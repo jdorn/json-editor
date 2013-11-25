@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JSON Editor Example</title>
+    <link rel='stylesheet' href='//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css'>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src='jquery.jsoneditor.js'></script>
+</head>
+<body>
+<div class='container'>
+    <div class='row'>
+        <div class='span8'>
+            <h2>Editor</h2>
+            <p>Below is the editor generated from the JSON Schema.</p>
+            
+            <div id='editor'></div>
+        </div>
+        <div class='span4'>
+            <h2>JSON Output</h2>
+            <p>You can also make changes to the JSON here and set the value in the editor by clicking <button class='btn btn-primary' id='setvalue'>Update Form</button></p>
+            
+            <textarea id='output' style='width: 100%; height: 500px; font-family: monospace;'></textarea>
+        </div>
+    </div>
+    <div class='row'>
+        <div class='span12'>
+            <h2>Schema</h2>
+            <p>You can change the schema and see how the generated form looks.  After you make changes, click <button class='btn btn-primary' id='setschema'>Update Schema</button></p>
+            
+            <textarea id='schema' style='width: 100%; height: 450px; font-family: monospace;'></textarea>
+        </div>
+    </div>
+</div>
+<script>
+var schema = {
+    id: "person",
+    title: "Person",
+    type: "object",
+    properties: {
+        name: {
+           type: "string"
+        },
+        age: {
+           type: "integer"
+        },
+        gender: {
+           type: "string",
+           enum: ["male", "female"]
+        },
+        location: {
+           type: "object",
+           properties: {
+               city: {
+                   type: "string"
+               },
+               state: {
+                   type: "string"
+               }
+           }
+        },
+        pets: {
+           type: "array",
+           editor: "table",
+           title: "Pets",
+           items: {
+               type: "object",
+               id: "pet",
+               properties: {
+                   type: {
+                       type: "string",
+                       enum: ["dog","cat","bird","reptile","other"]
+                   },
+                   name: {
+                       type: "string"
+                   }
+               }
+           }
+        }
+    }
+};
+    
+$(document).ready(function() {
+    // Initialize the editor
+    $("#editor").jsoneditor({
+       schema: schema
+    });
+    
+    // Display the initial schema
+    $("#schema").val(JSON.stringify(schema,null,2));
+    
+    // When the 'update schema' button is clicked, re-initialize the editor
+    $("#setschema").on('click',function() {
+        try {
+            schema = JSON.parse($("#schema").val());
+        }
+        catch(e) {
+            alert('Invalid Schema: '+e.message);
+            return;
+        }
+        
+        $("#editor").jsoneditor('destroy').jsoneditor({
+           schema: schema
+        });
+    });
+    
+    // When the value of the editor changes, update the JSON output
+    $("#editor").on('change',function() {
+        var json = $("#editor").jsoneditor('value');
+        
+       $("#output").val(JSON.stringify(json,null,2)); 
+    });
+
+    // Trigger an initial change event so the JSON output has something in it
+    $("#editor").trigger('change');
+    
+    // When the 'update form' button is clicked, set the editor's value
+    $("#setvalue").on('click',function() {
+       $("#editor").jsoneditor('value',JSON.parse($("#output").val())); 
+    });
+});
+</script>
+</body>
+</html>
