@@ -3,9 +3,11 @@ JSON Editor
 
 JSON Schema -> HTML Editor -> JSON
 
-If you have structured JSON data and need a web-based way to edit it, JSON Editor can help you out.  Define your data structure using JSON Schema and let JSON Editor do the rest.
+If you have structured JSON data and need a web-based editor for it, JSON Editor can help you out.
 
-Check out an example: http://htmlpreview.github.io/?https://github.com/jdorn/json-editor/blob/master/example.html
+Define your data structure using JSON Schema and let JSON Editor do the rest.
+
+Check out an example: http://rawgithub.com/jdorn/json-editor/master/example.html
 
 Requirements
 -----------------
@@ -16,7 +18,7 @@ Requirements
 ### Optional Requirements
 
 *  jQueryUI Sortable to enable drag and drop re-ordering of array elements
-*  swig templating engine to enable template macros (see below)
+*  a javascript templating engine to enable template macros (see below)
 
 Usage
 --------------
