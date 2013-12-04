@@ -1,7 +1,7 @@
-/*! JSON Editor v0.1.4 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.5 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
- * Released under the MIT license  
- * 
+ * Released under the MIT license
+ *
  * Date: 2013-11-24
  */
 
@@ -10,12 +10,12 @@
  * Uses Bootstrap 2.X classnames for styling.
  * Either jqueryUI sortable or html5sortable is required if you want drag/drop rearranging of list elements
  * A templating engine is required if you want to use macro templates.
- * 
+ *
  * Supports a subset of the JSON Schema specification with a few extra
  * features and custom types as well.
- * 
+ *
  * Example Usage:
- * 
+ *
  * var schema = {
  *   type: "object",
  *   title: "Person",
@@ -31,15 +31,15 @@
  * $("#editor").jsoneditor({
  *   schema: schema
  * });
- * 
+ *
  * $("#editor").jsoneditor('value',{
  *   firstname: "Jeremy",
  *   age: 24
  * });
- * 
+ *
  * var value = $("#editor").jsoneditor('value');
  * console.log(value);
- * 
+ *
  * $("#editor").jsoneditor('destroy');
  */
 
@@ -54,29 +54,29 @@
   /**
    * Turn an element into a schema editor
    * @param options Options (must contain at least a `schema` property)
-   * 
+   *
    * Constructor:
    * $("#container").jsoneditor({
    *   schema: {...}
    * });
-   * 
+   *
    * Set Value:
    * $("#container").jsoneditor('value',{...})
-   * 
+   *
    * Get Value:
    * var value = $("#container").jsoneditor('value');
-   * 
+   *
    * Destroy:
    * $("#container").jsoneditor('destroy');
    */
-  $.fn.jsoneditor = function(options) {    
+  $.fn.jsoneditor = function(options) {
     var $this = $(this), d;
-    
+
     // Get/Set value
     if(options === 'value') {
       d = $this.data('jsoneditor');
       if(!d) return {};
-      
+
       // Setting value
       if(arguments.length > 1) {
         d.root.setValue(arguments[1]);
@@ -96,7 +96,7 @@
       d.root.destroy();
       d = null;
       $this.data('jsoneditor',null);
-      
+
       return this;
     }
 
@@ -104,7 +104,7 @@
 
     var schema = options.schema;
     var data = options.startval;
-    
+
     var editor_class = $.jsoneditor.getEditorClass(schema);
 
     // Store info about the jsoneditor in the element
@@ -114,11 +114,11 @@
       definitions: {}
     };
     $this.data('jsoneditor',d);
-    
+
     d.root = new editor_class({
-        jsoneditor: $this,
-        schema: schema,
-        container: $this
+      jsoneditor: $this,
+      schema: schema,
+      container: $this
     })
 
     // Starting data
@@ -133,19 +133,19 @@
     expandSchema: function(schema, editor) {
       if(schema['$ref']) {
         if(!schema['$ref'].match(/^#\/definitions\//g)) {
-			throw "JSON Editor only supports local references to schema definitions defined for the root node";
-		}
-		var key = schema['$ref'].substr(14);
-		var definitions = editor.data('jsoneditor').definitions;
-		if(!definitions[key]) throw "Schema definition not found - "+schema['$ref'];
-		
-		return $.extend(true,{},definitions[key]);
+          throw "JSON Editor only supports local references to schema definitions defined for the root node";
+        }
+        var key = schema['$ref'].substr(14);
+        var definitions = editor.data('jsoneditor').definitions;
+        if(!definitions[key]) throw "Schema definition not found - "+schema['$ref'];
+
+        return $.extend(true,{},definitions[key]);
       }
       return schema;
     },
     getEditorClass: function(schema, editor) {
-	  schema = $.jsoneditor.expandSchema(schema, editor);
-		
+      schema = $.jsoneditor.expandSchema(schema, editor);
+
       var editor = schema.editor || schema.type;
       if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
       return $.jsoneditor.editors[editor];
@@ -164,12 +164,12 @@
       this.schema = $.jsoneditor.expandSchema(this.schema,this.jsoneditor);
 
       // Store schema definitions
-	  if(this.schema.definitions) {
-		  var definitions = this.jsoneditor.data('jsoneditor').definitions;
-		  $.each(this.schema.definitions,function(key,schema) {
-			  definitions[key] = schema;
-		  });
-	  }
+      if(this.schema.definitions) {
+        var definitions = this.jsoneditor.data('jsoneditor').definitions;
+        $.each(this.schema.definitions,function(key,schema) {
+          definitions[key] = schema;
+        });
+      }
 
       this.options = $.extend({},(this.options || {}),options);
 
@@ -182,10 +182,10 @@
       this.value = null;
 
       this.div = $("<"+(options.tag || "div")+">").appendTo(this.container);
-      
+
       // Show field's description as a tooltip
       if(this.schema.description) this.div.attr('title',this.schema.description);
-      
+
       this.div.data('editor',this);
       this.div.attr('data-schematype',this.schema.type);
 
@@ -194,7 +194,7 @@
       }
 
       this.initialize();
-      
+
       // If this field has a default value
       this.schema.default = this.schema.default || this.default;
       this.setValue(this.schema.default);
@@ -204,7 +204,7 @@
      * Should be overridden
      */
     initialize: function() {
-      
+
     },
     /**
      * Gets the value from the editor
@@ -267,7 +267,7 @@
           marginLeft: 10,
           borderLeft: '1px solid #ccc'
         });
-      
+
         // Add a title and placeholder for action buttons
         this.title = $("<h2></h2>").text(this.schema.title || this.schema.id || this.key).appendTo(this.div);
         this.title_controls = $("<div class='btn-group' style='display:inline-block;'></div>").appendTo(this.title);
@@ -287,7 +287,7 @@
           e.preventDefault();
           return false;
         });
-        
+
         // Put all child editors within a well
         this.editor_holder = $("<div></div>").appendTo(this.div).addClass('well well-small');
       }
@@ -349,10 +349,10 @@
 
   /**
    * Editor for schemas of type 'string'
-   * 
+   *
    * Renders a text input
    * { type: "string" }
-   * 
+   *
    * Renders a select box if the 'enum' property is set
    * { type: "string", enum: ["option 1","option 2"] }
    */
@@ -363,7 +363,7 @@
 
       var self = this;
       this.label = $("<label></label>").text(this.schema.title || this.schema.id || this.key).appendTo(this.div);
-      
+
       // Select box
       if(this.schema.enum) {
         this.input = $("<select></select>").css('width','auto');
@@ -380,7 +380,19 @@
       }
       // Text input
       else {
-        this.input = $("<input type='text'>").addClass('input-xxlarge');
+        var input_type = this.schema.format? this.schema.format : 'text';
+        this.input = $("<input type='"+input_type+"'>");
+
+        // Set the min/max for format="range"
+        if(input_type === 'range') {
+          this.input.attr('min',(this.schema.minimum || 0));
+          this.input.attr('max',(this.schema.maximum || 100));
+        }
+
+        // Some input formats should use a large input field
+        if(['email','url','text'].indexOf(input_type) >= 0) {
+          this.input.addClass('input-xxlarge')
+        }
       }
 
       this.input
@@ -395,7 +407,7 @@
             $(this).val(self.value);
             return;
           }
-          
+
           var val = $(this).val();
           // sanitize value
           var sanitized = self.sanitize(val);
@@ -440,7 +452,7 @@
       if(this.schema.enum && this.schema.enum.indexOf(sanitized) < 0) {
         sanitized = this.schema.enum[0];
       }
-      
+
       // If the value has changed
       this.input.val(sanitized);
       this.updateValue();
@@ -448,10 +460,10 @@
     setupTemplate: function() {
       // Don't allow editing the input directly if it's based on a macro template
       this.input.addClass('disabled');
-      
+
       // Compile and store the template
       this.template = $.jsoneditor.template.compile(this.schema.template);
-      
+
       // Prepare the template vars
       this.vars = {};
       if(this.schema.vars) {
@@ -476,11 +488,11 @@
             path: path_parts,
             adjusted_path: adjusted_path
           };
-          
+
           // Listen for changes to the variable field
           root.on('change','[data-schemapath="'+adjusted_path+'"]',self.var_listener);
         });
-        
+
         self.var_listener();
       }
     },
@@ -526,7 +538,7 @@
   /**
    * Editor for schemas of type 'array'
    * { type: "array", items: {} }
-   * 
+   *
    * Only supports arrays where every element has the same schema (specified in the 'items' property)
    */
   $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
@@ -561,7 +573,7 @@
           marginLeft: 10,
           borderLeft: '1px solid #ccc'
         });
-      
+
         this.row_holder = $("<div>").appendTo(this.div);
       }
 
@@ -692,9 +704,9 @@
         .data('i',i)
         .on('click',function() {
           var i = $(this).data('i');
-          
+
           var value = self.getValue();
-          
+
           var newval = [];
           $.each(value,function(j,row) {
             if(j===i) return; // If this is the one we're deleting
@@ -709,13 +721,13 @@
         .addClass('btn moveup')
         .on('click',function() {
           var i = $(this).data('i');
-          
+
           if(i<=0) return;
           var rows = self.getValue();
           var tmp = rows[i-1];
           rows[i-1] = rows[i];
           rows[i] = tmp;
-          
+
           self.setValue(rows);
           self.div.trigger('change');
         });
@@ -725,13 +737,13 @@
         .data('i',i)
         .on('click',function() {
           var i = $(this).data('i');
-          
+
           var rows = self.getValue();
           if(i>=rows.length-1) return;
           var tmp = rows[i+1];
           rows[i+1] = rows[i];
           rows[i] = tmp;
-          
+
           self.setValue(rows);
           self.div.trigger('change');
         });
@@ -761,7 +773,7 @@
           marginLeft: 0,
           paddingLeft: 0
         });
-        
+
         // Make inputs small and remove bottom margins
         $('.input-xxlarge',row.div).removeClass('input-xxlarge').css('margin-bottom',0);
         $('select',row.div).css('margin-bottom',0);
@@ -769,17 +781,17 @@
 
       if(value) self.rows[i].setValue(value);
     },
-    
+
     /**
      * Re-calculate the value for this editor
      */
     refresh: function() {
       var self = this;
       this.value = [];
-      
+
       // If we currently have minItems items in the array
       var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
-      
+
       $.each(this.rows,function(i,editor) {
         // Hide the move down button for the last row
         if(i === self.rows.length - 1) {
@@ -788,7 +800,7 @@
         else {
           editor.movedown_button.show();
         }
-        
+
         // Hide the delete button if we have minItems items
         if(minItems) {
           editor.delete_button.hide();
@@ -796,11 +808,11 @@
         else {
           editor.delete_button.show();
         }
-        
+
         // Get the value for this editor
         self.value[i] = editor.getValue();
       });
-      
+
       // If there are minItems items in the array, hide the delete button beneath the rows
       if(minItems) {
         this.delete_last_row_button.hide();
@@ -808,7 +820,7 @@
       else {
         this.delete_last_row_button.show();
       }
-      
+
       // If there are maxItems in the array, hide the add button beneath the rows
       if(this.schema.maxItems && this.schema.maxItems <= this.rows.length) {
         this.add_row_button.hide();
@@ -816,7 +828,7 @@
       else {
         this.add_row_button.show();
       }
-      
+
       if(this.table) {
         if(this.value.length) this.table.show();
         else this.table.hide();
@@ -836,7 +848,7 @@
     setValue: function(value) {
       // Update the array's value, adding/removing rows when necessary
       value = value || [];
-      
+
       // Make sure value has between minItems and maxItems items in it
       if(this.schema.minItems) {
         while(value.length < this.schema.minItems) {
@@ -846,7 +858,7 @@
       if(this.schema.maxItems && value.length > this.schema.maxItems) {
         value = value.slice(0,this.schema.maxItems);
       }
-      
+
       var self = this;
       $.each(value,function(i,val) {
         if(self.rows[i]) {
@@ -857,13 +869,13 @@
           self.addRow(val);
         }
       });
-      
+
       for(var j=value.length; j<self.rows.length; j++) {
         self.rows[j].destroy();
         self.rows[j] = null;
       }
       self.rows = self.rows.slice(0,value.length);
-      
+
       self.refresh();
 
       if($.fn.sortable) {
@@ -890,12 +902,6 @@
 
   // String editor derivatives
   $.jsoneditor.editors.number = $.jsoneditor.editors.string.extend({
-    initialize: function() {
-      this._super();
-      this.input.css({
-        width: 50
-      });
-    },
     sanitize: function(value) {
       return (value+"").replace(/[^0-9\.\-]/g,'');
     },
@@ -904,12 +910,6 @@
     }
   });
   $.jsoneditor.editors.integer = $.jsoneditor.editors.string.extend({
-    initialize: function() {
-      this._super();
-      this.input.css({
-        width: 50
-      });
-    },
     sanitize: function(value) {
       value = value + "";
       return value.replace(/[^0-9\-]/g,'');

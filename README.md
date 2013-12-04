@@ -58,15 +58,22 @@ Only the following JSON schema keywords are supported.  All other keywords will 
 *  default
 *  enum (for type `string` only)
 *  properties
+*  items
 *  $ref
 *  definitions
-*  items
+*  format
+*  minimum
+*  maximum
 *  minItems
 *  maxItems
 
 JSON Editor only supports arrays with a single `items` schema.
 
 Currently, JSON Editor only supports schema references to the root node in the format `#/definitions/DEFINITION_NAME`.
+
+JSON Editor supports all of the HTML5 input types for the `format` parameter.
+
+The `minimum` and `maximum` schema keywords are only used when the format is set to `range`.
 
 Template Macros
 ------------------
