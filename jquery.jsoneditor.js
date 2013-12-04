@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1.3 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.4 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license  
  * 
@@ -104,18 +104,22 @@
 
     var schema = options.schema;
     var data = options.startval;
+    
+    var editor_class = $.jsoneditor.getEditorClass(schema);
 
     // Store info about the jsoneditor in the element
     var d = {
       schema: schema,
       options: options,
-      root: new $.jsoneditor.editors[schema.type]({
+      definitions: {}
+    };
+    $this.data('jsoneditor',d);
+    
+    d.root = new editor_class({
         jsoneditor: $this,
         schema: schema,
         container: $this
-      })
-    };
-    $this.data('jsoneditor',d);
+    })
 
     // Starting data
     if(data) d.root.setValue(data);
@@ -126,7 +130,22 @@
   $.jsoneditor = {
     template: window.swig,
     editors: {},
-    getEditorClass: function(schema) {
+    expandSchema: function(schema, editor) {
+      if(schema['$ref']) {
+        if(!schema['$ref'].match(/^#\/definitions\//g)) {
+			throw "JSON Editor only supports local references to schema definitions defined for the root node";
+		}
+		var key = schema['$ref'].substr(14);
+		var definitions = editor.data('jsoneditor').definitions;
+		if(!definitions[key]) throw "Schema definition not found - "+schema['$ref'];
+		
+		return $.extend(true,{},definitions[key]);
+      }
+      return schema;
+    },
+    getEditorClass: function(schema, editor) {
+	  schema = $.jsoneditor.expandSchema(schema, editor);
+		
       var editor = schema.editor || schema.type;
       if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
       return $.jsoneditor.editors[editor];
@@ -142,6 +161,15 @@
       this.container = options.container;
       this.jsoneditor = options.jsoneditor;
       this.schema = options.schema;
+      this.schema = $.jsoneditor.expandSchema(this.schema,this.jsoneditor);
+
+      // Store schema definitions
+	  if(this.schema.definitions) {
+		  var definitions = this.jsoneditor.data('jsoneditor').definitions;
+		  $.each(this.schema.definitions,function(key,schema) {
+			  definitions[key] = schema;
+		  });
+	  }
 
       this.options = $.extend({},(this.options || {}),options);
 
@@ -267,7 +295,7 @@
       // Add child editors
       this.editors = {};
       $.each(this.schema.properties,function(key,schema) {
-        var editor = $.jsoneditor.getEditorClass(schema);
+        var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
         self.editors[key] = new editor({
           jsoneditor: self.jsoneditor,
           schema: schema,
@@ -646,7 +674,7 @@
       var schema_copy = $.extend({},self.schema.items);
       schema_copy.title = (schema_copy.title || schema_copy.id || self.schema.title || self.schema.id || self.key)+' '+i;
 
-      var editor = $.jsoneditor.getEditorClass(schema_copy);
+      var editor = $.jsoneditor.getEditorClass(schema_copy, self.jsoneditor);
 
       self.rows[i] = new editor({
         jsoneditor: self.jsoneditor,

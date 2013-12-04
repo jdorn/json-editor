@@ -58,11 +58,15 @@ Only the following JSON schema keywords are supported.  All other keywords will 
 *  default
 *  enum (for type `string` only)
 *  properties
+*  $ref
+*  definitions
 *  items
 *  minItems
 *  maxItems
 
-JSON Editor only supports arrays with a single `items` schema.  
+JSON Editor only supports arrays with a single `items` schema.
+
+Currently, JSON Editor only supports schema references to the root node in the format `#/definitions/DEFINITION_NAME`.
 
 Template Macros
 ------------------
