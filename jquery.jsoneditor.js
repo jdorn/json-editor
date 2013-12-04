@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.1 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license  
  * 
@@ -678,7 +678,7 @@
         });
       self.rows[i].movedown_button = $("<button></button>")
         .text('Move down')
-        .addClass('btn moveup')
+        .addClass('btn movedown')
         .data('i',i)
         .on('click',function() {
           var i = $(this).data('i');
@@ -734,8 +734,15 @@
       var self = this;
       this.value = [];
       $.each(this.rows,function(i,editor) {
+        // Show the "move down" button for each row
+        editor.movedown_button.show();
+        
+        // Get the value for this editor
         self.value[i] = editor.getValue();
       });
+      
+      // Hide the "move down" button for the last row
+      this.rows[this.rows.length-1].movedown_button.hide();
       
       if(this.table) {
         if(this.value.length) this.table.show();
@@ -766,6 +773,7 @@
           self.addRow(val);
         }
       });
+      
       for(var j=value.length; j<self.rows.length; j++) {
         self.rows[j].destroy();
         self.rows[j] = null;
