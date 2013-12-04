@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1.5 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.6 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -347,6 +347,42 @@
     }
   });
 
+  // Boolean Editor (simple checkbox)
+  $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
+    default: false,
+    initialize: function() {
+      var self = this;
+
+      this.value = false;
+
+      this.input_holder = $("<div></div>").css({
+        padding: '10px 0'
+      }).appendTo(this.div);
+
+      this.label = $("<label></label>").text(this.schema.title || this.schema.id || this.key).appendTo(this.input_holder).addClass('checkbox');
+      this.input = $("<input type='checkbox'>").appendTo(this.label);
+
+      this.input
+        // data-schemapath is used by other editors to listen to changes
+        .attr('data-schemapath',this.path)
+        // data-schematype can be used to style different editors based on the string editor
+        .attr('data-schematype',this.schema.type)
+        //update the editor's value when it is changed
+        .on('change',function(e) {
+          self.updateValue();
+        });
+    },
+    updateValue: function() {
+      this.value = this.input.prop('checked');
+    },
+    setValue: function(val) {
+      if(val) this.input.prop('checked',true);
+      else this.input.prop('checked',false);
+
+      this.updateValue();
+    }
+  });
+
   /**
    * Editor for schemas of type 'string'
    *
@@ -366,6 +402,7 @@
 
       // Select box
       if(this.schema.enum) {
+        this.input_type = 'select';
         this.input = $("<select></select>").css('width','auto');
         $.each(this.schema.enum,function(i,val) {
           self.input.append($("<option value='"+val+"'>"+val+"</option>"));
@@ -373,6 +410,7 @@
       }
       // Text Area
       else if(this.options.textarea) {
+        this.input_type = 'textarea';
         this.input = $("<textarea>").css({
           width: '100%',
           height: this.options.height || 150
@@ -380,17 +418,20 @@
       }
       // Text input
       else {
-        var input_type = this.schema.format? this.schema.format : 'text';
-        this.input = $("<input type='"+input_type+"'>");
+        this.input_type = this.schema.format? this.schema.format : 'text';
+        this.input = $("<input type='"+this.input_type+"'>");
 
         // Set the min/max for format="range"
-        if(input_type === 'range') {
+        if(this.input_type === 'range') {
           this.input.attr('min',(this.schema.minimum || 0));
           this.input.attr('max',(this.schema.maximum || 100));
+          this.input.css({
+            marginBottom: '10px'
+          });
         }
 
         // Some input formats should use a large input field
-        if(['email','url','text'].indexOf(input_type) >= 0) {
+        if(['email','url','text'].indexOf(this.input_type) >= 0) {
           this.input.addClass('input-xxlarge')
         }
       }
@@ -420,12 +461,21 @@
         })
         .appendTo(this.div);
 
+      // For input type='range', we need to display the value after the input
+      if(this.input_type === 'range') {
+        this.output = $("<output></output>").insertAfter(this.input).css({
+          paddingLeft: '10px'
+        });
+      }
+
       // If this schema is based on a macro template, set that up
       if(this.schema.template) this.setupTemplate();
       else this.updateValue();
     },
     updateValue: function() {
       this.value = this.input.val();
+
+      if(this.output) this.output.val(this.value);
     },
     destroy: function() {
       if(this.vars) {
@@ -916,15 +966,6 @@
     },
     getValue: function() {
       return this.value*1;
-    }
-  });
-  $.jsoneditor.editors.boolean = $.jsoneditor.editors.string.extend({
-    initialize: function() {
-      this.schema.enum = ["yes","no"];
-      this._super();
-    },
-    getValue: function() {
-      return (this.value == "yes");
     }
   });
 
