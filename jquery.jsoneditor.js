@@ -136,6 +136,7 @@
    * All editors should extend from this class
    */
   $.jsoneditor.AbstractEditor = Class.extend({
+    default: null,
     init: function(options) {
       this.container = options.container;
       this.jsoneditor = options.jsoneditor;
@@ -166,7 +167,8 @@
       this.initialize();
       
       // If this field has a default value
-      if(this.schema.default) this.setValue(this.schema.default);
+      this.schema.default = this.schema.default || this.default;
+      this.setValue(this.schema.default);
     },
     /**
      * Called after constructor
@@ -213,6 +215,7 @@
    * { type: "object", properties: {} }
    */
   $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
+    default: {},
     init: function(options) {
       if(options.table_row) options.tag = 'tr';
       this._super(options);
@@ -325,6 +328,7 @@
    * { type: "string", enum: ["option 1","option 2"] }
    */
   $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
+    default: '',
     initialize: function() {
       this.value = '';
 
@@ -497,6 +501,7 @@
    * Only supports arrays where every element has the same schema (specified in the 'items' property)
    */
   $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
+    default: [],
     initialize: function() {
       var self = this;
       this.value = [];
@@ -564,7 +569,7 @@
       }
 
       // Add "new row" and "delete last" buttons below editor
-      $("<button></button>")
+      this.add_row_button = $("<button></button>")
         .text('Add '+(this.schema.items.title || this.schema.items.id || this.schema.title || this.schema.id || this.key))
         .on('click',function() {
           self.addRow();
@@ -574,7 +579,7 @@
         .addClass('btn')
         .appendTo(self.controls);
 
-      $("<button></button>")
+      this.delete_last_row_button = $("<button></button>")
         .text('Delete Last '+(this.schema.items.title || this.schema.items.id || this.schema.title || this.schema.id || this.key))
         .on('click',function() {
           var rows = self.getValue();
@@ -742,16 +747,46 @@
     refresh: function() {
       var self = this;
       this.value = [];
+      
+      // If we currently have minItems items in the array
+      var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
+      
       $.each(this.rows,function(i,editor) {
-        // Show the "move down" button for each row
-        editor.movedown_button.show();
+        // Hide the move down button for the last row
+        if(i === self.rows.length - 1) {
+          editor.movedown_button.hide();
+        }
+        else {
+          editor.movedown_button.show();
+        }
+        
+        // Hide the delete button if we have minItems items
+        if(minItems) {
+          editor.delete_button.hide();
+        }
+        else {
+          editor.delete_button.show();
+        }
         
         // Get the value for this editor
         self.value[i] = editor.getValue();
       });
       
-      // Hide the "move down" button for the last row
-      if(this.rows.length) this.rows[this.rows.length-1].movedown_button.hide();
+      // If there are minItems items in the array, hide the delete button beneath the rows
+      if(minItems) {
+        this.delete_last_row_button.hide();
+      }
+      else {
+        this.delete_last_row_button.show();
+      }
+      
+      // If there are maxItems in the array, hide the add button beneath the rows
+      if(this.schema.maxItems && this.schema.maxItems <= this.rows.length) {
+        this.add_row_button.hide();
+      }
+      else {
+        this.add_row_button.show();
+      }
       
       if(this.table) {
         if(this.value.length) this.table.show();
@@ -772,6 +807,17 @@
     setValue: function(value) {
       // Update the array's value, adding/removing rows when necessary
       value = value || [];
+      
+      // Make sure value has between minItems and maxItems items in it
+      if(this.schema.minItems) {
+        while(value.length < this.schema.minItems) {
+          value.push({});
+        }
+      }
+      if(this.schema.maxItems && value.length > this.schema.maxItems) {
+        value = value.slice(0,this.schema.maxItems);
+      }
+      
       var self = this;
       $.each(value,function(i,val) {
         if(self.rows[i]) {
