@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1.2 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.3 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license  
  * 
@@ -9,7 +9,7 @@
  * Requires jQuery.
  * Uses Bootstrap 2.X classnames for styling.
  * Either jqueryUI sortable or html5sortable is required if you want drag/drop rearranging of list elements
- * Swig templating engine is required if you want to use macro templates.
+ * A templating engine is required if you want to use macro templates.
  * 
  * Supports a subset of the JSON Schema specification with a few extra
  * features and custom types as well.
@@ -124,6 +124,7 @@
   };
 
   $.jsoneditor = {
+    template: window.swig,
     editors: {},
     getEditorClass: function(schema) {
       var editor = schema.editor || schema.type;
@@ -421,7 +422,7 @@
       this.input.addClass('disabled');
       
       // Compile and store the template
-      this.template = swig.compile(this.schema.template);
+      this.template = $.jsoneditor.template.compile(this.schema.template);
       
       // Prepare the template vars
       this.vars = {};

@@ -48,17 +48,21 @@ $("#editor_holder").jsoneditor('destroy');
 JSON Schema Support
 -----------------
 JSON Editor currently only supports a small subset of JSON Schema.  
-All of the primitive types are supported (object, array, string, number, integer, boolean).
+All of the primitive types except `null` are supported (object, array, string, number, integer, boolean).
 
 Only the following JSON schema keywords are supported.  All other keywords will be ignored.
 
 *  id
 *  title
+*  description
+*  default
 *  enum (for type `string` only)
-*  properties (for type `object` only)
-*  items (for type `array` and `table` only)
+*  properties
+*  items
+*  minItems
+*  maxItems
 
-JSON Editor only supports arrays with a single `items` schema.
+JSON Editor only supports arrays with a single `items` schema.  
 
 Template Macros
 ------------------
@@ -94,8 +98,23 @@ Any time the `fname` or `lname` field is changed, the `generated_email` field wi
 
 Any variables you want to use in the template must be declared in the `vars` object.  The key is the variable name and the value is the dot separated path to the field, starting at an ancestor node that has an `id` specified.  If there are no ancestor node with an `id` specified, the special keyword `root` can be used to refer to the outermost object.
 
-Templates use the powerful swig templating engine.  For full documentation, see https://github.com/paularmstrong/swig
+By default, templates are configured to use the powerful swig templating engine (https://github.com/paularmstrong/swig).
 
+You can use a different templating engine by overwriting the `$.jsoneditor.template` variable.  Here are examples for Handlebars and Mustache:
+
+```js
+// Handlebars uses the same API as swig, so it's an easy replacement
+$.jsoneditor.template = Handlebars;
+
+// Mustache needs a small wrapper object to work
+$.jsoneditor.template = {
+  compile: function(template) {
+    return function(view) {
+      return Mustache.render(template, view);
+    }
+  }
+};
+```
 
 
 Editors
