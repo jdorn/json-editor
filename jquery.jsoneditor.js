@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1.1 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.2 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license  
  * 
@@ -152,6 +152,10 @@
       this.value = null;
 
       this.div = $("<"+(options.tag || "div")+">").appendTo(this.container);
+      
+      // Show field's description as a tooltip
+      if(this.schema.description) this.div.attr('title',this.schema.description);
+      
       this.div.data('editor',this);
       this.div.attr('data-schematype',this.schema.type);
 
@@ -160,6 +164,9 @@
       }
 
       this.initialize();
+      
+      // If this field has a default value
+      if(this.schema.default) this.setValue(this.schema.default);
     },
     /**
      * Called after constructor
@@ -287,7 +294,9 @@
     setValue: function(value) {
       value = value || {};
       $.each(this.editors,function(key,editor) {
-        editor.setValue(value[key]);
+        if(typeof value[key] !== "undefined") {
+          editor.setValue(value[key]);
+        }
       });
       this.refresh();
     },
@@ -558,7 +567,7 @@
       $("<button></button>")
         .text('Add '+(this.schema.items.title || this.schema.items.id || this.schema.title || this.schema.id || this.key))
         .on('click',function() {
-          self.addRow({});
+          self.addRow();
           self.refresh();
           self.div.trigger('change');
         })
@@ -742,7 +751,7 @@
       });
       
       // Hide the "move down" button for the last row
-      this.rows[this.rows.length-1].movedown_button.hide();
+      if(this.rows.length) this.rows[this.rows.length-1].movedown_button.hide();
       
       if(this.table) {
         if(this.value.length) this.table.show();

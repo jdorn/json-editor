@@ -38,10 +38,12 @@ var schema = {
     type: "object",
     properties: {
         name: {
-           type: "string"
+           type: "string",
+           description: "First and Last name"
         },
         age: {
-           type: "integer"
+           type: "integer",
+           default: 21
         },
         gender: {
            type: "string",
@@ -68,7 +70,8 @@ var schema = {
                properties: {
                    type: {
                        type: "string",
-                       enum: ["dog","cat","bird","reptile","other"]
+                       enum: ["cat","dog","bird","reptile","other"],
+                       default: "dog"
                    },
                    name: {
                        type: "string"
@@ -82,7 +85,10 @@ var schema = {
 $(document).ready(function() {
     // Initialize the editor
     $("#editor").jsoneditor({
-       schema: schema
+       schema: schema,
+       startval: {
+           name: "John Smith"
+       }
     });
     
     // Display the initial schema
