@@ -18,7 +18,7 @@ Requirements
 ### Optional Requirements
 
 *  jQueryUI Sortable to enable drag and drop re-ordering of array elements
-*  a javascript templating engine to enable template macros (see below)
+*  A javascript templating engine to enable template macros (see below)
 
 Usage
 --------------
@@ -49,10 +49,20 @@ $("#editor_holder").jsoneditor('destroy');
 
 JSON Schema Support
 -----------------
-JSON Editor currently only supports a small subset of JSON Schema.  
-All of the primitive types except `null` are supported (object, array, string, number, integer, boolean).
+JSON Editor only supports a subset of the JSON Schema draft specification.
 
-Only the following JSON schema keywords are supported.  All other keywords will be ignored.
+The following schema types are supported:
+
+*  object
+*  array
+*  string
+*  boolean
+*  number
+*  integer
+
+Compound types are not supported.
+
+The following JSON schema keywords are supported.  All other keywords will be ignored.
 
 *  id
 *  title
@@ -69,13 +79,75 @@ Only the following JSON schema keywords are supported.  All other keywords will 
 *  minItems
 *  maxItems
 
-JSON Editor only supports arrays with a single `items` schema.
+### Arrays
 
-Currently, JSON Editor only supports schema references to the root node in the format `#/definitions/DEFINITION_NAME`.
+JSON Editor only supports arrays with a single `items` schema.  For example:
 
-JSON Editor supports all of the HTML5 input types for the `format` parameter.
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "parameters": {
+      "name": {
+        "type": "string"
+      }
+    }
+  }
+}
+```
+### References and Definitions
 
-The `minimum` and `maximum` schema keywords are only used when the format is set to `range`.
+Currently, JSON Editor only supports schema references to the root node in the format `#/definitions/DEFINITION_NAME`.  For example:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "$ref": "#/definitions/name"
+    }
+  },
+  "definitions": {
+    "name": {
+      "type": "string",
+      "title": "Name"
+    }
+  }
+}
+```
+
+### Formats
+
+JSON Editor supports all of the HTML5 input types for the `format` parameter.  For example, this will show a color picker in the editor:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "color": {
+      "type": "string",
+      "format": "color"
+    }
+  }
+}
+```
+
+The `minimum` and `maximum` schema keywords are only used when the format is set to `range`.  For example, this will show a slider from 10 to 50:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "age": {
+      "type": "number",
+      "format": "range",
+      "minimum": 10,
+      "maximum": 50
+    }
+  }
+}
+```
 
 Template Macros
 ------------------
@@ -107,9 +179,29 @@ A unique feature of JSON Editor is the support for template macros.  This lets y
 }
 ```
 
-Any time the `fname` or `lname` field is changed, the `generated_email` field will re-calculate its value.
+Any time the `fname` or `lname` field is changed, the `generated_email` field will re-calculate its value.  The   `generated_email` field cannot be edited directly.
 
-Any variables you want to use in the template must be declared in the `vars` object.  The key is the variable name and the value is the dot separated path to the field, starting at an ancestor node that has an `id` specified.  If there are no ancestor node with an `id` specified, the special keyword `root` can be used to refer to the outermost object.
+Any variables you want to use in the template must be declared in the `vars` object.  The key is the variable name and the value is the dot separated path to the field, starting at an ancestor node that has an `id` specified.  If there are no ancestor node with an `id` specified, the special keyword `root` can be used to refer to the outermost object.  For example:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "name2": {
+      "type": "string",
+      "template": "{{name}}",
+      "vars": {
+        "name": "root.name"
+      }
+    }
+  }
+}
+```
+
+For templates to work, you must include a javascript templating engine on the page.
 
 By default, templates are configured to use the powerful swig templating engine (https://github.com/paularmstrong/swig).
 
@@ -129,10 +221,24 @@ $.jsoneditor.template = {
 };
 ```
 
+JSON Editor should work with any other templating engine as well.
+
 
 Editors
 -----------------
-Each primitive type has its own editor.  This can be overridden with the `editor` property.  The only custom editor included is the `table` editor, which is a more compact version of the `array` editor.
+Each primitive type has its own editor.  A different editor can be used by setting the `editor` property.  The only other editor included by default is the `table` editor, which is a more compact version of the `array` editor.  Here is an example:
+
+```json
+{
+  "type": "array",
+  "editor": "table",
+  "properties": {
+    "name": {
+      "type": "string"
+    }
+  }
+}
+```
 
 It is easy to add your own custom editors as well.
 
@@ -154,7 +260,7 @@ $.jsoneditor.editors.textarea = $.jsoneditor.AbstractEditor.extend({
 });
 ```
 
-In your JSON schema, you would specify the editor like this:
+In your JSON schema, you would specify this custom editor like this:
 
 ```json
 {
