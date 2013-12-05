@@ -119,7 +119,24 @@ Currently, JSON Editor only supports schema references to the root node in the f
 
 ### Formats
 
-JSON Editor supports all of the HTML5 input types for the `format` parameter.  For example, this will show a color picker in the editor:
+JSON Editor supports the following values for the `format` parameter:
+
+*  text
+*  hidden
+*  email
+*  url
+*  tel
+*  number
+*  range
+*  date
+*  month
+*  week
+*  time
+*  datetime
+*  datetime-local
+*  color
+
+Here is an example that will show a color picker in modern browsers:
 
 ```json
 {
