@@ -171,7 +171,7 @@
         });
       }
 
-      this.options = $.extend({},(this.options || {}),options);
+      this.options = $.extend(true, {}, (this.options || {}), (this.schema.options || {}), options);
 
       if(!options.path && !this.schema.id) this.schema.id = 'root';
       this.path = options.path || this.schema.id;
@@ -273,7 +273,7 @@
         this.title_controls = $("<div class='btn-group' style='display:inline-block;'></div>").appendTo(this.title);
 
         // Add toggle button to collapse/expand object
-        $("<button>Toggle</button>").appendTo(this.title_controls).addClass('btn toggle').attr('data-toggle','shown').css({marginLeft: 20}).on('click',function(e) {
+        this.toggle_button = $("<button>Toggle</button>").appendTo(this.title_controls).addClass('btn toggle').attr('data-toggle','shown').css({marginLeft: 20}).on('click',function(e) {
           if($(this).attr('data-toggle')==='hidden') {
             $(this).attr('data-toggle','shown');
             self.editor_holder.show(300);
@@ -312,6 +312,8 @@
       });
 
       this.refresh();
+
+      if(this.options.collapsed && this.toggle_button) this.toggle_button.trigger('click');
     },
     /**
      * Re-calculate value from child editors
