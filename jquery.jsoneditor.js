@@ -681,6 +681,15 @@
         .addClass('btn')
         .appendTo(self.controls);
 
+      this.remove_all_rows_button = $("<button></button>")
+        .text('Delete All Rows')
+        .on('click',function() {
+          self.setValue([]);
+          self.div.trigger('change');
+        })
+        .addClass('btn')
+        .appendTo(self.controls);
+
       // Make rows sortable
       this.row_holder
         .on('sortupdate',function(e,ui) {
@@ -862,6 +871,20 @@
         // Get the value for this editor
         self.value[i] = editor.getValue();
       });
+
+      // Hide delete buttons if there aren't any rows
+      if(!this.value.length) {
+        this.delete_last_row_button.hide();
+        this.remove_all_rows_button.hide();
+      }
+      else if(this.value.length === 1) {
+        this.delete_last_row_button.show();
+        this.remove_all_rows_button.hide();
+      }
+      else {
+        this.delete_last_row_button.show();
+        this.remove_all_rows_button.show();
+      }
 
       // If there are minItems items in the array, hide the delete button beneath the rows
       if(minItems) {
