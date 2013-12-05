@@ -119,7 +119,7 @@
       jsoneditor: $this,
       schema: schema,
       container: $this
-    })
+    });
 
     // Starting data
     if(data) d.root.setValue(data);
@@ -507,7 +507,10 @@
 
       // If the value has changed
       this.input.val(sanitized);
+
       this.updateValue();
+
+      if(from_template) this.input.trigger('change');
     },
     setupTemplate: function() {
       // Don't allow editing the input directly if it's based on a macro template
@@ -640,26 +643,47 @@
 
       this.addControls();
       this.refresh();
+
+      if(this.options.collapsed) {
+        self.toggle_button.trigger('click');
+      }
+
+
     },
     addControls: function() {
       var self = this;
-      // Only add toggle button if we're not rendering as a table
-      if(!this.options.table_format) {
-        $("<button>Toggle All</button>").appendTo(this.title_controls).css({marginLeft: 20}).addClass('toggle-all btn').attr('data-toggle','shown').on('click',function(e) {
-          if($(this).attr('data-toggle')==='shown') {
-            $(this).attr('data-toggle','hidden');
+      this.toggle_button = $("<button>Toggle All</button>").appendTo(this.title_controls).css({marginLeft: 20}).addClass('toggle-all btn').attr('data-toggle','shown').on('click',function(e) {
+        if($(this).attr('data-toggle')==='shown') {
+          $(this).attr('data-toggle','hidden');
+
+          // For table editor, hide the table
+          if(self.options.table_format) {
+            self.row_holder.hide();
+            self.controls.hide();
+          }
+          // For array editor, toggle each element
+          else {
             $('.toggle[data-toggle="shown"]',self.row_holder).trigger('click');
           }
+        }
+        else {
+          $(this).attr('data-toggle','shown');
+
+          // For table editor, show the table
+          if(self.options.table_format) {
+            self.row_holder.show();
+            self.controls.show();
+          }
+          // For array editor, show each element
           else {
-            $(this).attr('data-toggle','shown');
             $('.toggle[data-toggle="hidden"]',self.row_holder).trigger('click');
           }
+        }
 
-          e.stopPropagation();
-          e.preventDefault();
-          return false;
-        });
-      }
+        e.stopPropagation();
+        e.preventDefault();
+        return false;
+      });
 
       // Add "new row" and "delete last" buttons below editor
       this.add_row_button = $("<button></button>")
