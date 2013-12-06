@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1.6 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.7 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -111,7 +111,8 @@
     var d = {
       schema: schema,
       options: options,
-      definitions: {}
+      definitions: {},
+      theme: new $.jsoneditor.themes[options.theme || 'bootstrap']()
     };
     $this.data('jsoneditor',d);
 
@@ -130,6 +131,7 @@
   $.jsoneditor = {
     template: window.swig,
     editors: {},
+    themes: {},
     expandSchema: function(schema, editor) {
       if(schema['$ref']) {
         if(!schema['$ref'].match(/^#\/definitions\//g)) {
@@ -151,6 +153,128 @@
       return $.jsoneditor.editors[editor];
     }
   };
+  
+  $.jsoneditor.AbstractTheme = Class.extend({
+    getFormInputField: function(type) {
+      return $("<input type='"+type+"'>");
+    },
+    getFormInputLabel: function(text) {
+      return $("<label>").text(text);
+    },
+    addFormInputControl: function(div,label,field) {
+      div.append(label);
+      div.append(field);
+    },
+    getTable: function() {
+      return $("<table>");
+    },
+    addTableHeader: function(table, cols) {
+      var header = $("<thead>").appendTo(table);
+      
+      var header_row = $("<tr>").appendTo(header);
+      $.each(cols,function(i,col) {
+        header_row.append($("<th>").text(col));
+      });
+      
+      return header;
+    },
+    addTableBody: function(table) {
+      return $("<tbody>").appendTo(table);
+    },
+    getTableRow: function() {
+      return $("<tr>");
+    },
+    getTableCell: function() {
+      return $("<td>");
+    },
+    indentDiv: function(div) {
+      div.css({
+        paddingLeft: 10,
+        marginLeft: 10,
+        borderLeft: '1px solid #ccc'
+      });
+    },
+    getTitle: function(text) {
+      return $("<h2>").text(text);
+    },
+    getTitleControls: function() {
+      return $("<div style='display:inline-block;'></div>");
+    },
+    getControls: function() {
+      return $("<div>");
+    },
+    getButton: function(text) {
+      return $("<button>").text(text);
+    },
+    getChildEditorHolder: function() {
+      return $("<div></div>").css({
+        border: '1px solid #ccc',
+        padding: '10px'
+      });
+    }
+  });
+  
+  $.jsoneditor.themes.bootstrap = $.jsoneditor.AbstractTheme.extend({
+    addFormInputControl: function(div,label,field) {
+      if(field.attr('type')==='checkbox') {
+        label.addClass('checkbox');
+        label.append(field);
+        div.append(label);
+      }
+      else {
+        this._super(div, label, field);
+      }
+    },
+    getTable: function() {
+      return this._super().addClass('table table-bordered').css({
+        maxWidth: 'none',
+        width: 'auto'
+      });
+    },
+    getControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getTitleControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getButton: function(text) {
+      return this._super(text).addClass('btn');
+    },
+    getChildEditorHolder: function() {
+      return $("<div>").addClass('well well-small');
+    }
+  });
+  
+  $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
+    addTableHeader: function(table, cols) {
+      var header = this._super(table, cols);
+      $("th",header).addClass('ui-state-default').css({
+        fontWeight: 'bold'
+      });
+      return header;
+    },
+    getTableCell: function() {
+      return this._super().addClass('ui-widget-content');
+    },
+    getTitleControls: function() {
+      return this._super().addClass('ui-buttonset').css({
+        fontSize: '.45em'
+      });
+    },
+    getControls: function() {
+      return this._super().addClass('ui-buttonset');
+    },
+    getButton: function(text) {
+      return $("<button>").addClass('ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only').append(
+        $("<span>").addClass('ui-button-text').text(text)
+      );
+    },
+    getChildEditorHolder: function() {
+      return $("<div>").addClass('ui-widget-content ui-corner-all').css({
+        padding: '1em 1.4em'
+      });
+    }
+  });
 
   /**
    * All editors should extend from this class
@@ -162,6 +286,8 @@
       this.jsoneditor = options.jsoneditor;
       this.schema = options.schema;
       this.schema = $.jsoneditor.expandSchema(this.schema,this.jsoneditor);
+      
+      this.theme = this.jsoneditor.data('jsoneditor').theme;
 
       // Store schema definitions
       if(this.schema.definitions) {
@@ -181,7 +307,15 @@
 
       this.value = null;
 
-      this.div = $("<"+(options.tag || "div")+">").appendTo(this.container);
+      var tag = options.tag || 'div';
+      if(tag === 'td') {
+        this.div = this.theme.getTableCell();
+      }
+      else {
+        this.div = $("<"+tag+">");
+      }
+
+      this.div.appendTo(this.container);
 
       // Show field's description as a tooltip
       if(this.schema.description) this.div.attr('title',this.schema.description);
@@ -196,8 +330,7 @@
       this.initialize();
 
       // If this field has a default value
-      this.schema.default = this.schema.default || this.default;
-      this.setValue(this.schema.default);
+      this.setValue(this.schema.default || this.default);
     },
     /**
      * Called after constructor
@@ -259,21 +392,15 @@
       }
       // If it should be rendered as a div
       else {
-        // Indent this editor and put a line to the left
-        // This makes it clear to see the nesting level when working with
-        // complicated schemas
-        this.div.css({
-          paddingLeft: 10,
-          marginLeft: 10,
-          borderLeft: '1px solid #ccc'
-        });
+        this.theme.indentDiv(this.div);
+
 
         // Add a title and placeholder for action buttons
-        this.title = $("<h2></h2>").text(this.schema.title || this.schema.id || this.key).appendTo(this.div);
-        this.title_controls = $("<div class='btn-group' style='display:inline-block;'></div>").appendTo(this.title);
+        this.title = this.theme.getTitle(this.schema.title || this.schema.id || this.key).appendTo(this.div);
+        this.title_controls = this.theme.getTitleControls().appendTo(this.title);
 
         // Add toggle button to collapse/expand object
-        this.toggle_button = $("<button>Toggle</button>").appendTo(this.title_controls).addClass('btn toggle').attr('data-toggle','shown').css({marginLeft: 20}).on('click',function(e) {
+        this.toggle_button = this.theme.getButton('Toggle').addClass('toggle').appendTo(this.title_controls).attr('data-toggle','shown').css({marginLeft: 20}).on('click',function(e) {
           if($(this).attr('data-toggle')==='hidden') {
             $(this).attr('data-toggle','shown');
             self.editor_holder.show(300);
@@ -289,7 +416,7 @@
         });
 
         // Put all child editors within a well
-        this.editor_holder = $("<div></div>").appendTo(this.div).addClass('well well-small');
+        this.editor_holder = this.theme.getChildEditorHolder().appendTo(this.div);
       }
 
       // Add child editors
@@ -360,9 +487,11 @@
       this.input_holder = $("<div></div>").css({
         padding: '10px 0'
       }).appendTo(this.div);
-
-      this.label = $("<label></label>").text(this.schema.title || this.schema.id || this.key).appendTo(this.input_holder).addClass('checkbox');
-      this.input = $("<input type='checkbox'>").appendTo(this.label);
+      
+      this.label = this.theme.getFormInputLabel(this.schema.title || this.schema.id || this.key);
+      this.input = this.theme.getFormInputField('checkbox');
+      
+      this.theme.addFormInputControl(this.input_holder,this.label,this.input);
 
       this.input
         // data-schemapath is used by other editors to listen to changes
@@ -400,19 +529,22 @@
       this.value = '';
 
       var self = this;
-      this.label = $("<label></label>").text(this.schema.title || this.schema.id || this.key).appendTo(this.div);
+      this.label = this.theme.getFormInputLabel(this.schema.title || this.schema.id || this.key).appendTo(this.div);
 
       // Select box
       if(this.schema.enum) {
         this.input_type = 'select';
+        // TODO: use theme
         this.input = $("<select></select>").css('width','auto');
         $.each(this.schema.enum,function(i,val) {
+          // TODO: use theme
           self.input.append($("<option value='"+val+"'>"+val+"</option>"));
         });
       }
       // Text Area
       else if(this.options.textarea) {
         this.input_type = 'textarea';
+        // TODO: use theme
         this.input = $("<textarea>").css({
           width: '100%',
           height: this.options.height || 150
@@ -421,7 +553,7 @@
       // Text input
       else {
         this.input_type = this.schema.format? this.schema.format : 'text';
-        this.input = $("<input type='"+this.input_type+"'>");
+        this.input = this.theme.getFormInputField(this.input_type);
 
         // Set the min/max for format="range"
         if(this.input_type === 'range') {
@@ -434,6 +566,7 @@
 
         // Some input formats should use a large input field
         if(['email','url','text'].indexOf(this.input_type) >= 0) {
+          // TODO: use theme
           this.input.addClass('input-xxlarge')
         }
       }
@@ -465,6 +598,7 @@
 
       // For input type='range', we need to display the value after the input
       if(this.input_type === 'range') {
+        // TODO: use theme
         this.output = $("<output></output>").insertAfter(this.input).css({
           paddingLeft: '10px'
         });
@@ -602,37 +736,30 @@
       var self = this;
       this.value = [];
 
-      this.title = $("<h2></h2>").addClass('title').text(this.schema.title || this.schema.id || this.key).appendTo(this.div);
-
-      this.title_controls = $("<div class='btn-group' style='display:inline-block'></div>").appendTo(this.title);
+      this.title = this.theme.getTitle(this.schema.title || this.schema.id || this.key).addClass('title').appendTo(this.div);
+      this.title_controls = this.theme.getTitleControls().appendTo(this.title);
 
       // If rendering the editor as an editable html table
       if(this.options.table_format) {
-        this.table = $("<table class='table table-bordered'>").css({
-          maxWidth: 'none',
-          width: 'auto'
-        }).appendTo(this.div);
+        this.table = this.theme.getTable().appendTo(this.div);
 
-        var header = $("<tr></tr>").appendTo($("<thead></thead>").appendTo(this.table));
+        var headers = [];        
         $.each(this.schema.items.properties,function(key,prop) {
-          header.append($("<th></th>").text(prop.title||prop.id||key));
+          headers.push(prop.title||prop.id||key);
         });
-        header.append("<th>actions</th>");
+        headers.push('actions');
 
-        this.row_holder = $("<tbody></tbody>").appendTo(this.table);
+        this.theme.addTableHeader(this.table, headers);
+        this.row_holder = this.theme.addTableBody(this.table);
       }
       else {
         // Indent the editor so it's easy to see the nested relationships
-        this.div.css({
-          paddingLeft: 10,
-          marginLeft: 10,
-          borderLeft: '1px solid #ccc'
-        });
+        this.theme.indentChildEditor(this.div);
 
         this.row_holder = $("<div>").appendTo(this.div);
       }
 
-      this.controls = $("<div></div>").addClass('btn-group').appendTo(this.div);
+      this.controls = this.theme.getControls().appendTo(this.div);
 
       // If a child editor changes, update this one's value
       this.row_holder.on('change',function() {
@@ -652,7 +779,7 @@
     },
     addControls: function() {
       var self = this;
-      this.toggle_button = $("<button>Toggle All</button>").appendTo(this.title_controls).css({marginLeft: 20}).addClass('toggle-all btn').attr('data-toggle','shown').on('click',function(e) {
+      this.toggle_button = this.theme.getButton('Toggle All').appendTo(this.title_controls).css({marginLeft: 20}).addClass('toggle-all').attr('data-toggle','shown').on('click',function(e) {
         if($(this).attr('data-toggle')==='shown') {
           $(this).attr('data-toggle','hidden');
 
@@ -686,34 +813,28 @@
       });
 
       // Add "new row" and "delete last" buttons below editor
-      this.add_row_button = $("<button></button>")
-        .text('Add '+(this.schema.items.title || this.schema.items.id || this.schema.title || this.schema.id || this.key))
+      this.add_row_button = this.theme.getButton('Add '+(this.schema.items.title || this.schema.items.id || this.schema.title || this.schema.id || this.key))
         .on('click',function() {
           self.addRow();
           self.refresh();
           self.div.trigger('change');
         })
-        .addClass('btn')
         .appendTo(self.controls);
 
-      this.delete_last_row_button = $("<button></button>")
-        .text('Delete Last '+(this.schema.items.title || this.schema.items.id || this.schema.title || this.schema.id || this.key))
+      this.delete_last_row_button = this.theme.getButton('Delete Last '+(this.schema.items.title || this.schema.items.id || this.schema.title || this.schema.id || this.key))
         .on('click',function() {
           var rows = self.getValue();
           rows.pop();
           self.setValue(rows);
           self.div.trigger('change');
         })
-        .addClass('btn')
         .appendTo(self.controls);
 
-      this.remove_all_rows_button = $("<button></button>")
-        .text('Delete All Rows')
+      this.remove_all_rows_button = this.theme.getButton('Delete All Rows')
         .on('click',function() {
           self.setValue([]);
           self.div.trigger('change');
         })
-        .addClass('btn')
         .appendTo(self.controls);
 
       // Make rows sortable
@@ -783,9 +904,8 @@
       });
 
       // Buttons to delete row, move row up, and move row down
-      self.rows[i].delete_button = $("<button></button>")
-        .text('Delete '+(self.schema.items.title||self.schema.items.id||self.schema.title||self.schema.id||self.key))
-        .addClass('btn delete')
+      self.rows[i].delete_button = this.theme.getButton('Delete '+(self.schema.items.title||self.schema.items.id||self.schema.title||self.schema.id||self.key))
+        .addClass('delete')
         .data('i',i)
         .on('click',function() {
           var i = $(this).data('i');
@@ -800,10 +920,9 @@
           self.setValue(newval);
           self.div.trigger('change');
         });
-      self.rows[i].moveup_button = $("<button></button>")
-        .text('Move up')
+      self.rows[i].moveup_button = this.theme.getButton('Move up')
         .data('i',i)
-        .addClass('btn moveup')
+        .addClass('moveup')
         .on('click',function() {
           var i = $(this).data('i');
 
@@ -816,9 +935,8 @@
           self.setValue(rows);
           self.div.trigger('change');
         });
-      self.rows[i].movedown_button = $("<button></button>")
-        .text('Move down')
-        .addClass('btn movedown')
+      self.rows[i].movedown_button = this.theme.getButton('Move down')
+        .addClass('movedown')
         .data('i',i)
         .on('click',function() {
           var i = $(this).data('i');
@@ -837,7 +955,7 @@
 
       // In the table format, action buttons go in a column to the far right
       if(this.options.table_format) {
-        controls_holder = $("<div class='btn-group'>").appendTo($("<td></td>").appendTo(self.rows[i].div));
+        controls_holder = this.theme.getControls().appendTo(this.theme.getTableCell().appendTo(self.rows[i].div));
       }
       // In the div layout, buttons go next to the title
       else {
@@ -853,6 +971,7 @@
         var row = this.rows[this.rows.length-1];
 
         // Hide labels, headers, wells, make inputs shorter
+        // TODO: use theme
         $('label,h1,h2,h3,h4,h5,h6',row.div).remove();
         $('.well',row.div).removeClass('well').css({
           marginLeft: 0,
@@ -860,6 +979,7 @@
         });
 
         // Make inputs small and remove bottom margins
+        // TODO: use theme
         $('.input-xxlarge',row.div).removeClass('input-xxlarge').css('margin-bottom',0);
         $('select',row.div).css('margin-bottom',0);
       }
@@ -982,7 +1102,7 @@
         if(self.options.table_format) {
           self.row_holder.sortable({
             items: 'tr',
-            placeholder: '<tr><td>&nbsp;</td></tr>',
+            placeholder: '<tr>'+self.theme.getTableCell().html('&nbsp;')+'</tr>',
             forcePlaceholderSize: true
           });
         }
