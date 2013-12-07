@@ -239,6 +239,8 @@
       if(['email','url','text'].indexOf(this.input_type) >= 0) {
         this.input.addClass('input-xxlarge')
       }
+      
+      return field;
     },
     addFormInputControl: function(div,label,field) {
       if(field.attr('type')==='checkbox') {
@@ -1089,27 +1091,32 @@
         // Get the value for this editor
         self.value[i] = editor.getValue();
       });
-
-      // Hide delete buttons if there aren't any rows
+      
       if(!this.value.length) {
         this.delete_last_row_button.hide();
         this.remove_all_rows_button.hide();
       }
-      else if(this.value.length === 1) {
-        this.delete_last_row_button.show();
-        this.remove_all_rows_button.hide();
-      }
-      else {
-        this.delete_last_row_button.show();
-        this.remove_all_rows_button.show();
-      }
+      else if(this.value.length === 1) {      
+        this.remove_all_rows_button.hide();  
 
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems) {
-        this.delete_last_row_button.hide();
+        // If there are minItems items in the array, hide the delete button beneath the rows
+        if(minItems) {
+          this.delete_last_row_button.hide();
+        }
+        else {
+          this.delete_last_row_button.show();
+        }
       }
       else {
-        this.delete_last_row_button.show();
+        // If there are minItems items in the array, hide the delete button beneath the rows
+        if(minItems) {
+          this.delete_last_row_button.hide();
+          this.delete_last_row_button.hide();
+        }
+        else {
+          this.delete_last_row_button.show();
+          this.remove_all_rows_button.show();
+        }
       }
 
       // If there are maxItems in the array, hide the add button beneath the rows
