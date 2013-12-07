@@ -176,7 +176,7 @@ A unique feature of JSON Editor is the support for template macros.  This lets y
   "id": "person",
   "properties": {
     "fname": {
-      "title: "First Name",
+      "title": "First Name",
       "type": "string"
     },
     "lname": {
