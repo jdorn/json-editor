@@ -4,7 +4,7 @@
     <title>JSON Editor Example</title>
     <link rel='stylesheet' href='//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css'>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src='jquery.jsoneditor.js'></script>
+    <script src='dist/jquery.jsoneditor.min.js'></script>
 </head>
 <body>
 <div class='container'>
@@ -28,6 +28,22 @@
             <p>You can change the schema and see how the generated form looks.  After you make changes, click <button class='btn btn-primary' id='setschema'>Update Schema</button></p>
 
             <textarea id='schema' style='width: 100%; height: 450px; font-family: monospace;'></textarea>
+        </div>
+    </div>
+    <div class='row'>
+        <div class='span12'>
+            <h2>Code</h2>
+            <pre><code>// Initialize the editor
+$("#editor").jsoneditor({
+   schema: {...} 
+});
+
+// Set the value
+$("#editor").jsoneditor('value',{...});
+
+// Get the value
+var data = $("#editor").jsoneditor('value');
+</code></pre>
         </div>
     </div>
 </div>
@@ -96,7 +112,8 @@
             schema: schema,
             startval: {
                 name: "John Smith"
-            }
+            },
+            theme: 'bootstrap2'
         });
 
         // Display the initial schema

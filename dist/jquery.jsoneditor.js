@@ -43,7 +43,8 @@
  * $("#editor").jsoneditor('destroy');
  */
 
-(function($) {
+(function($) {  
+
   /* Simple JavaScript Inheritance
    * By John Resig http://ejohn.org/
    * MIT Licensed.
@@ -154,216 +155,6 @@
     }
   };
   
-  $.jsoneditor.AbstractTheme = Class.extend({
-    getFormInputField: function(type) {
-      return $("<input type='"+type+"'>");
-    },
-    getFormInputLabel: function(text) {
-      return $("<label>").text(text);
-    },
-    addFormInputControl: function(div,label,field) {
-      div.append(label);
-      div.append(field);
-    },
-    getTable: function() {
-      return $("<table>");
-    },
-    addTableHeader: function(table, cols) {
-      var header = $("<thead>").appendTo(table);
-      
-      var header_row = $("<tr>").appendTo(header);
-      $.each(cols,function(i,col) {
-        header_row.append($("<th>").text(col));
-      });
-      
-      return header;
-    },
-    addTableBody: function(table) {
-      return $("<tbody>").appendTo(table);
-    },
-    getTableRow: function() {
-      return $("<tr>");
-    },
-    getTableCell: function() {
-      return $("<td>");
-    },
-    getSelectInput: function() {
-      return $("<select>");
-    },
-    getFormOutput: function() {
-      return $("<output></output>").css({
-        paddingLeft: '10px'
-      });
-    },
-    getTextareaInput: function() {
-      return $("<textarea>").css({
-        width: '100%',
-        height: this.options.height || 150
-      });
-    },
-    getSelectOption: function(val) {
-      return $("<option>").text(val).attr('value',val);
-    },
-    indentDiv: function(div) {
-      div.css({
-        paddingLeft: 10,
-        marginLeft: 10,
-        borderLeft: '1px solid #ccc'
-      });
-    },
-    getTitle: function(text) {
-      return $("<h2>").text(text);
-    },
-    getTitleControls: function() {
-      return $("<div style='display:inline-block;'></div>");
-    },
-    getControls: function() {
-      return $("<div>");
-    },
-    getButton: function(text) {
-      return $("<button>").text(text);
-    },
-    getChildEditorHolder: function() {
-      return $("<div></div>").css({
-        border: '1px solid #ccc',
-        padding: '10px'
-      });
-    }
-  });
-  
-  $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
-    getFormInputField: function(type) {
-      var field = this._super(type);
-      
-      // Some input formats should use a large input field
-      if(['email','url','text'].indexOf(this.input_type) >= 0) {
-        this.input.addClass('input-xxlarge')
-      }
-      
-      return field;
-    },
-    addFormInputControl: function(div,label,field) {
-      if(field.attr('type')==='checkbox') {
-        label.addClass('checkbox');
-        label.append(field);
-        div.append(label);
-      }
-      else {
-        this._super(div, label, field);
-      }
-    },
-    getTable: function() {
-      return this._super().addClass('table table-bordered').css({
-        maxWidth: 'none',
-        width: 'auto'
-      });
-    },
-    getControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getTitleControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getButton: function(text) {
-      return this._super(text).addClass('btn');
-    },
-    getChildEditorHolder: function() {
-      return $("<div>").addClass('well well-small');
-    }
-  });
-  
-  $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
-    addFormInputControl: function(div,label,field) {
-      if(field.attr('type')==='checkbox') {
-        label.append(field);
-        div.addClass('checkbox').append(label);
-      }
-      else {
-        div.addClass('form-group').append(label).append(field);
-      }
-    },
-    getSelectInput: function() {
-      return $("<select>").addClass('form-control');
-    },
-    getTable: function() {
-      return this._super().addClass('table table-bordered').css({
-        maxWidth: 'none',
-        width: 'auto'
-      });
-    },
-    getFormOutput: function() {
-      return $("<output></output>").css({
-        paddingLeft: '10px',
-        display: 'inline-block'
-      });
-    },
-    getFormInputField: function(type) {
-      var field = this._super(type);
-      
-      if(type === 'range') {
-        field.css('margin-left','5px').css('margin-top','5px');
-      }
-      else if(type === 'color') {
-        field.css('margin-left','5px')
-      }
-      else if(type === 'checkbox') {
-        field.css('margin-left','5px')
-      }
-      else {
-        field.addClass('form-control');
-      }
-      
-      return field;
-    },
-    getControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getTitleControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getButton: function(text) {
-      return this._super(text).addClass('btn btn-default');
-    },
-    getChildEditorHolder: function() {
-      return $("<div>").addClass('well well-small');
-    }
-  });
-  
-  $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
-    addTableHeader: function(table, cols) {
-      var header = this._super(table, cols);
-      $("th",header).addClass('ui-state-default').css({
-        fontWeight: 'bold'
-      });
-      return header;
-    },
-    getTableCell: function() {
-      return this._super().addClass('ui-widget-content');
-    },
-    getTitleControls: function() {
-      return this._super().addClass('ui-buttonset').css({
-        fontSize: '.45em'
-      });
-    },
-    getFormInputLabel: function(text) {
-      return this._super(text).css({
-        marginRight: '5px'
-      });
-    },
-    getControls: function() {
-      return this._super().addClass('ui-buttonset');
-    },
-    getButton: function(text) {
-      return $("<button>").addClass('ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only').append(
-        $("<span>").addClass('ui-button-text').text(text)
-      );
-    },
-    getChildEditorHolder: function() {
-      return $("<div>").addClass('ui-widget-content ui-corner-all').css({
-        padding: '1em 1.4em'
-      });
-    }
-  });
 
   /**
    * All editors should extend from this class
@@ -458,148 +249,6 @@
       this.key = null;
       this.parent = null;
       this.div = null;
-    }
-  });
-
-  /**
-   * Editor for schemas of type 'object'
-   * { type: "object", properties: {} }
-   */
-  $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
-    default: {},
-    init: function(options) {
-      if(options.table_row) options.tag = 'tr';
-      this._super(options);
-    },
-    initialize: function() {
-      var self = this;
-      this.value = {};
-
-      // If this should be rendered as a table row
-      if(this.options.table_row) {
-        this.editor_holder = this.div;
-      }
-      // If it should be rendered as a div
-      else {
-        this.theme.indentDiv(this.div);
-
-
-        // Add a title and placeholder for action buttons
-        this.title = this.theme.getTitle(this.schema.title || this.schema.id || this.key).appendTo(this.div);
-        this.title_controls = this.theme.getTitleControls().appendTo(this.title);
-
-        // Add toggle button to collapse/expand object
-        this.toggle_button = this.theme.getButton('Toggle').addClass('toggle').appendTo(this.title_controls).attr('data-toggle','shown').css({marginLeft: 20}).on('click',function(e) {
-          if($(this).attr('data-toggle')==='hidden') {
-            $(this).attr('data-toggle','shown');
-            self.editor_holder.show(300);
-          }
-          else {
-            $(this).attr('data-toggle','hidden');
-            self.editor_holder.hide(300);
-          }
-
-          e.stopPropagation();
-          e.preventDefault();
-          return false;
-        });
-
-        // Put all child editors within a well
-        this.editor_holder = this.theme.getChildEditorHolder().appendTo(this.div);
-      }
-
-      // Add child editors
-      this.editors = {};
-      $.each(this.schema.properties,function(key,schema) {
-        var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
-        self.editors[key] = new editor({
-          jsoneditor: self.jsoneditor,
-          schema: schema,
-          container: self.editor_holder,
-          path: self.path+'.'+key,
-          parent: self,
-          tag: (self.options.table_row? 'td' : 'div')
-        });
-      });
-
-      // If a child editor changes, update this one's value
-      self.editor_holder.on('change',function() {
-        self.refresh();
-      });
-
-      this.refresh();
-
-      if(this.options.collapsed && this.toggle_button) this.toggle_button.trigger('click');
-    },
-    /**
-     * Re-calculate value from child editors
-     */
-    refresh: function() {
-      var self = this;
-      this.value = {};
-      $.each(this.editors,function(key,editor) {
-        self.value[key] = editor.getValue();
-      });
-    },
-    setValue: function(value) {
-      value = value || {};
-      $.each(this.editors,function(key,editor) {
-        if(typeof value[key] !== "undefined") {
-          editor.setValue(value[key]);
-        }
-      });
-      this.refresh();
-    },
-    getValue: function() {
-      return $.extend({},this.value);
-    },
-    destroy: function() {
-      var self = this;
-      $.each(this.editors,function(i,editor) {
-        editor.destroy();
-        self.editors[i] = null;
-      });
-      self.editors = null;
-
-      this._super();
-    }
-  });
-
-  // Boolean Editor (simple checkbox)
-  $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
-    default: false,
-    initialize: function() {
-      var self = this;
-
-      this.value = false;
-
-      this.input_holder = $("<div></div>").css({
-        padding: '10px 0'
-      }).appendTo(this.div);
-      
-      this.label = this.theme.getFormInputLabel(this.schema.title || this.schema.id || this.key);
-      this.input = this.theme.getFormInputField('checkbox');
-      
-      this.theme.addFormInputControl(this.input_holder,this.label,this.input);
-
-      this.input
-        // data-schemapath is used by other editors to listen to changes
-        .attr('data-schemapath',this.path)
-        // data-schematype can be used to style different editors based on the string editor
-        .attr('data-schematype',this.schema.type)
-        //update the editor's value when it is changed
-        .on('change',function(e) {
-          self.updateValue();
-        });
-    },
-    updateValue: function() {
-      this.value = this.input.prop('checked');
-    },
-    setValue: function(val) {
-      if(val) this.input.prop('checked',true);
-      else this.input.prop('checked',false);
-
-      this.updateValue();
     }
   });
 
@@ -795,6 +444,168 @@
         });
         this.setValue(this.template(vars),true);
       }
+    }
+  });
+
+  $.jsoneditor.editors.number = $.jsoneditor.editors.string.extend({
+    sanitize: function(value) {
+      return (value+"").replace(/[^0-9\.\-]/g,'');
+    },
+    getValue: function() {
+      return this.value*1;
+    }
+  });
+
+  $.jsoneditor.editors.integer = $.jsoneditor.editors.string.extend({
+    sanitize: function(value) {
+      value = value + "";
+      return value.replace(/[^0-9\-]/g,'');
+    },
+    getValue: function() {
+      return this.value*1;
+    }
+  });
+
+
+  // Boolean Editor (simple checkbox)
+  $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
+    default: false,
+    initialize: function() {
+      var self = this;
+
+      this.value = false;
+
+      this.input_holder = $("<div></div>").css({
+        padding: '10px 0'
+      }).appendTo(this.div);
+      
+      this.label = this.theme.getFormInputLabel(this.schema.title || this.schema.id || this.key);
+      this.input = this.theme.getFormInputField('checkbox');
+      
+      this.theme.addFormInputControl(this.input_holder,this.label,this.input);
+
+      this.input
+        // data-schemapath is used by other editors to listen to changes
+        .attr('data-schemapath',this.path)
+        // data-schematype can be used to style different editors based on the string editor
+        .attr('data-schematype',this.schema.type)
+        //update the editor's value when it is changed
+        .on('change',function(e) {
+          self.updateValue();
+        });
+    },
+    updateValue: function() {
+      this.value = this.input.prop('checked');
+    },
+    setValue: function(val) {
+      if(val) this.input.prop('checked',true);
+      else this.input.prop('checked',false);
+
+      this.updateValue();
+    }
+  });
+
+  /**
+   * Editor for schemas of type 'object'
+   * { type: "object", properties: {} }
+   */
+  $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
+    default: {},
+    init: function(options) {
+      if(options.table_row) options.tag = 'tr';
+      this._super(options);
+    },
+    initialize: function() {
+      var self = this;
+      this.value = {};
+
+      // If this should be rendered as a table row
+      if(this.options.table_row) {
+        this.editor_holder = this.div;
+      }
+      // If it should be rendered as a div
+      else {
+        this.theme.indentDiv(this.div);
+
+
+        // Add a title and placeholder for action buttons
+        this.title = this.theme.getTitle(this.schema.title || this.schema.id || this.key).appendTo(this.div);
+        this.title_controls = this.theme.getTitleControls().appendTo(this.title);
+
+        // Add toggle button to collapse/expand object
+        this.toggle_button = this.theme.getButton('Toggle').addClass('toggle').appendTo(this.title_controls).attr('data-toggle','shown').css({marginLeft: 20}).on('click',function(e) {
+          if($(this).attr('data-toggle')==='hidden') {
+            $(this).attr('data-toggle','shown');
+            self.editor_holder.show(300);
+          }
+          else {
+            $(this).attr('data-toggle','hidden');
+            self.editor_holder.hide(300);
+          }
+
+          e.stopPropagation();
+          e.preventDefault();
+          return false;
+        });
+
+        // Put all child editors within a well
+        this.editor_holder = this.theme.getChildEditorHolder().appendTo(this.div);
+      }
+
+      // Add child editors
+      this.editors = {};
+      $.each(this.schema.properties,function(key,schema) {
+        var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+        self.editors[key] = new editor({
+          jsoneditor: self.jsoneditor,
+          schema: schema,
+          container: self.editor_holder,
+          path: self.path+'.'+key,
+          parent: self,
+          tag: (self.options.table_row? 'td' : 'div')
+        });
+      });
+
+      // If a child editor changes, update this one's value
+      self.editor_holder.on('change',function() {
+        self.refresh();
+      });
+
+      this.refresh();
+
+      if(this.options.collapsed && this.toggle_button) this.toggle_button.trigger('click');
+    },
+    /**
+     * Re-calculate value from child editors
+     */
+    refresh: function() {
+      var self = this;
+      this.value = {};
+      $.each(this.editors,function(key,editor) {
+        self.value[key] = editor.getValue();
+      });
+    },
+    setValue: function(value) {
+      value = value || {};
+      $.each(this.editors,function(key,editor) {
+        if(typeof value[key] !== "undefined") {
+          editor.setValue(value[key]);
+        }
+      });
+      this.refresh();
+    },
+    getValue: function() {
+      return $.extend({},this.value);
+    },
+    destroy: function() {
+      var self = this;
+      $.each(this.editors,function(i,editor) {
+        editor.destroy();
+        self.editors[i] = null;
+      });
+      self.editors = null;
+
+      this._super();
     }
   });
 
@@ -1198,23 +1009,216 @@
     }
   });
 
-  // String editor derivatives
-  $.jsoneditor.editors.number = $.jsoneditor.editors.string.extend({
-    sanitize: function(value) {
-      return (value+"").replace(/[^0-9\.\-]/g,'');
+  $.jsoneditor.AbstractTheme = Class.extend({
+    getFormInputField: function(type) {
+      return $("<input type='"+type+"'>");
     },
-    getValue: function() {
-      return this.value*1;
+    getFormInputLabel: function(text) {
+      return $("<label>").text(text);
+    },
+    addFormInputControl: function(div,label,field) {
+      div.append(label);
+      div.append(field);
+    },
+    getTable: function() {
+      return $("<table>");
+    },
+    addTableHeader: function(table, cols) {
+      var header = $("<thead>").appendTo(table);
+      
+      var header_row = $("<tr>").appendTo(header);
+      $.each(cols,function(i,col) {
+        header_row.append($("<th>").text(col));
+      });
+      
+      return header;
+    },
+    addTableBody: function(table) {
+      return $("<tbody>").appendTo(table);
+    },
+    getTableRow: function() {
+      return $("<tr>");
+    },
+    getTableCell: function() {
+      return $("<td>");
+    },
+    getSelectInput: function() {
+      return $("<select>");
+    },
+    getFormOutput: function() {
+      return $("<output></output>").css({
+        paddingLeft: '10px'
+      });
+    },
+    getTextareaInput: function() {
+      return $("<textarea>").css({
+        width: '100%',
+        height: this.options.height || 150
+      });
+    },
+    getSelectOption: function(val) {
+      return $("<option>").text(val).attr('value',val);
+    },
+    indentDiv: function(div) {
+      div.css({
+        paddingLeft: 10,
+        marginLeft: 10,
+        borderLeft: '1px solid #ccc'
+      });
+    },
+    getTitle: function(text) {
+      return $("<h2>").text(text);
+    },
+    getTitleControls: function() {
+      return $("<div style='display:inline-block;'></div>");
+    },
+    getControls: function() {
+      return $("<div>");
+    },
+    getButton: function(text) {
+      return $("<button>").text(text);
+    },
+    getChildEditorHolder: function() {
+      return $("<div></div>").css({
+        border: '1px solid #ccc',
+        padding: '10px'
+      });
     }
   });
-  $.jsoneditor.editors.integer = $.jsoneditor.editors.string.extend({
-    sanitize: function(value) {
-      value = value + "";
-      return value.replace(/[^0-9\-]/g,'');
+
+  $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
+    getFormInputField: function(type) {
+      var field = this._super(type);
+      
+      // Some input formats should use a large input field
+      if(['email','url','text'].indexOf(this.input_type) >= 0) {
+        this.input.addClass('input-xxlarge')
+      }
+      
+      return field;
     },
-    getValue: function() {
-      return this.value*1;
+    addFormInputControl: function(div,label,field) {
+      if(field.attr('type')==='checkbox') {
+        label.addClass('checkbox');
+        label.append(field);
+        div.append(label);
+      }
+      else {
+        this._super(div, label, field);
+      }
+    },
+    getTable: function() {
+      return this._super().addClass('table table-bordered').css({
+        maxWidth: 'none',
+        width: 'auto'
+      });
+    },
+    getControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getTitleControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getButton: function(text) {
+      return this._super(text).addClass('btn');
+    },
+    getChildEditorHolder: function() {
+      return $("<div>").addClass('well well-small');
     }
   });
+
+  $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
+    addFormInputControl: function(div,label,field) {
+      if(field.attr('type')==='checkbox') {
+        label.append(field);
+        div.addClass('checkbox').append(label);
+      }
+      else {
+        div.addClass('form-group').append(label).append(field);
+      }
+    },
+    getSelectInput: function() {
+      return $("<select>").addClass('form-control');
+    },
+    getTable: function() {
+      return this._super().addClass('table table-bordered').css({
+        maxWidth: 'none',
+        width: 'auto'
+      });
+    },
+    getFormOutput: function() {
+      return $("<output></output>").css({
+        paddingLeft: '10px',
+        display: 'inline-block'
+      });
+    },
+    getFormInputField: function(type) {
+      var field = this._super(type);
+      
+      if(type === 'range') {
+        field.css('margin-left','5px').css('margin-top','5px');
+      }
+      else if(type === 'color') {
+        field.css('margin-left','5px')
+      }
+      else if(type === 'checkbox') {
+        field.css('margin-left','5px')
+      }
+      else {
+        field.addClass('form-control');
+      }
+      
+      return field;
+    },
+    getControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getTitleControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getButton: function(text) {
+      return this._super(text).addClass('btn btn-default');
+    },
+    getChildEditorHolder: function() {
+      return $("<div>").addClass('well well-small');
+    }
+  });
+
+  $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
+    addTableHeader: function(table, cols) {
+      var header = this._super(table, cols);
+      $("th",header).addClass('ui-state-default').css({
+        fontWeight: 'bold'
+      });
+      return header;
+    },
+    getTableCell: function() {
+      return this._super().addClass('ui-widget-content');
+    },
+    getTitleControls: function() {
+      return this._super().addClass('ui-buttonset').css({
+        fontSize: '.45em'
+      });
+    },
+    getFormInputLabel: function(text) {
+      return this._super(text).css({
+        marginRight: '5px'
+      });
+    },
+    getControls: function() {
+      return this._super().addClass('ui-buttonset');
+    },
+    getButton: function(text) {
+      return $("<button>").addClass('ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only').append(
+        $("<span>").addClass('ui-button-text').text(text)
+      );
+    },
+    getChildEditorHolder: function() {
+      return $("<div>").addClass('ui-widget-content ui-corner-all').css({
+        padding: '1em 1.4em'
+      });
+    }
+  });
+
 
 })(jQuery);
