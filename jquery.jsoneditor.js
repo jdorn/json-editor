@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1.7 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.1.8 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -112,7 +112,7 @@
       schema: schema,
       options: options,
       definitions: {},
-      theme: new $.jsoneditor.themes[options.theme || 'bootstrap']()
+      theme: new $.jsoneditor.themes[options.theme || 'bootstrap2']()
     };
     $this.data('jsoneditor',d);
 
@@ -187,6 +187,23 @@
     getTableCell: function() {
       return $("<td>");
     },
+    getSelectInput: function() {
+      return $("<select>");
+    },
+    getFormOutput: function() {
+      return $("<output></output>").css({
+        paddingLeft: '10px'
+      });
+    },
+    getTextareaInput: function() {
+      return $("<textarea>").css({
+        width: '100%',
+        height: this.options.height || 150
+      });
+    },
+    getSelectOption: function(val) {
+      return $("<option>").text(val).attr('value',val);
+    },
     indentDiv: function(div) {
       div.css({
         paddingLeft: 10,
@@ -214,7 +231,15 @@
     }
   });
   
-  $.jsoneditor.themes.bootstrap = $.jsoneditor.AbstractTheme.extend({
+  $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
+    getFormInputField: function(type) {
+      var field = this._super(type);
+      
+      // Some input formats should use a large input field
+      if(['email','url','text'].indexOf(this.input_type) >= 0) {
+        this.input.addClass('input-xxlarge')
+      }
+    },
     addFormInputControl: function(div,label,field) {
       if(field.attr('type')==='checkbox') {
         label.addClass('checkbox');
@@ -245,6 +270,63 @@
     }
   });
   
+  $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
+    addFormInputControl: function(div,label,field) {
+      if(field.attr('type')==='checkbox') {
+        label.append(field);
+        div.addClass('checkbox').append(label);
+      }
+      else {
+        div.addClass('form-group').append(label).append(field);
+      }
+    },
+    getSelectInput: function() {
+      return $("<select>").addClass('form-control');
+    },
+    getTable: function() {
+      return this._super().addClass('table table-bordered').css({
+        maxWidth: 'none',
+        width: 'auto'
+      });
+    },
+    getFormOutput: function() {
+      return $("<output></output>").css({
+        paddingLeft: '10px',
+        display: 'inline-block'
+      });
+    },
+    getFormInputField: function(type) {
+      var field = this._super(type);
+      
+      if(type === 'range') {
+        field.css('margin-left','5px').css('margin-top','5px');
+      }
+      else if(type === 'color') {
+        field.css('margin-left','5px')
+      }
+      else if(type === 'checkbox') {
+        field.css('margin-left','5px')
+      }
+      else {
+        field.addClass('form-control');
+      }
+      
+      return field;
+    },
+    getControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getTitleControls: function() {
+      return this._super().addClass('btn-group');
+    },
+    getButton: function(text) {
+      return this._super(text).addClass('btn btn-default');
+    },
+    getChildEditorHolder: function() {
+      return $("<div>").addClass('well well-small');
+    }
+  });
+  
   $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
     addTableHeader: function(table, cols) {
       var header = this._super(table, cols);
@@ -259,6 +341,11 @@
     getTitleControls: function() {
       return this._super().addClass('ui-buttonset').css({
         fontSize: '.45em'
+      });
+    },
+    getFormInputLabel: function(text) {
+      return this._super(text).css({
+        marginRight: '5px'
       });
     },
     getControls: function() {
@@ -534,21 +621,15 @@
       // Select box
       if(this.schema.enum) {
         this.input_type = 'select';
-        // TODO: use theme
-        this.input = $("<select></select>").css('width','auto');
+        this.input = this.theme.getSelectInput().css('width','auto');
         $.each(this.schema.enum,function(i,val) {
-          // TODO: use theme
-          self.input.append($("<option value='"+val+"'>"+val+"</option>"));
+          self.input.append(self.theme.getSelectOption(val))
         });
       }
       // Text Area
       else if(this.options.textarea) {
         this.input_type = 'textarea';
-        // TODO: use theme
-        this.input = $("<textarea>").css({
-          width: '100%',
-          height: this.options.height || 150
-        });
+        this.input = this.theme.getTextareaInput();
       }
       // Text input
       else {
@@ -562,12 +643,6 @@
           this.input.css({
             marginBottom: '10px'
           });
-        }
-
-        // Some input formats should use a large input field
-        if(['email','url','text'].indexOf(this.input_type) >= 0) {
-          // TODO: use theme
-          this.input.addClass('input-xxlarge')
         }
       }
 
@@ -598,10 +673,7 @@
 
       // For input type='range', we need to display the value after the input
       if(this.input_type === 'range') {
-        // TODO: use theme
-        this.output = $("<output></output>").insertAfter(this.input).css({
-          paddingLeft: '10px'
-        });
+        this.output = this.theme.getFormOutput().insertAfter(this.input);
       }
 
       // If this schema is based on a macro template, set that up

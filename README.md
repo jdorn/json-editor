@@ -240,6 +240,26 @@ $.jsoneditor.template = {
 
 JSON Editor should work with any other templating engine as well.
 
+Themes
+----------------
+JSON Editor can integrate with several different CSS frameworks out of the box.
+
+The currently supported themes are:
+
+*  bootstrap2 (the default)
+*  bootstrap3
+*  jqueryui
+
+```js
+$("#editor_holder").jsoneditor({
+  schema: schema,
+  theme: 'jqueryui'
+});
+```
+
+There are plans to add additional themes for Foundation 4/5, jQuery Mobile, and Skeleton in the near future.
+
+It is also possible to add your own custom themes.
 
 Editors
 -----------------
@@ -249,39 +269,33 @@ Each primitive type has its own editor.  A different editor can be used by setti
 {
   "type": "array",
   "editor": "table",
-  "properties": {
-    "name": {
-      "type": "string"
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      }
     }
   }
 }
 ```
 
-It is easy to add your own custom editors as well.
+It is possible to add your own custom editors as well.
 
-### Creating a Custom Editor
+### Editor Options
 
-All editors must extend the `$.jsoneditor.AbstractEditor` class and must implement the `setValue` and `getValue` methods.  Here's a really simple example `textarea` editor:
+Some editors accept options which alter the behavior in some way.
 
-```js
-$.jsoneditor.editors.textarea = $.jsoneditor.AbstractEditor.extend({
-  initialize: function() {
-    this.input = $("<textarea>").appendTo(this.div);
-  },
-  getValue: function() {
-    return this.input.val();
-  },
-  setValue: function(value) {
-    this.input.val(value);
-  }
-});
-```
+Right now, there are only 2 options:
 
-In your JSON schema, you would specify this custom editor like this:
+*  `collapsed` - If set to true for the `object`, `array`, or `table` editor, child editors will be collapsed by default.
+*  `textarea` - If set to true for the `string` editor, a textarea will be used instead of a normal text input.
 
 ```json
 {
   "type": "string",
-  "editor": "textarea"
+  "options": {
+    "textarea": true
+  }
 }
 ```
