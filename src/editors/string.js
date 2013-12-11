@@ -35,8 +35,18 @@
 
         // Set the min/max for format="range"
         if(this.input_type === 'range') {
-          this.input.attr('min',(this.schema.minimum || 0));
-          this.input.attr('max',(this.schema.maximum || 100));
+          var min = this.schema.minimum || 0;
+          var max = this.schema.maximum || 100;
+
+          // If multipleOf is set, make sure minimum and maximum are multiples of multipleOf
+          if(this.schema.multipleOf) {
+            if(min%this.schema.multipleOf) min = Math.ceil(min/this.schema.multipleOf)*this.schema.multipleOf;
+            if(max%this.schema.multipleOf) max = Math.floor(max/this.schema.multipleOf)*this.schema.multipleOf;
+            this.input.attr('step',this.schema.multipleOf);
+          }
+
+          this.input.attr('min',min);
+          this.input.attr('max',max);
           this.input.css({
             marginBottom: '10px'
           });
