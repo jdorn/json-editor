@@ -54,12 +54,17 @@ $.fn.jsoneditor = function(options) {
 
   var editor_class = $.jsoneditor.getEditorClass(schema);
 
+  var theme_class = $.jsoneditor.themes[options.theme || $.jsoneditor.theme];
+
+  if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
+
   // Store info about the jsoneditor in the element
   var d = {
     schema: schema,
     options: options,
     definitions: {},
-    theme: new $.jsoneditor.themes[options.theme || 'bootstrap2']()
+    theme: new theme_class(),
+    template: options.template
   };
   $this.data('jsoneditor',d);
 
@@ -76,9 +81,16 @@ $.fn.jsoneditor = function(options) {
 };
 
 $.jsoneditor = {
-  template: window.swig,
+  // Defaults
+  template: null,
+  theme: 'bootstrap2',
+
+  // Presets
   editors: {},
+  templates: {},
   themes: {},
+
+  // Helper functions
   expandSchema: function(schema, editor) {
     if(schema['$ref']) {
       if(!schema['$ref'].match(/^#\/definitions\//g)) {
@@ -98,6 +110,28 @@ $.jsoneditor = {
     var editor = schema.editor || schema.type;
     if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
     return $.jsoneditor.editors[editor];
+  },
+  compileTemplate: function(template, name) {
+    name = name || $.jsoneditor.template;
+
+    var engine;
+
+    // Specifying a preset engine
+    if(typeof name === 'string') {
+      if(!$.jsoneditor.templates[name]) throw "Unknown template engine "+name;
+      engine = $.jsoneditor.templates[name]();
+
+      if(!engine) throw "Template engine "+name+" missing required library.";
+    }
+    // Specifying a custom engine
+    else {
+      engine = name;
+    }
+
+    if(!engine) throw "No template engine set";
+    if(!engine.compile) throw "Invalid template engine set";
+
+    return engine.compile(template);
   }
 };
 

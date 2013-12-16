@@ -22,10 +22,8 @@ Requirements
 
 ### Optional Requirements
 
+*  A javascript template engine for macro support (Mustache, Underscore, Hogan, Handlebars, Swig, or EJS)
 *  A compatible CSS Framework for styling (bootstrap 2, bootstrap 3, or jQueryUI)
-*  jQueryUI Sortable to enable drag and drop re-ordering of array elements
-*  HTML5 Input polyfills for older browser support
-*  A javascript templating engine to enable template macros (see below)
 
 Usage
 --------------
@@ -83,6 +81,7 @@ The following JSON schema keywords are supported.  All other keywords will be ig
 *  format
 *  minimum
 *  maximum
+*  multipleOf
 *  minItems
 *  maxItems
 
@@ -129,6 +128,7 @@ Currently, JSON Editor only supports schema references to the root node in the f
 JSON Editor supports the following values for the `format` parameter:
 
 *  text
+*  textarea
 *  hidden
 *  email
 *  url
@@ -159,7 +159,7 @@ Here is an example that will show a color picker in browsers that support it:
 }
 ```
 
-The `minimum` and `maximum` schema keywords are only used when the format is set to `range`.  For example, this will show a slider from 10 to 50:
+The `minimum`, `maximum`, and `multipleOf` schema keywords are only used when the format is set to `range`.  For example, this will show a slider from 10 to 50:
 
 ```json
 {
@@ -178,6 +178,16 @@ The `minimum` and `maximum` schema keywords are only used when the format is set
 Template Macros
 ------------------
 A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  Templates only work for fields of type `string`.
+
+Here are the supported template engines:
+
+*  mustache
+*  handlebars
+*  hogan
+*  swig
+*  underscore
+*  ejs
+
 
 ```json
 {
@@ -229,24 +239,21 @@ If there are no ancestor nodes with an `id` specified, the special keyword `root
 }
 ```
 
-For templates to work, you must include a javascript templating engine on the page.
-
-By default, templates are configured to use the powerful swig templating engine (https://github.com/paularmstrong/swig).
-
-You can use a different templating engine by overwriting the `$.jsoneditor.template` variable.  Here are examples for Handlebars and Mustache:
+JSON Editor will auto-detect which engine to use based on what libraries are loaded on the page.  You can manually set the template engine anytime by doing:
 
 ```js
-// Handlebars uses the same API as swig, so it's an easy replacement
-$.jsoneditor.template = Handlebars;
+$.jsoneditor.template = 'handlebars';
+```
 
-// Mustache needs a small wrapper object to work
-$.jsoneditor.template = {
-  compile: function(template) {
-    return function(view) {
-      return Mustache.render(template, view);
-    }
-  }
-};
+It's also possible to use a custom templating engine by setting `$.jsoneditor.template` to an object with a `compile` method.
+
+You can override the default on a per-instance basis by passing a `template` parameter in when initializing:
+
+```js
+$("#editor_holder").jsoneditor({
+  schema: schema,
+  template: 'hogan'
+});
 ```
 
 Themes
@@ -259,6 +266,10 @@ The currently supported themes are:
 *  bootstrap3
 *  jqueryui
 
+The default theme is `bootstrap2`, but this can be changed by setting the `$.jsoneditor.theme` variable.
+
+You can override the default on a per-instance basis by passing a `theme` parameter in when initializing:
+
 ```js
 $("#editor_holder").jsoneditor({
   schema: schema,
@@ -268,7 +279,6 @@ $("#editor_holder").jsoneditor({
 
 There are plans to add additional themes for Foundation 4/5, jQuery Mobile, and Skeleton in the near future.
 
-It is also possible to add your own custom themes.
 
 Editors
 -----------------
@@ -289,22 +299,24 @@ Each primitive type has its own editor.  A different editor can be used by setti
 }
 ```
 
-It is possible to add your own custom editors as well.
+It is possible to add your own custom editors as well.  Look at any of the included editor classes for examples.
 
 ### Editor Options
 
 Some editors accept options which alter the behavior in some way.
 
-Right now, there are only 2 options:
+Right now, there is only 1 supported option
 
 *  `collapsed` - If set to true for the `object`, `array`, or `table` editor, child editors will be collapsed by default.
-*  `textarea` - If set to true for the `string` editor, a textarea will be used instead of a normal text input.
 
 ```json
 {
-  "type": "string",
+  "type": "object",
   "options": {
-    "textarea": true
+    "collapsed": true
+  },
+  "properties": {
+
   }
 }
 ```

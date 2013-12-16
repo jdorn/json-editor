@@ -56,7 +56,8 @@ var data = $("#editor").jsoneditor('value');
     </div>
 </div>
 <script>
-    var theme = 'bootstrap2';
+    $.jsoneditor.theme = 'bootstrap2';
+
     var schema = {
         id: "person",
         title: "Person",
@@ -121,8 +122,7 @@ var data = $("#editor").jsoneditor('value');
             schema: schema,
             startval: {
                 name: "John Smith"
-            },
-            theme: theme
+            }
         });
 
         // Display the initial schema
@@ -139,8 +139,7 @@ var data = $("#editor").jsoneditor('value');
             }
 
             $("#editor").jsoneditor('destroy').jsoneditor({
-                schema: schema,
-                theme: theme
+                schema: schema
             });
         });
 

@@ -20,6 +20,10 @@ module.exports = function(grunt) {
           
           'src/theme.js',
           'src/themes/*.js',
+
+          'src/templates/*.js',
+
+          'src/defaults.js',
           
           'src/outro.js'
         ],

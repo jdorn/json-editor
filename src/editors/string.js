@@ -31,7 +31,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       this.input = this.theme.getSelectInput(this.schema.enum);
     }
     // Text Area
-    else if(this.options.textarea) {
+    else if(this.schema.format && this.schema.format == 'textarea') {
       this.input_type = 'textarea';
       this.input = this.theme.getTextareaInput();
     }
@@ -112,7 +112,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   setupTemplate: function() {
     // Compile and store the template
-    this.template = $.jsoneditor.template.compile(this.schema.template);
+    this.template = $.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
 
     // Prepare the template vars
     this.vars = {};

@@ -1,45 +1,12 @@
-/*! JSON Editor v0.2.0 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.2.1 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2013-12-15
+ * Date: 2013-12-16
  */
 
 /**
- * Requires jQuery.
- * Uses Bootstrap 2.X classnames for styling by default. Also supports Bootstrap 3 and jQueryUI.
- * A templating engine is required if you want to use macro templates.
- *
- * Supports a subset of the JSON Schema specification with a few extra
- * features and custom types as well.
- *
- * Example Usage:
- *
- * var schema = {
- *   type: "object",
- *   title: "Person",
- *   properties: {
- *     firstname: {
- *       type: "string"
- *     },
- *     age: {
- *       type: "integer"
- *     }
- *   }
- * };
- * $("#editor").jsoneditor({
- *   schema: schema
- * });
- *
- * $("#editor").jsoneditor('value',{
- *   firstname: "Jeremy",
- *   age: 24
- * });
- *
- * var value = $("#editor").jsoneditor('value');
- * console.log(value);
- *
- * $("#editor").jsoneditor('destroy');
+ * See README.md for requirements and usage info
  */
 
 (function($) {  
@@ -107,12 +74,17 @@ $.fn.jsoneditor = function(options) {
 
   var editor_class = $.jsoneditor.getEditorClass(schema);
 
+  var theme_class = $.jsoneditor.themes[options.theme || $.jsoneditor.theme];
+
+  if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
+
   // Store info about the jsoneditor in the element
   var d = {
     schema: schema,
     options: options,
     definitions: {},
-    theme: new $.jsoneditor.themes[options.theme || 'bootstrap2']()
+    theme: new theme_class(),
+    template: options.template
   };
   $this.data('jsoneditor',d);
 
@@ -129,9 +101,16 @@ $.fn.jsoneditor = function(options) {
 };
 
 $.jsoneditor = {
-  template: window.swig,
+  // Defaults
+  template: null,
+  theme: 'bootstrap2',
+
+  // Presets
   editors: {},
+  templates: {},
   themes: {},
+
+  // Helper functions
   expandSchema: function(schema, editor) {
     if(schema['$ref']) {
       if(!schema['$ref'].match(/^#\/definitions\//g)) {
@@ -151,100 +130,123 @@ $.jsoneditor = {
     var editor = schema.editor || schema.type;
     if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
     return $.jsoneditor.editors[editor];
+  },
+  compileTemplate: function(template, name) {
+    name = name || $.jsoneditor.template;
+
+    var engine;
+
+    // Specifying a preset engine
+    if(typeof name === 'string') {
+      if(!$.jsoneditor.templates[name]) throw "Unknown template engine "+name;
+      engine = $.jsoneditor.templates[name]();
+
+      if(!engine) throw "Template engine "+name+" missing required library.";
+    }
+    // Specifying a custom engine
+    else {
+      engine = name;
+    }
+
+    if(!engine) throw "No template engine set";
+    if(!engine.compile) throw "Invalid template engine set";
+
+    return engine.compile(template);
   }
 };
 
 
-  /**
-   * All editors should extend from this class
-   */
-  $.jsoneditor.AbstractEditor = Class.extend({
-    init: function(options) {
-      this.container = options.container;
-      this.jsoneditor = options.jsoneditor;
-      this.schema = options.schema;
-      this.schema = $.jsoneditor.expandSchema(this.schema,this.jsoneditor);
+/**
+ * All editors should extend from this class
+ */
+$.jsoneditor.AbstractEditor = Class.extend({
+  init: function(options) {
+    this.container = options.container;
+    this.jsoneditor = options.jsoneditor;
+    this.schema = options.schema;
+    this.schema = $.jsoneditor.expandSchema(this.schema,this.jsoneditor);
 
-      this.theme = this.jsoneditor.data('jsoneditor').theme;
+    this.theme = this.jsoneditor.data('jsoneditor').theme;
+    this.template_engine = this.jsoneditor.data('jsoneditor').template;
 
-      // Store schema definitions
-      if(this.schema.definitions) {
-        var definitions = this.jsoneditor.data('jsoneditor').definitions;
-        $.each(this.schema.definitions,function(key,schema) {
-          definitions[key] = schema;
-        });
-      }
-
-      this.options = $.extend(true, {}, (this.options || {}), (this.schema.options || {}), options);
-
-      if(!options.path && !this.schema.id) this.schema.id = 'root';
-      this.path = options.path || this.schema.id;
-      if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
-      this.container.data('editor',this);
-
-      this.key = this.path.split('.').pop();
-      this.parent = options.parent;
-
-      this.build();
-
-      if(typeof this.schema.default !== "undefined") this.setValue(this.schema.default);
-      else this.setValue(this.getDefault());
-    },
-
-    build: function() {
-
-    },
-    isValid: function(callback) {
-      callback();
-    },
-    setValue: function(value) {
-      this.value = value;
-    },
-    getValue: function() {
-      return this.value;
-    },
-    refreshValue: function() {
-
-    },
-    getChildEditors: function() {
-      return false;
-    },
-    destroy: function() {
-      this.value = null;
-      this.container = null;
-      this.jsoneditor = null;
-      this.schema = null;
-      this.path = null;
-      this.key = null;
-      this.parent = null;
-    },
-    getDefault: function() {
-      return null;
-    },
-
-    getTheme: function() {
-      return this.theme;
-    },
-    getSchema: function() {
-      return this.schema;
-    },
-    getContainer: function() {
-      return this.container;
-    },
-    getTitle: function() {
-      return this.schema.title || this.schema.id || this.key;
-    },
-    getPath: function() {
-      return this.path;
-    },
-    getParent: function() {
-      return this.parent;
-    },
-    getOption: function(key, def) {
-      if(typeof this.options[key] !== 'undefined') return this.options[key];
-      else return def;
+    // Store schema definitions
+    if(this.schema.definitions) {
+      var definitions = this.jsoneditor.data('jsoneditor').definitions;
+      $.each(this.schema.definitions,function(key,schema) {
+        definitions[key] = schema;
+      });
     }
-  });
+
+    this.options = $.extend(true, {}, (this.options || {}), (this.schema.options || {}), options);
+
+    if(!options.path && !this.schema.id) this.schema.id = 'root';
+    this.path = options.path || this.schema.id;
+    if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
+    this.container.data('editor',this);
+
+    this.key = this.path.split('.').pop();
+    this.parent = options.parent;
+
+    this.build();
+
+    if(typeof this.schema.default !== "undefined") this.setValue(this.schema.default);
+    else this.setValue(this.getDefault());
+  },
+
+  build: function() {
+
+  },
+  isValid: function(callback) {
+    callback();
+  },
+  setValue: function(value) {
+    this.value = value;
+  },
+  getValue: function() {
+    return this.value;
+  },
+  refreshValue: function() {
+
+  },
+  getChildEditors: function() {
+    return false;
+  },
+  destroy: function() {
+    this.value = null;
+    this.container = null;
+    this.jsoneditor = null;
+    this.schema = null;
+    this.path = null;
+    this.key = null;
+    this.parent = null;
+  },
+  getDefault: function() {
+    return null;
+  },
+
+  getTheme: function() {
+    return this.theme;
+  },
+  getSchema: function() {
+    return this.schema;
+  },
+  getContainer: function() {
+    return this.container;
+  },
+  getTitle: function() {
+    return this.schema.title || this.schema.id || this.key;
+  },
+  getPath: function() {
+    return this.path;
+  },
+  getParent: function() {
+    return this.parent;
+  },
+  getOption: function(key, def) {
+    if(typeof this.options[key] !== 'undefined') return this.options[key];
+    else return def;
+  }
+});
 
 $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
@@ -279,7 +281,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       this.input = this.theme.getSelectInput(this.schema.enum);
     }
     // Text Area
-    else if(this.options.textarea) {
+    else if(this.schema.format && this.schema.format == 'textarea') {
       this.input_type = 'textarea';
       this.input = this.theme.getTextareaInput();
     }
@@ -360,7 +362,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   setupTemplate: function() {
     // Compile and store the template
-    this.template = $.jsoneditor.template.compile(this.schema.template);
+    this.template = $.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
 
     // Prepare the template vars
     this.vars = {};
@@ -1594,5 +1596,68 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
   }
 });
 
+$.jsoneditor.templates.ejs = function() {
+  if(!window.EJS) return false;
+
+  return {
+    compile: function(template) {
+      var compiled = new EJS({
+        text: template
+      });
+
+      return function(context) {
+        return compiled.render(context);
+      };
+    }
+  };
+};
+$.jsoneditor.templates.handlebars = function() {
+  return window.Handlebars;
+};
+$.jsoneditor.templates.hogan = function() {
+  if(!window.Hogan) return false;
+
+  return {
+    compile: function(template) {
+      var compiled = Hogan.compile(template);
+      return function(context) {
+        return compiled.render(context);
+      }
+    }
+  };
+};
+$.jsoneditor.templates.mustache = function() {
+  if(!window.Mustache) return false;
+
+  return {
+    compile: function(template) {
+      return function(view) {
+        return Mustache.render(template, view);
+      }
+    }
+  };
+};
+$.jsoneditor.templates.swig = function() {
+  return window.swig;
+};
+$.jsoneditor.templates.underscore = function() {
+  if(!window._) return false;
+
+  return {
+    compile: function(template) {
+      return function(context) {
+        return _.template(template, context);
+      };
+    }
+  };
+};
+// Set the default template engine based on what libraries are loaded
+$.each($.jsoneditor.templates, function(key, template) {
+  // If this template is supported
+  if(template()) {
+    $.jsoneditor.template = key;
+    return false;
+  }
+});
 
 })(jQuery);
