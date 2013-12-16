@@ -6,7 +6,7 @@
   "devDependencies": {
     "grunt-contrib-concat": "~0.3.0",
     "grunt-contrib-uglify": "~0.2.0",
-    "grunt-contrib-watch": "~0.4.0",
+    "grunt-contrib-watch": "~0.5.3",
     "grunt": "~0.4.2"
   }
 }

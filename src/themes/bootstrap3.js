@@ -1,56 +1,57 @@
-  $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
-    addFormInputControl: function(div,label,field) {
-      if(field.attr('type')==='checkbox') {
-        label.append(field);
-        div.addClass('checkbox').append(label);
-      }
-      else {
-        div.addClass('form-group').append(label).append(field);
-      }
-    },
-    getSelectInput: function() {
-      return $("<select>").addClass('form-control');
-    },
-    getTable: function() {
-      return this._super().addClass('table table-bordered').css({
-        maxWidth: 'none',
-        width: 'auto'
-      });
-    },
-    getFormOutput: function() {
-      return $("<output></output>").css({
-        paddingLeft: '10px',
-        display: 'inline-block'
-      });
-    },
-    getFormInputField: function(type) {
-      var field = this._super(type);
-      
-      if(type === 'range') {
-        field.css('margin-left','5px').css('margin-top','5px');
-      }
-      else if(type === 'color') {
-        field.css('margin-left','5px')
-      }
-      else if(type === 'checkbox') {
-        field.css('margin-left','5px')
-      }
-      else {
-        field.addClass('form-control');
-      }
-      
-      return field;
-    },
-    getControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getTitleControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getButton: function(text) {
-      return this._super(text).addClass('btn btn-default');
-    },
-    getChildEditorHolder: function() {
-      return $("<div>").addClass('well well-small');
+$.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
+  getSelectInput: function(options) {
+    return this._super(options).addClass('form-control').css({
+      width: 'auto'
+    });
+  },
+  getTextareaInput: function() {
+    return $("<textarea>").addClass('form-control');
+  },
+  getRangeInput: function(min, max, step) {
+    // TODO: use better slider
+    return this._super();
+  },
+  getFormInputField: function(type) {
+    return this._super().addClass('form-control');
+  },
+  getFormControl: function(label, input, description) {
+    var group = $("<div></div>");
+
+    if(label && input.attr('type') === 'checkbox') {
+      group.addClass('checkbox');
+      label.append(input).appendTo(group);
+    } 
+    else {
+      group.addClass('form-group');
+      if(label) label.appendTo(group);
+      input.appendTo(group);
     }
-  });
+
+    if(description) group.append(description);
+
+    return group;
+  },
+  getIndentedPanel: function() {
+    return $("<div>").addClass('well well-sm');
+  },
+  getFormInputDescription: function(text) {
+    return $("<p>").addClass('help-block').text(text);
+  },
+  getHeaderButtonHolder: function() {
+    return this.getButtonHolder().css({
+      marginLeft: 10
+    });
+  },
+  getButtonHolder: function() {
+    return $("<div>").addClass('btn-group');
+  },
+  getButton: function(text) {
+    return $("<button>").addClass('btn btn-default').text(text);
+  },
+  getTable: function() {
+    return $("<table>").addClass("table table-bordered").css({
+      width: 'auto',
+      maxWidth: 'none'
+    });
+  }
+});

@@ -31,6 +31,12 @@ module.exports = function(grunt) {
         src: '<%= concat.dist.dest %>',
         dest: 'dist/jquery.jsoneditor.min.js'
       },
+    },
+    watch: {
+      scripts: {
+        files: ["src/**/*.js"],
+        tasks: ["concat"]
+      }
     }
   });
 

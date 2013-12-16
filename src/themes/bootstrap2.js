@@ -1,40 +1,61 @@
-  $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
-    getFormInputField: function(type) {
-      var field = this._super(type);
-      
-      // Some input formats should use a large input field
-      if(['email','url','text'].indexOf(this.input_type) >= 0) {
-        this.input.addClass('input-xxlarge')
-      }
-      
-      return field;
-    },
-    addFormInputControl: function(div,label,field) {
-      if(field.attr('type')==='checkbox') {
-        label.addClass('checkbox');
-        label.append(field);
-        div.append(label);
-      }
-      else {
-        this._super(div, label, field);
-      }
-    },
-    getTable: function() {
-      return this._super().addClass('table table-bordered').css({
-        maxWidth: 'none',
-        width: 'auto'
-      });
-    },
-    getControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getTitleControls: function() {
-      return this._super().addClass('btn-group');
-    },
-    getButton: function(text) {
-      return this._super(text).addClass('btn');
-    },
-    getChildEditorHolder: function() {
-      return $("<div>").addClass('well well-small');
+$.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
+  getRangeInput: function(min, max, step) {
+    // TODO: use bootstrap slider
+    return this._super(min, max, step);
+  },
+  getSelectInput: function(options) {
+    return this._super(options).css({
+      width: 'auto'
+    });
+  },
+  afterInputReady: function(input) {
+    if(input.closest('.compact').length) {
+      input.closest('.control-group').removeClass('control-group');
+      input.closest('.controls').removeClass('controls');
+      input.css('margin-bottom',0);
     }
-  });
+
+    // TODO: use bootstrap slider
+  },
+  getIndentedPanel: function() {
+    return $("<div></div>").addClass('well well-small');
+  },
+  getFormInputDescription: function(text) {
+    return $("<p></p>").addClass('help-inline').text(text);
+  },
+  getFormControl: function(label, input, description) {
+    var ret = $("<div></div>").addClass('control-group');
+
+    var controls;
+
+    if(label && input.attr('type') === 'checkbox') {
+      controls = $("<div></div>").addClass('controls').appendTo(ret);
+      label.addClass('checkbox').append(input).appendTo(controls);
+    }
+    else {
+      if(label) label.addClass('control-label').appendTo(ret);
+      controls = $("<div></div>").addClass('controls').append(input).appendTo(ret);
+    }
+
+    if(description) controls.append(description);
+
+    return ret;
+  },
+  getHeaderButtonHolder: function() {
+    return $("<div></div>").addClass('btn-group').css({
+      marginLeft: 10
+    });
+  },
+  getButtonHolder: function() {
+    return $("<div></div>").addClass('btn-group');
+  },
+  getButton: function(text) {
+    return $("<button></button>").addClass('btn btn-default').text(text);
+  },
+  getTable: function() {
+    return $("<table></table>").addClass('table table-bordered').css({
+      width: 'auto',
+      maxWidth: 'none'
+    });
+  }
+});

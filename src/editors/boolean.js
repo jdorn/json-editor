@@ -1,38 +1,47 @@
+// Boolean Editor (simple checkbox)
+$.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
+  getDefault: function() {
+    return false;
+  },
+  build: function() {
+    var container = this.getContainer();
+    if(!this.getOption('compact',false)) this.label = this.theme.getCheckboxLabel(this.getTitle());
+    this.input = this.theme.getCheckbox();
 
-  // Boolean Editor (simple checkbox)
-  $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
-    default: false,
-    initialize: function() {
-      var self = this;
+    if(this.schema.description) this.description = this.theme.getCheckboxDescription(this.schema.description);
 
-      this.value = false;
+    this.input_holder = this.theme.getFormControl(this.label, this.input, this.description).appendTo(container);
 
-      this.input_holder = $("<div></div>").css({
-        padding: '10px 0'
-      }).appendTo(this.div);
-      
-      this.label = this.theme.getFormInputLabel(this.schema.title || this.schema.id || this.key);
-      this.input = this.theme.getFormInputField('checkbox');
-      
-      this.theme.addFormInputControl(this.input_holder,this.label,this.input);
+    var self = this;
 
-      this.input
-        // data-schemapath is used by other editors to listen to changes
-        .attr('data-schemapath',this.path)
-        // data-schematype can be used to style different editors based on the string editor
-        .attr('data-schematype',this.schema.type)
-        //update the editor's value when it is changed
-        .on('change',function(e) {
-          self.updateValue();
-        });
-    },
-    updateValue: function() {
-      this.value = this.input.prop('checked');
-    },
-    setValue: function(val) {
-      if(val) this.input.prop('checked',true);
-      else this.input.prop('checked',false);
+    if(this.getOption('compact')) this.container.addClass('compact');
 
-      this.updateValue();
-    }
-  });
+    this.input
+      // data-schemapath is used by other editors to listen to changes
+      .attr('data-schemapath',this.getPath())
+      // data-schematype can be used to style different editors based on the string editor
+      .attr('data-schematype',this.schema.type)
+      //update the editor's value when it is changed
+      .on('change',function(e) {
+        self.refreshValue();
+      });
+  },
+  refreshValue: function() {
+    this.value = this.input.prop('checked');
+  },
+  setValue: function(val) {
+    if(val) this.input.prop('checked',true);
+    else this.input.prop('checked',false);
+
+    this.refreshValue();
+  },
+  destroy: function() {
+    this.input.remove();
+    if(this.label) this.label.remove();
+    if(this.description) this.description.remove();
+    this.input_holder.remove();
+    this.input = this.label = this.description = this.input_holder = null;
+
+    this._super();
+  }
+});

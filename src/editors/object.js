@@ -1,103 +1,125 @@
-  /**
-   * Editor for schemas of type 'object'
-   * { type: "object", properties: {} }
-   */
-  $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
-    default: {},
-    init: function(options) {
-      if(options.table_row) options.tag = 'tr';
-      this._super(options);
-    },
-    initialize: function() {
-      var self = this;
-      this.value = {};
+$.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
+  getDefault: function() {
+    return {};
+  },
+  getChildEditors: function() {
+    return this.editors;
+  },
+  build: function() {
+    this.editors = {};
+    var self = this;
 
-      // If this should be rendered as a table row
-      if(this.options.table_row) {
-        this.editor_holder = this.div;
-      }
-      // If it should be rendered as a div
-      else {
-        this.theme.indentDiv(this.div);
-
-
-        // Add a title and placeholder for action buttons
-        this.title = this.theme.getTitle(this.schema.title || this.schema.id || this.key).appendTo(this.div);
-        this.title_controls = this.theme.getTitleControls().appendTo(this.title);
-
-        // Add toggle button to collapse/expand object
-        this.toggle_button = this.theme.getButton('Toggle').addClass('toggle').appendTo(this.title_controls).attr('data-toggle','shown').css({marginLeft: 20}).on('click',function(e) {
-          if($(this).attr('data-toggle')==='hidden') {
-            $(this).attr('data-toggle','shown');
-            self.editor_holder.show(300);
-          }
-          else {
-            $(this).attr('data-toggle','hidden');
-            self.editor_holder.hide(300);
-          }
-
-          e.stopPropagation();
-          e.preventDefault();
-          return false;
-        });
-
-        // Put all child editors within a well
-        this.editor_holder = this.theme.getChildEditorHolder().appendTo(this.div);
-      }
-
-      // Add child editors
-      this.editors = {};
-      $.each(this.schema.properties,function(key,schema) {
+    // If the object should be rendered as a table row
+    if(this.getOption('table_row',false)) {
+      this.editor_holder = this.container;
+      $.each(this.schema.properties, function(key,schema) {
         var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+        var holder = self.getTheme().getTableCell().appendTo(self.editor_holder);
+
         self.editors[key] = new editor({
           jsoneditor: self.jsoneditor,
           schema: schema,
-          container: self.editor_holder,
+          container: holder,
           path: self.path+'.'+key,
           parent: self,
-          tag: (self.options.table_row? 'td' : 'div')
+          compact: true
+        });
+      });
+    }
+    // If the object should be rendered as a table
+    else if(this.getOption('table',false)) {
+      // TODO: table display format
+    }
+    // If the object should be rendered as a div
+    else {
+      this.title = this.getTheme().getHeader(this.getTitle()).appendTo(this.container);
+      if(this.schema.description) this.description = this.getTheme().getDescription(this.schema.description).appendTo(this.container);
+      this.editor_holder = this.getTheme().getIndentedPanel().appendTo(this.container);
+
+      $.each(this.schema.properties, function(key,schema) {
+        var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+        var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
+
+        self.editors[key] = new editor({
+          jsoneditor: self.jsoneditor,
+          schema: schema,
+          container: holder,
+          path: self.path+'.'+key,
+          parent: self
         });
       });
 
-      // If a child editor changes, update this one's value
-      self.editor_holder.on('change',function() {
-        self.refresh();
-      });
+      // Control buttons
+      this.title_controls = this.getTheme().getHeaderButtonHolder().appendTo(this.title);
 
-      this.refresh();
-
-      if(this.options.collapsed && this.toggle_button) this.toggle_button.trigger('click');
-    },
-    /**
-     * Re-calculate value from child editors
-     */
-    refresh: function() {
-      var self = this;
-      this.value = {};
-      $.each(this.editors,function(key,editor) {
-        self.value[key] = editor.getValue();
-      });
-    },
-    setValue: function(value) {
-      value = value || {};
-      $.each(this.editors,function(key,editor) {
-        if(typeof value[key] !== "undefined") {
-          editor.setValue(value[key]);
+      // Show/Hide button
+      this.collapsed = false;
+      this.toggle_button = this.getTheme().getButton('hide').appendTo(this.title_controls).on('click',function() {
+        if(self.collapsed) {
+          self.editor_holder.show(300);
+          self.collapsed = false;
+          self.getTheme().setButtonText(self.toggle_button,'hide');
+        }
+        else {
+          self.editor_holder.hide(300);
+          self.collapsed = true;
+          self.getTheme().setButtonText(self.toggle_button,'show');
         }
       });
-      this.refresh();
-    },
-    getValue: function() {
-      return $.extend({},this.value);
-    },
-    destroy: function() {
-      var self = this;
-      $.each(this.editors,function(i,editor) {
-        editor.destroy();
-        self.editors[i] = null;
-      });
-      self.editors = null;
-
-      this._super();
     }
-  });
+      
+    // When a child editor changes, refresh the value
+    self.editor_holder.on('change',function() {
+      self.refreshValue();
+    });
+    
+  },
+  destroy: function() {
+    $.each(this.editors, function(i,el) {
+      el.destroy();
+    });
+    this.editor_holder.empty();
+    if(this.title) this.title.remove();
+
+    this.editors = null;
+    this.editor_holder.remove();
+    this.editor_holder = null;
+
+    this._super();
+  },
+  refreshValue: function() {
+    this.value = {};
+    var self = this;
+    $.each(this.editors, function(i,editor) {
+      self.value[i] = editor.getValue();
+    });
+  },
+  setValue: function(value) {
+    value = value || {};
+    var self = this;
+    $.each(this.editors, function(i,editor) {
+      editor.setValue(value[i]);
+    });
+    this.refreshValue();
+  },
+  isValid: function(callback) {
+    var errors = [];
+
+    var needed = this.schema.properties.length;
+
+    var finished = 0;
+    $.each(this.editors, function(i,editor) {
+      editor.isValid(function(err) {
+        if(err) {
+          errors = errors.concat(err);
+        }
+        finished++;
+
+        if(finished >= needed) {
+          if(errors.length) callback(errors);
+          else callback();
+        }
+      });
+    });
+  }
+});

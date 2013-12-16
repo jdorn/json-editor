@@ -1,4 +1,4 @@
-/*! JSON Editor v0.1.8 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.2.0 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -7,8 +7,7 @@
 
 /**
  * Requires jQuery.
- * Uses Bootstrap 2.X classnames for styling.
- * Either jqueryUI sortable or html5sortable is required if you want drag/drop rearranging of list elements
+ * Uses Bootstrap 2.X classnames for styling by default. Also supports Bootstrap 3 and jQueryUI.
  * A templating engine is required if you want to use macro templates.
  *
  * Supports a subset of the JSON Schema specification with a few extra
