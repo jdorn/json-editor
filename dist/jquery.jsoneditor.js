@@ -1,14 +1,13 @@
-/*! JSON Editor v0.1.8 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.2.0 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2013-11-24
+ * Date: 2013-12-15
  */
 
 /**
  * Requires jQuery.
- * Uses Bootstrap 2.X classnames for styling.
- * Either jqueryUI sortable or html5sortable is required if you want drag/drop rearranging of list elements
+ * Uses Bootstrap 2.X classnames for styling by default. Also supports Bootstrap 3 and jQueryUI.
  * A templating engine is required if you want to use macro templates.
  *
  * Supports a subset of the JSON Schema specification with a few extra
@@ -45,116 +44,116 @@
 
 (function($) {  
 
-  /* Simple JavaScript Inheritance
-   * By John Resig http://ejohn.org/
-   * MIT Licensed.
-   */
-  // Inspired by base2 and Prototype
-  var Class;!function(){var a=!1,b=/xyz/.test(function(){})?/\b_super\b/:/.*/;Class=function(){},Class.extend=function(c){function g(){!a&&this.init&&this.init.apply(this,arguments)}var d=this.prototype;a=!0;var e=new this;a=!1;for(var f in c)e[f]="function"==typeof c[f]&&"function"==typeof d[f]&&b.test(c[f])?function(a,b){return function(){var c=this._super;this._super=d[a];var e=b.apply(this,arguments);return this._super=c,e}}(f,c[f]):c[f];return g.prototype=e,g.prototype.constructor=g,g.extend=arguments.callee,g}}();
+/* Simple JavaScript Inheritance
+* By John Resig http://ejohn.org/
+* MIT Licensed.
+*/
+// Inspired by base2 and Prototype
+var Class;!function(){var a=!1,b=/xyz/.test(function(){})?/\b_super\b/:/.*/;Class=function(){},Class.extend=function(c){function g(){!a&&this.init&&this.init.apply(this,arguments)}var d=this.prototype;a=!0;var e=new this;a=!1;for(var f in c)e[f]="function"==typeof c[f]&&"function"==typeof d[f]&&b.test(c[f])?function(a,b){return function(){var c=this._super;this._super=d[a];var e=b.apply(this,arguments);return this._super=c,e}}(f,c[f]):c[f];return g.prototype=e,g.prototype.constructor=g,g.extend=arguments.callee,g}}();
 
-  /**
-   * Turn an element into a schema editor
-   * @param options Options (must contain at least a `schema` property)
-   *
-   * Constructor:
-   * $("#container").jsoneditor({
-   *   schema: {...}
-   * });
-   *
-   * Set Value:
-   * $("#container").jsoneditor('value',{...})
-   *
-   * Get Value:
-   * var value = $("#container").jsoneditor('value');
-   *
-   * Destroy:
-   * $("#container").jsoneditor('destroy');
-   */
-  $.fn.jsoneditor = function(options) {
-    var $this = $(this), d;
+/**
+ * Turn an element into a schema editor
+ * @param options Options (must contain at least a `schema` property)
+ *
+ * Constructor:
+ * $("#container").jsoneditor({
+ *   schema: {...}
+ * });
+ *
+ * Set Value:
+ * $("#container").jsoneditor('value',{...})
+ *
+ * Get Value:
+ * var value = $("#container").jsoneditor('value');
+ *
+ * Destroy:
+ * $("#container").jsoneditor('destroy');
+ */
+$.fn.jsoneditor = function(options) {
+  var $this = $(this), d;
 
-    // Get/Set value
-    if(options === 'value') {
-      d = $this.data('jsoneditor');
-      if(!d) return {};
+  // Get/Set value
+  if(options === 'value') {
+    d = $this.data('jsoneditor');
+    if(!d) return {};
 
-      // Setting value
-      if(arguments.length > 1) {
-        d.root.setValue(arguments[1]);
-        return this;
-      }
-      // Getting value
-      else {
-        return d.root.getValue();
-      }
-    }
-    // Destroy editor
-    else if(options === 'destroy') {
-      d = $this.data('jsoneditor');
-      if(!d) return this;
-      d.schema = null;
-      d.options = null;
-      d.root.destroy();
-      d = null;
-      $this.data('jsoneditor',null);
-
+    // Setting value
+    if(arguments.length > 1) {
+      d.root.setValue(arguments[1]);
       return this;
     }
-
-    options = options || {};
-
-    var schema = options.schema;
-    var data = options.startval;
-
-    var editor_class = $.jsoneditor.getEditorClass(schema);
-
-    // Store info about the jsoneditor in the element
-    var d = {
-      schema: schema,
-      options: options,
-      definitions: {},
-      theme: new $.jsoneditor.themes[options.theme || 'bootstrap2']()
-    };
-    $this.data('jsoneditor',d);
-
-    d.root = new editor_class({
-      jsoneditor: $this,
-      schema: schema,
-      container: $this
-    });
-
-    // Starting data
-    if(data) d.root.setValue(data);
+    // Getting value
+    else {
+      return d.root.getValue();
+    }
+  }
+  // Destroy editor
+  else if(options === 'destroy') {
+    d = $this.data('jsoneditor');
+    if(!d) return this;
+    d.schema = null;
+    d.options = null;
+    d.root.destroy();
+    d = null;
+    $this.data('jsoneditor',null);
 
     return this;
+  }
+
+  options = options || {};
+
+  var schema = options.schema;
+  var data = options.startval;
+
+  var editor_class = $.jsoneditor.getEditorClass(schema);
+
+  // Store info about the jsoneditor in the element
+  var d = {
+    schema: schema,
+    options: options,
+    definitions: {},
+    theme: new $.jsoneditor.themes[options.theme || 'bootstrap2']()
   };
+  $this.data('jsoneditor',d);
 
-  $.jsoneditor = {
-    template: window.swig,
-    editors: {},
-    themes: {},
-    expandSchema: function(schema, editor) {
-      if(schema['$ref']) {
-        if(!schema['$ref'].match(/^#\/definitions\//g)) {
-          throw "JSON Editor only supports local references to schema definitions defined for the root node";
-        }
-        var key = schema['$ref'].substr(14);
-        var definitions = editor.data('jsoneditor').definitions;
-        if(!definitions[key]) throw "Schema definition not found - "+schema['$ref'];
+  d.root = new editor_class({
+    jsoneditor: $this,
+    schema: schema,
+    container: $this
+  });
 
-        return $.extend(true,{},definitions[key]);
+  // Starting data
+  if(data) d.root.setValue(data);
+
+  return this;
+};
+
+$.jsoneditor = {
+  template: window.swig,
+  editors: {},
+  themes: {},
+  expandSchema: function(schema, editor) {
+    if(schema['$ref']) {
+      if(!schema['$ref'].match(/^#\/definitions\//g)) {
+        throw "JSON Editor only supports local references to schema definitions defined for the root node";
       }
-      return schema;
-    },
-    getEditorClass: function(schema, editor) {
-      schema = $.jsoneditor.expandSchema(schema, editor);
+      var key = schema['$ref'].substr(14);
+      var definitions = editor.data('jsoneditor').definitions;
+      if(!definitions[key]) throw "Schema definition not found - "+schema['$ref'];
 
-      var editor = schema.editor || schema.type;
-      if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
-      return $.jsoneditor.editors[editor];
+      return $.extend(true,{},definitions[key]);
     }
-  };
-  
+    return schema;
+  },
+  getEditorClass: function(schema, editor) {
+    schema = $.jsoneditor.expandSchema(schema, editor);
+
+    var editor = schema.editor || schema.type;
+    if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
+    return $.jsoneditor.editors[editor];
+  }
+};
+
 
   /**
    * All editors should extend from this class
