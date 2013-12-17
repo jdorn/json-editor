@@ -23,7 +23,7 @@ Requirements
 ### Optional Requirements
 
 *  A javascript template engine for macro support (Mustache, Underscore, Hogan, Handlebars, Swig, or EJS)
-*  A compatible CSS Framework for styling (bootstrap 2, bootstrap 3, or jQueryUI)
+*  A compatible CSS Framework for styling (bootstrap2, bootstrap3, or jqueryui)
 
 Usage
 --------------
@@ -45,6 +45,15 @@ $("#editor_holder").jsoneditor('value',some_json_object);
 // Get the editor's current value as a JSON object
 console.log($("#editor_holder").jsoneditor('value'));
 
+// Validate the editor's current value against the schema
+$("#editor_holder").jsoneditor('validate',function(err) {
+  // err will be undefined if the value is valid
+  if(err) {
+    // if it is not valid, err will contain an array of errors, each with a `path` and `message` property
+    console.log(err);
+  }
+});
+
 // Listen to changes on the editor
 $("#editor_holder").on('change',function() {});
 
@@ -54,7 +63,7 @@ $("#editor_holder").jsoneditor('destroy');
 
 JSON Schema Support
 -----------------
-JSON Editor only supports a subset of the JSON Schema draft specification.
+JSON Editor supports a subset of the JSON Schema draft specification.
 
 The following schema types are supported:
 
@@ -78,16 +87,22 @@ The following JSON schema keywords are supported.  All other keywords will be ig
 *  items
 *  $ref
 *  definitions
-*  format
+*  format (for type `string` only)
 *  minimum
+*  exclusiveMinimum
 *  maximum
+*  exclusiveMaximum
 *  multipleOf
 *  minItems
 *  maxItems
+*  uniqueItems
+*  minLength
+*  maxLength
+*  pattern
 
 ### Arrays
 
-JSON Editor only supports arrays with a single `items` schema.  For example:
+JSON Editor only supports arrays with a single `items` schema.  In other words, every element in the array must follow the same format.  For example:
 
 ```json
 {
@@ -159,7 +174,7 @@ Here is an example that will show a color picker in browsers that support it:
 }
 ```
 
-The `minimum`, `maximum`, and `multipleOf` schema keywords are only used when the format is set to `range`.  For example, this will show a slider from 10 to 50:
+The `minimum`, `maximum`, and `multipleOf` schema keywords only affect the UI when the format is set to `range`.  For example, this will show a slider from 10 to 50:
 
 ```json
 {
@@ -179,7 +194,7 @@ Template Macros
 ------------------
 A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  Templates only work for fields of type `string`.
 
-Here are the supported template engines:
+JSON Editor supports the following template engines out of the box:
 
 *  mustache
 *  handlebars
@@ -239,15 +254,13 @@ If there are no ancestor nodes with an `id` specified, the special keyword `root
 }
 ```
 
-JSON Editor will auto-detect which engine to use based on what libraries are loaded on the page.  You can manually set the template engine anytime by doing:
+JSON Editor will auto-detect which template engine to default to based on what libraries are loaded on the page.  You can manually set the default template engine anytime by doing:
 
 ```js
 $.jsoneditor.template = 'handlebars';
 ```
 
-It's also possible to use a custom templating engine by setting `$.jsoneditor.template` to an object with a `compile` method.
-
-You can override the default on a per-instance basis by passing a `template` parameter in when initializing:
+You can override this default on a per-instance basis by passing a `template` parameter in when initializing:
 
 ```js
 $("#editor_holder").jsoneditor({
@@ -255,6 +268,8 @@ $("#editor_holder").jsoneditor({
   template: 'hogan'
 });
 ```
+
+It's also possible to use a custom templating engine by setting `$.jsoneditor.template` to an object with a `compile` method.
 
 Themes
 ----------------
@@ -282,7 +297,7 @@ There are plans to add additional themes for Foundation 4/5, jQuery Mobile, and 
 
 Editors
 -----------------
-Each primitive type has its own editor.  A different editor can be used by setting the `editor` property.  The only other editor included by default is the `table` editor, which is a more compact version of the `array` editor.  Here is an example:
+Each primitive type has its own editor.  A different editor can be used by setting the `editor` property.  The only other editor included is the `table` editor, which is a more compact version of the `array` editor.  Here is an example:
 
 ```json
 {
