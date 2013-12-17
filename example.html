@@ -28,6 +28,8 @@
             <p>You can also make changes to the JSON here and set the value in the editor by clicking <button class='btn btn-primary' id='setvalue'>Update Form</button></p>
 
             <textarea id='output' style='width: 100%; height: 500px; font-family: monospace;'></textarea>
+            
+            <p>Click <button class='btn btn-primary' id='validate'>Validate</button> to check if the data is valid against the schema.</p>
         </div>
     </div>
     <div class='row'>
@@ -65,7 +67,8 @@ var data = $("#editor").jsoneditor('value');
         properties: {
             name: {
                 type: "string",
-                description: "First and Last name"
+                description: "First and Last name",
+                pattern: '^[A-Z][a-z]+ [A-Z][a-z]+$'
             },
             age: {
                 type: "integer",
@@ -98,6 +101,7 @@ var data = $("#editor").jsoneditor('value');
                 type: "array",
                 editor: "table",
                 title: "Pets",
+                uniqueItems: true,
                 items: {
                     type: "object",
                     id: "pet",
@@ -156,6 +160,14 @@ var data = $("#editor").jsoneditor('value');
         // When the 'update form' button is clicked, set the editor's value
         $("#setvalue").on('click',function() {
             $("#editor").jsoneditor('value',JSON.parse($("#output").val()));
+        });
+        
+        // When the 'validate' button is clicked, validate the editor
+        $("#validate").on('click', function() {
+           $("#editor").jsoneditor('validate',function(err) {
+              if(err) alert(JSON.stringify(err,null,2));
+              else alert('valid'); 
+           }); 
         });
     });
 </script>

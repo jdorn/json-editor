@@ -1,4 +1,4 @@
-/*! JSON Editor v0.2.1 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.2.2 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -42,7 +42,7 @@ $.fn.jsoneditor = function(options) {
   // Get/Set value
   if(options === 'value') {
     d = $this.data('jsoneditor');
-    if(!d) return {};
+    if(!d) throw "JSON Editor must be instantiated before getting or setting the value";
 
     // Setting value
     if(arguments.length > 1) {
@@ -64,6 +64,15 @@ $.fn.jsoneditor = function(options) {
     d = null;
     $this.data('jsoneditor',null);
 
+    return this;
+  }
+  // Validate
+  else if(options === 'validate') {
+    d = $this.data('jsoneditor');
+    if(!d) throw "JSON Editor must be instantiated before trying to validate";
+    
+    d.root.isValid(arguments[1]);
+    
     return this;
   }
 
@@ -189,8 +198,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
     this.build();
 
-    if(typeof this.schema.default !== "undefined") this.setValue(this.schema.default);
-    else this.setValue(this.getDefault());
+    this.setValue(this.getDefault());
   },
 
   build: function() {
@@ -221,7 +229,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   getDefault: function() {
-    return null;
+    return this.schema.default || null;
   },
 
   getTheme: function() {
@@ -250,7 +258,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
 $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return '';
+    return this.schema.default || '';
   },
   setValue: function(value,from_template) {
     // Don't allow directly setting the value
@@ -269,6 +277,63 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     this.refreshValue();
 
     if(from_template) this.input.trigger('change');
+  },
+  isValid: function(callback) {
+    var errors = [];
+    var valid;
+    
+    // Check minLength and maxLength
+    var hasmin, hasmax;
+    valid = true;
+    if(typeof this.schema.minLength !== "undefined") {
+      hasmin = true;
+      if(this.value.length < this.schema.minLength) valid = false;
+    }
+    if(typeof this.schema.maxLength !== "undefined") {
+      hasmax = true;
+      if(this.value.length > this.schema.maxLength) valid = false;
+    }
+    if(!valid) {
+      var error;
+      // Needs to be between min and max length
+      if(hasmin && hasmax) {
+        error = "Length must be between "+this.schema.minLength+" and "+this.schema.maxLength+".";
+      }
+      // Needs to be longer than min
+      else if(hasmin) {
+        error = "Length must be at least "+this.schema.minLength+".";
+      }
+      // Needs to be shorter than max
+      else {
+        error = "Length must be at most "+this.schema.maxLength+".";
+      }
+      errors.push({
+        path: this.path,
+        message: error
+      });
+    }
+    
+    // Check enum
+    if(this.schema.enum) {
+      if($.inArray(this.value, this.schema.enum) < 0) {
+        errors.push({
+          path: this.path,
+          message: "Must be one of "+this.schema.enum.join(', ')
+        });
+      }
+    }
+    
+    // Check pattern
+    if(this.schema.pattern) {
+      var regex = new RegExp(this.schema.pattern);
+      if(!regex.test(this.value)) errors.push({
+        path: this.path,
+        message: "Must match pattern: "+this.schema.pattern
+      });
+    }
+    
+    if(errors.length) callback(errors);
+    else callback();
   },
   build: function() {
     var self = this;
@@ -438,13 +503,81 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
 $.jsoneditor.editors.number = $.jsoneditor.editors.string.extend({
   getDefault: function() {
-    return 0;
+    return this.schema.default || 0;
   },
   sanitize: function(value) {
     return (value+"").replace(/[^0-9\.\-]/g,'');
   },
   getValue: function() {
     return this.value*1;
+  },
+  isValid: function(callback) {
+    var val = this.getValue();
+    
+    if(typeof val === 'number') {
+      var valid = true, hasmin, hasmax, hasmultipleof;
+      
+      
+      if(typeof this.schema.minimum !== "undefined") {
+        hasmin = true;
+        if(this.schema.exclusiveMinimum && val <= this.schema.minimum) valid = false;
+        else if(val < this.schema.minimum) valid = false;
+      }
+      
+      if(typeof this.schema.maximum !== "undefined") {
+        hasmax = true;
+        if(this.schema.exclusiveMaximum && val >= this.schema.maximum) valid = false;
+        else if(val > this.schema.maximum) valid = false;
+      }
+      
+      if(typeof this.schema.multipleOf !== "undefined") {
+        hasmultipleof = true;
+        if(val % this.schema.multipleOf) valid = false;
+      }
+      
+      if(valid) callback();
+      else {
+        var error;
+        
+        // If value must be between a min and max
+        if(hasmin && hasmax) {
+          error = "Must be between "+this.schema.minimum+" (";
+          error += (this.schema.exclusiveMinimum)? 'exclusive' : 'inclusive';
+          error += ") and "+this.schema.maximum+" (";
+          error += (this.schema.exclusiveMaximum)? 'exclusive' : 'inclusive';
+          error += ")";
+        }
+        // If value must be greater than a min
+        else if(hasmin) {
+          error = "Must be greater than ";
+          if(!this.schema.exclusiveMinimum) error += "or equal to ";
+          error += this.schema.minimum;
+        }
+        // If value must be less than a max
+        else if(hasmax) {
+          error = "Must be less than ";
+          if(!this.schema.exclusiveMaximum) error += "or equal to ";
+          error += this.schema.maximum;
+        }
+        
+        // If value must be a multiple of something
+        if(hasmultipleof && error) error += " and divisble by "+this.schema.multipleOf;
+        else if(hasmultipleof) error = "Must be divisble by "+this.schema.multipleOf;
+        
+        error += ".";
+        
+        callback([{
+          path: this.path,
+          message: error
+        }]);
+      }
+    }
+    else callback([
+      {
+        path: this.path,
+        message: "not a number"
+      }
+    ]);
   }
 });
 
@@ -452,6 +585,22 @@ $.jsoneditor.editors.integer = $.jsoneditor.editors.number.extend({
   sanitize: function(value) {
     value = value + "";
     return value.replace(/[^0-9\-]/g,'');
+  },
+  isValid: function(callback) {
+    var val = this.getValue();
+    
+    this._super(function(err) {
+      // Make sure it's a valid number first
+      if(err) callback(err);
+      // Then, make sure it's an integer
+      else if(val%1 === 0) callback();
+      else callback([
+        {
+          path: this.path,
+          message: "not an integer"
+        }
+      ]);
+    });
   }
 });
 
@@ -500,12 +649,16 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
     this.input = this.label = this.description = this.input_holder = null;
 
     this._super();
+  },
+  isValid: function(callback) {
+    // A boolean field is always valid
+    callback();
   }
 });
 
 $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return {};
+    return $.extend(true,{},this.schema.default || {});
   },
   getChildEditors: function() {
     return this.editors;
@@ -603,14 +756,24 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     value = value || {};
     var self = this;
     $.each(this.editors, function(i,editor) {
-      editor.setValue(value[i]);
+      if(typeof value[i] !== "undefined") {
+        editor.setValue(value[i]);
+      }
+      else {
+        editor.setValue(editor.getDefault());
+      }
     });
     this.refreshValue();
   },
   isValid: function(callback) {
     var errors = [];
 
-    var needed = this.schema.properties.length;
+    var needed = 0;
+    $.each(this.editors, function(i,editor) {
+      needed++;
+    });
+    
+    if(!needed) return callback();
 
     var finished = 0;
     $.each(this.editors, function(i,editor) {
@@ -631,7 +794,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
 $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return [];
+    return this.schema.default || [];
   },
   build: function() {
     this.rows = [];
@@ -753,6 +916,83 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.refreshValue();
     
     // TODO: sortable
+  },
+  isValid: function(callback) {
+    var errors = [];
+
+    var needed = this.rows.length;
+
+    var valid;
+
+    // Check for maxItems and minItems
+    valid = true;
+    var hasmin, hasmax;
+    if(typeof this.schema.maxItems !== "undefined") {
+      hasmax = true;
+      if(needed > this.schema.maxItems) valid = false;
+    }
+    if(typeof this.schema.minItems !== "undefined") {
+      hasmin = true;
+      if(needed < this.schema.minItems) valid = false;
+    }
+    if(!valid) {
+      var error;
+      if(hasmin && hasmax) {
+        error = "Must have between "+this.schema.minItems+" and "+this.schema.maxItems+" items.";
+      }
+      else if(hasmin) {
+        error = "Must have at least "+this.schema.minItems+" items.";
+      }
+      else {
+        error = "Must have at most "+this.schema.maxItems+" items.";
+      }
+      errors.push({
+        path: this.path,
+        message: error
+      });
+    }
+    
+    // Check for unique items
+    if(this.schema.uniqueItems) {
+      var seen = {};
+      valid = true;
+      $.each(this.rows, function(i,row) {
+        var key = JSON.stringify(row.getValue());
+        if(seen[key]) {
+          valid = false;
+          return false;
+        }
+        seen[key] = true;
+      });
+      if(!valid) errors.push({
+        path: this.path,
+        message: "Must have unique values."
+      });
+    }
+    
+    // No rows to validate
+    if(!needed) {
+      if(errors.length) callback(errors);
+      else callback();
+    }
+    
+    // Validate each row
+    else {
+      var finished = 0;
+      $.each(this.rows, function(i,row) {
+        row.isValid(function(err) {
+          if(err) {
+            errors = errors.concat(err);
+          }
+          finished++;
+          
+          if(finished >= needed) {
+            if(errors.length) callback(errors);
+            else callback();
+          }
+        });
+      });
+    }
   },
   refreshValue: function() {
     var self = this;

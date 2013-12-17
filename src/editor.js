@@ -31,8 +31,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
     this.build();
 
-    if(typeof this.schema.default !== "undefined") this.setValue(this.schema.default);
-    else this.setValue(this.getDefault());
+    this.setValue(this.getDefault());
   },
 
   build: function() {
@@ -63,7 +62,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   getDefault: function() {
-    return null;
+    return this.schema.default || null;
   },
 
   getTheme: function() {

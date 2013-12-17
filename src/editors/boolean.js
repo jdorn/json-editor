@@ -43,5 +43,9 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
     this.input = this.label = this.description = this.input_holder = null;
 
     this._super();
+  },
+  isValid: function(callback) {
+    // A boolean field is always valid
+    callback();
   }
 });

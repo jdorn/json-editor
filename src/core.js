@@ -22,7 +22,7 @@ $.fn.jsoneditor = function(options) {
   // Get/Set value
   if(options === 'value') {
     d = $this.data('jsoneditor');
-    if(!d) return {};
+    if(!d) throw "JSON Editor must be instantiated before getting or setting the value";
 
     // Setting value
     if(arguments.length > 1) {
@@ -44,6 +44,15 @@ $.fn.jsoneditor = function(options) {
     d = null;
     $this.data('jsoneditor',null);
 
+    return this;
+  }
+  // Validate
+  else if(options === 'validate') {
+    d = $this.data('jsoneditor');
+    if(!d) throw "JSON Editor must be instantiated before trying to validate";
+    
+    d.root.isValid(arguments[1]);
+    
     return this;
   }
 

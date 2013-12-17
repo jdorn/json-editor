@@ -1,6 +1,6 @@
 $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return '';
+    return this.schema.default || '';
   },
   setValue: function(value,from_template) {
     // Don't allow directly setting the value
@@ -19,6 +19,63 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     this.refreshValue();
 
     if(from_template) this.input.trigger('change');
+  },
+  isValid: function(callback) {
+    var errors = [];
+    var valid;
+    
+    // Check minLength and maxLength
+    var hasmin, hasmax;
+    valid = true;
+    if(typeof this.schema.minLength !== "undefined") {
+      hasmin = true;
+      if(this.value.length < this.schema.minLength) valid = false;
+    }
+    if(typeof this.schema.maxLength !== "undefined") {
+      hasmax = true;
+      if(this.value.length > this.schema.maxLength) valid = false;
+    }
+    if(!valid) {
+      var error;
+      // Needs to be between min and max length
+      if(hasmin && hasmax) {
+        error = "Length must be between "+this.schema.minLength+" and "+this.schema.maxLength+".";
+      }
+      // Needs to be longer than min
+      else if(hasmin) {
+        error = "Length must be at least "+this.schema.minLength+".";
+      }
+      // Needs to be shorter than max
+      else {
+        error = "Length must be at most "+this.schema.maxLength+".";
+      }
+      errors.push({
+        path: this.path,
+        message: error
+      });
+    }
+    
+    // Check enum
+    if(this.schema.enum) {
+      if($.inArray(this.value, this.schema.enum) < 0) {
+        errors.push({
+          path: this.path,
+          message: "Must be one of "+this.schema.enum.join(', ')
+        });
+      }
+    }
+    
+    // Check pattern
+    if(this.schema.pattern) {
+      var regex = new RegExp(this.schema.pattern);
+      if(!regex.test(this.value)) errors.push({
+        path: this.path,
+        message: "Must match pattern: "+this.schema.pattern
+      });
+    }
+    
+    if(errors.length) callback(errors);
+    else callback();
   },
   build: function() {
     var self = this;

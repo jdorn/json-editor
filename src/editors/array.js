@@ -1,6 +1,6 @@
 $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return [];
+    return this.schema.default || [];
   },
   build: function() {
     this.rows = [];
@@ -122,6 +122,83 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.refreshValue();
     
     // TODO: sortable
+  },
+  isValid: function(callback) {
+    var errors = [];
+
+    var needed = this.rows.length;
+
+    var valid;
+
+    // Check for maxItems and minItems
+    valid = true;
+    var hasmin, hasmax;
+    if(typeof this.schema.maxItems !== "undefined") {
+      hasmax = true;
+      if(needed > this.schema.maxItems) valid = false;
+    }
+    if(typeof this.schema.minItems !== "undefined") {
+      hasmin = true;
+      if(needed < this.schema.minItems) valid = false;
+    }
+    if(!valid) {
+      var error;
+      if(hasmin && hasmax) {
+        error = "Must have between "+this.schema.minItems+" and "+this.schema.maxItems+" items.";
+      }
+      else if(hasmin) {
+        error = "Must have at least "+this.schema.minItems+" items.";
+      }
+      else {
+        error = "Must have at most "+this.schema.maxItems+" items.";
+      }
+      errors.push({
+        path: this.path,
+        message: error
+      });
+    }
+    
+    // Check for unique items
+    if(this.schema.uniqueItems) {
+      var seen = {};
+      valid = true;
+      $.each(this.rows, function(i,row) {
+        var key = JSON.stringify(row.getValue());
+        if(seen[key]) {
+          valid = false;
+          return false;
+        }
+        seen[key] = true;
+      });
+      if(!valid) errors.push({
+        path: this.path,
+        message: "Must have unique values."
+      });
+    }
+    
+    // No rows to validate
+    if(!needed) {
+      if(errors.length) callback(errors);
+      else callback();
+    }
+    
+    // Validate each row
+    else {
+      var finished = 0;
+      $.each(this.rows, function(i,row) {
+        row.isValid(function(err) {
+          if(err) {
+            errors = errors.concat(err);
+          }
+          finished++;
+          
+          if(finished >= needed) {
+            if(errors.length) callback(errors);
+            else callback();
+          }
+        });
+      });
+    }
   },
   refreshValue: function() {
     var self = this;

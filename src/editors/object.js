@@ -1,6 +1,6 @@
 $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return {};
+    return $.extend(true,{},this.schema.default || {});
   },
   getChildEditors: function() {
     return this.editors;
@@ -98,14 +98,24 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     value = value || {};
     var self = this;
     $.each(this.editors, function(i,editor) {
-      editor.setValue(value[i]);
+      if(typeof value[i] !== "undefined") {
+        editor.setValue(value[i]);
+      }
+      else {
+        editor.setValue(editor.getDefault());
+      }
     });
     this.refreshValue();
   },
   isValid: function(callback) {
     var errors = [];
 
-    var needed = this.schema.properties.length;
+    var needed = 0;
+    $.each(this.editors, function(i,editor) {
+      needed++;
+    });
+    
+    if(!needed) return callback();
 
     var finished = 0;
     $.each(this.editors, function(i,editor) {
