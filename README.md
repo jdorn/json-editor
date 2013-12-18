@@ -202,6 +202,7 @@ JSON Editor supports the following template engines out of the box:
 *  swig
 *  underscore
 *  ejs
+*  markup
 
 
 ```json
