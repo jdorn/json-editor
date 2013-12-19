@@ -22,8 +22,8 @@ Requirements
 
 ### Optional Requirements
 
-*  A javascript template engine for macro support (Mustache, Underscore, Hogan, Handlebars, Swig, or EJS)
-*  A compatible CSS Framework for styling (bootstrap2, bootstrap3, or jqueryui)
+*  A javascript template engine for macro support (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
+*  A compatible CSS Framework for styling (bootstrap, foundation, or jqueryui)
 
 Usage
 --------------
@@ -280,6 +280,8 @@ The currently supported themes are:
 
 *  bootstrap2 (the default)
 *  bootstrap3
+*  foundation4
+*  foundation5
 *  jqueryui
 
 The default theme is `bootstrap2`, but this can be changed by setting the `$.jsoneditor.theme` variable.
