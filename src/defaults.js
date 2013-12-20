@@ -6,3 +6,13 @@ $.each($.jsoneditor.templates, function(key, template) {
     return false;
   }
 });
+
+// Set the default resolvers
+$.jsoneditor.resolvers.unshift(function(schema) {
+  return schema.type;
+});
+$.jsoneditor.resolvers.unshift(function(schema) {
+  if(schema.type == "array" && schema.format == "table") {
+    return "table";
+  }
+});

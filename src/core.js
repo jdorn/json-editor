@@ -98,6 +98,7 @@ $.jsoneditor = {
   editors: {},
   templates: {},
   themes: {},
+  resolvers: [],
 
   // Helper functions
   expandSchema: function(schema, editor) {
@@ -116,9 +117,25 @@ $.jsoneditor = {
   getEditorClass: function(schema, editor) {
     schema = $.jsoneditor.expandSchema(schema, editor);
 
-    var editor = schema.editor || schema.type;
-    if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
-    return $.jsoneditor.editors[editor];
+    var classname;
+
+    if(schema.editor) classname = schema.editor;
+    else {
+      $.each($.jsoneditor.resolvers,function(i,resolver) {
+        var tmp;
+        if(tmp = resolver(schema)) {
+          if($.jsoneditor.editors[tmp]) {
+            classname = tmp;
+            return false;
+          }
+        }
+      });
+    }
+
+    if(!classname) throw "Unknown editor for schema "+JSON.stringify(schema);
+    if(!$.jsoneditor.editors[classname]) throw "Unknown editor "+classname;
+
+    return $.jsoneditor.editors[classname];
   },
   compileTemplate: function(template, name) {
     name = name || $.jsoneditor.template;

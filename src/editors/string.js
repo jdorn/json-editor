@@ -3,9 +3,6 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     return this.schema.default || '';
   },
   setValue: function(value,from_template) {
-    // Don't allow directly setting the value
-    if(this.template && !from_template) return;
-
     value = value || '';
 
     // Sanitize value before setting it

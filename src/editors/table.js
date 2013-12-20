@@ -3,6 +3,11 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.rows = [];
     var self = this;
 
+    this.table = this.theme.getTable();
+    this.thead = this.theme.getTableHead().appendTo(this.table);
+    this.header_row = this.theme.getTableRow().appendTo(this.thead);
+    this.row_holder = this.theme.getTableBody().appendTo(this.table);
+
     // Determine the default value of array element
     var tmp = this.getElementEditor(0);
     this.item_default = tmp.getDefault();
@@ -19,10 +24,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       }
     }
 
-    this.table = this.theme.getTable().appendTo(this.container);
-    this.thead = this.theme.getTableHead().appendTo(this.table);
-    this.header_row = this.theme.getTableRow().appendTo(this.thead);
-    this.row_holder = this.theme.getTableBody().appendTo(this.table);
+    this.table.appendTo(this.container);
     this.controls = this.theme.getButtonHolder().appendTo(this.container);
 
     if(this.item_has_child_editors) {

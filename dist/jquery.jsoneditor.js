@@ -1,8 +1,8 @@
-/*! JSON Editor v0.2.4 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.2.5 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2013-12-18
+ * Date: 2013-12-19
  */
 
 /**
@@ -118,6 +118,7 @@ $.jsoneditor = {
   editors: {},
   templates: {},
   themes: {},
+  resolvers: [],
 
   // Helper functions
   expandSchema: function(schema, editor) {
@@ -136,9 +137,25 @@ $.jsoneditor = {
   getEditorClass: function(schema, editor) {
     schema = $.jsoneditor.expandSchema(schema, editor);
 
-    var editor = schema.editor || schema.type;
-    if(!$.jsoneditor.editors[editor]) throw "Unknown editor "+editor;
-    return $.jsoneditor.editors[editor];
+    var classname;
+
+    if(schema.editor) classname = schema.editor;
+    else {
+      $.each($.jsoneditor.resolvers,function(i,resolver) {
+        var tmp;
+        if(tmp = resolver(schema)) {
+          if($.jsoneditor.editors[tmp]) {
+            classname = tmp;
+            return false;
+          }
+        }
+      });
+    }
+
+    if(!classname) throw "Unknown editor for schema "+JSON.stringify(schema);
+    if(!$.jsoneditor.editors[classname]) throw "Unknown editor "+classname;
+
+    return $.jsoneditor.editors[classname];
   },
   compileTemplate: function(template, name) {
     name = name || $.jsoneditor.template;
@@ -261,9 +278,6 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     return this.schema.default || '';
   },
   setValue: function(value,from_template) {
-    // Don't allow directly setting the value
-    if(this.template && !from_template) return;
-
     value = value || '';
 
     // Sanitize value before setting it
@@ -1211,6 +1225,11 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.rows = [];
     var self = this;
 
+    this.table = this.theme.getTable();
+    this.thead = this.theme.getTableHead().appendTo(this.table);
+    this.header_row = this.theme.getTableRow().appendTo(this.thead);
+    this.row_holder = this.theme.getTableBody().appendTo(this.table);
+
     // Determine the default value of array element
     var tmp = this.getElementEditor(0);
     this.item_default = tmp.getDefault();
@@ -1227,10 +1246,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       }
     }
 
-    this.table = this.theme.getTable().appendTo(this.container);
-    this.thead = this.theme.getTableHead().appendTo(this.table);
-    this.header_row = this.theme.getTableRow().appendTo(this.thead);
-    this.row_holder = this.theme.getTableBody().appendTo(this.table);
+    this.table.appendTo(this.container);
     this.controls = this.theme.getButtonHolder().appendTo(this.container);
 
     if(this.item_has_child_editors) {
@@ -2016,6 +2032,16 @@ $.each($.jsoneditor.templates, function(key, template) {
   if(template()) {
     $.jsoneditor.template = key;
     return false;
+  }
+});
+
+// Set the default resolvers
+$.jsoneditor.resolvers.unshift(function(schema) {
+  return schema.type;
+});
+$.jsoneditor.resolvers.unshift(function(schema) {
+  if(schema.type == "array" && schema.format == "table") {
+    return "table";
   }
 });
 
