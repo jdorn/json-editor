@@ -13,10 +13,15 @@
     <link rel='stylesheet' href='//cdn.jsdelivr.net/foundation/5.0.2/css/foundation.min.css'>
     <!----
     <link rel='stylesheet' href='//cdn.jsdelivr.net/foundation/4.3.2/css/foundation.min.css'>
+    <!----
+    <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/foundation/3.2.5/stylesheets/foundation.css'>
     <!---->
     
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src='dist/jquery.jsoneditor.js'></script>
+    <script>
+    $.jsoneditor.theme = 'bootstrap2';
+    </script>
 </head>
 <body>
 <div class='container'>
@@ -49,7 +54,8 @@
             <h2>Code</h2>
             <pre><code>// Initialize the editor
 $("#editor").jsoneditor({
-   schema: {...} 
+   schema: {...},
+   theme: 'bootstrap2'
 });
 
 // Set the value
@@ -62,8 +68,6 @@ var data = $("#editor").jsoneditor('value');
     </div>
 </div>
 <script>
-    $.jsoneditor.theme = 'bootstrap2';
-
     var schema = {
         id: "person",
         title: "Person",
@@ -72,7 +76,8 @@ var data = $("#editor").jsoneditor('value');
             name: {
                 type: "string",
                 description: "First and Last name",
-                pattern: '^[A-Z][a-z]+ [A-Z][a-z]+$'
+                pattern: '^[A-Z][a-z]+ [A-Z][a-z]+$',
+                default: "John Smith"
             },
             age: {
                 type: "integer",
@@ -127,10 +132,7 @@ var data = $("#editor").jsoneditor('value');
     $(document).ready(function() {
         // Initialize the editor
         $("#editor").jsoneditor({
-            schema: schema,
-            startval: {
-                name: "John Smith"
-            }
+            schema: schema
         });
 
         // Display the initial schema

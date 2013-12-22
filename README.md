@@ -23,41 +23,69 @@ Requirements
 ### Optional Requirements
 
 *  A javascript template engine for macro support (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
-*  A compatible CSS Framework for styling (bootstrap, foundation, or jqueryui)
+*  A compatible CSS Framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
 
 Usage
 --------------
 
+### Initialize
+
 ```javascript
-// Initialize the editor with a JSON schema
 $("#editor_holder").jsoneditor({
   schema: {
     type: "object",
     properties: {
-      //...
+      name: {
+        type: "string"
+      }
     }
   }
 });
+```
 
+### Get/Set Value
+
+```javascript
 // Set the editor's value with a JSON object
-$("#editor_holder").jsoneditor('value',some_json_object);
+$("#editor_holder").jsoneditor('value',{name: "John Smith"});
 
 // Get the editor's current value as a JSON object
-console.log($("#editor_holder").jsoneditor('value'));
+var value = $("#editor_holder").jsoneditor('value');
+console.log(value.name) // Will log "John Smith"
+```
 
+### Validate
+
+When feasible, JSON Editor won't let users enter invalid data.  
+However, in some cases it is still possible to enter data that doesn't validate against the schema.
+For those instances, you can use the `validate` method to check if the data is valid or not.
+
+```javascript
 // Validate the editor's current value against the schema
-$("#editor_holder").jsoneditor('validate',function(err) {
-  // err will be undefined if the value is valid
-  if(err) {
-    // if it is not valid, err will contain an array of errors, each with a `path` and `message` property
-    console.log(err);
+$("#editor_holder").jsoneditor('validate',function(errors) {
+  if(errors) {
+    // if it's not valid, errors will contain an array of objects, each with a `path` and `message` property
+    console.log(errors);
+  }
+  else {
+    // It's valid!
   }
 });
+```
 
-// Listen to changes on the editor
+### Listen for Changes
+
+The `change` event is fired whenever the editor's value changes.  When using macro templates, multiple `change` events may fire in quick succession.
+
+```javascript
 $("#editor_holder").on('change',function() {});
+```
 
-// Destroy the editor completely
+### Destroy
+
+This removes the editor HTML from the DOM and prepares everything for garbage collection.
+
+```javascript
 $("#editor_holder").jsoneditor('destroy');
 ```
 
@@ -65,44 +93,56 @@ JSON Schema Support
 -----------------
 JSON Editor supports a subset of the JSON Schema draft specification.
 
+The following JSON schema keywords are supported.  All other keywords from the specification will be ignored.
+
+*  default
+*  definitions
+*  description
+*  enum (for type `string` only)
+*  exclusiveMaximum
+*  exclusiveMinimum
+*  format
+*  id
+*  items
+*  maxItems
+*  maximum
+*  maxLength
+*  minItems
+*  minimum
+*  minLength
+*  multipleOf
+*  pattern
+*  properties
+*  title
+*  type
+*  uniqueItems
+*  $ref
+
+Most of these keywords behave as described in the specification, but several have caveats, which are described below.
+
+In addition, there are a few custom keywords supported which are not in the spefication:
+
+*  editor
+*  options
+*  template
+*  vars
+
+### Types
+
 The following schema types are supported:
 
-*  object
 *  array
-*  string
 *  boolean
-*  number
 *  integer
+*  number
+*  object
+*  string
 
 Compound types are not supported.
 
-The following JSON schema keywords are supported.  All other keywords will be ignored.
-
-*  id
-*  title
-*  description
-*  default
-*  enum (for type `string` only)
-*  properties
-*  items
-*  $ref
-*  definitions
-*  format (for type `string` only)
-*  minimum
-*  exclusiveMinimum
-*  maximum
-*  exclusiveMaximum
-*  multipleOf
-*  minItems
-*  maxItems
-*  uniqueItems
-*  minLength
-*  maxLength
-*  pattern
-
 ### Arrays
 
-JSON Editor only supports arrays with a single `items` schema.  In other words, every element in the array must follow the same format.  For example:
+JSON Editor only supports arrays with a single `items` schema.  In other words, every element in the array must have the same structure.  For example:
 
 ```json
 {
@@ -140,25 +180,25 @@ Currently, JSON Editor only supports schema references to the root node in the f
 
 ### Formats
 
-JSON Editor supports the following values for the `format` parameter:
+JSON Editor supports the following values for the `format` parameter for fields of type `string`.
 
-*  text
-*  textarea
-*  hidden
-*  email
-*  url
-*  tel
-*  number
-*  range
+*  color
 *  date
-*  month
-*  week
-*  time
 *  datetime
 *  datetime-local
-*  color
+*  email
+*  hidden
+*  month
+*  number
+*  range
+*  tel
+*  text
+*  textarea
+*  time
+*  url
+*  week
 
-JSON Editor uses HTML5 Input types, so polyfills might be required for full functionality in some browsers.
+JSON Editor uses HTML5 input types, so polyfills might be required for full functionality in older browsers.
 
 Here is an example that will show a color picker in browsers that support it:
 
@@ -190,20 +230,47 @@ The `minimum`, `maximum`, and `multipleOf` schema keywords only affect the UI wh
 }
 ```
 
+Themes
+----------------
+JSON Editor can integrate with several different CSS frameworks out of the box.
+
+The currently supported themes are:
+
+*  html (the default)
+*  bootstrap2
+*  bootstrap3
+*  foundation3
+*  foundation4
+*  foundation5
+*  jqueryui
+
+The default theme is `html`, which doesn't use any special class names or styling.
+This default can be changed by setting the `$.jsoneditor.theme` variable.
+
+You can also override the default on a per-instance basis by passing a `theme` parameter in when initializing:
+
+```js
+$("#editor_holder").jsoneditor({
+  schema: schema,
+  theme: 'jqueryui'
+});
+```
+
+It's possible to create your own custom themes as well.  Look at any of the existing theme classes for examples.
+
 Template Macros
 ------------------
 A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  Templates only work for fields of type `string`.
 
 JSON Editor supports the following template engines out of the box:
 
-*  mustache
+*  ejs
 *  handlebars
 *  hogan
+*  markup
+*  mustache
 *  swig
 *  underscore
-*  ejs
-*  markup
-
 
 ```json
 {
@@ -272,56 +339,47 @@ $("#editor_holder").jsoneditor({
 
 It's also possible to use a custom templating engine by setting `$.jsoneditor.template` to an object with a `compile` method.
 
-Themes
-----------------
-JSON Editor can integrate with several different CSS frameworks out of the box.
+Editors
+-----------------
 
-The currently supported themes are:
+JSON Editor uses resolver functions to determine which editor to use for a particular schema or subschema.  
+The default resolver function uses the `type` schema keyword to choose the editor to use.
 
-*  bootstrap2 (the default)
-*  bootstrap3
-*  foundation4
-*  foundation5
-*  jqueryui
+There is an editor for each primitive JSON type.  An additional `table` editor is included, which provides a more compact way to edit arrays.
 
-The default theme is `bootstrap2`, but this can be changed by setting the `$.jsoneditor.theme` variable.
-
-You can override the default on a per-instance basis by passing a `theme` parameter in when initializing:
+You can add your own resolver functions easily.  Let's say you want all schemas of type `array` to use the `table` editor.
 
 ```js
-$("#editor_holder").jsoneditor({
-  schema: schema,
-  theme: 'jqueryui'
+// Add a resolver function to the beginning of the resolver list
+// This will make it run before any other resolver functions
+$.jsoneditor.resolvers.unshift(function(schema) {
+  // If this schema is of type `array`, use the table editor
+  if(schema.type && schema.type === "array") {
+    return "table";
+  }
+  
+  // If the resolver function returns a falsy value or a non-existant editor, the next resolver function will be used.
 });
 ```
 
-There are plans to add additional themes for Foundation 4/5, jQuery Mobile, and Skeleton in the near future.
-
-
-Editors
------------------
-Each primitive type has its own editor.  A different editor can be used by setting the `editor` property.  The only other editor included is the `table` editor, which is a more compact version of the `array` editor.  Here is an example:
+There is a special schema keyword `editor` which takes precedence over all the resolver functions when set.
+For example, this schema will use the `table` editor, no matter what the resolver functions are.
 
 ```json
 {
-  "type": "array",
-  "editor": "table",
-  "items": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "type": "string"
-      }
-    }
+  type: "array",
+  editor: "table",
+  items: {
+    type: "number"
   }
 }
 ```
 
-It is possible to add your own custom editors as well.  Look at any of the included editor classes for examples.
+You can create your own custom editors as well.  Look at any of the existing editors for examples.
 
 ### Editor Options
 
-Some editors accept options which alter the behavior in some way.
+Editors can accept options which alter the behavior in some way.
 
 Right now, there is only 1 supported option
 
@@ -334,7 +392,9 @@ Right now, there is only 1 supported option
     "collapsed": true
   },
   "properties": {
-
+    "name": {
+      "type": "string" 
+    }
   }
 }
 ```

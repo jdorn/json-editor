@@ -1,8 +1,8 @@
-/*! JSON Editor v0.2.5 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.2.6 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2013-12-19
+ * Date: 2013-12-21
  */
 
 /**
@@ -110,11 +110,8 @@ $.fn.jsoneditor = function(options) {
 };
 
 $.jsoneditor = {
-  // Defaults
   template: null,
-  theme: 'bootstrap2',
-
-  // Presets
+  theme:null,
   editors: {},
   templates: {},
   themes: {},
@@ -123,7 +120,7 @@ $.jsoneditor = {
   // Helper functions
   expandSchema: function(schema, editor) {
     if(schema['$ref']) {
-      if(!schema['$ref'].match(/^#\/definitions\//g)) {
+      if(!schema['$ref'].match(/^#\/definitions\//)) {
         throw "JSON Editor only supports local references to schema definitions defined for the root node";
       }
       var key = schema['$ref'].substr(14);
@@ -1792,12 +1789,13 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
   }
 });
 
-$.jsoneditor.themes.foundation4 = $.jsoneditor.AbstractTheme.extend({
+// Base Foundation theme
+$.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
   getChildEditorHolder: function() {
     return $("<div>").css({
       marginBottom: 15
     });
-  },
+  }, 
   getSelectInput: function(options) {
     var select = $("<select>").css({
       width: 'auto',
@@ -1818,61 +1816,7 @@ $.jsoneditor.themes.foundation4 = $.jsoneditor.AbstractTheme.extend({
   getFormInputDescription: function(text) {
     return $("<p></p>").text(text).css({
       marginTop: -10,
-      fontStyle: 'italic',
-      fontSize: '.8rem'
-    });
-  },
-  getFormControl: function(label, input, description) {
-    return $("<div>")
-      .append(label)
-      .append(input)
-      .append(description)
-  },
-  getIndentedPanel: function() {
-    return $("<div>").addClass('panel');
-  },
-  getHeaderButtonHolder: function() {
-    return this.getButtonHolder().css({
-      display: 'inline-block',
-      marginLeft: 10,
-      verticalAlign: 'middle',
-      fontSize: '.6em'
-    });
-  },
-  getButtonHolder: function() {
-    return $("<div>").addClass('button-group');
-  },
-  getButton: function(text) {
-    return $("<button>").addClass('small button').text(text);
-  }
-});
-
-$.jsoneditor.themes.foundation5 = $.jsoneditor.AbstractTheme.extend({
-  getChildEditorHolder: function() {
-    return $("<div>").css({
-      marginBottom: 15
-    });
-  },
-  getSelectInput: function(options) {
-    var select = $("<select>").css({
-      width: 'auto',
-      minWidth: 'none'
-    });
-    $.each(options, function(i,val) {
-      select.append($("<option>").attr('value',val).text(val));
-    });
-    return select;
-  },
-  afterInputReady: function(input) {
-    if(input.closest('.compact').length) {
-      input.css('margin-bottom',0);
-    }
-  },
-  getFormInputDescription: function(text) {
-    return $("<p></p>").text(text).css({
-      marginTop: -10,
-      fontStyle: 'italic',
-      fontSize: '.8rem'
+      fontStyle: 'italic'
     });
   },
   getFormControl: function(label, input, description) {
@@ -1895,12 +1839,87 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.AbstractTheme.extend({
     return $("<div>").addClass('button-group');
   },
   getButton: function(text) {
-    return $("<button>").addClass('button tiny').text(text);
+    return $("<button>").addClass('small button').text(text);
+  }
+});
+
+// Foundation 3 Specific Theme
+$.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
+  getHeaderButtonHolder: function() {
+    return this._super().css({
+      fontSize: '.6em'
+    });
+  }
+});
+
+// Foundation 4 Specific Theme
+$.jsoneditor.themes.foundation4 = $.jsoneditor.themes.foundation.extend({
+  getHeaderButtonHolder: function() {
+    return this._super().css({
+      fontSize: '.6em'
+    });
+  },
+  getFormInputDescription: function(text) {
+    return this._super().css({
+      fontSize: '.8rem'
+    });
+  }
+});
+
+// Foundation 5 Specific Theme
+$.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
+  getFormInputDescription: function(text) {
+    return this._super().css({
+      fontSize: '.8rem'
+    });
+  },
+  getButton: function(text) {
+    return $("<button>").addClass('tiny button').text(text);
   }
 });
 
 $.jsoneditor.themes.html = $.jsoneditor.AbstractTheme.extend({
-  
+  getFormInputLabel: function(text) {
+    return this._super(text).css({
+      display: "block",
+      marginBottom: 3
+    });
+  },
+  getFormInputDescription: function(text) {
+    return this._super(text).css({
+      fontSize: '.8em',
+      margin: 0,
+      display: 'inline-block',
+      fontStyle: 'italic'
+    });
+  },
+  getIndentedPanel: function() {
+    return $("<div>").css({
+      border: '1px solid #ddd',
+      padding: 5,
+      margin: 5,
+      borderRadius: 3
+    });
+  },
+  getChildEditorHolder: function() {
+    return $("<div>").css({
+      marginBottom: 8
+    });
+  },
+  getHeaderButtonHolder: function() {
+    return this.getButtonHolder().css({
+      display: 'inline-block',
+      marginLeft: 10,
+      fontSize: '.8em',
+      verticalAlign: 'middle'
+    });
+  },
+  getTable: function() {
+    return $("<table>").css({
+      borderBottom: '1px solid #ccc',
+      marginBottom: 5
+    });
+  }
 });
 
 $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
@@ -2026,6 +2045,9 @@ $.jsoneditor.templates.underscore = function() {
     }
   };
 };
+// Set the default theme
+$.jsoneditor.theme = 'html';
+
 // Set the default template engine based on what libraries are loaded
 $.each($.jsoneditor.templates, function(key, template) {
   // If this template is supported
@@ -2044,5 +2066,6 @@ $.jsoneditor.resolvers.unshift(function(schema) {
     return "table";
   }
 });
+
 
 })(jQuery);

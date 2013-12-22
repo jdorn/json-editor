@@ -1,13 +1,16 @@
-$.jsoneditor.themes.foundation5 = $.jsoneditor.AbstractTheme.extend({
+// Base Foundation theme
+$.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
   getChildEditorHolder: function() {
     return $("<div>").css({
       marginBottom: 15
     });
-  },
+  }, 
   getSelectInput: function(options) {
     var select = $("<select>").css({
       width: 'auto',
-      minWidth: 'none'
+      minWidth: 'none',
+      padding: 5,
+      marginTop: 3
     });
     $.each(options, function(i,val) {
       select.append($("<option>").attr('value',val).text(val));
@@ -22,8 +25,7 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.AbstractTheme.extend({
   getFormInputDescription: function(text) {
     return $("<p></p>").text(text).css({
       marginTop: -10,
-      fontStyle: 'italic',
-      fontSize: '.8rem'
+      fontStyle: 'italic'
     });
   },
   getFormControl: function(label, input, description) {
@@ -46,6 +48,41 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.AbstractTheme.extend({
     return $("<div>").addClass('button-group');
   },
   getButton: function(text) {
-    return $("<button>").addClass('button tiny').text(text);
+    return $("<button>").addClass('small button').text(text);
+  }
+});
+
+// Foundation 3 Specific Theme
+$.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
+  getHeaderButtonHolder: function() {
+    return this._super().css({
+      fontSize: '.6em'
+    });
+  }
+});
+
+// Foundation 4 Specific Theme
+$.jsoneditor.themes.foundation4 = $.jsoneditor.themes.foundation.extend({
+  getHeaderButtonHolder: function() {
+    return this._super().css({
+      fontSize: '.6em'
+    });
+  },
+  getFormInputDescription: function(text) {
+    return this._super().css({
+      fontSize: '.8rem'
+    });
+  }
+});
+
+// Foundation 5 Specific Theme
+$.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
+  getFormInputDescription: function(text) {
+    return this._super().css({
+      fontSize: '.8rem'
+    });
+  },
+  getButton: function(text) {
+    return $("<button>").addClass('tiny button').text(text);
   }
 });

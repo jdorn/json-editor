@@ -90,11 +90,8 @@ $.fn.jsoneditor = function(options) {
 };
 
 $.jsoneditor = {
-  // Defaults
   template: null,
-  theme: 'bootstrap2',
-
-  // Presets
+  theme:null,
   editors: {},
   templates: {},
   themes: {},
@@ -103,7 +100,7 @@ $.jsoneditor = {
   // Helper functions
   expandSchema: function(schema, editor) {
     if(schema['$ref']) {
-      if(!schema['$ref'].match(/^#\/definitions\//g)) {
+      if(!schema['$ref'].match(/^#\/definitions\//)) {
         throw "JSON Editor only supports local references to schema definitions defined for the root node";
       }
       var key = schema['$ref'].substr(14);
