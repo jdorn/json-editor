@@ -358,7 +358,8 @@ $.jsoneditor.resolvers.unshift(function(schema) {
     return "table";
   }
   
-  // If the resolver function returns a falsy value or a non-existant editor, the next resolver function will be used.
+  // If the resolver function returns a falsy value or a non-existant editor, 
+  // the next resolver function will be used.
 });
 ```
 
@@ -367,10 +368,10 @@ For example, this schema will use the `table` editor, no matter what the resolve
 
 ```json
 {
-  type: "array",
-  editor: "table",
-  items: {
-    type: "number"
+  "type": "array",
+  "editor": "table",
+  "items": {
+    "type": "number"
   }
 }
 ```
