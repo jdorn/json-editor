@@ -702,6 +702,12 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     // If the object should be rendered as a div
     else {
       this.title = this.getTheme().getHeader(this.getTitle()).appendTo(this.container);
+      
+      this.editjson_holder = this.theme.getTextareaInput().appendTo(this.container).hide().css({
+        height: 100,
+        width: '100%'
+      });
+      
       if(this.schema.description) this.description = this.getTheme().getDescription(this.schema.description).appendTo(this.container);
       this.editor_holder = this.getTheme().getIndentedPanel().appendTo(this.container);
 
@@ -723,17 +729,61 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
       // Show/Hide button
       this.collapsed = false;
-      this.toggle_button = this.getTheme().getButton('hide').appendTo(this.title_controls).on('click',function() {
+      this.toggle_button = this.getTheme().getButton('Collapse').appendTo(this.title_controls).on('click',function() {
         if(self.collapsed) {
           self.editor_holder.show(300);
           self.collapsed = false;
-          self.getTheme().setButtonText(self.toggle_button,'hide');
+          self.getTheme().setButtonText(self.toggle_button,'Collapse');
         }
         else {
           self.editor_holder.hide(300);
           self.collapsed = true;
-          self.getTheme().setButtonText(self.toggle_button,'show');
+          self.getTheme().setButtonText(self.toggle_button,'Expand');
         }
+      });
+      
+      // Edit JSON Button
+      this.editing_json = false
+      this.editjson_button = this.theme.getButton('Edit JSON').appendTo(this.title_controls).on('click',function() {
+        // Save Changes
+        if(self.editing_json) {
+          // Get value from form
+          try {
+            var value = JSON.parse(self.editjson_holder.val());
+          }
+          catch(e) {
+            // Error parsing the JSON
+            alert('Invalid JSON - '+e);
+            return false;
+          }
+          
+          // Hide the edit form
+          self.cancel_editjson_button.hide();
+          self.editjson_holder.hide(300);
+          self.theme.setButtonText(self.editjson_button,'Edit JSON');
+          self.editing_json = false;
+          
+          // Set the value
+          self.setValue(value);
+          self.editor_holder.trigger('change');
+        }
+        // Start Editing
+        else {
+          self.editing_json = true;
+          self.cancel_editjson_button.show();
+          self.editjson_holder.show(300);
+          self.theme.setButtonText(self.editjson_button,'Save JSON');
+        }
+        
+        return false;
+      });
+      this.cancel_editjson_button = this.theme.getButton('Cancel Edit').appendTo(this.title_controls).hide().on('click',function() {
+          self.cancel_editjson_button.hide();
+          self.editjson_holder.hide(300);
+          self.theme.setButtonText(self.editjson_button,'Edit JSON');
+          self.editing_json = false;
+          
+          return false;
       });
     }
       
@@ -762,6 +812,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     $.each(this.editors, function(i,editor) {
       self.value[i] = editor.getValue();
     });
+    
+    if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(JSON.stringify(this.value,null,2));
   },
   setValue: function(value) {
     value = value || {};
@@ -1135,16 +1187,18 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     
     this.collapsed = false;
-    this.toggle_button = this.theme.getButton('hide').appendTo(this.title_controls).on('click',function() {
+    this.toggle_button = this.theme.getButton('Collapse').appendTo(this.title_controls).on('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
         self.row_holder.show(300);
-        self.theme.setButtonText($(this),'hide');
+        self.controls.show(300);
+        self.theme.setButtonText($(this),'Collapse');
       }
       else {
         self.collapsed = true;
         self.row_holder.hide(300);
-        self.theme.setButtonText($(this),'show');
+        self.controls.hide(300);
+        self.theme.setButtonText($(this),'Expand');
       }
     });
     
@@ -1494,16 +1548,18 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     var self = this;
 
     this.collapsed = false;
-    this.toggle_button = this.theme.getButton('hide').appendTo(this.title_controls).on('click',function() {
+    this.toggle_button = this.theme.getButton('Collapse').appendTo(this.title_controls).on('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
+        self.controls.show(300);
         self.row_holder.show(300);
-        self.theme.setButtonText($(this),'hide');
+        self.theme.setButtonText($(this),'Collapse');
       }
       else {
         self.collapsed = true;
+        self.controls.hide(300);
         self.row_holder.hide(300);
-        self.theme.setButtonText($(this),'show');
+        self.theme.setButtonText($(this),'Expand');
       }
     });
 

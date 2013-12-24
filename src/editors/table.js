@@ -275,16 +275,18 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     var self = this;
 
     this.collapsed = false;
-    this.toggle_button = this.theme.getButton('hide').appendTo(this.title_controls).on('click',function() {
+    this.toggle_button = this.theme.getButton('Collapse').appendTo(this.title_controls).on('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
+        self.controls.show(300);
         self.row_holder.show(300);
-        self.theme.setButtonText($(this),'hide');
+        self.theme.setButtonText($(this),'Collapse');
       }
       else {
         self.collapsed = true;
+        self.controls.hide(300);
         self.row_holder.hide(300);
-        self.theme.setButtonText($(this),'show');
+        self.theme.setButtonText($(this),'Expand');
       }
     });
 
