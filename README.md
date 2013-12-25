@@ -140,7 +140,7 @@ The following schema types are supported:
 
 Compound types are not supported.
 
-### Arrays
+#### Arrays
 
 JSON Editor only supports arrays with a single `items` schema.  In other words, every element in the array must have the same structure.  For example:
 
@@ -182,7 +182,7 @@ JSON Editor supports references to external urls and local definitions.  Here's 
 }
 ```
 
-Local references must point to the `definitions` object of the root node of the schema and can't be nested.  So, both `#/customkey/name` and `#definitions/name/first` will throw an exception.
+Local references must point to the `definitions` object of the root node of the schema and can't be nested.  So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
 
 External urls are loaded with an AJAX request, so they must either be on the same domain or have the correct HTTP cross domain headers.
 
