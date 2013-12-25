@@ -11,11 +11,11 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.theme = this.jsoneditor.data('jsoneditor').theme;
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
 
-    // Store schema definitions
-    if(this.schema.definitions) {
-      var definitions = this.jsoneditor.data('jsoneditor').definitions;
+    // Store schema definitions for root node
+    if(!options.path && this.schema.definitions) {
+      var refs = this.jsoneditor.data('jsoneditor').refs;
       $.each(this.schema.definitions,function(key,schema) {
-        definitions[key] = schema;
+        refs['#/definitions/'+key] = schema;
       });
     }
 

@@ -159,24 +159,35 @@ JSON Editor only supports arrays with a single `items` schema.  In other words, 
 ```
 ### References and Definitions
 
-Currently, JSON Editor only supports schema references to the root node in the format `#/definitions/DEFINITION_NAME`.  For example:
+JSON Editor supports references to external urls and local definitions.  Here's an example showing both:
 
 ```json
 {
   "type": "object",
   "properties": {
     "name": {
+      "title": "Full Name",
       "$ref": "#/definitions/name"
+    },
+    "location": {
+      "$ref": "http://mydomain.com/geo.json"
     }
   },
   "definitions": {
     "name": {
       "type": "string",
-      "title": "Name"
+      "minLength": 5
     }
   }
 }
 ```
+
+Local references must point to the `definitions` object of the root node of the schema and can't be nested.  So, both `#/customkey/name` and `#definitions/name/first` will throw an exception.
+
+External urls are loaded with an AJAX request, so they must either be on the same domain or have the correct HTTP cross domain headers.
+
+The standard schemas hosted on http://json-schema.org/ do not have the correct cross domain headers and thus cannot be used with JSON Editor.  So, using `http://json-schema.org/geo` will fail.
+
 
 ### Formats
 
