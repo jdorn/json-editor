@@ -64,7 +64,8 @@ For those instances, you can use the `validate` method to check if the data is v
 // Validate the editor's current value against the schema
 $("#editor_holder").jsoneditor('validate',function(errors) {
   if(errors) {
-    // if it's not valid, errors will contain an array of objects, each with a `path` and `message` property
+    // if it's not valid, errors will contain an array of objects, 
+    // each with a `path` and `message` property
     console.log(errors);
   }
   else {
@@ -83,7 +84,7 @@ $("#editor_holder").on('change',function() {});
 
 ### Destroy
 
-This removes the editor HTML from the DOM and prepares everything for garbage collection.
+This removes the editor HTML from the DOM and frees up memory.
 
 ```javascript
 $("#editor_holder").jsoneditor('destroy');
@@ -98,7 +99,7 @@ The following JSON schema keywords are supported.  All other keywords from the s
 *  default
 *  definitions
 *  description
-*  enum (for type `string` only)
+*  enum
 *  exclusiveMaximum
 *  exclusiveMinimum
 *  format
@@ -120,7 +121,7 @@ The following JSON schema keywords are supported.  All other keywords from the s
 
 Most of these keywords behave as described in the specification, but several have caveats, which are described below.
 
-In addition, there are a few custom keywords supported which are not in the spefication:
+In addition, there are a few custom keywords supported which are not in the spefication. These are also explained below.
 
 *  editor
 *  options
@@ -157,6 +158,11 @@ JSON Editor only supports arrays with a single `items` schema.  In other words, 
   }
 }
 ```
+
+### Enum
+
+The `enum` property is only supported for schemas of type `string`, `number`, or `integer`.
+
 ### References and Definitions
 
 JSON Editor supports references to external urls and local definitions.  Here's an example showing both:
@@ -186,12 +192,18 @@ Local references must point to the `definitions` object of the root node of the 
 
 External urls are loaded with an AJAX request, so they must either be on the same domain or have the correct HTTP cross domain headers.
 
-The standard schemas hosted on http://json-schema.org/ do not have the correct cross domain headers and thus cannot be used with JSON Editor.  So, using `http://json-schema.org/geo` will fail.
+When any external urls are used, JSON Editor will fetch them before initializing the editor.  Calling any of the API methods before the editor is initialized will throw an exception.  You can listen for the `ready` event if you want to do something immediately after initialization.
 
+```javascript
+$("#editor_holder").jsoneditor({schema: schema}).on('ready',function() {
+  // Do something here
+});
+
+```
 
 ### Formats
 
-JSON Editor supports the following values for the `format` parameter for fields of type `string`.
+JSON Editor supports the following values for the `format` parameter for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results (e.g. "email").
 
 *  color
 *  date
@@ -271,7 +283,7 @@ It's possible to create your own custom themes as well.  Look at any of the exis
 
 Template Macros
 ------------------
-A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  Templates only work for fields of type `string`.
+A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  Templates only work for fields of type `string`, `integer`, and `number`.
 
 JSON Editor supports the following template engines out of the box:
 
@@ -282,6 +294,8 @@ JSON Editor supports the following template engines out of the box:
 *  mustache
 *  swig
 *  underscore
+
+Here's an example template macro that generates an email address based on a first and last name:
 
 ```json
 {
@@ -354,23 +368,21 @@ Editors
 -----------------
 
 JSON Editor uses resolver functions to determine which editor to use for a particular schema or subschema.  
-The default resolver function uses the `type` schema keyword to choose the editor to use.
+The default resolver function uses the `type` schema keyword to choose the editor to use.  So, `{"type": "integer"}` will use the `integer` editor.
 
-There is an editor for each primitive JSON type.  An additional `table` editor is included, which provides a more compact way to edit arrays.
+There is an editor for each primitive JSON type.  An additional `table` editor is included, which provides a more compact way to edit arrays.  Custom editors can be added as well (look at existing ones for examples).
 
-You can add your own resolver functions easily.  Let's say you want all schemas of type `array` to use the `table` editor.
+Let's say you make a custom `date` editor and want any schema with `format` set to `date` to use this instead of the `string` editor.  You can do this by adding a resolver function:
 
 ```js
 // Add a resolver function to the beginning of the resolver list
 // This will make it run before any other resolver functions
 $.jsoneditor.resolvers.unshift(function(schema) {
-  // If this schema is of type `array`, use the table editor
-  if(schema.type && schema.type === "array") {
-    return "table";
+  if(schema.format === "date") {
+    return "date";
   }
   
-  // If the resolver function returns a falsy value or a non-existant editor, 
-  // the next resolver function will be used.
+  // If no valid editor is returned, the next resolver function will be used
 });
 ```
 
