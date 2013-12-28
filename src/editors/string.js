@@ -178,13 +178,20 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         });
       };
       $.each(this.schema.vars,function(name,path) {
-        var path_parts = path.split('.');
+        var path_parts;
+        if(path instanceof Array) {
+          path_parts = [path[0]].concat(path[1].split('.'));
+        }
+        else {
+          path_parts = path.split('.'); 
+        }
         var first = path_parts.shift();
+        
+        if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
 
         // Find the root node for this template variable
         var root = self.container.closest('[data-schemaid="'+first+'"]');
         if(!root.length) throw "Unknown template variable path "+path;
-
 
         // Keep track of the root node and path for use when rendering the template
         var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');

@@ -3,9 +3,8 @@ JSON Editor
 
 ![JSON Schema -> HTML Editor -> JSON](https://raw.github.com/jdorn/json-editor/master/jsoneditor.png)
 
-If you have structured JSON data and need a web-based editor for it, JSON Editor can help you out.
-
-Define your data structure using JSON Schema and let JSON Editor do the rest.
+JSON Editor will create an HTML editor from a JSON Schema and output JSON data that matches the schema.
+It supports a large subset of JSON Schema and can integrate with several popular CSS frameworks (bootstrap, foundation, and jQueryUI).
 
 Check out an example: http://rawgithub.com/jdorn/json-editor/master/example.html
 
@@ -22,7 +21,7 @@ Requirements
 
 ### Optional Requirements
 
-*  A javascript template engine for macro support (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
+*  A compatible javascript template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
 *  A compatible CSS Framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
 
 Usage
@@ -283,9 +282,12 @@ It's possible to create your own custom themes as well.  Look at any of the exis
 
 Template Macros
 ------------------
-A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  Templates only work for fields of type `string`, `integer`, and `number`.
+A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  
+Templates only work for fields of type `string`, `integer`, and `number`.
 
-JSON Editor supports the following template engines out of the box:
+JSON Editor uses a barebones template engine by default (simple `{{variable}}` replacement only).
+
+You can use another template engine by setting `$.jsoneditor.template` to one of the following supported libraries:
 
 *  ejs
 *  handlebars
@@ -295,12 +297,15 @@ JSON Editor supports the following template engines out of the box:
 *  swig
 *  underscore
 
+```javascript
+$.jsoneditor.template = 'handlebars';
+```
+
 Here's an example template macro that generates an email address based on a first and last name:
 
 ```json
 {
   "type": "object",
-  "id": "person",
   "properties": {
     "fname": {
       "title": "First Name",
@@ -315,8 +320,8 @@ Here's an example template macro that generates an email address based on a firs
       "type": "string",
       "template": "{{ fname }}.{{ lname }}@domain.com",
       "vars": {
-        "fname": "person.fname",
-        "lname": "person.lname"
+        "fname": ["#","fname"],
+        "lname": ["#","lname"]
       }
     }
   }
@@ -325,35 +330,43 @@ Here's an example template macro that generates an email address based on a firs
 
 Any time the `fname` or `lname` field is changed, the `generated_email` field will re-calculate its value.  The   `generated_email` field cannot be edited directly.
 
-Any variables you want to use in the template must be declared in the `vars` object.  The key is the variable name and the value is the dot separated path to the field, starting at an ancestor node that has an `id` specified.  
-
-If there are no ancestor nodes with an `id` specified, the special keyword `root` can be used to refer to the outermost object.  For example:
+Any variables you want to use in the template must be declared in the `vars` object.  
+Each variable is defined by an array with 2 properties. The first is the `id` of the schema where the field is located.  The second is the dot separated path to the field.
+If no `id` is set in your schema, the value `#` can be used to reference the root.  Here are some more examples:
 
 ```json
 {
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string"
-    },
-    "name2": {
-      "type": "string",
-      "template": "{{name}}",
-      "vars": {
-        "name": "root.name"
-      }
+    "type": "array",
+    "items": {
+        "id": "http://example.com/item-schema",
+        "type": "object",
+        "properties": {
+            "address": {
+                "type": "object",
+                "properties": {
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  }
+                }
+            },
+            "location": {
+                "type": "string",
+                "template": "{{city}}, {{state}}",
+                "vars": {
+                    "city": ["http://example.com/item-schema","address.city"],
+                    "state": ["http://example.com/item-schema","address.state"]
+                }
+            }
+        }
     }
-  }
 }
 ```
 
-JSON Editor will auto-detect which template engine to default to based on what libraries are loaded on the page.  You can manually set the default template engine anytime by doing:
 
-```js
-$.jsoneditor.template = 'handlebars';
-```
-
-You can override this default on a per-instance basis by passing a `template` parameter in when initializing:
+If you need to support mutliple template engines for whatever reason, you can override the global `$.jsoneditor.template` setting on a per-instance basis:
 
 ```js
 $("#editor_holder").jsoneditor({
@@ -362,7 +375,20 @@ $("#editor_holder").jsoneditor({
 });
 ```
 
-It's also possible to use a custom templating engine by setting `$.jsoneditor.template` to an object with a `compile` method.
+It's also possible to use a custom template engine by setting `$.jsoneditor.template` to an object with a `compile` method.  For example:
+
+```js
+$.jsoneditor.template = {
+  compile: function(template) {
+    // Compile should return a render function
+    return function(vars) {
+      // A real template engine would render the template here
+      var result = template;
+      return result;
+    }
+  }
+};
+```
 
 Editors
 -----------------

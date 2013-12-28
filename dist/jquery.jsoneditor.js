@@ -250,8 +250,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.options = $.extend(true, {}, (this.options || {}), (this.schema.options || {}), options);
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
-    this.path = options.path || this.schema.id;
+    this.path = options.path || 'root';
     if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
+    if(this.schema.type) this.container.attr('data-schematype',this.schema.type);
     this.container.data('editor',this);
 
     this.key = this.path.split('.').pop();
@@ -303,7 +304,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     return this.container;
   },
   getTitle: function() {
-    return this.schema.title || this.schema.id || this.key;
+    return this.schema.title || this.key;
   },
   getPath: function() {
     return this.path;
@@ -497,13 +498,20 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         });
       };
       $.each(this.schema.vars,function(name,path) {
-        var path_parts = path.split('.');
+        var path_parts;
+        if(path instanceof Array) {
+          path_parts = [path[0]].concat(path[1].split('.'));
+        }
+        else {
+          path_parts = path.split('.'); 
+        }
         var first = path_parts.shift();
+        
+        if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
 
         // Find the root node for this template variable
         var root = self.container.closest('[data-schemaid="'+first+'"]');
         if(!root.length) throw "Unknown template variable path "+path;
-
 
         // Keep track of the root node and path for use when rendering the template
         var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');
@@ -924,7 +932,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     });
     
     // Determine the default value and title of an array element
-    this.item_title = this.schema.items.title || this.schema.items.id || this.getTitle();
+    this.item_title = this.schema.items.title || 'item';
     var tmp = this.getElementEditor(0);
     if(tmp.getChildEditors()) {
       this.item_has_child_editors = true;
@@ -1331,7 +1339,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     // Determine the default value of array element
     var tmp = this.getElementEditor(0);
     this.item_default = tmp.getDefault();
-    this.item_title = this.schema.items.title || this.schema.items.id || this.getTitle();
+    this.item_title = this.schema.items.title || 'row';
 
     // Build header row for table
     if(tmp.getChildEditors()) {
@@ -2081,6 +2089,21 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
   }
 });
 
+$.jsoneditor.templates.default = function() {
+  return {
+    compile: function(template) {
+      return function (vars) {
+        var ret = template+"";
+        // Only supports basic {{var}} macro replacement
+        $.each(vars,function(key,value) {
+          ret = ret.replace(new RegExp('\{\{\s*'+key+'\s*\}\}','g'),value);
+        });
+        return ret;
+      };
+    }
+  };
+};
+
 $.jsoneditor.templates.ejs = function() {
   if(!window.EJS) return false;
 
@@ -2151,14 +2174,8 @@ $.jsoneditor.templates.underscore = function() {
 // Set the default theme
 $.jsoneditor.theme = 'html';
 
-// Set the default template engine based on what libraries are loaded
-$.each($.jsoneditor.templates, function(key, template) {
-  // If this template is supported
-  if(template()) {
-    $.jsoneditor.template = key;
-    return false;
-  }
-});
+// Set the default template engine
+$.jsoneditor.template = 'default';
 
 // Set the default resolvers
 $.jsoneditor.resolvers.unshift(function(schema) {

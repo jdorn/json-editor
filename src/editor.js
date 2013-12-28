@@ -22,8 +22,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.options = $.extend(true, {}, (this.options || {}), (this.schema.options || {}), options);
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
-    this.path = options.path || this.schema.id;
+    this.path = options.path || 'root';
     if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
+    if(this.schema.type) this.container.attr('data-schematype',this.schema.type);
     this.container.data('editor',this);
 
     this.key = this.path.split('.').pop();
@@ -75,7 +76,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     return this.container;
   },
   getTitle: function() {
-    return this.schema.title || this.schema.id || this.key;
+    return this.schema.title || this.key;
   },
   getPath: function() {
     return this.path;

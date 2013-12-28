@@ -20,7 +20,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     });
     
     // Determine the default value and title of an array element
-    this.item_title = this.schema.items.title || this.schema.items.id || this.getTitle();
+    this.item_title = this.schema.items.title || 'item';
     var tmp = this.getElementEditor(0);
     if(tmp.getChildEditors()) {
       this.item_has_child_editors = true;

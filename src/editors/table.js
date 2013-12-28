@@ -11,7 +11,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     // Determine the default value of array element
     var tmp = this.getElementEditor(0);
     this.item_default = tmp.getDefault();
-    this.item_title = this.schema.items.title || this.schema.items.id || this.getTitle();
+    this.item_title = this.schema.items.title || 'row';
 
     // Build header row for table
     if(tmp.getChildEditors()) {

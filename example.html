@@ -69,7 +69,6 @@ var data = $("#editor").jsoneditor('value');
 </div>
 <script>
     var schema = {
-        id: "person",
         title: "Person",
         type: "object",
         properties: {
@@ -113,7 +112,6 @@ var data = $("#editor").jsoneditor('value');
                 uniqueItems: true,
                 items: {
                     type: "object",
-                    id: "pet",
                     properties: {
                         type: {
                             type: "string",
