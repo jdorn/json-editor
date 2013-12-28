@@ -1,7 +1,7 @@
 JSON Editor
 ===========
 
-JSON Schema -> HTML Editor -> JSON
+![JSON Schema -> HTML Editor -> JSON](https://raw.github.com/jdorn/json-editor/master/jsoneditor.png)
 
 If you have structured JSON data and need a web-based editor for it, JSON Editor can help you out.
 
