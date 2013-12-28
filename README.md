@@ -42,6 +42,26 @@ $("#editor_holder").jsoneditor({
 });
 ```
 
+If you want to set an initial value for the editor, pass in a `startval` parameter.
+
+
+```javascript
+$("#editor_holder").jsoneditor({
+  schema: {
+    type: "object",
+    properties: {
+      name: {
+        type: "string"
+      }
+    }
+  },
+  startval: {
+    "name": "Jane Doe"
+  }
+});
+```
+
+
 ### Get/Set Value
 
 ```javascript
