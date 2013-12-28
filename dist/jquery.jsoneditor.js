@@ -65,6 +65,7 @@ $.fn.jsoneditor = function(options) {
     d.root.destroy();
     d = null;
     $this.data('jsoneditor',null);
+    $this.empty();
 
     return this;
   }
@@ -101,20 +102,42 @@ $.fn.jsoneditor = function(options) {
   };
   $this.data('jsoneditor',d);
 
-  var load = function() {
+  d.root_container = d.theme.getContainer().appendTo($this);
+
+  // Stop all change events before the editor is ready
+  d.root_container.on('change',function(e) {
+    if(!d.ready) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  });
+
+  var load = function(synchronous) {
     if(d.ready) return;
     
     d.root = new editor_class({
       jsoneditor: $this,
       schema: schema,
-      container: $this
+      container: d.root_container
     });
 
     // Starting data
     if(data) d.root.setValue(data);
     
     d.ready = true;
-    $this.trigger('ready');
+    
+    if(synchronous) {
+      window.setTimeout(function() {
+        $this.trigger('ready');
+        $this.trigger('change');
+      });
+    }
+    else {
+      $this.trigger('ready');
+      $this.trigger('change');
+    }
+    
   }
 
   // Recursively look for $ref urls in the schema and load them before building the editor
@@ -148,7 +171,7 @@ $.fn.jsoneditor = function(options) {
     });    
   };
   getRefs(d.schema);
-  if(!waiting) load();
+  if(!waiting) load(true);
 
   return this;
 };
@@ -163,6 +186,9 @@ $.jsoneditor = {
 
   // Helper functions
   expandSchema: function(schema, editor) {
+    // Work on a deep copy of the schema
+    schema = $.extend(true,{},schema);
+    
     // Schema has a reference to another schema
     if(schema['$ref']) {
       // Reference to local schema or external url (previously loaded and cached)
@@ -252,7 +278,6 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
     if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
-    if(this.schema.type) this.container.attr('data-schematype',this.schema.type);
     this.container.data('editor',this);
 
     this.key = this.path.split('.').pop();
@@ -335,7 +360,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     this.refreshValue();
 
-    if(from_template) this.input.trigger('change');
+    if(this.getValue() !== value || from_template) this.input.trigger('change');
+    this.input.trigger('set');
   },
   isValid: function(callback) {
     var errors = [];
@@ -504,6 +530,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         }
         else {
           path_parts = path.split('.'); 
+          if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
         }
         var first = path_parts.shift();
         
@@ -522,7 +549,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         };
 
         // Listen for changes to the variable field
-        root.on('change','[data-schemapath="'+adjusted_path+'"]',self.var_listener);
+        root.on('change set','[data-schemapath="'+adjusted_path+'"]',self.var_listener);
       });
 
       self.var_listener();
@@ -1689,6 +1716,9 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
 
 $.jsoneditor.AbstractTheme = Class.extend({
+  getContainer: function() {
+    return $("<div>");
+  },
   getFormInputLabel: function(text) {
     return $("<label>").text(text);
   },
@@ -2096,7 +2126,7 @@ $.jsoneditor.templates.default = function() {
         var ret = template+"";
         // Only supports basic {{var}} macro replacement
         $.each(vars,function(key,value) {
-          ret = ret.replace(new RegExp('\{\{\s*'+key+'\s*\}\}','g'),value);
+          ret = ret.replace(new RegExp('\{\{\\s*'+key+'\\s*\}\}','g'),value);
         });
         return ret;
       };

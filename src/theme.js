@@ -1,4 +1,7 @@
 $.jsoneditor.AbstractTheme = Class.extend({
+  getContainer: function() {
+    return $("<div>");
+  },
   getFormInputLabel: function(text) {
     return $("<label>").text(text);
   },

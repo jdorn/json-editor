@@ -307,21 +307,24 @@ Here's an example template macro that generates an email address based on a firs
 {
   "type": "object",
   "properties": {
-    "fname": {
-      "title": "First Name",
-      "type": "string"
+    "name": {
+      "type": "object",
+      "properties": {
+        "first": {
+          "type": "string"
+        },
+        "last": {
+          "type": "string"
+        }
+      }
     },
-    "lname": {
-      "title": "Last Name",
-      "type": "string"
-    },
-    "generated_email": {
+    "email": {
       "title": "Generated Email",
       "type": "string",
       "template": "{{ fname }}.{{ lname }}@domain.com",
       "vars": {
-        "fname": ["#","fname"],
-        "lname": ["#","lname"]
+        "fname": "name.first",
+        "lname": "name.last"
       }
     }
   }
@@ -331,14 +334,14 @@ Here's an example template macro that generates an email address based on a firs
 Any time the `fname` or `lname` field is changed, the `generated_email` field will re-calculate its value.  The   `generated_email` field cannot be edited directly.
 
 Any variables you want to use in the template must be declared in the `vars` object.  
-Each variable is defined by an array with 2 properties. The first is the `id` of the schema where the field is located.  The second is the dot separated path to the field.
-If no `id` is set in your schema, the value `#` can be used to reference the root.  Here are some more examples:
+By default, the variable paths (`name.first` and `name.last` in this example) are relative to the root schema.
+You can make the variable paths relative to any ancestor node with a schema `id` defined as well.  This is especially useful within arrays.  Here's an example:
 
 ```json
 {
     "type": "array",
     "items": {
-        "id": "http://example.com/item-schema",
+        "id": "http://example.com/person",
         "type": "object",
         "properties": {
             "address": {
@@ -356,8 +359,8 @@ If no `id` is set in your schema, the value `#` can be used to reference the roo
                 "type": "string",
                 "template": "{{city}}, {{state}}",
                 "vars": {
-                    "city": ["http://example.com/item-schema","address.city"],
-                    "state": ["http://example.com/item-schema","address.state"]
+                    "city": ["http://example.com/person","address.city"],
+                    "state": ["http://example.com/person","address.state"]
                 }
             }
         }
@@ -365,6 +368,11 @@ If no `id` is set in your schema, the value `#` can be used to reference the roo
 }
 ```
 
+The `location` field for each row will be generated using the `city` and `state` fields from its row.
+
+
+Custom Template Engines
+============
 
 If you need to support mutliple template engines for whatever reason, you can override the global `$.jsoneditor.template` setting on a per-instance basis:
 

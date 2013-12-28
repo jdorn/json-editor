@@ -102,6 +102,15 @@ var data = $("#editor").jsoneditor('value');
                     },
                     state: {
                         type: "string"
+                    },
+                    citystate: {
+                        type: "string",
+                        description: "This is generated automatically from the previous two fields",
+                        template: "{{city}}, {{state}}",
+                        vars: {
+                            city: 'location.city',
+                            state: 'location.state'
+                        }
                     }
                 }
             },
@@ -157,9 +166,6 @@ var data = $("#editor").jsoneditor('value');
 
             $("#output").val(JSON.stringify(json,null,2));
         });
-
-        // Trigger an initial change event so the JSON output has something in it
-        $("#editor").trigger('change');
 
         // When the 'update form' button is clicked, set the editor's value
         $("#setvalue").on('click',function() {

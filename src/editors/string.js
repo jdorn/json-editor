@@ -15,7 +15,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     this.refreshValue();
 
-    if(from_template) this.input.trigger('change');
+    if(this.getValue() !== value || from_template) this.input.trigger('change');
+    this.input.trigger('set');
   },
   isValid: function(callback) {
     var errors = [];
@@ -184,6 +185,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         }
         else {
           path_parts = path.split('.'); 
+          if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
         }
         var first = path_parts.shift();
         
@@ -202,7 +204,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         };
 
         // Listen for changes to the variable field
-        root.on('change','[data-schemapath="'+adjusted_path+'"]',self.var_listener);
+        root.on('change set','[data-schemapath="'+adjusted_path+'"]',self.var_listener);
       });
 
       self.var_listener();
