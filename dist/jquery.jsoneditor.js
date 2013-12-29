@@ -1,4 +1,4 @@
-/*! JSON Editor v0.3.0 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.0 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -119,7 +119,8 @@ $.fn.jsoneditor = function(options) {
     d.root = new editor_class({
       jsoneditor: $this,
       schema: schema,
-      container: d.root_container
+      container: d.root_container,
+      required: true
     });
 
     // Starting data
@@ -282,12 +283,39 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
+    
+    // If not required, add an add/remove property link
+    if(!this.isRequired() && !this.options.compact) {
+      this.title_links = this.theme.getFloatRightLinkHolder().appendTo(this.container);
+
+      this.addremove = this.theme.getLink('remove '+this.getTitle()).appendTo(this.title_links);
+      
+      var self = this;
+      this.addremove.on('click',function() {
+        if(self.property_removed) {
+          self.addProperty();
+        }
+        else {
+          self.removeProperty();
+        }
+      
+        self.container.trigger('change');
+        return false;
+      });
+    }
 
     this.build();
 
-    this.setValue(this.getDefault());
+    this.setValue(this.getDefault(), true);
   },
-
+  addProperty: function() {
+    this.property_removed = false;
+    this.addremove.text('remove '+this.getTitle());
+  },
+  removeProperty: function() {
+    this.property_removed = true;
+    this.addremove.text('add '+this.getTitle());
+  },
   build: function() {
 
   },
@@ -314,6 +342,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.path = null;
     this.key = null;
     this.parent = null;
+  },
+  isRequired: function() {
+    return this.options.required;
   },
   getDefault: function() {
     return this.schema.default || null;
@@ -347,7 +378,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || '';
   },
-  setValue: function(value,from_template) {
+  setValue: function(value,initial,from_template) {
     value = value || '';
 
     // Sanitize value before setting it
@@ -419,6 +450,18 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     
     if(errors.length) callback(errors);
     else callback();
+  },
+  removeProperty: function() {
+    this._super();
+    this.input.hide(500);
+    if(this.description) this.description.hide(500);
+    this.theme.disableLabel(this.label);
+  },
+  addProperty: function() {
+    this._super();
+    this.input.show(500);
+    if(this.description) this.description.show(500);
+    this.theme.enableLabel(this.label);
   },
   build: function() {
     var self = this;
@@ -589,7 +632,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         }
         vars[name] = val;
       });
-      this.setValue(this.template(vars),true);
+      this.setValue(this.template(vars),false,true);
     }
   }
 });
@@ -756,6 +799,22 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getChildEditors: function() {
     return this.editors;
   },
+  addProperty: function() {
+    this._super();
+    this.editor_holder.show(500);
+    this.title_controls.show(500);
+    this.theme.enableHeader(this.title);
+  },
+  removeProperty: function() {
+    this._super();
+    this.editor_holder.hide(500);
+    this.title_controls.hide(500);
+    this.cancel_editjson_button.hide();
+    this.editjson_holder.hide(300);
+    this.theme.setButtonText(this.editjson_button,'Edit JSON');
+    this.editing_json = false;
+    this.theme.disableHeader(this.title);
+  },
   build: function() {
     this.editors = {};
     var self = this;
@@ -797,12 +856,17 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
         var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
 
+        // If the property is required
+        var required = false;
+        if(self.schema.required && self.schema.required.indexOf(key) >= 0) required = true;
+
         self.editors[key] = new editor({
           jsoneditor: self.jsoneditor,
           schema: schema,
           container: holder,
           path: self.path+'.'+key,
-          parent: self
+          parent: self,
+          required: required
         });
       });
 
@@ -892,20 +956,32 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     this.value = {};
     var self = this;
     $.each(this.editors, function(i,editor) {
+      if(editor.property_removed) return;
       self.value[i] = editor.getValue();
     });
     
     if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(JSON.stringify(this.value,null,2));
   },
-  setValue: function(value) {
+  setValue: function(value, initial) {
     value = value || {};
     var self = this;
     $.each(this.editors, function(i,editor) {
       if(typeof value[i] !== "undefined") {
-        editor.setValue(value[i]);
+        // If property is removed, add property
+        if(editor.property_removed && editor.addremove) {
+          editor.addremove.trigger('click');
+        }
+        
+        editor.setValue(value[i],initial);
       }
       else {
-        editor.setValue(editor.getDefault());
+        // If property isn't required, remove property
+        if(!initial && !editor.property_removed && !editor.isRequired() && editor.addremove) {
+          editor.addremove.trigger('click');
+          return;
+        }
+        
+        editor.setValue(editor.getDefault(),initial);
       }
     });
     this.refreshValue();
@@ -914,7 +990,11 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     var errors = [];
 
     var needed = 0;
+    var self = this;
     $.each(this.editors, function(i,editor) {
+      // Ignore properties that aren't set
+      if(editor.property_removed) return;
+      
       needed++;
     });
     
@@ -922,6 +1002,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
     var finished = 0;
     $.each(this.editors, function(i,editor) {
+      // Ignore properties that aren't set
+      if(editor.property_removed) return;
+      
       editor.isValid(function(err) {
         if(err) {
           errors = errors.concat(err);
@@ -940,6 +1023,20 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || [];
+  },
+  addProperty: function() {
+    this._super();
+    this.row_holder.show(500);
+    this.controls.show(500);
+    this.title_controls.show(500);
+    this.theme.enableHeader(this.title);
+  },
+  removeProperty: function() {
+    this._super();
+    this.row_holder.hide(500);
+    this.controls.hide(500);
+    this.title_controls.hide(500);
+    this.theme.disableHeader(this.title);
   },
   build: function() {
     this.rows = [];
@@ -999,7 +1096,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       schema: schema_copy,
       container: holder,
       path: this.path+'.'+i,
-      parent: this
+      parent: this,
+      required: true
     });
     
     ret.array_controls = this.theme.getButtonHolder().appendTo(holder);
@@ -1354,6 +1452,14 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
 });
 
 $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
+  addProperty: function() {
+    this._super();
+    if(this.value.length) this.table.show(500);
+  },
+  removeProperty: function() {
+    this._super();
+    this.table.hide(500);
+  },
   build: function() {
     this.rows = [];
     var self = this;
@@ -1718,6 +1824,35 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 $.jsoneditor.AbstractTheme = Class.extend({
   getContainer: function() {
     return $("<div>");
+  },
+  getFloatRightLinkHolder: function() {
+    return $("<div>").css({
+      float: 'right',
+      marginLeft: '10px'
+    });
+  },
+  getLink: function(text) {
+    return $("<a href='#'>").text(text);
+  },
+  disableHeader: function(header) {
+    header.css({
+      color: "#ccc"
+    });
+  },
+  disableLabel: function(label) {
+    label.css({
+      color: "#ccc"
+    });
+  },
+  enableHeader: function(header) {
+    header.css({
+      color: ''
+    });
+  },
+  enableLabel: function(label) {
+    label.css({
+      color: ''
+    });
   },
   getFormInputLabel: function(text) {
     return $("<label>").text(text);

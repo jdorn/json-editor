@@ -133,6 +133,7 @@ The following JSON schema keywords are supported.  All other keywords from the s
 *  multipleOf
 *  pattern
 *  properties
+*  required
 *  title
 *  type
 *  uniqueItems
@@ -219,6 +220,16 @@ $("#editor_holder").jsoneditor({schema: schema}).on('ready',function() {
 });
 
 ```
+
+### Required
+
+If a field is marked as not required, there will be an "add/remove" link.  
+
+As per the spec, the `required` attribute only cares that the property exists and doesn't look at the value at all.
+
+Some other JSON Schema based editors require a non-empty value in order to validate against `required`, but JSON Editor does not.
+
+The proper way to require a non-empty value is to use the `minLength` or `minItems` schema keywords.
 
 ### Formats
 

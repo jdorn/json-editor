@@ -2,6 +2,35 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getContainer: function() {
     return $("<div>");
   },
+  getFloatRightLinkHolder: function() {
+    return $("<div>").css({
+      float: 'right',
+      marginLeft: '10px'
+    });
+  },
+  getLink: function(text) {
+    return $("<a href='#'>").text(text);
+  },
+  disableHeader: function(header) {
+    header.css({
+      color: "#ccc"
+    });
+  },
+  disableLabel: function(label) {
+    label.css({
+      color: "#ccc"
+    });
+  },
+  enableHeader: function(header) {
+    header.css({
+      color: ''
+    });
+  },
+  enableLabel: function(label) {
+    label.css({
+      color: ''
+    });
+  },
   getFormInputLabel: function(text) {
     return $("<label>").text(text);
   },

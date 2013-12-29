@@ -1,4 +1,12 @@
 $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
+  addProperty: function() {
+    this._super();
+    if(this.value.length) this.table.show(500);
+  },
+  removeProperty: function() {
+    this._super();
+    this.table.hide(500);
+  },
   build: function() {
     this.rows = [];
     var self = this;

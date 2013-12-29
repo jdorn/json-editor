@@ -99,7 +99,8 @@ $.fn.jsoneditor = function(options) {
     d.root = new editor_class({
       jsoneditor: $this,
       schema: schema,
-      container: d.root_container
+      container: d.root_container,
+      required: true
     });
 
     // Starting data

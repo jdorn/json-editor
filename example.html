@@ -112,7 +112,8 @@ var data = $("#editor").jsoneditor('value');
                             state: 'location.state'
                         }
                     }
-                }
+                },
+                required: ["city","state"]
             },
             pets: {
                 type: "array",
@@ -130,10 +131,12 @@ var data = $("#editor").jsoneditor('value');
                         name: {
                             type: "string"
                         }
-                    }
+                    },
+                    required: ["type","name"]
                 }
             }
-        }
+        },
+        required: ["name","age"]
     };
 
     $(document).ready(function() {

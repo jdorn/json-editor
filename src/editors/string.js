@@ -2,7 +2,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || '';
   },
-  setValue: function(value,from_template) {
+  setValue: function(value,initial,from_template) {
     value = value || '';
 
     // Sanitize value before setting it
@@ -74,6 +74,18 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     
     if(errors.length) callback(errors);
     else callback();
+  },
+  removeProperty: function() {
+    this._super();
+    this.input.hide(500);
+    if(this.description) this.description.hide(500);
+    this.theme.disableLabel(this.label);
+  },
+  addProperty: function() {
+    this._super();
+    this.input.show(500);
+    if(this.description) this.description.show(500);
+    this.theme.enableLabel(this.label);
   },
   build: function() {
     var self = this;
@@ -244,7 +256,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         }
         vars[name] = val;
       });
-      this.setValue(this.template(vars),true);
+      this.setValue(this.template(vars),false,true);
     }
   }
 });

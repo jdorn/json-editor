@@ -28,12 +28,39 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
+    
+    // If not required, add an add/remove property link
+    if(!this.isRequired() && !this.options.compact) {
+      this.title_links = this.theme.getFloatRightLinkHolder().appendTo(this.container);
+
+      this.addremove = this.theme.getLink('remove '+this.getTitle()).appendTo(this.title_links);
+      
+      var self = this;
+      this.addremove.on('click',function() {
+        if(self.property_removed) {
+          self.addProperty();
+        }
+        else {
+          self.removeProperty();
+        }
+      
+        self.container.trigger('change');
+        return false;
+      });
+    }
 
     this.build();
 
-    this.setValue(this.getDefault());
+    this.setValue(this.getDefault(), true);
   },
-
+  addProperty: function() {
+    this.property_removed = false;
+    this.addremove.text('remove '+this.getTitle());
+  },
+  removeProperty: function() {
+    this.property_removed = true;
+    this.addremove.text('add '+this.getTitle());
+  },
   build: function() {
 
   },
@@ -60,6 +87,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.path = null;
     this.key = null;
     this.parent = null;
+  },
+  isRequired: function() {
+    return this.options.required;
   },
   getDefault: function() {
     return this.schema.default || null;

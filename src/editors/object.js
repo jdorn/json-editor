@@ -5,6 +5,22 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getChildEditors: function() {
     return this.editors;
   },
+  addProperty: function() {
+    this._super();
+    this.editor_holder.show(500);
+    this.title_controls.show(500);
+    this.theme.enableHeader(this.title);
+  },
+  removeProperty: function() {
+    this._super();
+    this.editor_holder.hide(500);
+    this.title_controls.hide(500);
+    this.cancel_editjson_button.hide();
+    this.editjson_holder.hide(300);
+    this.theme.setButtonText(this.editjson_button,'Edit JSON');
+    this.editing_json = false;
+    this.theme.disableHeader(this.title);
+  },
   build: function() {
     this.editors = {};
     var self = this;
@@ -46,12 +62,17 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
         var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
 
+        // If the property is required
+        var required = false;
+        if(self.schema.required && self.schema.required.indexOf(key) >= 0) required = true;
+
         self.editors[key] = new editor({
           jsoneditor: self.jsoneditor,
           schema: schema,
           container: holder,
           path: self.path+'.'+key,
-          parent: self
+          parent: self,
+          required: required
         });
       });
 
@@ -141,20 +162,32 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     this.value = {};
     var self = this;
     $.each(this.editors, function(i,editor) {
+      if(editor.property_removed) return;
       self.value[i] = editor.getValue();
     });
     
     if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(JSON.stringify(this.value,null,2));
   },
-  setValue: function(value) {
+  setValue: function(value, initial) {
     value = value || {};
     var self = this;
     $.each(this.editors, function(i,editor) {
       if(typeof value[i] !== "undefined") {
-        editor.setValue(value[i]);
+        // If property is removed, add property
+        if(editor.property_removed && editor.addremove) {
+          editor.addremove.trigger('click');
+        }
+        
+        editor.setValue(value[i],initial);
       }
       else {
-        editor.setValue(editor.getDefault());
+        // If property isn't required, remove property
+        if(!initial && !editor.property_removed && !editor.isRequired() && editor.addremove) {
+          editor.addremove.trigger('click');
+          return;
+        }
+        
+        editor.setValue(editor.getDefault(),initial);
       }
     });
     this.refreshValue();
@@ -163,7 +196,11 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     var errors = [];
 
     var needed = 0;
+    var self = this;
     $.each(this.editors, function(i,editor) {
+      // Ignore properties that aren't set
+      if(editor.property_removed) return;
+      
       needed++;
     });
     
@@ -171,6 +208,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
     var finished = 0;
     $.each(this.editors, function(i,editor) {
+      // Ignore properties that aren't set
+      if(editor.property_removed) return;
+      
       editor.isValid(function(err) {
         if(err) {
           errors = errors.concat(err);

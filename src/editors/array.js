@@ -2,6 +2,20 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || [];
   },
+  addProperty: function() {
+    this._super();
+    this.row_holder.show(500);
+    this.controls.show(500);
+    this.title_controls.show(500);
+    this.theme.enableHeader(this.title);
+  },
+  removeProperty: function() {
+    this._super();
+    this.row_holder.hide(500);
+    this.controls.hide(500);
+    this.title_controls.hide(500);
+    this.theme.disableHeader(this.title);
+  },
   build: function() {
     this.rows = [];
     var self = this;
@@ -60,7 +74,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       schema: schema_copy,
       container: holder,
       path: this.path+'.'+i,
-      parent: this
+      parent: this,
+      required: true
     });
     
     ret.array_controls = this.theme.getButtonHolder().appendTo(holder);
