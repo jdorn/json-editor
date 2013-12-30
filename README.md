@@ -44,7 +44,6 @@ $("#editor_holder").jsoneditor({
 
 If you want to set an initial value for the editor, pass in a `startval` parameter.
 
-
 ```javascript
 $("#editor_holder").jsoneditor({
   schema: {
@@ -61,6 +60,13 @@ $("#editor_holder").jsoneditor({
 });
 ```
 
+JSON Editor does the initialization asynchronously, so before using any of the following API methods, you must listen for the `ready` event.
+
+```javascript
+$("#editor_holder").jsoneditor({schema: schema}).on('ready',function() {
+  // Do something here
+});
+```
 
 ### Get/Set Value
 
@@ -77,7 +83,8 @@ console.log(value.name) // Will log "John Smith"
 
 When feasible, JSON Editor won't let users enter invalid data.  
 However, in some cases it is still possible to enter data that doesn't validate against the schema.
-For those instances, you can use the `validate` method to check if the data is valid or not.
+
+You can use the `validate` method to check if the data is valid or not.
 
 ```javascript
 // Validate the editor's current value against the schema
@@ -111,42 +118,34 @@ $("#editor_holder").jsoneditor('destroy');
 
 JSON Schema Support
 -----------------
-JSON Editor supports a subset of the JSON Schema draft specification.
+JSON Editor supports most of the JSON Schema [core][core] and [validation][validation] specifications.  The [hyper-schema][hyper] specification is not supported.
 
-The following JSON schema keywords are supported.  All other keywords from the specification will be ignored.
+[core]: http://json-schema.org/latest/json-schema-core.html
+[validation]: http://json-schema.org/latest/json-schema-validation.html
+[hyper]: http://json-schema.org/latest/json-schema-hypermedia.html
 
-*  default
-*  definitions
-*  description
-*  enum
-*  exclusiveMaximum
-*  exclusiveMinimum
-*  format
-*  id
-*  items
-*  maxItems
-*  maximum
-*  maxLength
-*  minItems
-*  minimum
-*  minLength
-*  multipleOf
-*  pattern
-*  properties
-*  required
-*  title
-*  type
-*  uniqueItems
-*  $ref
+The following schema keywords are __NOT__ supported and will be ignored:
 
-Most of these keywords behave as described in the specification, but several have caveats, which are described below.
+*  additionalItems
+*  additionalProperties
+*  allOf
+*  anyOf
+*  dependencies
+*  not
+*  oneOf
+*  patternProperties
 
-In addition, there are a few custom keywords supported which are not in the spefication. These are also explained below.
+Everything else behaves as described in the specification, but a few have caveats.  These are described below.
+
+In addition, JSON Editor has the following 4 custom schema keywords, which are also described below.
 
 *  editor
 *  options
 *  template
 *  vars
+
+The eventual goal of this project is to provide support for 100% of the JSON Schema specification,
+so this list of caveats and unsupported keywords will get smaller over time.
 
 ### Types
 
@@ -181,7 +180,7 @@ JSON Editor only supports arrays with a single `items` schema.  In other words, 
 
 ### Enum
 
-The `enum` property is only supported for schemas of type `string`, `number`, or `integer`.
+The `enum` property is only supported for schemas of type `string`, `number`, and `integer`.
 
 ### References and Definitions
 
@@ -208,17 +207,10 @@ JSON Editor supports references to external urls and local definitions.  Here's 
 }
 ```
 
-Local references must point to the `definitions` object of the root node of the schema and can't be nested.  So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
+Local references must point to the `definitions` object of the root node of the schema and can't be nested.
+So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
 
 External urls are loaded with an AJAX request, so they must either be on the same domain or have the correct HTTP cross domain headers.
-
-When any external urls are used, JSON Editor will fetch them before initializing the editor.  Calling any of the API methods before the editor is initialized will throw an exception.  You can listen for the `ready` event if you want to do something immediately after initialization.
-
-```javascript
-$("#editor_holder").jsoneditor({schema: schema}).on('ready',function() {
-  // Do something here
-});
-
 ```
 
 ### Required
@@ -251,7 +243,7 @@ JSON Editor supports the following values for the `format` parameter for schemas
 *  url
 *  week
 
-JSON Editor uses HTML5 input types, so polyfills might be required for full functionality in older browsers.
+JSON Editor uses HTML5 input types, so some of these may render as basic text input in older browsers.
 
 Here is an example that will show a color picker in browsers that support it:
 
@@ -300,7 +292,11 @@ The currently supported themes are:
 The default theme is `html`, which doesn't use any special class names or styling.
 This default can be changed by setting the `$.jsoneditor.theme` variable.
 
-You can also override the default on a per-instance basis by passing a `theme` parameter in when initializing:
+```javascript
+$.jsoneditor.theme = 'foundation5';
+```
+
+You can override this default on a per-instance basis by passing a `theme` parameter in when initializing:
 
 ```js
 $("#editor_holder").jsoneditor({
@@ -362,7 +358,7 @@ Here's an example template macro that generates an email address based on a firs
 }
 ```
 
-Any time the `fname` or `lname` field is changed, the `generated_email` field will re-calculate its value.  The   `generated_email` field cannot be edited directly.
+Any time the `fname` or `lname` field is changed, the `generated_email` field will re-calculate its value.
 
 Any variables you want to use in the template must be declared in the `vars` object.  
 By default, the variable paths (`name.first` and `name.last` in this example) are relative to the root schema.
@@ -399,13 +395,12 @@ You can make the variable paths relative to any ancestor node with a schema `id`
 }
 ```
 
-The `location` field for each row will be generated using the `city` and `state` fields from its row.
-
+In this example, the `location` field will be generated using the `city` and `state` fields from each row.
 
 Custom Template Engines
 ============
 
-If you need to support mutliple template engines for whatever reason, you can override the global `$.jsoneditor.template` setting on a per-instance basis:
+If you need to support multiple template engines for whatever reason, you can override the global `$.jsoneditor.template` setting on a per-instance basis:
 
 ```js
 $("#editor_holder").jsoneditor({
@@ -414,7 +409,7 @@ $("#editor_holder").jsoneditor({
 });
 ```
 
-It's also possible to use a custom template engine by setting `$.jsoneditor.template` to an object with a `compile` method.  For example:
+It's also possible to use a custom template engine by using an object with a `compile` method.  For example:
 
 ```js
 $.jsoneditor.template = {

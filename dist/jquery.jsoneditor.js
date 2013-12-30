@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.0 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.1 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2013-12-28
+ * Date: 2013-12-30
  */
 
 /**
@@ -990,15 +990,33 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     var errors = [];
 
     var needed = 0;
-    var self = this;
     $.each(this.editors, function(i,editor) {
       // Ignore properties that aren't set
       if(editor.property_removed) return;
       
       needed++;
     });
-    
-    if(!needed) return callback();
+
+    // Check for minProperties and maxProperties
+    if(typeof this.schema.minProperties !== "undefined" && needed < this.schema.minProperties) {
+      errors.push({
+        path: this.path,
+        message: 'Must have at least '+this.schema.minProperties+' properties'
+      });
+    }
+    if(typeof this.schema.maxProperties !== "undefined"  && needed > this.schema.maxProperties) {
+      errors.push({
+        path: this.path,
+        message: 'Must have at most '+this.schema.maxProperties+' properties'
+      });
+    }
+
+    // If there aren't any child editors to check
+    if(!needed) {
+      if(errors.length) callback(errors);
+      else callback();
+      return;
+    }
 
     var finished = 0;
     $.each(this.editors, function(i,editor) {
