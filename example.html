@@ -79,7 +79,7 @@ var data = $("#editor").jsoneditor('value');
                 default: "John Smith"
             },
             age: {
-                type: "integer",
+                type: ["integer","string"],
                 default: 21,
                 format: "range",
                 minimum: 18,

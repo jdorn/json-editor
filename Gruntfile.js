@@ -17,6 +17,7 @@ module.exports = function(grunt) {
           'src/editors/object.js',
           'src/editors/array.js',
           'src/editors/table.js',
+          'src/editors/multiple.js',
           
           'src/theme.js',
           'src/themes/*.js',
