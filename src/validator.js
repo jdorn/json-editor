@@ -154,7 +154,7 @@ $.jsoneditor.Validator = Class.extend({
       }
     }
     
-    // `maxium`
+    // `maximum`
     if(schema.maximum) {
       if(schema.exclusiveMaximum && value >= schema.maximum) {
         errors.push({
@@ -223,104 +223,218 @@ $.jsoneditor.Validator = Class.extend({
       }
     }
     
-    // `items` and `additionalItems`
-    if(schema.items) {
-      // TODO: implement
-    }
-    
-    // `maxItems`
-    if(schema.maxItems) {
-      if(value.length > schema.maxItems) {
-        errors.push({
-          path: path,
-          property: 'maxItems',
-          message: 'Value must have at most '+schema.maxItems+' items'
-        });
-      }
-    }
-    
-    // `minItems`
-    if(schema.minItems) {
-      if(value.length < schema.minItems) {
-        errors.push({
-          path: path,
-          property: 'minItems',
-          message: 'Value must have at least '+schema.minItems+' items'
-        });
-      }
-    }
-    
-    // `uniqueItems`
-    if(schema.uniqueItems) {
-      var seen = {};
-      for(i=0; i<value.length; i++) {
-        valid = JSON.Stringify(value[i]);
-        if(seen[valid]) {
-          errors.push({
-            path: path,
-            property: 'uniqueItems',
-            message: 'Array must have unique items'
-          });
-          break;
+    if(value instanceof Array) {    
+      // `items` and `additionalItems`
+      if(schema.items) {
+        // `items` is an array
+        if(schema.items instanceOf Array) {
+          for(i=0; i<value.length; i++) {
+            // If this item has a specific schema tied to it
+            // Validate against it
+            if(schema.items[i]) {
+              errors.concat(this._validateSchema(schema.items[i],value[i],path+'.'+i));
+            }
+            // If all additional items are allowed
+            else if(schema.additionalItems === true) {
+              break;
+            }
+            // If additional items is a schema
+            // TODO: Incompatibility between version 3 and 4 of the spec
+            else if(schema.additionalItems) {
+              errors.concat(this._validateSchema(schema.additionalItems,value[i],path+'.'+i));
+            }
+            // If no additional items are allowed
+            else if(schema.additionalItems === false) {
+              errors.concat({
+                path: path,
+                property: 'additionalItems',
+                message: 'No additional items allowed in this array'
+              });
+              break;
+            }
+            // Default for `additionalItems` is an empty schema
+            else {
+              break;
+            }
+          }
         }
-        seen[valid] = true;
+        // `items` is a schema
+        else {
+          // Each item in the array must validate against the schema
+          for(i=0; i<value.length; i++) {
+            errors.concat(this._validateSchema(schema.items,value[i],path+'.'+i));
+          }
+        }
       }
-    }
-    
-    // `maxProperties`
-    if(schema.maxProperties) {
-      valid = 0;
-      for(var i in value) {
-        if(!value.hasOwnProperty(i)) continue;
-        valid++;
-      }
-      if(valid > schema.maxProperties) {
-        errors.push({
-          path: path,
-          property: 'maxProperties',
-          message: 'Object must have at most '+schema.maxProperties+' properties'
-        });
-      }
-    }
-    
-    // `minProperties`
-    if(schema.minProperties) {
-      valid = 0;
-      for(i in value) {
-        if(!value.hasOwnProperty(i)) continue;
-        valid++;
-      }
-      if(valid < schema.minProperties) {
-        errors.push({
-          path: path,
-          property: 'minProperties',
-          message: 'Object must have at least '+schema.minProperties+' properties'
-        });
-      }
-    }
-    
-    // Version 4 `required`
-    if(schema.required && schema.required instanceOf Array) {
-      valid = true;
-      for(i=0; i<schema.required.length; i++) {
-        if(typeof value[schema.required[i]] === "undefined") {
+      
+      // `maxItems`
+      if(schema.maxItems) {
+        if(value.length > schema.maxItems) {
           errors.push({
             path: path,
-            property: 'required',
-            message: 'Object is missing the required property '+schema.required[i]
+            property: 'maxItems',
+            message: 'Value must have at most '+schema.maxItems+' items'
           });
+        }
+      }
+      
+      // `minItems`
+      if(schema.minItems) {
+        if(value.length < schema.minItems) {
+          errors.push({
+            path: path,
+            property: 'minItems',
+            message: 'Value must have at least '+schema.minItems+' items'
+          });
+        }
+      }
+      
+      // `uniqueItems`
+      if(schema.uniqueItems) {
+        var seen = {};
+        for(i=0; i<value.length; i++) {
+          valid = JSON.Stringify(value[i]);
+          if(seen[valid]) {
+            errors.push({
+              path: path,
+              property: 'uniqueItems',
+              message: 'Array must have unique items'
+            });
+            break;
+          }
+          seen[valid] = true;
         }
       }
     }
     
-    // `properties`, `additionalProperties`, and `patternProperties`
-    if(schema.properties) {
-      // TODO: implement
-    }
-    
-    // `dependencies`
-    if(schema.dependencies) {
-      // TODO: implement
+    if(typeof value === "object" && value !== null && !(value instanceof Array)) {
+      // `maxProperties`
+      if(schema.maxProperties) {
+        valid = 0;
+        for(var i in value) {
+          if(!value.hasOwnProperty(i)) continue;
+          valid++;
+        }
+        if(valid > schema.maxProperties) {
+          errors.push({
+            path: path,
+            property: 'maxProperties',
+            message: 'Object must have at most '+schema.maxProperties+' properties'
+          });
+        }
+      }
+      
+      // `minProperties`
+      if(schema.minProperties) {
+        valid = 0;
+        for(i in value) {
+          if(!value.hasOwnProperty(i)) continue;
+          valid++;
+        }
+        if(valid < schema.minProperties) {
+          errors.push({
+            path: path,
+            property: 'minProperties',
+            message: 'Object must have at least '+schema.minProperties+' properties'
+          });
+        }
+      }
+      
+      // Version 4 `required`
+      if(schema.required && schema.required instanceOf Array) {
+        valid = true;
+        for(i=0; i<schema.required.length; i++) {
+          if(typeof value[schema.required[i]] === "undefined") {
+            errors.push({
+              path: path,
+              property: 'required',
+              message: 'Object is missing the required property '+schema.required[i]
+            });
+          }
+        }
+      }
+      
+      // `properties`
+      var validated_properties = {};
+      if(schema.properties) {
+        for(i in schema.properties) {
+          if(!schema.properties.hasOwnProperty(i)) continue;
+          validated_properties[i] = true;
+          errors.concat(this._validateSchema(schema.properties[i],value[i],path+'.'+i));
+        }
+      }
+      
+      // `patternProperties`
+      if(schema.patternProperties) {
+        for(i in schema.patternProperties) {
+          if(!schema.patternProperties.hasOwnProperty(i)) continue;
+          
+          var regex = new RegExp(i);
+          
+          // Check which properties match
+          for(var j in value) {
+            if(!value.hasOwnProperty(j)) continue;
+            if(regex.test(j)) {
+              validated_properties[j] = true;
+              errors.concat(this._validateSchema(schema.patterProperties[i],value[j],path+'.'+j));
+            }
+          }
+        }
+      }
+      
+      // `additionalProperties`
+      if(typeof schema.additionalProperties !== "undefined") {
+        for(i in value) {
+          if(!value.hasOwnProperty(i)) continue;
+          if(!validated_properties[i]) {
+            // No extra properties allowed
+            if(!schema.additionalProperties) {
+              errors.push({
+                path: path,
+                property: 'additionalProperties',
+                message: 'No additional properties allowed, but property '+i+' is set'
+              });
+              break;
+            }
+            // Allowed
+            else if(schema.additionalProperties === true) {
+              break;
+            }
+            // Must match schema
+            // TODO: incompatibility between version 3 and 4 of the spec
+            else {
+              errors.concat(this._validateSchema(schema.additionalProperties,value[i],path+'.'+i));
+            }
+          }
+        }
+      }
+      
+      // `dependencies`
+      if(schema.dependencies) {
+        for(i in schema.dependencies) {
+          if(!schema.dependencies.hasOwnProperty(i)) continue;
+          
+          // Doesn't need to meet the dependency
+          if(typeof value[i] === "undefined") continue;
+          
+          // Property dependency
+          if(schema.dependencies[i] instanceOf Array) {
+            for(var j=0; j<schema.dependencies[i].length; j++) {
+              if(typeof value[schema.dependencies[i][j]] === "undefined") {
+                errors.push({
+                  path: path,
+                  property: 'dependencies',
+                  message: 'Must have property '+schema.dependencies[i][j]
+                });
+              }
+            }
+          }
+          // Schema dependency
+          else {
+            errors.concat(this._validateSchema(schema.dependencies[i],value,path));
+          }
+        }
+      }
     }
     
     return errors;
