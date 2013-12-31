@@ -147,20 +147,7 @@ In addition, JSON Editor has the following 4 custom schema keywords, which are a
 The eventual goal of this project is to provide support for 100% of the JSON Schema specification,
 so this list of caveats and unsupported keywords will get smaller over time.
 
-### Types
-
-The following schema types are supported:
-
-*  array
-*  boolean
-*  integer
-*  number
-*  object
-*  string
-
-Compound types are not supported.
-
-#### Arrays
+### Array Items
 
 JSON Editor only supports arrays with a single `items` schema.  In other words, every element in the array must have the same structure.  For example:
 
@@ -397,8 +384,7 @@ You can make the variable paths relative to any ancestor node with a schema `id`
 
 In this example, the `location` field will be generated using the `city` and `state` fields from each row.
 
-Custom Template Engines
-============
+### Custom Template Engines
 
 If you need to support multiple template engines for whatever reason, you can override the global `$.jsoneditor.template` setting on a per-instance basis:
 
