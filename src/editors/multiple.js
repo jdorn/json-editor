@@ -7,7 +7,21 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     var container = this.getContainer();
 
-    this.switcher = this.theme.getSelectInput(this.schema.type)
+    this.types = [];
+    if(!this.schema.type || this.schema.type === "any") {
+      this.types = ['string','number','integer','boolean','object','array','null'];
+    }
+    else if(this.schema.type instanceof Array) {
+      this.types = this.schema.type;
+    }
+    else if(typeof this.schema.type === "string") {
+      this.types = [this.schema.type];
+    }
+    else {
+      throw "Invalid type: "+(typeof this.schema.type);
+    }
+
+    this.switcher = this.theme.getSelectInput(this.types)
       .appendTo(container)
       .on('change',function() {
         self.type = $(this).val();
@@ -30,10 +44,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       });
 
     this.editor_holder = this.theme.getIndentedPanel().appendTo(container);
-    this.type = this.schema.type[0];
+    this.type = this.types[0];
 
     this.editors = {};
-    $.each(this.schema.type,function(i,type) {
+    $.each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
 
       var schema = $.extend(true,{},self.schema);
@@ -71,8 +85,5 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editor_holder.remove();
     this.switcher.remove();
     this._super();
-  },
-  isValid: function(callback) {
-    this.editors[this.type].isValid(callback);
   }
 });

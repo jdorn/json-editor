@@ -25,6 +25,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     this.editors = {};
     var self = this;
 
+    this.schema.properties = this.schema.properties || {};
+
     // If the object should be rendered as a table row
     if(this.getOption('table_row',false)) {
       this.editor_holder = this.container;
@@ -191,55 +193,5 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       }
     });
     this.refreshValue();
-  },
-  isValid: function(callback) {
-    var errors = [];
-
-    var needed = 0;
-    $.each(this.editors, function(i,editor) {
-      // Ignore properties that aren't set
-      if(editor.property_removed) return;
-      
-      needed++;
-    });
-
-    // Check for minProperties and maxProperties
-    if(typeof this.schema.minProperties !== "undefined" && needed < this.schema.minProperties) {
-      errors.push({
-        path: this.path,
-        message: 'Must have at least '+this.schema.minProperties+' properties'
-      });
-    }
-    if(typeof this.schema.maxProperties !== "undefined"  && needed > this.schema.maxProperties) {
-      errors.push({
-        path: this.path,
-        message: 'Must have at most '+this.schema.maxProperties+' properties'
-      });
-    }
-
-    // If there aren't any child editors to check
-    if(!needed) {
-      if(errors.length) callback(errors);
-      else callback();
-      return;
-    }
-
-    var finished = 0;
-    $.each(this.editors, function(i,editor) {
-      // Ignore properties that aren't set
-      if(editor.property_removed) return;
-      
-      editor.isValid(function(err) {
-        if(err) {
-          errors = errors.concat(err);
-        }
-        finished++;
-
-        if(finished >= needed) {
-          if(errors.length) callback(errors);
-          else callback();
-        }
-      });
-    });
   }
 });

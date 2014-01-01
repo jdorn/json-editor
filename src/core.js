@@ -55,9 +55,7 @@ $.fn.jsoneditor = function(options) {
     if(!d) throw "JSON Editor must be instantiated before trying to validate";
     if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before running validation";
     
-    d.root.isValid(arguments[1]);
-    
-    return this;
+    return d.validator.validate(d.root.getValue());
   }
 
   options = options || {};
@@ -102,6 +100,8 @@ $.fn.jsoneditor = function(options) {
       container: d.root_container,
       required: true
     });
+    
+    d.validator = new $.jsoneditor.Validator(schema);
 
     // Starting data
     if(data) d.root.setValue(data);
@@ -118,7 +118,6 @@ $.fn.jsoneditor = function(options) {
       $this.trigger('ready');
       $this.trigger('change');
     }
-    
   }
 
   // Recursively look for $ref urls in the schema and load them before building the editor
@@ -146,7 +145,7 @@ $.fn.jsoneditor = function(options) {
           throw "Failed to load ref - "+value;
         });
       }
-      else if(typeof value == "object") {
+      else if(typeof value == "object" && value) {
         getRefs(value);
       }
     });    

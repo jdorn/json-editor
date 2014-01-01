@@ -36,10 +36,13 @@
             <h2>JSON Output</h2>
             <p>You can also make changes to the JSON here and set the value in the editor by clicking <button class='btn btn-primary' id='setvalue'>Update Form</button></p>
 
-            <textarea id='output' style='width: 100%; height: 500px; font-family: monospace;'></textarea>
+            <textarea id='output' style='width: 100%; height: 300px; font-family: monospace;'></textarea>
             
-            <p>Click <button class='btn btn-primary' id='validate'>Validate</button> to check if the data is valid against the schema.</p>
-        </div>
+            <h2>Validation</h2>
+            
+            <p>This will update whenever the form changes to show validation errors if there are any.</p>
+            
+            <textarea id='validate' style='width: 100%; height: 200px; font-family: monospace;' readonly disabled></textarea>
     </div>
     <div class='row'>
         <div class='span12'>
@@ -63,6 +66,12 @@ $("#editor").jsoneditor('value',{...});
 
 // Get the value
 var data = $("#editor").jsoneditor('value');
+
+// Validate
+var errors = $("#editor").jsoneditor('validate');
+if(errors.length) {
+    // Not valid
+}
 </code></pre>
         </div>
     </div>
@@ -168,19 +177,19 @@ var data = $("#editor").jsoneditor('value');
             var json = $("#editor").jsoneditor('value');
 
             $("#output").val(JSON.stringify(json,null,2));
+            
+            var validation_errors = $("#editor").jsoneditor('validate');
+            if(validation_errors.length) {
+                $("#validate").val(JSON.stringify(validation_errors,null,2));
+            }
+            else {
+                $("#validate").val('valid');
+            }
         });
 
         // When the 'update form' button is clicked, set the editor's value
         $("#setvalue").on('click',function() {
             $("#editor").jsoneditor('value',JSON.parse($("#output").val()));
-        });
-        
-        // When the 'validate' button is clicked, validate the editor
-        $("#validate").on('click', function() {
-           $("#editor").jsoneditor('validate',function(err) {
-              if(err) alert(JSON.stringify(err,null,2));
-              else alert('valid'); 
-           }); 
         });
     });
 </script>
