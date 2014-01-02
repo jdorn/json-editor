@@ -69,7 +69,7 @@ $.jsoneditor.themes.foundation4 = $.jsoneditor.themes.foundation.extend({
     });
   },
   getFormInputDescription: function(text) {
-    return this._super().css({
+    return this._super(text).css({
       fontSize: '.8rem'
     });
   }
@@ -78,7 +78,7 @@ $.jsoneditor.themes.foundation4 = $.jsoneditor.themes.foundation.extend({
 // Foundation 5 Specific Theme
 $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
   getFormInputDescription: function(text) {
-    return this._super().css({
+    return this._super(text).css({
       fontSize: '.8rem'
     });
   },

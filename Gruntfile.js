@@ -8,8 +8,11 @@ module.exports = function(grunt) {
           'src/intro.js',
           'src/class.js',
           'src/core.js',
+
+          'src/validator.js',
           
           'src/editor.js',
+          'src/editors/null.js',
           'src/editors/string.js',
           'src/editors/number.js',
           'src/editors/integer.js',

@@ -55,9 +55,9 @@ $.fn.jsoneditor = function(options) {
     if(!d) throw "JSON Editor must be instantiated before trying to validate";
     if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before running validation";
     
-    d.root.isValid(arguments[1]);
+    var value = arguments.length > 1? arguments[1] : d.root.getValue();
     
-    return this;
+    return d.validator.validate(value);
   }
 
   options = options || {};
@@ -72,7 +72,7 @@ $.fn.jsoneditor = function(options) {
   if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
 
   // Store info about the jsoneditor in the element
-  var d = {
+  d = {
     schema: schema,
     options: options,
     refs: {},
@@ -93,9 +93,14 @@ $.fn.jsoneditor = function(options) {
     }
   });
 
-  var load = function(synchronous) {
+  // Let the validator resolve references in the schema asynchronously
+  d.validator = new $.jsoneditor.Validator(schema,{
+    refs: options.refs
+  }).ready(function(expanded) {
+    d.schema = expanded;
+
     if(d.ready) return;
-    
+
     d.root = new editor_class({
       jsoneditor: $this,
       schema: schema,
@@ -105,54 +110,14 @@ $.fn.jsoneditor = function(options) {
 
     // Starting data
     if(data) d.root.setValue(data);
-    
+
     d.ready = true;
-    
-    if(synchronous) {
-      window.setTimeout(function() {
-        $this.trigger('ready');
-        $this.trigger('change');
-      });
-    }
-    else {
+
+    window.setTimeout(function() {
       $this.trigger('ready');
       $this.trigger('change');
-    }
-    
-  }
-
-  // Recursively look for $ref urls in the schema and load them before building the editor
-  var waiting = 0;
-  var finished = 0;
-  var getRefs = function(schema) {
-    $.each(schema, function(i,value) {
-      // If this is an external url we need to load
-      if(i === "$ref" && value.match(/^http/) && !d.refs[value]) {
-        d.refs[value] = 'loading';
-        waiting++;
-        $.getJSON(value,function(json) {
-          d.refs[value] = json;
-          
-          // Check this external schema for further $refs
-          getRefs(json);
-          
-          finished++;
-          
-          // If we're done
-          if(finished >= waiting) {
-            load();
-          }
-        }).fail(function() {
-          throw "Failed to load ref - "+value;
-        });
-      }
-      else if(typeof value == "object") {
-        getRefs(value);
-      }
-    });    
-  };
-  getRefs(d.schema);
-  if(!waiting) load(true);
+    });
+  });
 
   return this;
 };
@@ -165,29 +130,7 @@ $.jsoneditor = {
   themes: {},
   resolvers: [],
 
-  // Helper functions
-  expandSchema: function(schema, editor) {
-    // Work on a deep copy of the schema
-    schema = $.extend(true,{},schema);
-    
-    // Schema has a reference to another schema
-    if(schema['$ref']) {
-      // Reference to local schema or external url (previously loaded and cached)
-      if(schema['$ref'].match(/^(#\/definitions\/|http)/)) {
-        var refs = editor.data('jsoneditor').refs;
-        if(!refs[schema['$ref']]) throw "Schema definition not found - "+schema['$ref'];
-
-        return $.extend(true,{},refs[schema['$ref']],schema);
-      }
-      else {
-        throw "Unsupported $ref - "+schema['$ref'];
-      }
-    }
-    return schema;
-  },
   getEditorClass: function(schema, editor) {
-    schema = $.jsoneditor.expandSchema(schema, editor);
-
     var classname;
 
     if(schema.editor) classname = schema.editor;

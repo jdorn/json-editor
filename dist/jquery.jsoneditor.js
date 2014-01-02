@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.2 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.4 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2013-12-30
+ * Date: 2014-01-02
  */
 
 /**
@@ -75,9 +75,9 @@ $.fn.jsoneditor = function(options) {
     if(!d) throw "JSON Editor must be instantiated before trying to validate";
     if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before running validation";
     
-    d.root.isValid(arguments[1]);
+    var value = arguments.length > 1? arguments[1] : d.root.getValue();
     
-    return this;
+    return d.validator.validate(value);
   }
 
   options = options || {};
@@ -92,7 +92,7 @@ $.fn.jsoneditor = function(options) {
   if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
 
   // Store info about the jsoneditor in the element
-  var d = {
+  d = {
     schema: schema,
     options: options,
     refs: {},
@@ -113,9 +113,14 @@ $.fn.jsoneditor = function(options) {
     }
   });
 
-  var load = function(synchronous) {
+  // Let the validator resolve references in the schema asynchronously
+  d.validator = new $.jsoneditor.Validator(schema,{
+    refs: options.refs
+  }).ready(function(expanded) {
+    d.schema = expanded;
+
     if(d.ready) return;
-    
+
     d.root = new editor_class({
       jsoneditor: $this,
       schema: schema,
@@ -125,54 +130,14 @@ $.fn.jsoneditor = function(options) {
 
     // Starting data
     if(data) d.root.setValue(data);
-    
+
     d.ready = true;
-    
-    if(synchronous) {
-      window.setTimeout(function() {
-        $this.trigger('ready');
-        $this.trigger('change');
-      });
-    }
-    else {
+
+    window.setTimeout(function() {
       $this.trigger('ready');
       $this.trigger('change');
-    }
-    
-  }
-
-  // Recursively look for $ref urls in the schema and load them before building the editor
-  var waiting = 0;
-  var finished = 0;
-  var getRefs = function(schema) {
-    $.each(schema, function(i,value) {
-      // If this is an external url we need to load
-      if(i === "$ref" && value.match(/^http/) && !d.refs[value]) {
-        d.refs[value] = 'loading';
-        waiting++;
-        $.getJSON(value,function(json) {
-          d.refs[value] = json;
-          
-          // Check this external schema for further $refs
-          getRefs(json);
-          
-          finished++;
-          
-          // If we're done
-          if(finished >= waiting) {
-            load();
-          }
-        }).fail(function() {
-          throw "Failed to load ref - "+value;
-        });
-      }
-      else if(typeof value == "object") {
-        getRefs(value);
-      }
-    });    
-  };
-  getRefs(d.schema);
-  if(!waiting) load(true);
+    });
+  });
 
   return this;
 };
@@ -185,29 +150,7 @@ $.jsoneditor = {
   themes: {},
   resolvers: [],
 
-  // Helper functions
-  expandSchema: function(schema, editor) {
-    // Work on a deep copy of the schema
-    schema = $.extend(true,{},schema);
-    
-    // Schema has a reference to another schema
-    if(schema['$ref']) {
-      // Reference to local schema or external url (previously loaded and cached)
-      if(schema['$ref'].match(/^(#\/definitions\/|http)/)) {
-        var refs = editor.data('jsoneditor').refs;
-        if(!refs[schema['$ref']]) throw "Schema definition not found - "+schema['$ref'];
-
-        return $.extend(true,{},refs[schema['$ref']],schema);
-      }
-      else {
-        throw "Unsupported $ref - "+schema['$ref'];
-      }
-    }
-    return schema;
-  },
   getEditorClass: function(schema, editor) {
-    schema = $.jsoneditor.expandSchema(schema, editor);
-
     var classname;
 
     if(schema.editor) classname = schema.editor;
@@ -253,6 +196,672 @@ $.jsoneditor = {
 };
 
 
+$.jsoneditor.Validator = Class.extend({
+  init: function(schema, options) {
+    this.original_schema = schema;
+    this.options = options || {};
+
+    // Store any $ref and definitions
+    this.ready_callbacks = [];
+    if(this.options.ready) this.ready(this.options.ready);
+    this.getRefs();
+  },
+  ready: function(callback) {
+    if(this.is_ready) callback.apply(self,[this.schema]);
+    else {
+      this.ready_callbacks.push(callback);
+    }
+
+    return this;
+  },
+  getRefs: function() {
+    this.refs = this.options.refs || {};
+
+    var self = this;
+    this._getRefs(this.original_schema, function(schema) {
+      self.schema = schema;
+
+      self.is_ready = true;
+      $.each(self.ready_callbacks,function(i,callback) {
+        callback.apply(self,[this.schema]);
+      });
+    });
+  },
+  _getRefs: function(schema,callback) {
+    var self = this;
+    var is_root = schema === this.original_schema;
+
+    var waiting, finished, check_if_finished, called;
+
+    // Work on a deep copy of the schema
+    schema = $.extend(true,{},schema);
+
+    // First expand out any definition in the root node
+    if(is_root && schema.definitions) {
+      var defs = schema.definitions;
+      delete schema.definitions;
+
+      waiting = finished = 0;
+      check_if_finished = function(schema) {
+        if(finished >= waiting) {
+          if(called) return;
+          called = true;
+          self._getRefs(schema,callback);
+        }
+      };
+
+      $.each(defs,function() {
+        waiting++;
+      });
+
+      if(waiting) {
+        $.each(defs,function(i,definition) {
+          // Expand the definition recursively
+          self._getRefs(definition,function(def_schema) {
+            self.refs['#/definitions/'+i] = def_schema;
+            finished++;
+            check_if_finished(schema);
+          });
+        });
+      }
+      else {
+        check_if_finished(schema);
+      }
+    }
+    // Expand out any references
+    else if(schema['$ref']) {
+      var ref = schema['$ref'];
+      delete schema['$ref'];
+
+      // If we're currently loading this external reference, wait for it to be done
+      if(self.refs[ref] && self.refs[ref] instanceof Array) {
+        self.refs[ref].push(function() {
+          schema = $.extend(true,{},self.refs[ref],schema);
+          callback(schema);
+        });
+      }
+      // If this reference has already been loaded
+      else if(self.refs[ref]) {
+        schema = $.extend(true,{},self.refs[ref],schema);
+        callback(schema);
+      }
+      // If we need to fetch an external url
+      else if(ref.match(/^[a-zA-Z]+:\/\//)) {
+        $.getJSON(ref,function(response) {
+          self.refs[ref] = [];
+
+          // Recursively expand this schema
+          self._getRefs(response, function(ref_schema) {
+            var list = self.refs[ref];
+            self.refs[ref] = ref_schema;
+            schema = $.extend(true,{},self.refs[ref],schema);
+            callback(schema);
+
+            // If anything is waiting on this to load
+            $.each(list,function(i,v) {
+              v();
+            });
+          });
+        })
+          .fail(function() {
+            throw "Failed to fetch external ref - "+ref;
+          })
+      }
+      else {
+        throw "Unknown ref - "+ref;
+      }
+    }
+    // Expand out any subschemas
+    else {
+      waiting = finished = 0;
+      check_if_finished = function(schema) {
+        if(finished >= waiting) {
+          if(called) return;
+          called = true;
+
+          callback(schema);
+        }
+      };
+
+      $.each(schema, function(key, value) {
+        // Arrays that need to be expanded
+        if(typeof value === "object" && value && value instanceof Array) {
+          $.each(value,function(j,item) {
+            if(typeof item === "object" && item && !(item instanceof Array)) {
+              waiting++;
+            }
+          });
+        }
+        // Objects that need to be expanded
+        else if(typeof value === "object" && value) {
+          waiting++;
+        }
+      });
+
+      if(waiting) {
+        $.each(schema, function(key, value) {
+          // Arrays that need to be expanded
+          if(typeof value === "object" && value && value instanceof Array) {
+            $.each(value,function(j,item) {
+              if(typeof item === "object" && item && !(item instanceof Array)) {
+                self._getRefs(item,function(expanded) {
+                  schema[key][j] = expanded;
+
+                  finished++;
+                  check_if_finished(schema);
+                });
+              }
+            });
+          }
+          // Objects that need to be expanded
+          else if(typeof value === "object" && value) {
+            self._getRefs(value,function(expanded) {
+              schema[key] = expanded;
+
+              finished++;
+              check_if_finished(schema);
+            });
+          }
+        });
+      }
+      else {
+        check_if_finished(schema);
+      }
+    }
+  },
+  validate: function(value) {
+    return this._validateSchema(this.schema, value);
+  },
+  _validateSchema: function(schema,value,path) {
+    var errors = [];
+    var valid, i, j;
+    var stringified = JSON.stringify(value);
+    
+    path = path || 'root';
+    
+    // Work on a copy of the schema
+    schema = $.extend(true,{},schema);
+    
+    /*
+     * Type Agnostic Validation
+     */
+     
+    // Version 3 `required`
+    if(schema.required && schema.required === true) {
+      if(typeof value === "undefined") {
+        errors.push({
+          path: path,
+          property: 'required',
+          message: 'Property must be set'
+        });
+        
+        // Can't do any more validation at this point
+        return errors;
+      }
+    }
+    else if(!schema.required && typeof value === "undefined") {
+      // Not required and not defined, no further validation needed
+      return errors;
+    }
+    
+    // `enum`
+    if(schema.enum) {
+      valid = false;
+      for(i=0; i<schema.enum.length; i++) {
+        if(stringified === JSON.stringify(schema.enum[i])) valid = true;
+      }
+      if(!valid) {
+        errors.push({
+          path: path,
+          property: 'enum',
+          message: 'Value must be one of the enumerated values'
+        });
+      }
+    }
+    
+    // `extends` (version 3)
+    if(schema.extends) {
+      for(i=0; i<schema.extends.length; i++) {
+        errors = errors.concat(this._validateSchema(schema.extends[i],value,path));
+      }
+    }
+    
+    // `allOf`
+    if(schema.allOf) {
+      for(i=0; i<schema.allOf.length; i++) {
+        errors = errors.concat(this._validateSchema(schema.allOf[i],value,path));
+      }
+    }
+    
+    // `anyOf`
+    if(schema.anyOf) {
+      valid = false;
+      for(i=0; i<schema.anyOf.length; i++) {
+        if(!this._validateSchema(schema.anyOf[i],value,path).length) {
+          valid = true;
+          break;
+        }
+      }
+      if(!valid) {
+        errors.push({
+          path: path,
+          property: 'anyOf',
+          message: 'Value must validate against at least one of the provided schemas'
+        });
+      }
+    }
+    
+    // `oneOf`
+    if(schema.oneOf) {
+      valid = 0;
+      for(i=0; i<schema.oneOf.length; i++) {
+        if(!this._validateSchema(schema.oneOf[i],value,path).length) {
+          valid++;
+        }
+      }
+      if(valid !== 1) {
+        errors.push({
+          path: path,
+          property: 'oneOf',
+          message: 'Value must validate against exactly one of the provided schemas. '+
+            'It currently validates against '+valid+' of the schemas.'
+        });
+      }
+    }
+    
+    // `not`
+    if(schema.not) {
+      if(!this._validateSchema(schema.not,value,path).length) {
+        errors.push({
+          path: path,
+          property: 'not',
+          message: 'Value must not validate against the provided schema'
+        });
+      }
+    }
+    
+    // `type` (both Version 3 and Version 4 support)
+    if(schema.type) {
+      // Union type
+      if(schema.type instanceof Array) {
+        valid = false;
+        for(i=0;i<schema.type.length;i++) {
+          if(this._checkType(schema.type[i], value)) {
+            valid = true;
+            break;
+          }
+        }
+        if(!valid) {
+          errors.push({
+            path: path,
+            property: 'type',
+            message: 'Value must be one of the provided types'
+          });
+        }
+      }
+      // Simple type
+      else {
+        if(!this._checkType(schema.type, value)) {
+          errors.push({
+            path: path,
+            property: 'type',
+            message: 'Value must be of type '+schema.type
+          });
+        }
+      }
+    }
+
+
+    // `disallow` (version 3)
+    if(schema.disallow) {
+      // Union type
+      if(schema.disallow instanceof Array) {
+        valid = true;
+        for(i=0;i<schema.disallow.length;i++) {
+          if(this._checkType(schema.disallow[i], value)) {
+            valid = false;
+            break;
+          }
+        }
+        if(!valid) {
+          errors.push({
+            path: path,
+            property: 'disallow',
+            message: 'Value must not be one of the provided disallowed types'
+          });
+        }
+      }
+      // Simple type
+      else {
+        if(this._checkType(schema.disallow, value)) {
+          errors.push({
+            path: path,
+            property: 'disallow',
+            message: 'Value must not be of type '+schema.disallow
+          });
+        }
+      }
+    }
+    
+    /*
+     * Type Specific Validation
+     */
+    
+    // `multipleOf` and `divisibleBy`
+    if(schema.multipleOf || schema.divisibleBy) {
+      valid = value / (schema.multipleOf || schema.divisibleBy);
+      if(valid !== Math.floor(valid)) {
+        errors.push({
+          path: path,
+          property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
+          message: 'Value must be a multiple of '+(schema.multipleOf || schema.divisibleBy)
+        });
+      }
+    }
+    
+    // `maximum`
+    if(schema.maximum) {
+      if(schema.exclusiveMaximum && value >= schema.maximum) {
+        errors.push({
+          path: path,
+          property: 'maximum',
+          message: 'Value must be less than '+schema.maximum
+        });
+      }
+      else if(!schema.exclusiveMaximum && value > schema.maximum) {
+        errors.push({
+          path: path,
+          property: 'maximum',
+          message: 'Value must be at most '+schema.maximum
+        });
+      }
+    }
+    
+    // `minimum`
+    if(schema.minimum) {
+      if(schema.exclusiveMinimum && value <= schema.minimum) {
+        errors.push({
+          path: path,
+          property: 'minimum',
+          message: 'Value must be greater than '+schema.minimum
+        });
+      }
+      else if(!schema.exclusiveMinimum && value < schema.minimum) {
+        errors.push({
+          path: path,
+          property: 'minimum',
+          message: 'Value must be at least '+schema.minimum
+        });
+      }
+    }
+    
+    // `maxLength`
+    if(schema.maxLength) {
+      if((value+"").length > schema.maxLength) {
+        errors.push({
+          path: path,
+          property: 'maxLength',
+          message: 'Value must be at most '+schema.maxLength+' characters long'
+        });
+      }
+    }
+    
+    // `minLength`
+    if(schema.minLength) {
+      if((value+"").length < schema.minLength) {
+        errors.push({
+          path: path,
+          property: 'minLength',
+          message: 'Value must be at least '+schema.minLength+' characters long'
+        });
+      }
+    }
+    
+    // `pattern`
+    if(schema.pattern) {
+      if(!(new RegExp(schema.pattern)).test(value)) {
+        errors.push({
+          path: path,
+          property: 'pattern',
+          message: 'Value must match the provided pattern'
+        });
+      }
+    }
+    
+    if(value instanceof Array) {    
+      // `items` and `additionalItems`
+      if(schema.items) {
+        // `items` is an array
+        if(schema.items instanceof Array) {
+          for(i=0; i<value.length; i++) {
+            // If this item has a specific schema tied to it
+            // Validate against it
+            if(schema.items[i]) {
+              errors = errors.concat(this._validateSchema(schema.items[i],value[i],path+'.'+i));
+            }
+            // If all additional items are allowed
+            else if(schema.additionalItems === true) {
+              break;
+            }
+            // If additional items is a schema
+            // TODO: Incompatibility between version 3 and 4 of the spec
+            else if(schema.additionalItems) {
+              errors = errors.concat(this._validateSchema(schema.additionalItems,value[i],path+'.'+i));
+            }
+            // If no additional items are allowed
+            else if(schema.additionalItems === false) {
+              errors.push({
+                path: path,
+                property: 'additionalItems',
+                message: 'No additional items allowed in this array'
+              });
+              break;
+            }
+            // Default for `additionalItems` is an empty schema
+            else {
+              break;
+            }
+          }
+        }
+        // `items` is a schema
+        else {
+          // Each item in the array must validate against the schema
+          for(i=0; i<value.length; i++) {
+            errors = errors.concat(this._validateSchema(schema.items,value[i],path+'.'+i));
+          }
+        }
+      }
+      
+      // `maxItems`
+      if(schema.maxItems) {
+        if(value.length > schema.maxItems) {
+          errors.push({
+            path: path,
+            property: 'maxItems',
+            message: 'Value must have at most '+schema.maxItems+' items'
+          });
+        }
+      }
+      
+      // `minItems`
+      if(schema.minItems) {
+        if(value.length < schema.minItems) {
+          errors.push({
+            path: path,
+            property: 'minItems',
+            message: 'Value must have at least '+schema.minItems+' items'
+          });
+        }
+      }
+      
+      // `uniqueItems`
+      if(schema.uniqueItems) {
+        var seen = {};
+        for(i=0; i<value.length; i++) {
+          valid = JSON.stringify(value[i]);
+          if(seen[valid]) {
+            errors.push({
+              path: path,
+              property: 'uniqueItems',
+              message: 'Array must have unique items'
+            });
+            break;
+          }
+          seen[valid] = true;
+        }
+      }
+    }
+    
+    if(typeof value === "object" && value !== null && !(value instanceof Array)) {
+      // `maxProperties`
+      if(schema.maxProperties) {
+        valid = 0;
+        for(i in value) {
+          if(!value.hasOwnProperty(i)) continue;
+          valid++;
+        }
+        if(valid > schema.maxProperties) {
+          errors.push({
+            path: path,
+            property: 'maxProperties',
+            message: 'Object must have at most '+schema.maxProperties+' properties'
+          });
+        }
+      }
+      
+      // `minProperties`
+      if(schema.minProperties) {
+        valid = 0;
+        for(i in value) {
+          if(!value.hasOwnProperty(i)) continue;
+          valid++;
+        }
+        if(valid < schema.minProperties) {
+          errors.push({
+            path: path,
+            property: 'minProperties',
+            message: 'Object must have at least '+schema.minProperties+' properties'
+          });
+        }
+      }
+      
+      // Version 4 `required`
+      if(schema.required && schema.required instanceof Array) {
+        for(i=0; i<schema.required.length; i++) {
+          if(typeof value[schema.required[i]] === "undefined") {
+            errors.push({
+              path: path,
+              property: 'required',
+              message: 'Object is missing the required property '+schema.required[i]
+            });
+          }
+        }
+      }
+      
+      // `properties`
+      var validated_properties = {};
+      if(schema.properties) {
+        for(i in schema.properties) {
+          if(!schema.properties.hasOwnProperty(i)) continue;
+          validated_properties[i] = true;
+          errors = errors.concat(this._validateSchema(schema.properties[i],value[i],path+'.'+i));
+        }
+      }
+      
+      // `patternProperties`
+      if(schema.patternProperties) {
+        for(i in schema.patternProperties) {
+          if(!schema.patternProperties.hasOwnProperty(i)) continue;
+          
+          var regex = new RegExp(i);
+          
+          // Check which properties match
+          for(j in value) {
+            if(!value.hasOwnProperty(j)) continue;
+            if(regex.test(j)) {
+              validated_properties[j] = true;
+              errors = errors.concat(this._validateSchema(schema.patternProperties[i],value[j],path+'.'+j));
+            }
+          }
+        }
+      }
+      
+      // `additionalProperties`
+      if(typeof schema.additionalProperties !== "undefined") {
+        for(i in value) {
+          if(!value.hasOwnProperty(i)) continue;
+          if(!validated_properties[i]) {
+            // No extra properties allowed
+            if(!schema.additionalProperties) {
+              errors.push({
+                path: path,
+                property: 'additionalProperties',
+                message: 'No additional properties allowed, but property '+i+' is set'
+              });
+              break;
+            }
+            // Allowed
+            else if(schema.additionalProperties === true) {
+              break;
+            }
+            // Must match schema
+            // TODO: incompatibility between version 3 and 4 of the spec
+            else {
+              errors = errors.concat(this._validateSchema(schema.additionalProperties,value[i],path+'.'+i));
+            }
+          }
+        }
+      }
+      
+      // `dependencies`
+      if(schema.dependencies) {
+        for(i in schema.dependencies) {
+          if(!schema.dependencies.hasOwnProperty(i)) continue;
+          
+          // Doesn't need to meet the dependency
+          if(typeof value[i] === "undefined") continue;
+          
+          // Property dependency
+          if(schema.dependencies[i] instanceof Array) {
+            for(j=0; j<schema.dependencies[i].length; j++) {
+              if(typeof value[schema.dependencies[i][j]] === "undefined") {
+                errors.push({
+                  path: path,
+                  property: 'dependencies',
+                  message: 'Must have property '+schema.dependencies[i][j]
+                });
+              }
+            }
+          }
+          // Schema dependency
+          else {
+            errors = errors.concat(this._validateSchema(schema.dependencies[i],value,path));
+          }
+        }
+      }
+    }
+    
+    return errors;
+  },
+  _checkType: function(type, value) {
+    // Simple types
+    if(typeof type === "string") {
+      if(type==="string") return typeof value === "string";
+      else if(type==="number") return typeof value === "number";
+      else if(type==="integer") return typeof value === "number" && value === Math.floor(value);
+      else if(type==="boolean") return typeof value === "boolean";
+      else if(type==="array") return value instanceof Array;
+      else if(type === "object") return value !== null && !(value instanceof Array) && typeof value === "object";
+      else if(type === "null") return value === null;
+      else return true;
+    }
+    // Schema
+    else {
+      return !this._validateSchema(type,value).length;
+    }
+  }
+});
+
 /**
  * All editors should extend from this class
  */
@@ -260,21 +869,12 @@ $.jsoneditor.AbstractEditor = Class.extend({
   init: function(options) {
     this.container = options.container;
     this.jsoneditor = options.jsoneditor;
-    this.schema = options.schema;
-    this.schema = $.jsoneditor.expandSchema(this.schema,this.jsoneditor);
 
     this.theme = this.jsoneditor.data('jsoneditor').theme;
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
 
-    // Store schema definitions for root node
-    if(!options.path && this.schema.definitions) {
-      var refs = this.jsoneditor.data('jsoneditor').refs;
-      $.each(this.schema.definitions,function(key,schema) {
-        refs['#/definitions/'+key] = schema;
-      });
-    }
-
-    this.options = $.extend(true, {}, (this.options || {}), (this.schema.options || {}), options);
+    this.options = $.extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
+    this.schema = this.options.schema;
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
@@ -344,7 +944,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   isRequired: function() {
-    return this.options.required;
+    return this.options.required || this.schema.required===true;
   },
   getDefault: function() {
     return this.schema.default || null;
@@ -374,6 +974,12 @@ $.jsoneditor.AbstractEditor = Class.extend({
   }
 });
 
+$.jsoneditor.editors.null = $.jsoneditor.AbstractEditor({
+  getValue: function() {
+    return null;
+  }
+});
+
 $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || '';
@@ -393,63 +999,6 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     if(this.getValue() !== value || from_template) this.input.trigger('change');
     this.input.trigger('set');
-  },
-  isValid: function(callback) {
-    var errors = [];
-    var valid;
-    
-    // Check minLength and maxLength
-    var hasmin, hasmax;
-    valid = true;
-    if(typeof this.schema.minLength !== "undefined") {
-      hasmin = true;
-      if(this.value.length < this.schema.minLength) valid = false;
-    }
-    if(typeof this.schema.maxLength !== "undefined") {
-      hasmax = true;
-      if(this.value.length > this.schema.maxLength) valid = false;
-    }
-    if(!valid) {
-      var error;
-      // Needs to be between min and max length
-      if(hasmin && hasmax) {
-        error = "Length must be between "+this.schema.minLength+" and "+this.schema.maxLength+".";
-      }
-      // Needs to be longer than min
-      else if(hasmin) {
-        error = "Length must be at least "+this.schema.minLength+".";
-      }
-      // Needs to be shorter than max
-      else {
-        error = "Length must be at most "+this.schema.maxLength+".";
-      }
-      errors.push({
-        path: this.path,
-        message: error
-      });
-    }
-    
-    // Check enum
-    if(this.schema.enum) {
-      if($.inArray(this.value, this.schema.enum) < 0) {
-        errors.push({
-          path: this.path,
-          message: "Must be one of "+this.schema.enum.join(', ')
-        });
-      }
-    }
-    
-    // Check pattern
-    if(this.schema.pattern) {
-      var regex = new RegExp(this.schema.pattern);
-      if(!regex.test(this.value)) errors.push({
-        path: this.path,
-        message: "Must match pattern: "+this.schema.pattern
-      });
-    }
-    
-    if(errors.length) callback(errors);
-    else callback();
   },
   removeProperty: function() {
     this._super();
@@ -576,7 +1125,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
           if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
         }
         var first = path_parts.shift();
-        
+
         if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
 
         // Find the root node for this template variable
@@ -646,74 +1195,6 @@ $.jsoneditor.editors.number = $.jsoneditor.editors.string.extend({
   },
   getValue: function() {
     return this.value*1;
-  },
-  isValid: function(callback) {
-    var val = this.getValue();
-    
-    if(typeof val === 'number') {
-      var valid = true, hasmin, hasmax, hasmultipleof;
-      
-      
-      if(typeof this.schema.minimum !== "undefined") {
-        hasmin = true;
-        if(this.schema.exclusiveMinimum && val <= this.schema.minimum) valid = false;
-        else if(val < this.schema.minimum) valid = false;
-      }
-      
-      if(typeof this.schema.maximum !== "undefined") {
-        hasmax = true;
-        if(this.schema.exclusiveMaximum && val >= this.schema.maximum) valid = false;
-        else if(val > this.schema.maximum) valid = false;
-      }
-      
-      if(typeof this.schema.multipleOf !== "undefined") {
-        hasmultipleof = true;
-        if(val % this.schema.multipleOf) valid = false;
-      }
-      
-      if(valid) callback();
-      else {
-        var error;
-        
-        // If value must be between a min and max
-        if(hasmin && hasmax) {
-          error = "Must be between "+this.schema.minimum+" (";
-          error += (this.schema.exclusiveMinimum)? 'exclusive' : 'inclusive';
-          error += ") and "+this.schema.maximum+" (";
-          error += (this.schema.exclusiveMaximum)? 'exclusive' : 'inclusive';
-          error += ")";
-        }
-        // If value must be greater than a min
-        else if(hasmin) {
-          error = "Must be greater than ";
-          if(!this.schema.exclusiveMinimum) error += "or equal to ";
-          error += this.schema.minimum;
-        }
-        // If value must be less than a max
-        else if(hasmax) {
-          error = "Must be less than ";
-          if(!this.schema.exclusiveMaximum) error += "or equal to ";
-          error += this.schema.maximum;
-        }
-        
-        // If value must be a multiple of something
-        if(hasmultipleof && error) error += " and divisble by "+this.schema.multipleOf;
-        else if(hasmultipleof) error = "Must be divisble by "+this.schema.multipleOf;
-        
-        error += ".";
-        
-        callback([{
-          path: this.path,
-          message: error
-        }]);
-      }
-    }
-    else callback([
-      {
-        path: this.path,
-        message: "not a number"
-      }
-    ]);
   }
 });
 
@@ -721,22 +1202,6 @@ $.jsoneditor.editors.integer = $.jsoneditor.editors.number.extend({
   sanitize: function(value) {
     value = value + "";
     return value.replace(/[^0-9\-]/g,'');
-  },
-  isValid: function(callback) {
-    var val = this.getValue();
-    
-    this._super(function(err) {
-      // Make sure it's a valid number first
-      if(err) callback(err);
-      // Then, make sure it's an integer
-      else if(val%1 === 0) callback();
-      else callback([
-        {
-          path: this.path,
-          message: "not an integer"
-        }
-      ]);
-    });
   }
 });
 
@@ -764,7 +1229,7 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
       // data-schematype can be used to style different editors based on the string editor
       .attr('data-schematype',this.schema.type)
       //update the editor's value when it is changed
-      .on('change',function(e) {
+      .on('change',function() {
         self.refreshValue();
       });
   },
@@ -818,6 +1283,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   build: function() {
     this.editors = {};
     var self = this;
+
+    this.schema.properties = this.schema.properties || {};
 
     // If the object should be rendered as a table row
     if(this.getOption('table_row',false)) {
@@ -889,7 +1356,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       });
       
       // Edit JSON Button
-      this.editing_json = false
+      this.editing_json = false;
       this.editjson_button = this.theme.getButton('Edit JSON').appendTo(this.title_controls).on('click',function() {
         // Save Changes
         if(self.editing_json) {
@@ -964,7 +1431,6 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   },
   setValue: function(value, initial) {
     value = value || {};
-    var self = this;
     $.each(this.editors, function(i,editor) {
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
@@ -985,56 +1451,6 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       }
     });
     this.refreshValue();
-  },
-  isValid: function(callback) {
-    var errors = [];
-
-    var needed = 0;
-    $.each(this.editors, function(i,editor) {
-      // Ignore properties that aren't set
-      if(editor.property_removed) return;
-      
-      needed++;
-    });
-
-    // Check for minProperties and maxProperties
-    if(typeof this.schema.minProperties !== "undefined" && needed < this.schema.minProperties) {
-      errors.push({
-        path: this.path,
-        message: 'Must have at least '+this.schema.minProperties+' properties'
-      });
-    }
-    if(typeof this.schema.maxProperties !== "undefined"  && needed > this.schema.maxProperties) {
-      errors.push({
-        path: this.path,
-        message: 'Must have at most '+this.schema.maxProperties+' properties'
-      });
-    }
-
-    // If there aren't any child editors to check
-    if(!needed) {
-      if(errors.length) callback(errors);
-      else callback();
-      return;
-    }
-
-    var finished = 0;
-    $.each(this.editors, function(i,editor) {
-      // Ignore properties that aren't set
-      if(editor.property_removed) return;
-      
-      editor.isValid(function(err) {
-        if(err) {
-          errors = errors.concat(err);
-        }
-        finished++;
-
-        if(finished >= needed) {
-          if(errors.length) callback(errors);
-          else callback();
-        }
-      });
-    });
   }
 });
 
@@ -1059,7 +1475,9 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   build: function() {
     this.rows = [];
     var self = this;
-    
+
+    this.schema.items = this.schema.items || [];
+
     if(!this.getOption('compact',false)) {
       this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
       this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
@@ -1177,83 +1595,6 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.refreshValue();
     
     // TODO: sortable
-  },
-  isValid: function(callback) {
-    var errors = [];
-
-    var needed = this.rows.length;
-
-    var valid;
-
-    // Check for maxItems and minItems
-    valid = true;
-    var hasmin, hasmax;
-    if(typeof this.schema.maxItems !== "undefined") {
-      hasmax = true;
-      if(needed > this.schema.maxItems) valid = false;
-    }
-    if(typeof this.schema.minItems !== "undefined") {
-      hasmin = true;
-      if(needed < this.schema.minItems) valid = false;
-    }
-    if(!valid) {
-      var error;
-      if(hasmin && hasmax) {
-        error = "Must have between "+this.schema.minItems+" and "+this.schema.maxItems+" items.";
-      }
-      else if(hasmin) {
-        error = "Must have at least "+this.schema.minItems+" items.";
-      }
-      else {
-        error = "Must have at most "+this.schema.maxItems+" items.";
-      }
-      errors.push({
-        path: this.path,
-        message: error
-      });
-    }
-    
-    // Check for unique items
-    if(this.schema.uniqueItems) {
-      var seen = {};
-      valid = true;
-      $.each(this.rows, function(i,row) {
-        var key = JSON.stringify(row.getValue());
-        if(seen[key]) {
-          valid = false;
-          return false;
-        }
-        seen[key] = true;
-      });
-      if(!valid) errors.push({
-        path: this.path,
-        message: "Must have unique values."
-      });
-    }
-    
-    // No rows to validate
-    if(!needed) {
-      if(errors.length) callback(errors);
-      else callback();
-    }
-    
-    // Validate each row
-    else {
-      var finished = 0;
-      $.each(this.rows, function(i,row) {
-        row.isValid(function(err) {
-          if(err) {
-            errors = errors.concat(err);
-          }
-          finished++;
-          
-          if(finished >= needed) {
-            if(errors.length) callback(errors);
-            else callback();
-          }
-        });
-      });
-    }
   },
   refreshValue: function() {
     var self = this;
@@ -1481,6 +1822,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
   build: function() {
     this.rows = [];
     var self = this;
+
+    this.schema.items = this.schema.items || [];
 
     this.table = this.theme.getTable();
     this.thead = this.theme.getTableHead().appendTo(this.table);
@@ -1848,7 +2191,21 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     var container = this.getContainer();
 
-    this.switcher = this.theme.getSelectInput(this.schema.type)
+    this.types = [];
+    if(!this.schema.type || this.schema.type === "any") {
+      this.types = ['string','number','integer','boolean','object','array','null'];
+    }
+    else if(this.schema.type instanceof Array) {
+      this.types = this.schema.type;
+    }
+    else if(typeof this.schema.type === "string") {
+      this.types = [this.schema.type];
+    }
+    else {
+      throw "Invalid type: "+(typeof this.schema.type);
+    }
+
+    this.switcher = this.theme.getSelectInput(this.types)
       .appendTo(container)
       .on('change',function() {
         self.type = $(this).val();
@@ -1871,10 +2228,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       });
 
     this.editor_holder = this.theme.getIndentedPanel().appendTo(container);
-    this.type = this.schema.type[0];
+    this.type = this.types[0];
 
     this.editors = {};
-    $.each(this.schema.type,function(i,type) {
+    $.each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
 
       var schema = $.extend(true,{},self.schema);
@@ -1912,9 +2269,6 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editor_holder.remove();
     this.switcher.remove();
     this._super();
-  },
-  isValid: function(callback) {
-    this.editors[this.type].isValid(callback);
   }
 });
 
@@ -2118,7 +2472,7 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
     return this._super();
   },
   getFormInputField: function(type) {
-    return this._super().addClass('form-control');
+    return this._super(type).addClass('form-control');
   },
   getFormControl: function(label, input, description) {
     var group = $("<div></div>");
@@ -2233,7 +2587,7 @@ $.jsoneditor.themes.foundation4 = $.jsoneditor.themes.foundation.extend({
     });
   },
   getFormInputDescription: function(text) {
-    return this._super().css({
+    return this._super(text).css({
       fontSize: '.8rem'
     });
   }
@@ -2242,7 +2596,7 @@ $.jsoneditor.themes.foundation4 = $.jsoneditor.themes.foundation.extend({
 // Foundation 5 Specific Theme
 $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
   getFormInputDescription: function(text) {
-    return this._super().css({
+    return this._super(text).css({
       fontSize: '.8rem'
     });
   },
@@ -2441,12 +2795,19 @@ $.jsoneditor.template = 'default';
 
 // Set the default resolvers
 $.jsoneditor.resolvers.unshift(function(schema) {
-  return schema.type;
+  // TODO: handle schemas with no type set
+  // TODO: handle schemas with the type set to a schema
+  return "string";
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
- if(schema.type && schema.type instanceof Array) {
-   return "multiple";
- }
+  // If the schema is a simple type
+  if(typeof schema.type === "string") return schema.type;
+});
+$.jsoneditor.resolvers.unshift(function(schema) {
+  // If the schema can be of any type or an enumerated list of types
+  if(schema.type === "any" || schema.type && schema.type instanceof Array) {
+    return "multiple";
+  }
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
   if(schema.type == "array" && schema.format == "table") {

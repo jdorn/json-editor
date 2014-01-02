@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "properties": {
+    "string": {
+      "$ref": "http://localhost/json-editor/tests/string.json"
+    }
+  }
+}

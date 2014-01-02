@@ -11,6 +11,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.rows = [];
     var self = this;
 
+    this.schema.items = this.schema.items || [];
+
     this.table = this.theme.getTable();
     this.thead = this.theme.getTableHead().appendTo(this.table);
     this.header_row = this.theme.getTableRow().appendTo(this.thead);

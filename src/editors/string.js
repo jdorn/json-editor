@@ -18,63 +18,6 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.getValue() !== value || from_template) this.input.trigger('change');
     this.input.trigger('set');
   },
-  isValid: function(callback) {
-    var errors = [];
-    var valid;
-    
-    // Check minLength and maxLength
-    var hasmin, hasmax;
-    valid = true;
-    if(typeof this.schema.minLength !== "undefined") {
-      hasmin = true;
-      if(this.value.length < this.schema.minLength) valid = false;
-    }
-    if(typeof this.schema.maxLength !== "undefined") {
-      hasmax = true;
-      if(this.value.length > this.schema.maxLength) valid = false;
-    }
-    if(!valid) {
-      var error;
-      // Needs to be between min and max length
-      if(hasmin && hasmax) {
-        error = "Length must be between "+this.schema.minLength+" and "+this.schema.maxLength+".";
-      }
-      // Needs to be longer than min
-      else if(hasmin) {
-        error = "Length must be at least "+this.schema.minLength+".";
-      }
-      // Needs to be shorter than max
-      else {
-        error = "Length must be at most "+this.schema.maxLength+".";
-      }
-      errors.push({
-        path: this.path,
-        message: error
-      });
-    }
-    
-    // Check enum
-    if(this.schema.enum) {
-      if($.inArray(this.value, this.schema.enum) < 0) {
-        errors.push({
-          path: this.path,
-          message: "Must be one of "+this.schema.enum.join(', ')
-        });
-      }
-    }
-    
-    // Check pattern
-    if(this.schema.pattern) {
-      var regex = new RegExp(this.schema.pattern);
-      if(!regex.test(this.value)) errors.push({
-        path: this.path,
-        message: "Must match pattern: "+this.schema.pattern
-      });
-    }
-    
-    if(errors.length) callback(errors);
-    else callback();
-  },
   removeProperty: function() {
     this._super();
     this.input.hide(500);
@@ -200,7 +143,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
           if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
         }
         var first = path_parts.shift();
-        
+
         if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
 
         // Find the root node for this template variable
