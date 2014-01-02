@@ -89,7 +89,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   isRequired: function() {
-    return this.options.required || this.schema.required;
+    return this.options.required || this.schema.required===true;
   },
   getDefault: function() {
     return this.schema.default || null;

@@ -55,7 +55,9 @@ $.fn.jsoneditor = function(options) {
     if(!d) throw "JSON Editor must be instantiated before trying to validate";
     if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before running validation";
     
-    return d.validator.validate(d.root.getValue());
+    var value = arguments.length > 1? arguments[1] : d.root.getValue();
+    
+    return d.validator.validate(value);
   }
 
   options = options || {};

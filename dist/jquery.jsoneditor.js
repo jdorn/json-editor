@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.2 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.3 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2013-12-30
+ * Date: 2014-01-01
  */
 
 /**
@@ -75,7 +75,9 @@ $.fn.jsoneditor = function(options) {
     if(!d) throw "JSON Editor must be instantiated before trying to validate";
     if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before running validation";
     
-    return d.validator.validate(d.root.getValue());
+    var value = arguments.length > 1? arguments[1] : d.root.getValue();
+    
+    return d.validator.validate(value);
   }
 
   options = options || {};
@@ -842,7 +844,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   isRequired: function() {
-    return this.options.required || this.schema.required;
+    return this.options.required || this.schema.required===true;
   },
   getDefault: function() {
     return this.schema.default || null;
