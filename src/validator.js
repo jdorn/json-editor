@@ -1,20 +1,188 @@
 $.jsoneditor.Validator = Class.extend({
-  init: function(schema, editor) {
-    this.schema = schema;
-    this.editor = editor;
+  init: function(schema, options) {
+    this.original_schema = schema;
+    this.options = options || {};
+
+    // Store any $ref and definitions
+    this.ready_callbacks = [];
+    if(this.options.ready) this.ready(this.options.ready);
+    this.getRefs();
+  },
+  ready: function(callback) {
+    if(this.is_ready) callback.apply(self,[this.schema]);
+    else {
+      this.ready_callbacks.push(callback);
+    }
+
+    return this;
+  },
+  getRefs: function() {
+    this.refs = this.options.refs || {};
+
+    var self = this;
+    this._getRefs(this.original_schema, function(schema) {
+      self.schema = schema;
+
+      self.is_ready = true;
+      $.each(self.ready_callbacks,function(i,callback) {
+        callback.apply(self,[this.schema]);
+      });
+    });
+  },
+  _getRefs: function(schema,callback) {
+    var self = this;
+    var is_root = schema === this.original_schema;
+
+    var waiting, finished, check_if_finished, called;
+
+    // Work on a deep copy of the schema
+    schema = $.extend(true,{},schema);
+
+    // First expand out any definition in the root node
+    if(is_root && schema.definitions) {
+      var defs = schema.definitions;
+      delete schema.definitions;
+
+      waiting = finished = 0;
+      check_if_finished = function(schema) {
+        if(finished >= waiting) {
+          if(called) return;
+          called = true;
+          self._getRefs(schema,callback);
+        }
+      };
+
+      $.each(defs,function() {
+        waiting++;
+      });
+
+      if(waiting) {
+        $.each(defs,function(i,definition) {
+          // Expand the definition recursively
+          self._getRefs(definition,function(def_schema) {
+            self.refs['#/definitions/'+i] = def_schema;
+            finished++;
+            check_if_finished(schema);
+          });
+        });
+      }
+      else {
+        check_if_finished(schema);
+      }
+    }
+    // Expand out any references
+    else if(schema['$ref']) {
+      var ref = schema['$ref'];
+      delete schema['$ref'];
+
+      // If we're currently loading this external reference, wait for it to be done
+      if(self.refs[ref] && self.refs[ref] instanceof Array) {
+        self.refs[ref].push(function() {
+          schema = $.extend(true,{},self.refs[ref],schema);
+          callback(schema);
+        });
+      }
+      // If this reference has already been loaded
+      else if(self.refs[ref]) {
+        schema = $.extend(true,{},self.refs[ref],schema);
+        callback(schema);
+      }
+      // If we need to fetch an external url
+      else if(ref.match(/^[a-zA-Z]+:\/\//)) {
+        $.getJSON(ref,function(response) {
+          self.refs[ref] = [];
+
+          // Recursively expand this schema
+          self._getRefs(response, function(ref_schema) {
+            var list = self.refs[ref];
+            self.refs[ref] = ref_schema;
+            schema = $.extend(true,{},self.refs[ref],schema);
+            callback(schema);
+
+            // If anything is waiting on this to load
+            $.each(list,function(i,v) {
+              v();
+            });
+          });
+        })
+          .fail(function() {
+            throw "Failed to fetch external ref - "+ref;
+          })
+      }
+      else {
+        throw "Unknown ref - "+ref;
+      }
+    }
+    // Expand out any subschemas
+    else {
+      waiting = finished = 0;
+      check_if_finished = function(schema) {
+        if(finished >= waiting) {
+          if(called) return;
+          called = true;
+
+          callback(schema);
+        }
+      };
+
+      $.each(schema, function(key, value) {
+        // Arrays that need to be expanded
+        if(typeof value === "object" && value && value instanceof Array) {
+          $.each(value,function(j,item) {
+            if(typeof item === "object" && item && !(item instanceof Array)) {
+              waiting++;
+            }
+          });
+        }
+        // Objects that need to be expanded
+        else if(typeof value === "object" && value) {
+          waiting++;
+        }
+      });
+
+      if(waiting) {
+        $.each(schema, function(key, value) {
+          // Arrays that need to be expanded
+          if(typeof value === "object" && value && value instanceof Array) {
+            $.each(value,function(j,item) {
+              if(typeof item === "object" && item && !(item instanceof Array)) {
+                self._getRefs(item,function(expanded) {
+                  schema[key][j] = expanded;
+
+                  finished++;
+                  check_if_finished(schema);
+                });
+              }
+            });
+          }
+          // Objects that need to be expanded
+          else if(typeof value === "object" && value) {
+            self._getRefs(value,function(expanded) {
+              schema[key] = expanded;
+
+              finished++;
+              check_if_finished(schema);
+            });
+          }
+        });
+      }
+      else {
+        check_if_finished(schema);
+      }
+    }
   },
   validate: function(value) {
     return this._validateSchema(this.schema, value);
   },
   _validateSchema: function(schema,value,path) {
     var errors = [];
-    var valid, i;
+    var valid, i, j;
     var stringified = JSON.stringify(value);
     
     path = path || 'root';
     
-    // Expand out any `$ref` properties
-    schema = $.jsoneditor.expandSchema(schema,this.editor);
+    // Work on a copy of the schema
+    schema = $.extend(true,{},schema);
     
     /*
      * Type Agnostic Validation
@@ -350,7 +518,7 @@ $.jsoneditor.Validator = Class.extend({
       // `maxProperties`
       if(schema.maxProperties) {
         valid = 0;
-        for(var i in value) {
+        for(i in value) {
           if(!value.hasOwnProperty(i)) continue;
           valid++;
         }
@@ -381,7 +549,6 @@ $.jsoneditor.Validator = Class.extend({
       
       // Version 4 `required`
       if(schema.required && schema.required instanceof Array) {
-        valid = true;
         for(i=0; i<schema.required.length; i++) {
           if(typeof value[schema.required[i]] === "undefined") {
             errors.push({
@@ -411,7 +578,7 @@ $.jsoneditor.Validator = Class.extend({
           var regex = new RegExp(i);
           
           // Check which properties match
-          for(var j in value) {
+          for(j in value) {
             if(!value.hasOwnProperty(j)) continue;
             if(regex.test(j)) {
               validated_properties[j] = true;
@@ -458,7 +625,7 @@ $.jsoneditor.Validator = Class.extend({
           
           // Property dependency
           if(schema.dependencies[i] instanceof Array) {
-            for(var j=0; j<schema.dependencies[i].length; j++) {
+            for(j=0; j<schema.dependencies[i].length; j++) {
               if(typeof value[schema.dependencies[i][j]] === "undefined") {
                 errors.push({
                   path: path,

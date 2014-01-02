@@ -5,21 +5,12 @@ $.jsoneditor.AbstractEditor = Class.extend({
   init: function(options) {
     this.container = options.container;
     this.jsoneditor = options.jsoneditor;
-    this.schema = options.schema;
-    this.schema = $.jsoneditor.expandSchema(this.schema,this.jsoneditor);
 
     this.theme = this.jsoneditor.data('jsoneditor').theme;
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
 
-    // Store schema definitions for root node
-    if(!options.path && this.schema.definitions) {
-      var refs = this.jsoneditor.data('jsoneditor').refs;
-      $.each(this.schema.definitions,function(key,schema) {
-        refs['#/definitions/'+key] = schema;
-      });
-    }
-
-    this.options = $.extend(true, {}, (this.options || {}), (this.schema.options || {}), options);
+    this.options = $.extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
+    this.schema = this.options.schema;
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';

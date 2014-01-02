@@ -71,17 +71,17 @@ $("#editor_holder").jsoneditor({schema: schema}).on('ready',function() {
 ### Get/Set Value
 
 ```javascript
-// Set the editor's value with a JSON object
+// Set the editor's value
 $("#editor_holder").jsoneditor('value',{name: "John Smith"});
 
-// Get the editor's current value as a JSON object
+// Get the editor's current value
 var value = $("#editor_holder").jsoneditor('value');
 console.log(value.name) // Will log "John Smith"
 ```
 
 ### Validate
 
-When feasible, JSON Editor won't let users enter invalid data.  
+When feasible, JSON Editor won't let users enter invalid data.
 However, in some cases it is still possible to enter data that doesn't validate against the schema.
 
 You can use the `validate` method to check if the data is valid or not.
@@ -100,8 +100,8 @@ else {
 }
 ```
 
-By default, this will validate the form's current value against the schema.  
-If you want to validate a different value against the schema, you can pass it in as a 2nd parameter.
+By default, this will do the validation with the editor's current value.
+If you want to use a different value, you can pass it in as a 2nd parameter.
 
 ```javascript
 // Validate an arbitrary value against the editor's schema
@@ -256,13 +256,24 @@ This will work as expected:
 {
   "type": "array",
   "items": {
-    "type": "object",
-    "parameters": {
-      "name": {
-        "type": "string"
-      }
-    }
+    "type": "string"
   }
+}
+```
+
+This will break:
+
+```json
+{
+  "type": "array",
+  "items": [
+		{
+			"type": "string"
+		},
+		{
+			"type": "number"
+		}
+	]
 }
 ```
 
@@ -294,12 +305,32 @@ JSON Editor supports references to external urls and local definitions.  Here's 
 Local references must point to the `definitions` object of the root node of the schema and can't be nested.
 So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
 
-External urls are loaded with an AJAX request, so they must either be on the same domain or have the correct HTTP cross domain headers.
+You can  optionally pass in the schemas for external urls during initialization:
+
+```javascript
+$("#editor").jsoneditor({
+  schema: {
+    "$ref": "http://mydomain.com/geo.json"
+  },
+  refs: {
+    "http://mydomain.con/geo.json": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        }
+      }
+    }
+  }
+});
 ```
+
+If JSON Editor sees an external url it doesn't already have a schema for, it will attempt to fetch it via Ajax.
+If loading from Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
 
 ### format
 
-JSON Editor supports the following values for the `format` parameter for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results (e.g. "email").
+JSON Editor supports the following values for the `format` parameter for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
 
 *  color
 *  date
@@ -340,7 +371,7 @@ JSON Editor uses resolver functions to determine which editor to use for a parti
 
 There is an editor for each primitive JSON type.  An additional `table` editor is included, which provides a more compact way to edit arrays.  Custom editors can be added as well (look at existing ones for examples).
 
-Let's say you make a custom `date` editor and want any schema with `format` set to `date` to use this instead of the `string` editor.  You can do this by adding a resolver function:
+Let's say you make a custom `date` editor and want any schema with `format` set to `date` to use this instead of the default `string` editor.  You can do this by adding a resolver function:
 
 ```js
 // Add a resolver function to the beginning of the resolver list
@@ -397,7 +428,7 @@ Templates only work for fields of type `string`, `integer`, and `number`.
 
 JSON Editor uses a barebones template engine by default (simple `{{variable}}` replacement only).
 
-You can use another template engine by setting `$.jsoneditor.template` to one of the following supported libraries:
+You can change the default by setting `$.jsoneditor.template` to one of the following supported template engines:
 
 *  ejs
 *  handlebars

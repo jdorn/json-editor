@@ -22,7 +22,7 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
       // data-schematype can be used to style different editors based on the string editor
       .attr('data-schematype',this.schema.type)
       //update the editor's value when it is changed
-      .on('change',function(e) {
+      .on('change',function() {
         self.refreshValue();
       });
   },

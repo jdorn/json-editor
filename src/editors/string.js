@@ -143,7 +143,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
           if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
         }
         var first = path_parts.shift();
-        
+
         if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
 
         // Find the root node for this template variable

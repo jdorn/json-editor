@@ -97,7 +97,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       });
       
       // Edit JSON Button
-      this.editing_json = false
+      this.editing_json = false;
       this.editjson_button = this.theme.getButton('Edit JSON').appendTo(this.title_controls).on('click',function() {
         // Save Changes
         if(self.editing_json) {
@@ -172,7 +172,6 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   },
   setValue: function(value, initial) {
     value = value || {};
-    var self = this;
     $.each(this.editors, function(i,editor) {
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property

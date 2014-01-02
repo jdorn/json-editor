@@ -12,7 +12,7 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
     return this._super();
   },
   getFormInputField: function(type) {
-    return this._super().addClass('form-control');
+    return this._super(type).addClass('form-control');
   },
   getFormControl: function(label, input, description) {
     var group = $("<div></div>");
