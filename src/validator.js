@@ -201,7 +201,7 @@ $.jsoneditor.Validator = Class.extend({
         return errors;
       }
     }
-    else if(!schema.required && typeof value === "undefined") {
+    else if(typeof value === "undefined") {
       // Not required and not defined, no further validation needed
       return errors;
     }

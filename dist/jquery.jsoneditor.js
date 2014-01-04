@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.4 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.5 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-02
+ * Date: 2014-01-04
  */
 
 /**
@@ -399,7 +399,7 @@ $.jsoneditor.Validator = Class.extend({
         return errors;
       }
     }
-    else if(!schema.required && typeof value === "undefined") {
+    else if(typeof value === "undefined") {
       // Not required and not defined, no further validation needed
       return errors;
     }
