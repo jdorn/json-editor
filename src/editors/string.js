@@ -63,6 +63,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       this.input_type = this.schema.format? this.schema.format : 'text';
       this.input = this.theme.getFormInputField(this.input_type);
     }
+    
+    // minLength, maxLength, and pattern
+    if(typeof this.schema.maxLength !== "undefined") this.input.attr('maxlength',this.schema.maxLength);
+    if(typeof this.schema.pattern !== "undefined") this.input.attr('pattern',this.schema.pattern);
+    else if(typeof this.schema.minLength !== "undefined") this.input.attr('pattern','.{'+this.schema.minLength+',}');
 
     if(this.getOption('compact')) this.container.addClass('compact');
     
