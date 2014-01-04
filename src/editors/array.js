@@ -35,34 +35,67 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       self.refreshValue();
     });
     
-    // Determine the default value and title of an array element
-    this.item_title = this.schema.items.title || 'item';
-    var tmp = this.getElementEditor(0);
-    if(tmp.getChildEditors()) {
-      this.item_has_child_editors = true;
-    }
-    this.item_default = tmp.getDefault();    
-    tmp.destroy();
-    
-    this.row_holder.empty();
-    
     // Add controls
     this.addControls();
   },
-  getItemDefault: function() {
-    return $.extend(true,{},{default:this.item_default}).default;
-  },
   getItemTitle: function() {
-    return this.item_title;
+    return (this.schema.items && this.schema.items.title) || 'item';
+  },
+  getItemSchema: function(i) {
+    if(this.schema.items instanceof Array) {
+      if(i >= this.schema.items.length) {
+        if(this.schema.additionalItems===true) {
+          return {};
+        }
+        else if(this.schema.additionalItems) {
+          return $.extend(true,{},this.schema.additionalItems);
+        }
+      }
+      else {
+        return $.extend(true,{},this.schema.items[i]);
+      }
+    }
+    else return $.extend(true,{},this.schema.items);
+  },
+  getItemInfo: function(i) {
+    // Get the schema for this item
+    var schema = this.getItemSchema(i);
+    
+    // Check if it's cached
+    this.item_info = this.item_info || {};
+    var stringified = JSON.stringify(schema);
+    if(typeof this.item_info[stringified] !== "undefined") return this.item_info[stringified];
+    
+    // Create a temporary editor with this schema and get info
+    var tmp = $("<div>");
+    var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
+    editor = new editor({
+      jsoneditor: this.jsoneditor,
+      schema: schema,
+      container: tmp,
+      path: this.path+'.'+i,
+      parent: this,
+      required: true
+    });
+    this.item_info[stringified] = {
+      child_editors: editor.getChildEditors()? true : false,
+      title: schema.title || 'item',
+      default: editor.getDefault()
+    };
+    editor.destroy();
+    tmp.remove();
+    
+    return this.item_info[stringified];
   },
   getElementEditor: function(i) {
-    var schema_copy = $.extend({},this.schema.items);
-    schema_copy.title = this.getItemTitle()+' '+i;
+    var item_info = this.getItemInfo(i);
+    var schema = this.getItemSchema(i);
+    schema.title = item_info.title+' '+i;
 
-    var editor = $.jsoneditor.getEditorClass(schema_copy, this.jsoneditor);
+    var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
 
     var holder;
-    if(this.item_has_child_editors) {
+    if(item_info.child_editors) {
       holder = this.theme.getChildEditorHolder();
     }
     else {
@@ -73,7 +106,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
 
     var ret = new editor({
       jsoneditor: this.jsoneditor,
-      schema: schema_copy,
+      schema: schema,
       container: holder,
       path: this.path+'.'+i,
       parent: this,
@@ -103,6 +136,14 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     });
     self.rows = [];
   },
+  getMax: function() {
+    if((this.schema.items instanceof Array) && this.schema.additionalItems == false) {
+      return Math.min(this.schema.items.length,this.schema.maxItems || Infinity);
+    }
+    else {
+      return this.schema.maxItems || Infinity;
+    }
+  },
   setValue: function(value) {
     // Update the array's value, adding/removing rows when necessary
     value = value || [];
@@ -113,8 +154,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         value.push(this.getItemDefault());
       }
     }
-    if(this.schema.maxItems && value.length > this.schema.maxItems) {
-      value = value.slice(0,this.schema.maxItems);
+    if(this.getMax() && value.length > this.getMax()) {
+      value = value.slice(0,this.getMax());
     }
 
     var self = this;
@@ -196,7 +237,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     }
 
     // If there are maxItems in the array, hide the add button beneath the rows
-    if(this.schema.maxItems && this.schema.maxItems <= this.rows.length) {
+    if(this.getMax() && this.getMax() <= this.rows.length) {
       this.add_row_button.hide();
     }
     else {

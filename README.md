@@ -177,12 +177,8 @@ only used during validation.
 *  additionalProperties
 *  maxProperties
 *  minProperties
-*  additionalItems
 *  dependencies
 *  uniqueItems
-*  pattern
-*  minLength
-*  maxLength
 *  divisbleBy
 *  multipleOf
 *  disallow
@@ -196,7 +192,6 @@ There are a few caveats with some of the other schema keywords:
 
 *  enum
 *  type
-*  items
 *  $ref
 *  definitions
 *  format
@@ -243,37 +238,6 @@ This is not supported in JSON Editor.
       }]
     }
   }
-}
-```
-### items
-
-JSON Schema only supports a single schema for the `items` keyword.
-The specification allows for an array of schemas, but JSON Editor does not.
-
-This will work as expected:
-
-```json
-{
-  "type": "array",
-  "items": {
-    "type": "string"
-  }
-}
-```
-
-This will break:
-
-```json
-{
-  "type": "array",
-  "items": [
-		{
-			"type": "string"
-		},
-		{
-			"type": "number"
-		}
-	]
 }
 ```
 
