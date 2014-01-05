@@ -175,12 +175,8 @@ only used during validation.
 
 *  patternProperties
 *  additionalProperties
-*  maxProperties
-*  minProperties
 *  dependencies
 *  uniqueItems
-*  divisbleBy
-*  multipleOf
 *  disallow
 *  extends
 *  allOf
@@ -188,7 +184,7 @@ only used during validation.
 *  oneOf
 *  not
 
-There are a few caveats with some of the other schema keywords:
+Some of the other keywords have caveats that affect their behavior:
 
 *  enum
 *  type

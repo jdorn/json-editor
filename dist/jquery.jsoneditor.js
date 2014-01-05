@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.7 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.8 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1407,7 +1407,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       
     // When a child editor changes, refresh the value
     self.editor_holder.on('change',function() {
-      self.refreshValue();
+      self.refreshValue();      
     });
     
   },
@@ -1427,12 +1427,35 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   refreshValue: function() {
     this.value = {};
     var self = this;
+    var props = 0;
     $.each(this.editors, function(i,editor) {
+      if(editor.addremove) editor.addremove.show();
       if(editor.property_removed) return;
+      props++;
       self.value[i] = editor.getValue();
     });
     
     if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(JSON.stringify(this.value,null,2));
+    
+    // See if we need to show/hide the add/remove property links
+    if(typeof this.schema.minProperties !== "undefined") {
+      if(props <= this.schema.minProperties) {
+        $.each(this.editors, function(i,editor) {
+          if(!editor.property_removed && editor.addremove) {
+            editor.addremove.hide();
+          }
+        });
+      }
+    }
+    if(typeof this.schema.maxProperties !== "undefined") {
+      if(props >= this.schema.maxProperties) {
+        $.each(this.editors, function(i,editor) {
+          if(editor.property_removed && editor.addremove) {
+            editor.addremove.hide();
+          }
+        });
+      }
+    }
   },
   setValue: function(value, initial) {
     value = value || {};
