@@ -20,8 +20,6 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     this.rows = [];
     var self = this;
 
-    this.schema.items = this.schema.items || [];
-
     if(!this.getOption('compact',false)) {
       this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
       this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
@@ -55,7 +53,12 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         return $.extend(true,{},this.schema.items[i]);
       }
     }
-    else return $.extend(true,{},this.schema.items);
+    else if(this.schema.items) {
+      return $.extend(true,{},this.schema.items);
+    }
+    else {
+      return {};
+    }
   },
   getItemInfo: function(i) {
     // Get the schema for this item
@@ -147,6 +150,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   setValue: function(value) {
     // Update the array's value, adding/removing rows when necessary
     value = value || [];
+    
+    if(!(value instanceof Array)) value = [value];
 
     // Make sure value has between minItems and maxItems items in it
     if(this.schema.minItems) {
@@ -178,6 +183,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.rows = self.rows.slice(0,value.length);
 
     self.refreshValue();
+    
+    self.container.trigger('set');
     
     // TODO: sortable
   },

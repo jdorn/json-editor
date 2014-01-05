@@ -195,6 +195,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   },
   setValue: function(value, initial) {
     value = value || {};
+    
+    if(typeof value !== "object" || value instanceof Array) value = {};
+    
     $.each(this.editors, function(i,editor) {
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
@@ -215,5 +218,6 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       }
     });
     this.refreshValue();
+    this.container.trigger('set');
   }
 });

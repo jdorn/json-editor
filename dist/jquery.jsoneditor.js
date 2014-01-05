@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.8 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.9 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -974,9 +974,12 @@ $.jsoneditor.AbstractEditor = Class.extend({
   }
 });
 
-$.jsoneditor.editors.null = $.jsoneditor.AbstractEditor({
+$.jsoneditor.editors.null = $.jsoneditor.AbstractEditor.extend({
   getValue: function() {
     return null;
+  },
+  setValue: function() {
+    this.container.trigger('set');
   }
 });
 
@@ -1244,6 +1247,8 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
   setValue: function(val) {
     if(val) this.input.prop('checked',true);
     else this.input.prop('checked',false);
+    
+    this.input.trigger('set');
 
     this.refreshValue();
   },
@@ -1459,6 +1464,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   },
   setValue: function(value, initial) {
     value = value || {};
+    
+    if(typeof value !== "object" || value instanceof Array) value = {};
+    
     $.each(this.editors, function(i,editor) {
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
@@ -1479,6 +1487,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       }
     });
     this.refreshValue();
+    this.container.trigger('set');
   }
 });
 
@@ -1503,8 +1512,6 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   build: function() {
     this.rows = [];
     var self = this;
-
-    this.schema.items = this.schema.items || [];
 
     if(!this.getOption('compact',false)) {
       this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
@@ -1539,7 +1546,12 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         return $.extend(true,{},this.schema.items[i]);
       }
     }
-    else return $.extend(true,{},this.schema.items);
+    else if(this.schema.items) {
+      return $.extend(true,{},this.schema.items);
+    }
+    else {
+      return {};
+    }
   },
   getItemInfo: function(i) {
     // Get the schema for this item
@@ -1631,6 +1643,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   setValue: function(value) {
     // Update the array's value, adding/removing rows when necessary
     value = value || [];
+    
+    if(!(value instanceof Array)) value = [value];
 
     // Make sure value has between minItems and maxItems items in it
     if(this.schema.minItems) {
@@ -1662,6 +1676,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.rows = self.rows.slice(0,value.length);
 
     self.refreshValue();
+    
+    self.container.trigger('set');
     
     // TODO: sortable
   },
@@ -2029,6 +2045,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     self.rows = self.rows.slice(0,value.length);
 
     self.refreshValue();
+    
+    self.container.trigger('set');
 
     // TODO: sortable
   },
@@ -2276,7 +2294,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
 
     this.switcher = this.theme.getSelectInput(this.types)
       .appendTo(container)
-      .on('change',function() {
+      .on('change',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         self.type = $(this).val();
 
         var current_value = self.getValue();
@@ -2290,6 +2311,8 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         });
 
         self.container.trigger('change');
+        
+        return false;
       })
       .css({
         marginBottom: 0,
@@ -2333,6 +2356,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
+    this.container.trigger('set');
   },
   destroy: function() {
     this.editor_holder.remove();
@@ -2874,7 +2898,7 @@ $.jsoneditor.resolvers.unshift(function(schema) {
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
   // If the schema can be of any type or an enumerated list of types
-  if(schema.type === "any" || schema.type && schema.type instanceof Array) {
+  if(!schema.type || schema.type === "any" || schema.type && schema.type instanceof Array) {
     return "multiple";
   }
 });

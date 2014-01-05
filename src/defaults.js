@@ -16,7 +16,7 @@ $.jsoneditor.resolvers.unshift(function(schema) {
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
   // If the schema can be of any type or an enumerated list of types
-  if(schema.type === "any" || schema.type && schema.type instanceof Array) {
+  if(!schema.type || schema.type === "any" || schema.type && schema.type instanceof Array) {
     return "multiple";
   }
 });

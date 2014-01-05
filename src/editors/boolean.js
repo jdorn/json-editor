@@ -32,6 +32,8 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
   setValue: function(val) {
     if(val) this.input.prop('checked',true);
     else this.input.prop('checked',false);
+    
+    this.input.trigger('set');
 
     this.refreshValue();
   },

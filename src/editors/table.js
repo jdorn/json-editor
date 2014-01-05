@@ -148,6 +148,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     self.rows = self.rows.slice(0,value.length);
 
     self.refreshValue();
+    
+    self.container.trigger('set');
 
     // TODO: sortable
   },

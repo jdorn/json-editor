@@ -23,7 +23,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
 
     this.switcher = this.theme.getSelectInput(this.types)
       .appendTo(container)
-      .on('change',function() {
+      .on('change',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         self.type = $(this).val();
 
         var current_value = self.getValue();
@@ -37,6 +40,8 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         });
 
         self.container.trigger('change');
+        
+        return false;
       })
       .css({
         marginBottom: 0,
@@ -80,6 +85,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
+    this.container.trigger('set');
   },
   destroy: function() {
     this.editor_holder.remove();
