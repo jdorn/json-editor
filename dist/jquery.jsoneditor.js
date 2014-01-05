@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.9 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.10 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-04
+ * Date: 2014-01-05
  */
 
 /**
@@ -971,6 +971,45 @@ $.jsoneditor.AbstractEditor = Class.extend({
   getOption: function(key, def) {
     if(typeof this.options[key] !== 'undefined') return this.options[key];
     else return def;
+  },
+  getDisplayText: function(arr) {
+    var disp = [];
+    var used = {};
+    
+    // Determine display text for each element of the array
+    $.each(arr,function(i,el)  {
+      var name;
+      
+      // If it's a simple string
+      if(typeof el === "string") name = el;
+      // Object
+      else if(el.title && !used[el.title]) name = el.title;
+      else if(el.format && !used[el.format]) name = el.format;
+      else if(el.description && !used[el.description]) name = el.descripton;
+      else if(el.type && !used[el.type]) name = el.type;
+      else if(el.title) name = el.title;
+      else if(el.format) name = el.format;
+      else if(el.description) name = el.description;
+      else if(el.type) name = el.type;
+      else if(JSON.stringify(el).length < 50) name = JSON.stringify(el);
+      else name = "type";
+      
+      used[name] = used[name] || 0;
+      used[name]++;
+      
+      disp.push(name);
+    });
+    
+    // Replace identical display text with "text 1", "text 2", etc.
+    var inc = {};
+    $.each(disp,function(i,name) {
+      inc[name] = inc[name] || 0;
+      inc[name]++;
+      
+      if(used[name] > 1) disp[i] = name + " " + inc[name];
+    });
+    
+    return disp;
   }
 });
 
@@ -989,6 +1028,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   setValue: function(value,initial,from_template) {
     value = value || '';
+    if(typeof value === "object") value = JSON.stringify(value);
+    if(typeof value !== "string") value = ""+value;
 
     // Sanitize value before setting it
     var sanitized = this.sanitize(value);
@@ -2279,32 +2320,39 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     var container = this.getContainer();
 
     this.types = [];
-    if(!this.schema.type || this.schema.type === "any") {
-      this.types = ['string','number','integer','boolean','object','array','null'];
-    }
-    else if(this.schema.type instanceof Array) {
-      this.types = this.schema.type;
-    }
-    else if(typeof this.schema.type === "string") {
-      this.types = [this.schema.type];
+    
+    if(this.schema.oneOf) {
+      this.types = this.schema.oneOf;
+      delete this.schema.oneOf;
     }
     else {
-      throw "Invalid type: "+(typeof this.schema.type);
+      if(!this.schema.type || this.schema.type === "any") {
+        this.types = ['string','number','integer','boolean','object','array','null'];
+      }
+      else if(this.schema.type instanceof Array) {
+        this.types = this.schema.type;
+      }
+      else {
+        this.types = [this.schema.type];
+      }
+      delete this.schema.type;
     }
+    
+    this.display_text = this.getDisplayText(this.types);
 
-    this.switcher = this.theme.getSelectInput(this.types)
+    this.switcher = this.theme.getSelectInput(this.display_text)
       .appendTo(container)
       .on('change',function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        self.type = $(this).val();
+        self.type = self.display_text.indexOf($(this).val());
 
         var current_value = self.getValue();
 
         $.each(self.editors,function(type,editor) {
           if(self.type === type) {
-            editor.setValue(current_value);
+            editor.setValue(current_value,true);
             editor.container.show();
           }
           else editor.container.hide();
@@ -2320,18 +2368,25 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       });
 
     this.editor_holder = this.theme.getIndentedPanel().appendTo(container);
-    this.type = this.types[0];
+    this.type = 0;
 
-    this.editors = {};
+    this.editors = [];
     $.each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
 
-      var schema = $.extend(true,{},self.schema);
-      schema.type = type;
+      var schema;
+      
+      if(typeof type === "string") {
+        schema = $.extend(true,{},self.schema);
+        schema.type = type;
+      }
+      else {
+        schema = $.extend(true,{},self.schema,type);
+      }
 
       var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
-      self.editors[type] = new editor({
+      self.editors[i] = new editor({
         jsoneditor: self.jsoneditor,
         schema: schema,
         container: holder,
@@ -2340,14 +2395,14 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         required: true
       });
 
-      if(type !== self.type) holder.hide();
+      if(i !== self.type) holder.hide();
     });
 
     this.editor_holder.on('change set',function() {
       self.refreshValue();
     });
 
-    this.switcher.val(this.type);
+    this.switcher.val(this.display_text[this.type]);
   },
   refreshValue: function() {
     this.value = this.editors[this.type].getValue();
@@ -2359,6 +2414,9 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.container.trigger('set');
   },
   destroy: function() {
+    $.each(this.editors, function(type,editor) {
+      editor.destroy();
+    });
     this.editor_holder.remove();
     this.switcher.remove();
     this._super();
@@ -2888,24 +2946,26 @@ $.jsoneditor.template = 'default';
 
 // Set the default resolvers
 $.jsoneditor.resolvers.unshift(function(schema) {
-  // TODO: handle schemas with no type set
-  // TODO: handle schemas with the type set to a schema
-  return "string";
+  // Unknown or compound type
+  return "multiple";
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
   // If the schema is a simple type
   if(typeof schema.type === "string") return schema.type;
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
-  // If the schema can be of any type or an enumerated list of types
-  if(!schema.type || schema.type === "any" || schema.type && schema.type instanceof Array) {
-    return "multiple";
-  }
+  // If the schema can be of any type
+  if(schema.type === "any") return "multiple";
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
+  // Type `array` with format set to `table`
   if(schema.type == "array" && schema.format == "table") {
     return "table";
   }
+});
+$.jsoneditor.resolvers.unshift(function(schema) {
+  // If this schema uses `oneOf`
+  if(schema.oneOf) return "multiple";
 });
 
 

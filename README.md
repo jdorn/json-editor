@@ -181,13 +181,11 @@ only used during validation.
 *  extends
 *  allOf
 *  anyOf
-*  oneOf
 *  not
 
 Some of the other keywords have caveats that affect their behavior:
 
 *  enum
-*  type
 *  $ref
 *  definitions
 *  format
@@ -208,34 +206,6 @@ These keywords are also described in detail below.
 ### enum
 
 The `enum` property only affects the UI for schemas of type `string`, `number`, and `integer`.
-
-### type
-
-Version 3 of the JSON Schema specification allows for type to be an arbitrary schema.
-This is not supported in JSON Editor.
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "simple": {
-      "description": "Will show a text input",
-      "type": "string"
-    },
-    "union": {
-      "description": "Allows the user to switch the type with a dropdown",
-      "type": ["string","number"]
-    },
-    "not_supported": {
-      "description": "This will break",
-      "type": [{
-        "type": "number",
-        "minimum": 5
-      }]
-    }
-  }
-}
-```
 
 ### $ref and definitions
 

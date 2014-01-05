@@ -4,6 +4,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   setValue: function(value,initial,from_template) {
     value = value || '';
+    if(typeof value === "object") value = JSON.stringify(value);
+    if(typeof value !== "string") value = ""+value;
 
     // Sanitize value before setting it
     var sanitized = this.sanitize(value);

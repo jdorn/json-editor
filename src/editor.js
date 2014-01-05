@@ -107,5 +107,44 @@ $.jsoneditor.AbstractEditor = Class.extend({
   getOption: function(key, def) {
     if(typeof this.options[key] !== 'undefined') return this.options[key];
     else return def;
+  },
+  getDisplayText: function(arr) {
+    var disp = [];
+    var used = {};
+    
+    // Determine display text for each element of the array
+    $.each(arr,function(i,el)  {
+      var name;
+      
+      // If it's a simple string
+      if(typeof el === "string") name = el;
+      // Object
+      else if(el.title && !used[el.title]) name = el.title;
+      else if(el.format && !used[el.format]) name = el.format;
+      else if(el.description && !used[el.description]) name = el.descripton;
+      else if(el.type && !used[el.type]) name = el.type;
+      else if(el.title) name = el.title;
+      else if(el.format) name = el.format;
+      else if(el.description) name = el.description;
+      else if(el.type) name = el.type;
+      else if(JSON.stringify(el).length < 50) name = JSON.stringify(el);
+      else name = "type";
+      
+      used[name] = used[name] || 0;
+      used[name]++;
+      
+      disp.push(name);
+    });
+    
+    // Replace identical display text with "text 1", "text 2", etc.
+    var inc = {};
+    $.each(disp,function(i,name) {
+      inc[name] = inc[name] || 0;
+      inc[name]++;
+      
+      if(used[name] > 1) disp[i] = name + " " + inc[name];
+    });
+    
+    return disp;
   }
 });
