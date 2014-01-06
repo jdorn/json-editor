@@ -32,10 +32,10 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
   setValue: function(val) {
     if(val) this.input.prop('checked',true);
     else this.input.prop('checked',false);
-    
-    this.input.trigger('set');
 
     this.refreshValue();
+
+    this.input.trigger('set');
   },
   destroy: function() {
     this.input.remove();
@@ -45,9 +45,5 @@ $.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
     this.input = this.label = this.description = this.input_holder = null;
 
     this._super();
-  },
-  isValid: function(callback) {
-    // A boolean field is always valid
-    callback();
   }
 });

@@ -21,6 +21,7 @@ module.exports = function(grunt) {
           'src/editors/array.js',
           'src/editors/table.js',
           'src/editors/multiple.js',
+          'src/editors/enum.js',
           
           'src/theme.js',
           'src/themes/*.js',

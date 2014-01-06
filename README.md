@@ -205,7 +205,7 @@ These keywords are also described in detail below.
 
 ### enum
 
-The `enum` property only affects the UI for schemas of type `string`, `number`, and `integer`.
+The `enum` property is ignored for schemas of type `boolean`.  Support for this will be added in a future release.
 
 ### $ref and definitions
 

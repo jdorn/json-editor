@@ -24,6 +24,12 @@ $.jsoneditor.resolvers.unshift(function(schema) {
   }
 });
 $.jsoneditor.resolvers.unshift(function(schema) {
+  // Array or Object with enumerated values
+  if(schema.type === "array" || schema.type === "object") {
+    if(schema.enum) return "enum";
+  }
+});
+$.jsoneditor.resolvers.unshift(function(schema) {
   // If this schema uses `oneOf`
   if(schema.oneOf) return "multiple";
 });
