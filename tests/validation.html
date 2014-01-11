@@ -424,6 +424,35 @@
                 {}
             ]
         },
+        required4_merge: {
+            schema: {
+                type: "object",
+                properties: {
+                    orig: {},
+                    other: {}
+                },
+                required: ["orig"],
+                oneOf: [
+                    {
+                        required: ["other"]
+                    }
+                ]
+            },
+            valid: [
+                {
+                    orig: true,
+                    other: true
+                }
+            ],
+            invalid: [
+                {
+                    orig: true
+                },
+                {
+                    other: true
+                }
+            ]
+        },
         properties: {
             schema: {
                 type: "object",
@@ -636,6 +665,7 @@
             console.log(i);
 
             var validator = new $.jsoneditor.Validator(test.schema,{
+                ajax: true,
                 ready: function() {
                     var self = this;
                     $.each(test.valid,function(j,value) {

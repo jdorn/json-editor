@@ -155,7 +155,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
         // Find the root node for this template variable
         var root = self.container.closest('[data-schemaid="'+first+'"]');
-        if(!root.length) throw "Unknown template variable path "+path;
+        if(!root.length) throw "Could not find ancestor node with id "+first;
 
         // Keep track of the root node and path for use when rendering the template
         var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');

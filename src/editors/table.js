@@ -13,7 +13,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
     this.schema.items = this.schema.items || [];
 
-    this.table = this.theme.getTable();
+    this.table = this.theme.getTable().appendTo(this.container);
     this.thead = this.theme.getTableHead().appendTo(this.table);
     this.header_row = this.theme.getTableRow().appendTo(this.thead);
     this.row_holder = this.theme.getTableBody().appendTo(this.table);

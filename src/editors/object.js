@@ -65,8 +65,10 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
 
         // If the property is required
-        var required = false;
-        if(self.schema.required && self.schema.required.indexOf(key) >= 0) required = true;
+        var required;
+        if(self.schema.required && self.schema.required instanceof Array) {
+          required = self.schema.required.indexOf(key) >= 0;
+        }
 
         self.editors[key] = new editor({
           jsoneditor: self.jsoneditor,

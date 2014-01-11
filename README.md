@@ -29,52 +29,67 @@ Usage
 
 ### Initialize
 
-```javascript
-$("#editor_holder").jsoneditor({
-  schema: {
-    type: "object",
-    properties: {
-      name: {
-        type: "string"
-      }
-    }
-  }
-});
+```js
+$("#editor_holder").jsoneditor(options);
 ```
 
-If you want to set an initial value for the editor, pass in a `startval` parameter.
+#### Options
 
-```javascript
+*  __schema__ - Required, a valid JSON Schema (either Version 3 or Version 4 of the draft spec)
+*  __startval__ - Optional, the starting value for the editor.  Must be valid against the schema.
+*  __ajax__ - Optional, if `true`, JSON Editor will load external urls in `$ref` via ajax.  Default `false`
+*  __refs__ - Optional, an object containing schema definitions for urls.  Allows you to pre-define external schemas.
+*  __required_by_default__ - Optional, if `true`, all schemas that don't have the `required` property explicitly set will be required. Default `false`
+
+Here's an example using all the options:
+
+```js
 $("#editor_holder").jsoneditor({
   schema: {
     type: "object",
     properties: {
       name: {
-        type: "string"
+        description: "Will load from the pre-defined schema passed in during initialization",
+        $ref: "http://example.com/name.json"
+      },
+      age: {
+        description: "Will load via ajax.  If the ajax option was false, this would throw an exception",
+        $ref: "http://example.com/age.json"
       }
     }
   },
   startval: {
-    "name": "Jane Doe"
-  }
+    name: "John Smith",
+    age: 21
+  },
+  ajax: true,
+  refs: {
+    "http://example.com/name.json": {
+      type: "string"
+    }
+  },
+  required_by_default: true
 });
 ```
 
-JSON Editor does the initialization asynchronously, so before using any of the following API methods, you must listen for the `ready` event.
-
-```javascript
-$("#editor_holder").jsoneditor({schema: schema}).on('ready',function() {
-  // Do something here
+__*Note__ If the `ajax` property is `true` and JSON Editor needs to fetch an external url, the api methods won't be available immediately.
+Listen for the `ready` event before calling them.
+```js
+$("#editor_holder").on('ready',function() {
+  // Now the api methods will be available
+  $("#editor_holder").jsoneditor('validate');
 });
 ```
 
 ### Get/Set Value
 
-```javascript
-// Set the editor's value
+Set the editor's value
+```js
 $("#editor_holder").jsoneditor('value',{name: "John Smith"});
+```
 
-// Get the editor's current value
+Get the editor's value
+```js
 var value = $("#editor_holder").jsoneditor('value');
 console.log(value.name) // Will log "John Smith"
 ```
@@ -102,6 +117,7 @@ else {
 
 By default, this will do the validation with the editor's current value.
 If you want to use a different value, you can pass it in as a 2nd parameter.
+
 
 ```javascript
 // Validate an arbitrary value against the editor's schema
@@ -193,10 +209,9 @@ Some of the other keywords have caveats that affect their behavior:
 These caveats are described in detail below.
 
 In addition to the keywords defined in the specification, 
-JSON Editor adds 4 custom keywords which allows you to adjust
+JSON Editor adds 3 custom keywords which allows you to adjust
 the generated HTML form in various ways:
 
-*  editor
 *  options
 *  template
 *  vars
@@ -235,28 +250,7 @@ JSON Editor supports references to external urls and local definitions.  Here's 
 Local references must point to the `definitions` object of the root node of the schema and can't be nested.
 So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
 
-You can  optionally pass in the schemas for external urls during initialization:
-
-```javascript
-$("#editor").jsoneditor({
-  schema: {
-    "$ref": "http://mydomain.com/geo.json"
-  },
-  refs: {
-    "http://mydomain.con/geo.json": {
-      "type": "object",
-      "properties": {
-        "city": {
-          "type": "string"
-        }
-      }
-    }
-  }
-});
-```
-
-If JSON Editor sees an external url it doesn't already have a schema for, it will attempt to fetch it via Ajax.
-If loading from Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
+If loading an external url via Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
 
 ### format
 
@@ -294,41 +288,26 @@ Here is an example that will show a color picker in browsers that support it:
 }
 ```
 
-editor
------------------
-
-JSON Editor uses resolver functions to determine which editor to use for a particular schema or subschema.  
-
-There is an editor for each primitive JSON type.  An additional `table` editor is included, which provides a more compact way to edit arrays.  Custom editors can be added as well (look at existing ones for examples).
-
-Let's say you make a custom `date` editor and want any schema with `format` set to `date` to use this instead of the default `string` editor.  You can do this by adding a resolver function:
-
-```js
-// Add a resolver function to the beginning of the resolver list
-// This will make it run before any other ones
-$.jsoneditor.resolvers.unshift(function(schema) {
-  if(schema.format === "date") {
-    return "date";
-  }
-  
-  // If no valid editor is returned, the next resolver function will be used
-});
-```
-
-There is a special schema keyword `editor` which takes precedence over all the resolver functions when set.
-For example, this schema will use the `table` editor, no matter what the resolver functions are.
+For schemas of type `array`, the format `table` is supported, which is a more compact UI for editing arrays.
+To use this format, each array element must have the same schema.
 
 ```json
 {
   "type": "array",
-  "editor": "table",
+  "format": "table",
   "items": {
-    "type": "number"
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      }
+    }
   }
 }
 ```
 
-### options
+Editor Options
+----------------
 
 Editors can accept options which alter the behavior in some way.
 
@@ -350,8 +329,7 @@ Right now, there is only 1 supported option
 }
 ```
 
-
-template and vars
+Templates and Variables
 ------------------
 A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  
 Templates only work for fields of type `string`, `integer`, and `number`.
@@ -453,7 +431,7 @@ In this example, the `location` field will be generated using the `city` and `st
 ### Custom Template Engines
 
 If one of the included template engines isn't sufficient, 
-you can use a custom template engine with a `compile` method.  For example:
+you can use any custom template engine with a `compile` method.  For example:
 
 ```js
 var myengine = {
@@ -476,3 +454,50 @@ $("#editor").jsoneditor({
   template: myengine
 });
 ```
+
+
+Custom Editor Interfaces
+-----------------
+
+JSON Editor contains editor interfaces for each of the primitive JSON types as well as a few other specialized ones.
+
+You can add custom editors interfaces fairly easily.  Look at any of the existing ones for an example.
+
+JSON Editor uses resolver functions to determine which editor interface to use for a particular schema or subschema.
+
+Let's say you make a custom `location` editor for editing geo data.  You can add a resolver function to use this custom editor when appropriate. For example:
+
+```js
+// Add a resolver function to the beginning of the resolver list
+// This will make it run before any other ones
+$.jsoneditor.resolvers.unshift(function(schema) {
+  if(schema.type === "object" && schema.format === "location") {
+    return "location";
+  }
+  
+  // If no valid editor is returned, the next resolver function will be used
+});
+```
+
+The following schema will now use this custom editor for each of the array elements instead of the default `object` editor.
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "format": "location",
+    "properties": {
+      "longitude": {
+        "type": "number"
+      },
+      "latitude": {
+        "type": "number"
+      }
+    }
+  }
+}
+```
+
+If you create a custom editor interface that you think could be helpful to others, submit a pull request!
+Current editor interfaces on the wishlist include a WYSIWYG html editor, a Markdown editor, and a code editor with syntax highlighting.

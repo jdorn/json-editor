@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.11 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.12 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-06
+ * Date: 2014-01-11
  */
 
 /**
@@ -115,6 +115,7 @@ $.fn.jsoneditor = function(options) {
 
   // Let the validator resolve references in the schema asynchronously
   d.validator = new $.jsoneditor.Validator(schema,{
+    ajax: options.ajax,
     refs: options.refs
   }).ready(function(expanded) {
     d.schema = expanded;
@@ -153,18 +154,15 @@ $.jsoneditor = {
   getEditorClass: function(schema, editor) {
     var classname;
 
-    if(schema.editor) classname = schema.editor;
-    else {
-      $.each($.jsoneditor.resolvers,function(i,resolver) {
-        var tmp;
-        if(tmp = resolver(schema)) {
-          if($.jsoneditor.editors[tmp]) {
-            classname = tmp;
-            return false;
-          }
+    $.each($.jsoneditor.resolvers,function(i,resolver) {
+      var tmp;
+      if(tmp = resolver(schema)) {
+        if($.jsoneditor.editors[tmp]) {
+          classname = tmp;
+          return false;
         }
-      });
-    }
+      }
+    });
 
     if(!classname) throw "Unknown editor for schema "+JSON.stringify(schema);
     if(!$.jsoneditor.editors[classname]) throw "Unknown editor "+classname;
@@ -200,9 +198,11 @@ $.jsoneditor.Validator = Class.extend({
   init: function(schema, options) {
     this.original_schema = schema;
     this.options = options || {};
+    this.refs = this.options.refs || {};
 
     // Store any $ref and definitions
     this.ready_callbacks = [];
+
     if(this.options.ready) this.ready(this.options.ready);
     this.getRefs();
   },
@@ -215,8 +215,6 @@ $.jsoneditor.Validator = Class.extend({
     return this;
   },
   getRefs: function() {
-    this.refs = this.options.refs || {};
-
     var self = this;
     this._getRefs(this.original_schema, function(schema) {
       self.schema = schema;
@@ -287,6 +285,8 @@ $.jsoneditor.Validator = Class.extend({
       }
       // If we need to fetch an external url
       else if(ref.match(/^[a-zA-Z]+:\/\//)) {
+        if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
+
         $.getJSON(ref,function(response) {
           self.refs[ref] = [];
 
@@ -944,7 +944,18 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   isRequired: function() {
-    return this.options.required || this.schema.required===true;
+    if(typeof this.options.required !== "undefined") {
+      return this.options.required;
+    }
+    else if(typeof this.schema.required === "boolean") {
+      return this.schema.required;
+    }
+    else if(this.jsoneditor.data('jsoneditor').options.required_by_default) {
+      return true
+    }
+    else {
+      return false;
+    }
   },
   getDefault: function() {
     return this.schema.default || null;
@@ -1179,7 +1190,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
         // Find the root node for this template variable
         var root = self.container.closest('[data-schemaid="'+first+'"]');
-        if(!root.length) throw "Unknown template variable path "+path;
+        if(!root.length) throw "Could not find ancestor node with id "+first;
 
         // Keep track of the root node and path for use when rendering the template
         var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');
@@ -1371,8 +1382,10 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
 
         // If the property is required
-        var required = false;
-        if(self.schema.required && self.schema.required.indexOf(key) >= 0) required = true;
+        var required;
+        if(self.schema.required && self.schema.required instanceof Array) {
+          required = self.schema.required.indexOf(key) >= 0;
+        }
 
         self.editors[key] = new editor({
           jsoneditor: self.jsoneditor,
@@ -1600,7 +1613,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     if(typeof this.item_info[stringified] !== "undefined") return this.item_info[stringified];
     
     // Create a temporary editor with this schema and get info
-    var tmp = $("<div>");
+    var tmp = $("<div>").appendTo(this.container);
     var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
     editor = new editor({
       jsoneditor: this.jsoneditor,
@@ -1947,7 +1960,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
     this.schema.items = this.schema.items || [];
 
-    this.table = this.theme.getTable();
+    this.table = this.theme.getTable().appendTo(this.container);
     this.thead = this.theme.getTableHead().appendTo(this.table);
     this.header_row = this.theme.getTableRow().appendTo(this.thead);
     this.row_holder = this.theme.getTableBody().appendTo(this.table);
@@ -2367,6 +2380,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.type = 0;
 
     this.editors = [];
+    this.validators = [];
     $.each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
 
@@ -2378,7 +2392,14 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       }
       else {
         schema = $.extend(true,{},self.schema,type);
+
+        // If we need to merge `required` arrays
+        if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
+          schema.required = self.schema.required.concat(type.required);
+        }
       }
+
+      self.validators[i] = new $.jsoneditor.Validator(schema);
 
       var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
@@ -2404,6 +2425,16 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.value = this.editors[this.type].getValue();
   },
   setValue: function(val,initial) {
+    // Determine type by getting the first one that validates
+    var self = this;
+    $.each(this.validators, function(i,validator) {
+      if(!validator.validate(val).length) {
+        self.type = i;
+        self.switcher.val(self.display_text[i]).trigger('change');
+        return false;
+      }
+    });
+
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();

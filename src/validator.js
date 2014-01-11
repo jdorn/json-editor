@@ -2,9 +2,11 @@ $.jsoneditor.Validator = Class.extend({
   init: function(schema, options) {
     this.original_schema = schema;
     this.options = options || {};
+    this.refs = this.options.refs || {};
 
     // Store any $ref and definitions
     this.ready_callbacks = [];
+
     if(this.options.ready) this.ready(this.options.ready);
     this.getRefs();
   },
@@ -17,8 +19,6 @@ $.jsoneditor.Validator = Class.extend({
     return this;
   },
   getRefs: function() {
-    this.refs = this.options.refs || {};
-
     var self = this;
     this._getRefs(this.original_schema, function(schema) {
       self.schema = schema;
@@ -89,6 +89,8 @@ $.jsoneditor.Validator = Class.extend({
       }
       // If we need to fetch an external url
       else if(ref.match(/^[a-zA-Z]+:\/\//)) {
+        if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
+
         $.getJSON(ref,function(response) {
           self.refs[ref] = [];
 

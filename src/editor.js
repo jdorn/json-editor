@@ -80,7 +80,18 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   isRequired: function() {
-    return this.options.required || this.schema.required===true;
+    if(typeof this.options.required !== "undefined") {
+      return this.options.required;
+    }
+    else if(typeof this.schema.required === "boolean") {
+      return this.schema.required;
+    }
+    else if(this.jsoneditor.data('jsoneditor').options.required_by_default) {
+      return true
+    }
+    else {
+      return false;
+    }
   },
   getDefault: function() {
     return this.schema.default || null;

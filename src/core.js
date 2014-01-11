@@ -95,6 +95,7 @@ $.fn.jsoneditor = function(options) {
 
   // Let the validator resolve references in the schema asynchronously
   d.validator = new $.jsoneditor.Validator(schema,{
+    ajax: options.ajax,
     refs: options.refs
   }).ready(function(expanded) {
     d.schema = expanded;
@@ -133,18 +134,15 @@ $.jsoneditor = {
   getEditorClass: function(schema, editor) {
     var classname;
 
-    if(schema.editor) classname = schema.editor;
-    else {
-      $.each($.jsoneditor.resolvers,function(i,resolver) {
-        var tmp;
-        if(tmp = resolver(schema)) {
-          if($.jsoneditor.editors[tmp]) {
-            classname = tmp;
-            return false;
-          }
+    $.each($.jsoneditor.resolvers,function(i,resolver) {
+      var tmp;
+      if(tmp = resolver(schema)) {
+        if($.jsoneditor.editors[tmp]) {
+          classname = tmp;
+          return false;
         }
-      });
-    }
+      }
+    });
 
     if(!classname) throw "Unknown editor for schema "+JSON.stringify(schema);
     if(!$.jsoneditor.editors[classname]) throw "Unknown editor "+classname;

@@ -59,6 +59,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.type = 0;
 
     this.editors = [];
+    this.validators = [];
     $.each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
 
@@ -70,7 +71,14 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       }
       else {
         schema = $.extend(true,{},self.schema,type);
+
+        // If we need to merge `required` arrays
+        if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
+          schema.required = self.schema.required.concat(type.required);
+        }
       }
+
+      self.validators[i] = new $.jsoneditor.Validator(schema);
 
       var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
@@ -96,6 +104,16 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.value = this.editors[this.type].getValue();
   },
   setValue: function(val,initial) {
+    // Determine type by getting the first one that validates
+    var self = this;
+    $.each(this.validators, function(i,validator) {
+      if(!validator.validate(val).length) {
+        self.type = i;
+        self.switcher.val(self.display_text[i]).trigger('change');
+        return false;
+      }
+    });
+
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();

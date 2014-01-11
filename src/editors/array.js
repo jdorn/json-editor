@@ -70,7 +70,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     if(typeof this.item_info[stringified] !== "undefined") return this.item_info[stringified];
     
     // Create a temporary editor with this schema and get info
-    var tmp = $("<div>");
+    var tmp = $("<div>").appendTo(this.container);
     var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
     editor = new editor({
       jsoneditor: this.jsoneditor,
