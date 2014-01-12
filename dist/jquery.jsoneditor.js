@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.12 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.13 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -150,6 +150,7 @@ $.jsoneditor = {
   templates: {},
   themes: {},
   resolvers: [],
+  custom_validators: [],
 
   getEditorClass: function(schema, editor) {
     var classname;
@@ -547,88 +548,93 @@ $.jsoneditor.Validator = Class.extend({
      * Type Specific Validation
      */
     
-    // `multipleOf` and `divisibleBy`
-    if(schema.multipleOf || schema.divisibleBy) {
-      valid = value / (schema.multipleOf || schema.divisibleBy);
-      if(valid !== Math.floor(valid)) {
-        errors.push({
-          path: path,
-          property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-          message: 'Value must be a multiple of '+(schema.multipleOf || schema.divisibleBy)
-        });
+    // Number Specific Validation
+    if(typeof value === "number") {
+      // `multipleOf` and `divisibleBy`
+      if(schema.multipleOf || schema.divisibleBy) {
+        valid = value / (schema.multipleOf || schema.divisibleBy);
+        if(valid !== Math.floor(valid)) {
+          errors.push({
+            path: path,
+            property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
+            message: 'Value must be a multiple of '+(schema.multipleOf || schema.divisibleBy)
+          });
+        }
+      }
+      
+      // `maximum`
+      if(schema.maximum) {
+        if(schema.exclusiveMaximum && value >= schema.maximum) {
+          errors.push({
+            path: path,
+            property: 'maximum',
+            message: 'Value must be less than '+schema.maximum
+          });
+        }
+        else if(!schema.exclusiveMaximum && value > schema.maximum) {
+          errors.push({
+            path: path,
+            property: 'maximum',
+            message: 'Value must be at most '+schema.maximum
+          });
+        }
+      }
+      
+      // `minimum`
+      if(schema.minimum) {
+        if(schema.exclusiveMinimum && value <= schema.minimum) {
+          errors.push({
+            path: path,
+            property: 'minimum',
+            message: 'Value must be greater than '+schema.minimum
+          });
+        }
+        else if(!schema.exclusiveMinimum && value < schema.minimum) {
+          errors.push({
+            path: path,
+            property: 'minimum',
+            message: 'Value must be at least '+schema.minimum
+          });
+        }
       }
     }
-    
-    // `maximum`
-    if(schema.maximum) {
-      if(schema.exclusiveMaximum && value >= schema.maximum) {
-        errors.push({
-          path: path,
-          property: 'maximum',
-          message: 'Value must be less than '+schema.maximum
-        });
+    // String specific validation
+    else if(typeof value === "string") {
+      // `maxLength`
+      if(schema.maxLength) {
+        if((value+"").length > schema.maxLength) {
+          errors.push({
+            path: path,
+            property: 'maxLength',
+            message: 'Value must be at most '+schema.maxLength+' characters long'
+          });
+        }
       }
-      else if(!schema.exclusiveMaximum && value > schema.maximum) {
-        errors.push({
-          path: path,
-          property: 'maximum',
-          message: 'Value must be at most '+schema.maximum
-        });
+      
+      // `minLength`
+      if(schema.minLength) {
+        if((value+"").length < schema.minLength) {
+          errors.push({
+            path: path,
+            property: 'minLength',
+            message: 'Value must be at least '+schema.minLength+' characters long'
+          });
+        }
       }
-    }
-    
-    // `minimum`
-    if(schema.minimum) {
-      if(schema.exclusiveMinimum && value <= schema.minimum) {
-        errors.push({
-          path: path,
-          property: 'minimum',
-          message: 'Value must be greater than '+schema.minimum
-        });
-      }
-      else if(!schema.exclusiveMinimum && value < schema.minimum) {
-        errors.push({
-          path: path,
-          property: 'minimum',
-          message: 'Value must be at least '+schema.minimum
-        });
-      }
-    }
-    
-    // `maxLength`
-    if(schema.maxLength) {
-      if((value+"").length > schema.maxLength) {
-        errors.push({
-          path: path,
-          property: 'maxLength',
-          message: 'Value must be at most '+schema.maxLength+' characters long'
-        });
+      
+      // `pattern`
+      if(schema.pattern) {
+        if(!(new RegExp(schema.pattern)).test(value)) {
+          errors.push({
+            path: path,
+            property: 'pattern',
+            message: 'Value must match the provided pattern'
+          });
+        }
       }
     }
-    
-    // `minLength`
-    if(schema.minLength) {
-      if((value+"").length < schema.minLength) {
-        errors.push({
-          path: path,
-          property: 'minLength',
-          message: 'Value must be at least '+schema.minLength+' characters long'
-        });
-      }
-    }
-    
-    // `pattern`
-    if(schema.pattern) {
-      if(!(new RegExp(schema.pattern)).test(value)) {
-        errors.push({
-          path: path,
-          property: 'pattern',
-          message: 'Value must match the provided pattern'
-        });
-      }
-    }
-    
-    if(value instanceof Array) {    
+    // Array specific validation
+    else if(typeof value === "object" && value !== null && value instanceof Array) {    
       // `items` and `additionalItems`
       if(schema.items) {
         // `items` is an array
@@ -711,8 +717,8 @@ $.jsoneditor.Validator = Class.extend({
         }
       }
     }
-    
-    if(typeof value === "object" && value !== null && !(value instanceof Array)) {
+    // Object specific validation
+    else if(typeof value === "object" && value !== null) {
       // `maxProperties`
       if(schema.maxProperties) {
         valid = 0;
@@ -840,6 +846,11 @@ $.jsoneditor.Validator = Class.extend({
         }
       }
     }
+    
+    // Custom type validation
+    $.each($.jsoneditor.custom_validators,function(i,validator) {
+      errors = errors.concat(validator(schema,value,path));
+    });
     
     return errors;
   },

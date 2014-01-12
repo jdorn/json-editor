@@ -501,3 +501,28 @@ The following schema will now use this custom editor for each of the array eleme
 
 If you create a custom editor interface that you think could be helpful to others, submit a pull request!
 Current editor interfaces on the wishlist include a WYSIWYG html editor, a Markdown editor, and a code editor with syntax highlighting.
+
+Custom Validation
+----------------
+
+JSON Editor provides a hook into the validation engine for adding your own custom validation.
+
+Let's say you want to force all schemas with `format` set to `date` to match the pattern `YYYY-MM-DD`.
+
+```js
+// Custom validators must return an array of errors or an empty array if valid
+$.jsoneditor.custom_validators.push(function(schema, value, path) {
+  var errors = [];
+  if(schema.format==="date") {
+    if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)) {
+      // Errors must be an object with `path`, `property`, and `mesage`
+      errors.push({
+        path: path,
+        property: 'format',
+        message: 'Dates must be in the format "YYYY-MM-DD"'
+      });
+    }
+  }
+  return errors;
+});
+```

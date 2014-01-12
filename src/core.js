@@ -130,6 +130,7 @@ $.jsoneditor = {
   templates: {},
   themes: {},
   resolvers: [],
+  custom_validators: [],
 
   getEditorClass: function(schema, editor) {
     var classname;
