@@ -23,6 +23,7 @@ Requirements
 
 *  A compatible javascript template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
 *  A compatible CSS Framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
+*  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode
 
 Usage
 --------------
@@ -256,12 +257,14 @@ If loading an external url via Ajax, the url must either be on the same domain o
 
 JSON Editor supports the following values for the `format` parameter for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
 
+*  bbcode (requires SCEditor)
 *  color
 *  date
 *  datetime
 *  datetime-local
 *  email
 *  hidden
+*  html (requires SCEditor)
 *  month
 *  number
 *  range
@@ -500,7 +503,7 @@ The following schema will now use this custom editor for each of the array eleme
 ```
 
 If you create a custom editor interface that you think could be helpful to others, submit a pull request!
-Current editor interfaces on the wishlist include a WYSIWYG html editor, a Markdown editor, and a code editor with syntax highlighting.
+Current editor interfaces on the wishlist include a Markdown editor and a code editor with syntax highlighting.
 
 Custom Validation
 ----------------

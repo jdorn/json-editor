@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.13 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.14 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-11
+ * Date: 2014-01-12
  */
 
 /**
@@ -1060,6 +1060,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     }
 
     this.input.val(sanitized);
+    
+    // If using SCEditor, update the WYSIWYG
+    if(this.sceditor_instance) {
+      this.sceditor_instance.val(sanitized);
+    }
 
     this.refreshValue();
 
@@ -1088,27 +1093,42 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       this.input_type = 'select';
       this.input = this.theme.getSelectInput(this.schema.enum);
     }
-    // Text Area
-    else if(this.schema.format && this.schema.format == 'textarea') {
-      this.input_type = 'textarea';
-      this.input = this.theme.getTextareaInput();
-    }
-    else if(this.schema.format && this.schema.format == 'range') {
-      this.input_type = 'range';
-      var min = this.schema.minimum || 0;
-      var max = this.schema.maximum || Math.max(100,min+1);
-      var step = 1;
-      if(this.schema.multipleOf) {
-        if(min%this.schema.multipleOf) min = Math.ceil(min/this.schema.multipleOf)*this.schema.multipleOf;
-        if(max%this.schema.multipleOf) max = Math.floor(max/this.schema.multipleOf)*this.schema.multipleOf;
-        step = this.schema.multipleOf;
+    // Specific format
+    else if(this.schema.format) {
+      // Text Area
+      if(this.schema.format === 'textarea') {
+        this.input_type = 'textarea';
+        this.input = this.theme.getTextareaInput();
       }
+      // WYSIWYG html/bbcode
+      if(this.schema.format === 'html' || this.schema.format === 'bbcode') {
+        this.input_type = this.schema.format;
+        
+        this.input = this.theme.getTextareaInput();
+      }
+      // Range Input
+      else if(this.schema.format === 'range') {
+        this.input_type = 'range';
+        var min = this.schema.minimum || 0;
+        var max = this.schema.maximum || Math.max(100,min+1);
+        var step = 1;
+        if(this.schema.multipleOf) {
+          if(min%this.schema.multipleOf) min = Math.ceil(min/this.schema.multipleOf)*this.schema.multipleOf;
+          if(max%this.schema.multipleOf) max = Math.floor(max/this.schema.multipleOf)*this.schema.multipleOf;
+          step = this.schema.multipleOf;
+        }
 
-      this.input = this.theme.getRangeInput(min,max,step);
+        this.input = this.theme.getRangeInput(min,max,step);
+      }
+      // HTML5 Input type
+      else {
+        this.input_type = this.schema.format;
+        this.input = this.theme.getFormInputField(this.input_type);
+      }
     }
-    // Other input type
+    // Normal text input
     else {
-      this.input_type = this.schema.format? this.schema.format : 'text';
+      this.input_type = 'text';
       this.input = this.theme.getFormInputField(this.input_type);
     }
     
@@ -1142,16 +1162,49 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         self.refreshValue();
       });
 
+    if(this.schema.format) this.input.attr('data-schemaformat',this.schema.format);
+
     this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
 
     // Any special formatting that needs to happen after the input is added to the dom
     window.setTimeout(function() {
-      self.theme.afterInputReady(self.input);
+      self.afterInputReady();
     });
 
     // If this schema is based on a macro template, set that up
     if(this.schema.template) this.setupTemplate();
     else this.refreshValue();
+  },
+  afterInputReady: function() {
+    var self = this;
+    
+    // Setup WYSIWYG editor
+    if(this.input_type === 'html' || this.input_type === 'bbcode') {
+      // If SCEditor is loaded
+      if($.fn.sceditor) {
+        self.input.sceditor({
+          plugins: self.input_type==='html'? 'xhtml' : 'bbcode',
+          emoticonsEnabled: false,
+          width: '100%',
+          height: 300
+        });
+        
+        self.sceditor_instance = self.input.sceditor('instance');
+        
+        self.sceditor_instance.blur(function() {
+          // Get editor's value
+          var val = $("<div>"+self.sceditor_instance.val()+"</div>");
+          // Remove sceditor spans/divs
+          $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
+          // Set the value and update
+          self.input.val(val.html());
+          self.input.trigger('change');
+        });
+      }
+      // TODO: support other WYSIWYG editors
+    }
+    
+    self.theme.afterInputReady(self.input);
   },
   refreshValue: function() {
     this.value = this.input.val();
@@ -1165,11 +1218,18 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       });
       self.var_listener = null;
     }
+    
+    // If using SCEditor, destroy the editor instance
+    if(this.sceditor_instance) {
+      this.sceditor_instance.destroy();
+    }
+    
     this.template = null;
     this.vars = null;
     this.input.remove();
     if(this.label) this.label.remove();
     if(this.description) this.description.remove();
+
 
     this._super();
   },
@@ -2635,7 +2695,10 @@ $.jsoneditor.AbstractTheme = Class.extend({
     return select;
   },
   getTextareaInput: function() {
-    return $("<textarea>");
+    return $("<textarea>").css({
+      width: '100%',
+      height: 300
+    });
   },
   getRangeInput: function(min,max,step) {
     return $("<input type='range'>")
