@@ -24,6 +24,7 @@ Requirements
 *  A compatible javascript template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
 *  A compatible CSS Framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
 *  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode
+*  [EpicEditor](http://epiceditor.com/) for Markdown editing
 
 Usage
 --------------
@@ -265,6 +266,7 @@ JSON Editor supports the following values for the `format` parameter for schemas
 *  email
 *  hidden
 *  html (requires SCEditor)
+*  markdown (requires EpicEditor)
 *  month
 *  number
 *  range

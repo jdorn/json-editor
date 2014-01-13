@@ -19,6 +19,9 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.sceditor_instance) {
       this.sceditor_instance.val(sanitized);
     }
+    if(this.epiceditor) {
+      this.epiceditor.importFile(null,sanitized);
+    }
 
     this.refreshValue();
 
@@ -58,6 +61,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       if(this.schema.format === 'html' || this.schema.format === 'bbcode') {
         this.input_type = this.schema.format;
         
+        this.input = this.theme.getTextareaInput();
+      }
+      // Markdown
+      else if(this.schema.format === 'markdown') {
+        this.input_type = 'markdown';
         this.input = this.theme.getTextareaInput();
       }
       // Range Input
@@ -157,6 +165,26 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       }
       // TODO: support other WYSIWYG editors
     }
+    // Markdown
+    else if(this.input_type === 'markdown') {
+      if(window.EpicEditor) {
+        this.epiceditor_container = $("<div>").insertBefore(this.input);
+        this.input.hide();
+        this.epiceditor = new EpicEditor({
+          container: this.epiceditor_container.get(0),
+          clientSideStorage: false,
+          basePath: '//cdnjs.cloudflare.com/ajax/libs/epiceditor/0.2.0'
+        });
+        
+        this.epiceditor.on('update',function() {
+          var val = self.epiceditor.exportFile();
+          self.input.val(val);
+          self.input.trigger('change');
+        });
+        
+        this.epiceditor.load();
+      }
+    }
     
     self.theme.afterInputReady(self.input);
   },
@@ -176,6 +204,9 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     // If using SCEditor, destroy the editor instance
     if(this.sceditor_instance) {
       this.sceditor_instance.destroy();
+    }
+    if(this.epiceditor) {
+      this.epiceditor.unload();
     }
     
     this.template = null;
