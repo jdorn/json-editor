@@ -203,7 +203,6 @@ only used during validation.
 
 Some of the other keywords have caveats that affect their behavior:
 
-*  enum
 *  $ref
 *  definitions
 *  format
@@ -219,10 +218,6 @@ the generated HTML form in various ways:
 *  vars
 
 These keywords are also described in detail below.
-
-### enum
-
-The `enum` property is ignored for schemas of type `boolean`.  Support for this will be added in a future release.
 
 ### $ref and definitions
 
@@ -505,13 +500,21 @@ The following schema will now use this custom editor for each of the array eleme
 ```
 
 If you create a custom editor interface that you think could be helpful to others, submit a pull request!
-Current editor interfaces on the wishlist include a Markdown editor and a code editor with syntax highlighting.
+
+The possibilities are endless.  Some ideas:
+
+*  Syntax highlighting code editor (Ace, Markup, etc.)
+*  A compact way to edit objects
+*  Radio button version of the `select` editor
+*  Typeahead for schemas with really long `enum` lists
+*  Canvas based image editor that produces Base64 data urls
+
 
 Custom Validation
 ----------------
 
 JSON Editor provides a hook into the validation engine for adding your own custom validation.
-
+
 Let's say you want to force all schemas with `format` set to `date` to match the pattern `YYYY-MM-DD`.
 
 ```js
