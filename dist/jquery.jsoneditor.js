@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.15 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.16 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-12
+ * Date: 2014-01-13
  */
 
 /**
@@ -1367,56 +1367,6 @@ $.jsoneditor.editors.integer = $.jsoneditor.editors.number.extend({
   }
 });
 
-// Boolean Editor (simple checkbox)
-$.jsoneditor.editors.boolean = $.jsoneditor.AbstractEditor.extend({
-  getDefault: function() {
-    return false;
-  },
-  build: function() {
-    var container = this.getContainer();
-    if(!this.getOption('compact',false)) this.label = this.theme.getCheckboxLabel(this.getTitle());
-    this.input = this.theme.getCheckbox();
-
-    if(this.schema.description) this.description = this.theme.getCheckboxDescription(this.schema.description);
-
-    this.input_holder = this.theme.getFormControl(this.label, this.input, this.description).appendTo(container);
-
-    var self = this;
-
-    if(this.getOption('compact')) this.container.addClass('compact');
-
-    this.input
-      // data-schemapath is used by other editors to listen to changes
-      .attr('data-schemapath',this.getPath())
-      // data-schematype can be used to style different editors based on the string editor
-      .attr('data-schematype',this.schema.type)
-      //update the editor's value when it is changed
-      .on('change',function() {
-        self.refreshValue();
-      });
-  },
-  refreshValue: function() {
-    this.value = this.input.prop('checked');
-  },
-  setValue: function(val) {
-    if(val) this.input.prop('checked',true);
-    else this.input.prop('checked',false);
-
-    this.refreshValue();
-
-    this.input.trigger('set');
-  },
-  destroy: function() {
-    this.input.remove();
-    if(this.label) this.label.remove();
-    if(this.description) this.description.remove();
-    this.input_holder.remove();
-    this.input = this.label = this.description = this.input_holder = null;
-
-    this._super();
-  }
-});
-
 $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
     return $.extend(true,{},this.schema.default || {});
@@ -2601,6 +2551,8 @@ $.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
     });
     this.value = this.enum[0];
     this.refreshValue();
+
+    if(this.enum.length === 1) this.switcher.hide();
   },
   refreshValue: function() {
     var self = this;
@@ -2668,6 +2620,110 @@ $.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
     this.display_area.remove();
     this.title.remove();
     this.switcher.remove();
+
+    this._super();
+  }
+});
+
+$.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
+  getDefault: function() {
+    return this.schema.default || '';
+  },
+  setValue: function(value,initial) {
+    value = this.typecast(value||'');
+
+    // Sanitize value before setting it
+    var sanitized = value;
+    if(this.enum_values.indexOf(sanitized) < 0) {
+      sanitized = this.enum_values[0];
+    }
+
+    this.input.val(this.enum_options[this.enum_values.indexOf(sanitized)]);
+    this.value = sanitized;
+
+    if(sanitized !== value) this.input.trigger('change');
+
+    this.input.trigger('set');
+  },
+  typecast: function(value) {
+    if(this.schema.type === "boolean") {
+      return !!value;
+    }
+    else if(this.schema.type === "number") {
+      return 1*value;
+    }
+    else if(this.schema.type === "integer") {
+      return Math.floor(value*1);
+    }
+    else {
+      return ""+value;
+    }
+  },
+  getValue: function() {
+    return this.value;
+  },
+  removeProperty: function() {
+    this._super();
+    this.input.hide(500);
+    if(this.description) this.description.hide(500);
+    this.theme.disableLabel(this.label);
+  },
+  addProperty: function() {
+    this._super();
+    this.input.show(500);
+    if(this.description) this.description.show(500);
+    this.theme.enableLabel(this.label);
+  },
+  build: function() {
+    var self = this;
+    if(!this.getOption('compact',false)) this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
+
+    this.input_type = 'select';
+    this.enum_options = [];
+    this.enum_values = [];
+
+    // Enum options enumerated
+    if(this.schema.enum) {
+      $.each(this.schema.enum,function(i,option) {
+        self.enum_options[i] = ""+option;
+        self.enum_values[i] = self.typecast(option);
+      });
+    }
+    // Boolean
+    else if(this.schema.type === "boolean") {
+      self.enum_options = ['true','false'];
+      self.enum_values = [true,false];
+    }
+    // Other, not supported
+    else {
+      throw "'select' editor requires the enum property to be set."
+    }
+
+    this.input = this.theme.getSelectInput(this.enum_options);
+
+    this.input
+      .attr('data-schemapath',this.path)
+      .attr('data-schematype',this.schema.type)
+      .on('change keyup',function(e) {
+        var val = $(this).val();
+
+        var sanitized = val;
+        if(self.enum_options.indexOf(val) === -1) {
+          sanitized = self.enum_options[0];
+        }
+
+        self.value = self.enum_values[self.enum_options.indexOf(val)];
+      });
+
+    this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
+
+    this.value = this.enum_values[0];
+  },
+  destroy: function() {
+    if(this.label) this.label.remove();
+    if(this.description) this.description.remove();
+    this.input.remove();
 
     this._super();
   }
@@ -3198,30 +3254,46 @@ $.jsoneditor.theme = 'html';
 $.jsoneditor.template = 'default';
 
 // Set the default resolvers
+// Use "multiple" as a fall back for everything
 $.jsoneditor.resolvers.unshift(function(schema) {
   // Unknown or compound type
   return "multiple";
 });
+// If the type is set and it's a basic type, use the primitive editor
 $.jsoneditor.resolvers.unshift(function(schema) {
   // If the schema is a simple type
   if(typeof schema.type === "string") return schema.type;
 });
+// Use the select editor for all boolean values
+$.jsoneditor.resolvers.unshift(function(schema) {
+  if(schema.type === 'boolean') {
+    return "select";
+  }
+});
+// Use the multiple editor for schemas where the `type` is set to "any"
 $.jsoneditor.resolvers.unshift(function(schema) {
   // If the schema can be of any type
   if(schema.type === "any") return "multiple";
 });
+// Use the table editor for arrays with the format set to `table`
 $.jsoneditor.resolvers.unshift(function(schema) {
   // Type `array` with format set to `table`
   if(schema.type == "array" && schema.format == "table") {
     return "table";
   }
 });
+// Use the `enum` or `select` editors for schemas with enumerated properties
 $.jsoneditor.resolvers.unshift(function(schema) {
-  // Array or Object with enumerated values
-  if(schema.type === "array" || schema.type === "object") {
-    if(schema.enum) return "enum";
+  if(schema.enum) {
+    if(schema.type === "array" || schema.type === "object") {
+      return "enum";
+    }
+    else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
+      return "select";
+    }
   }
 });
+// Use the multiple editor for schemas with `oneOf` set
 $.jsoneditor.resolvers.unshift(function(schema) {
   // If this schema uses `oneOf`
   if(schema.oneOf) return "multiple";

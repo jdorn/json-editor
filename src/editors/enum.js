@@ -47,6 +47,8 @@ $.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
     });
     this.value = this.enum[0];
     this.refreshValue();
+
+    if(this.enum.length === 1) this.switcher.hide();
   },
   refreshValue: function() {
     var self = this;
