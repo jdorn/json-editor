@@ -126,5 +126,11 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editor_holder.remove();
     this.switcher.remove();
     this._super();
+  },
+  showValidationErrors: function(errors) {
+    var self = this;
+    $.each(this.editors,function(type,editor) {
+      editor.showValidationErrors(errors);
+    });
   }
 });

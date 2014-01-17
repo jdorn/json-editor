@@ -28,12 +28,6 @@ $.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
       fontStyle: 'italic'
     });
   },
-  getFormControl: function(label, input, description) {
-    return $("<div>")
-      .append(label)
-      .append(input)
-      .append(description)
-  },
   getIndentedPanel: function() {
     return $("<div>").addClass('panel');
   },
@@ -49,6 +43,15 @@ $.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
   },
   getButton: function(text) {
     return $("<button>").addClass('small button').text(text);
+  },
+  addInputError: function(input,text) {
+    var group = input.closest('.form-control').addClass('error');
+    var errmsg = $('.errormsg',group);
+    if(!errmsg.length) errmsg = $("<small class='errormsg'>").insertAfter(input);
+    errmsg.text(text);
+  },
+  removeInputError: function(input) {
+    $('.errormsg',input.closest('.form-control').removeClass('error')).remove();
   }
 });
 

@@ -39,5 +39,20 @@ $.jsoneditor.themes.html = $.jsoneditor.AbstractTheme.extend({
       borderBottom: '1px solid #ccc',
       marginBottom: 5
     });
-  }
+  },
+  addInputError: function(input, text) {
+    input.css({
+      borderColor: 'red'
+    });
+    var group = input.closest('.form-control');
+    var errmsg = $('.errmsg',group);
+    if(!errmsg.length) errmsg = $("<div style='color: red;' class='errmsg'>").appendTo(group);
+    errmsg.text(text);
+  },
+  removeInputError: function(input) {
+    input.css({
+      borderColor: ''
+    });
+    $('.errmsg',input.closest('.form-control')).remove();
+  },
 });

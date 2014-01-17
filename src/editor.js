@@ -157,5 +157,8 @@ $.jsoneditor.AbstractEditor = Class.extend({
     });
     
     return disp;
+  },
+  showValidationErrors: function(errors) {
+
   }
 });

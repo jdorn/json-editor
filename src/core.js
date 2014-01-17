@@ -1,20 +1,6 @@
 /**
  * Turn an element into a schema editor
  * @param options Options (must contain at least a `schema` property)
- *
- * Constructor:
- * $("#container").jsoneditor({
- *   schema: {...}
- * });
- *
- * Set Value:
- * $("#container").jsoneditor('value',{...})
- *
- * Get Value:
- * var value = $("#container").jsoneditor('value');
- *
- * Destroy:
- * $("#container").jsoneditor('destroy');
  */
 $.fn.jsoneditor = function(options) {
   var $this = $(this), d;
@@ -54,10 +40,15 @@ $.fn.jsoneditor = function(options) {
     d = $this.data('jsoneditor');
     if(!d) throw "JSON Editor must be instantiated before trying to validate";
     if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before running validation";
-    
-    var value = arguments.length > 1? arguments[1] : d.root.getValue();
-    
-    return d.validator.validate(value);
+
+    // Custom value to validate
+    if(arguments.length > 1) {
+      return d.validator.validate(arguments[1]);
+    }
+    // Current value (use cached result)
+    else {
+      return d.validation_results;
+    }
   }
 
   options = options || {};
@@ -91,13 +82,18 @@ $.fn.jsoneditor = function(options) {
       e.stopPropagation();
       return false;
     }
+
+    // Validate and cache results
+    d.validation_results = d.validator.validate(d.root.getValue());
+    d.root.showValidationErrors(d.validation_results);
   });
 
   // Let the validator resolve references in the schema asynchronously
   d.validator = new $.jsoneditor.Validator(schema,{
     ajax: options.ajax,
     refs: options.refs
-  }).ready(function(expanded) {
+  });
+  d.validator.ready(function(expanded) {
     d.schema = expanded;
 
     if(d.ready) return;
@@ -112,8 +108,12 @@ $.fn.jsoneditor = function(options) {
     // Starting data
     if(data) d.root.setValue(data);
 
+    d.validation_results = d.validator.validate(d.root.getValue());
+    d.root.showValidationErrors(d.validation_results);
+
     d.ready = true;
 
+    // Fire ready event asynchronously
     window.setTimeout(function() {
       $this.trigger('ready');
       $this.trigger('change');

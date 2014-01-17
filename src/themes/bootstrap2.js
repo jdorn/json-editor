@@ -57,5 +57,14 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
       width: 'auto',
       maxWidth: 'none'
     });
+  },
+  addInputError: function(input,text) {
+    var controls = $('.controls',input.closest('.control-group').addClass('error'));
+    var errmsg = $('.errormsg',controls);
+    if(!errmsg.length) errmsg = $("<p class='help-block errormsg'>").appendTo(controls);
+    errmsg.text(text);
+  },
+  removeInputError: function(input) {
+    $('.errormsg',input.closest('.control-group').removeClass('error')).remove();
   }
 });

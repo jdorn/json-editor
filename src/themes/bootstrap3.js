@@ -23,7 +23,7 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
     } 
     else {
       group.addClass('form-group');
-      if(label) label.appendTo(group);
+      if(label) label.appendTo(group).addClass('control-label');
       input.appendTo(group);
     }
 
@@ -53,5 +53,14 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
       width: 'auto',
       maxWidth: 'none'
     });
+  },
+  addInputError: function(input,text) {
+    var group = input.closest('.form-group').addClass('has-error');
+    var errmsg = $('.errormsg',group);
+    if(!errmsg.length) errmsg = $("<p class='help-block errormsg'>").appendTo(group);
+    errmsg.text(text);
+  },
+  removeInputError: function(input) {
+    $('.errormsg',input.closest('.form-group').removeClass('has-error')).remove();
   }
 });

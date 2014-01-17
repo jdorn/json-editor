@@ -73,6 +73,8 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
       throw "'select' editor requires the enum property to be set."
     }
 
+    if(this.getOption('compact')) this.container.addClass('compact');
+
     this.input = this.theme.getSelectInput(this.enum_options);
 
     this.input
@@ -92,6 +94,8 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
     this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
 
     this.value = this.enum_values[0];
+
+    self.theme.afterInputReady(self.input);
   },
   destroy: function() {
     if(this.label) this.label.remove();

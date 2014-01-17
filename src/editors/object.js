@@ -47,6 +47,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     // If the object should be rendered as a table
     else if(this.getOption('table',false)) {
       // TODO: table display format
+      throw "Not supported yet";
     }
     // If the object should be rendered as a div
     else {
@@ -58,6 +59,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       });
       
       if(this.schema.description) this.description = this.getTheme().getDescription(this.schema.description).appendTo(this.container);
+      this.error_holder = $("<div></div>").appendTo(this.container);
       this.editor_holder = this.getTheme().getIndentedPanel().appendTo(this.container);
 
       $.each(this.schema.properties, function(key,schema) {
@@ -155,6 +157,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     });
     this.editor_holder.empty();
     if(this.title) this.title.remove();
+    if(this.error_holder) this.error_holder.remove();
 
     this.editors = null;
     this.editor_holder.remove();
@@ -221,5 +224,50 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     });
     this.refreshValue();
     this.container.trigger('set');
+  },
+  showValidationErrors: function(errors) {
+    var self = this;
+
+    // Get all the errors that pertain to this editor
+    var my_errors = [];
+    var other_errors = [];
+    $.each(errors, function(i,error) {
+      if(error.path === self.path) {
+        my_errors.push(error);
+      }
+      else {
+        other_errors.push(error);
+      }
+    });
+
+    // Show errors for this editor
+    if(this.error_holder) {
+      if(my_errors.length) {
+        var message = [];
+        this.error_holder.empty().show();
+        $.each(my_errors, function(i,error) {
+          self.error_holder.append(self.theme.getErrorMessage(error.message));
+        });
+      }
+      // Hide error area
+      else {
+        this.error_holder.hide();
+      }
+    }
+
+    // Show error for the table row if this is inside a table
+    if(this.getOption('table_row')) {
+      if(my_errors.length) {
+        this.theme.addTableRowError(this.container);
+      }
+      else {
+        this.theme.removeTableRowError(this.container);
+      }
+    }
+
+    // Show errors for child editors
+    $.each(this.editors, function(i,editor) {
+      editor.showValidationErrors(other_errors);
+    });
   }
 });

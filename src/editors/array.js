@@ -24,6 +24,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
       this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
       if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.container);
+      this.error_holder = $("<div></div>").appendTo(this.container);
     }
     this.row_holder = this.theme.getIndentedPanel().appendTo(this.container);
     
@@ -399,5 +400,40 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         self.setValue(newval);
         self.div.trigger('change');
       })
+  },
+  showValidationErrors: function(errors) {
+    var self = this;
+
+    // Get all the errors that pertain to this editor
+    var my_errors = [];
+    var other_errors = [];
+    $.each(errors, function(i,error) {
+      if(error.path === self.path) {
+        my_errors.push(error);
+      }
+      else {
+        other_errors.push(error);
+      }
+    });
+
+    // Show errors for this editor
+    if(this.error_holder) {
+      if(my_errors.length) {
+        var message = [];
+        this.error_holder.empty().show();
+        $.each(my_errors, function(i,error) {
+          self.error_holder.append(self.theme.getErrorMessage(error.message));
+        });
+      }
+      // Hide error area
+      else {
+        this.error_holder.hide();
+      }
+    }
+
+    // Show errors for child editors
+    $.each(this.rows, function(i,row) {
+      row.showValidationErrors(other_errors);
+    });
   }
 });

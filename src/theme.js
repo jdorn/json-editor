@@ -69,7 +69,7 @@ $.jsoneditor.AbstractTheme = Class.extend({
     
   },
   getFormControl: function(label, input, description) {
-    return $("<div>")
+    return $("<div>").addClass('form-control')
       .append(label)
       .append(input)
       .append(description)
@@ -122,5 +122,16 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   getTableCell: function() {
     return $("<td></td>");
+  },
+  getErrorMessage: function(text) {
+    return $("<p style='color: red;'></p>").text(text);
+  },
+  addInputError: function(input, text) {
+  },
+  removeInputError: function(input) {
+  },
+  addTableRowError: function(row) {
+  },
+  removeTableRowError: function(row) {
   }
 });

@@ -31,6 +31,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
         this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
         this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
         if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.container);
+        this.error_holder = $("<div></div>").appendTo(this.container);
       }
     }
 

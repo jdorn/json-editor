@@ -23,8 +23,17 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
       marginLeft: 10
     });
   },
+  getFormControl: function(label, input, description) {
+    return $("<div>").addClass('form-control')
+      .css({
+        padding: '8px 0'
+      })
+      .append(label)
+      .append(input)
+      .append(description)
+  },
   getDescription: function(text) {
-    return $("<p>").css({
+    return $("<span>").css({
       fontSize: '.8em',
       fontStyle: 'italic'
     }).text(text);
@@ -51,5 +60,14 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
     return $("<div>").addClass('ui-widget-content ui-corner-all').css({
       padding: '1em 1.4em'
     });
+  },
+  addInputError: function(input,text) {
+    var group = input.closest('.form-control');
+    var errmsg = $('.errormsg',group);
+    if(!errmsg.length) errmsg = $("<div class='errormsg ui-state-error'>").appendTo(group);
+    errmsg.text(text);
+  },
+  removeInputError: function(input) {
+    $('.errormsg',input.closest('.form-control')).remove();
   }
 });
