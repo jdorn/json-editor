@@ -191,10 +191,6 @@ JSON Editor fully supports version 3 and 4 of the JSON Schema [core][core] and [
 The following schema keywords have no effect on the generated form and are
 only used during validation.
 
-*  patternProperties
-*  additionalProperties
-*  dependencies
-*  uniqueItems
 *  disallow
 *  extends
 *  allOf

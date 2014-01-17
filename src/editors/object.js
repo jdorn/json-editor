@@ -9,16 +9,18 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     this._super();
     this.editor_holder.show(500);
     this.title_controls.show(500);
+    this.editjson_controls.show(500);
+    if(this.addproperty_controls) this.addproperty_controls.show(500);
     this.theme.enableHeader(this.title);
   },
   removeProperty: function() {
     this._super();
     this.editor_holder.hide(500);
     this.title_controls.hide(500);
-    this.cancel_editjson_button.hide();
-    this.editjson_holder.hide(300);
-    this.theme.setButtonText(this.editjson_button,'Edit JSON');
-    this.editing_json = false;
+    this.editjson_controls.hide(500);
+    if(this.addproperty_controls) this.addproperty_controls.hide(500);
+    this.cancel_editjson_button.trigger('click');
+    if(this.cancel_addproperty_button) this.cancel_addproperty_button.trigger('click');
     this.theme.disableHeader(this.title);
   },
   build: function() {
@@ -58,6 +60,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         width: '100%'
       });
       
+      this.addproperty_holder = $("<div>").appendTo(this.container).hide();
+      this.addproperty_input = this.theme.getFormInputField('text').appendTo(this.addproperty_holder).attr('placeholder','Property name...');
+      
       if(this.schema.description) this.description = this.getTheme().getDescription(this.schema.description).appendTo(this.container);
       this.error_holder = $("<div></div>").appendTo(this.container);
       this.editor_holder = this.getTheme().getIndentedPanel().appendTo(this.container);
@@ -84,6 +89,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
       // Control buttons
       this.title_controls = this.getTheme().getHeaderButtonHolder().appendTo(this.title);
+      this.editjson_controls = this.getTheme().getHeaderButtonHolder().appendTo(this.title);
+      this.addproperty_controls = this.getTheme().getHeaderButtonHolder().appendTo(this.title);
 
       // Show/Hide button
       this.collapsed = false;
@@ -102,7 +109,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       
       // Edit JSON Button
       this.editing_json = false;
-      this.editjson_button = this.theme.getButton('Edit JSON').appendTo(this.title_controls).on('click',function() {
+      this.editjson_button = this.theme.getButton('Edit JSON').appendTo(this.editjson_controls).on('click',function() {
         // Save Changes
         if(self.editing_json) {
           // Get value from form
@@ -135,7 +142,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         
         return false;
       });
-      this.cancel_editjson_button = this.theme.getButton('Cancel Edit').appendTo(this.title_controls).hide().on('click',function() {
+      this.cancel_editjson_button = this.theme.getButton('Cancel').appendTo(this.editjson_controls).hide().on('click',function() {
           self.cancel_editjson_button.hide();
           self.editjson_holder.hide(300);
           self.theme.setButtonText(self.editjson_button,'Edit JSON');
@@ -143,6 +150,80 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           
           return false;
       });
+      
+      if(this.schema.additionalProperties !== false) {
+        this.adding_property = false;
+        this.addproperty_button = this.theme.getButton('Add Property').appendTo(this.addproperty_controls).on('click',function() {
+          // Add property
+          if(self.adding_property) {
+            var name = self.addproperty_input.val();
+            
+            // If property with this name already exists
+            if(self.editors[name]) {
+              alert('A property already exists with this name');
+              return false;
+            }
+            
+            // Hide the edit form
+            self.cancel_addproperty_button.hide();
+            self.addproperty_holder.hide(300);
+            self.theme.setButtonText(self.addproperty_button,'Add Property');
+            self.adding_property = false;
+            
+            // Determine the schema to use for this new property
+            var schema = {}, matched = false;
+            // Check if it matches any of the pattern properties
+            if(self.schema.patternProperties) {
+              $.each(self.schema.patternProperties,function(i,el) {
+                var regex = new RegExp(i);
+                if(regex.test(name)) {
+                  matched = true;
+                  schema = $.extend(true,schema,el);
+                }
+              });
+            }
+            // Otherwise, check if additionalProperties is a schema
+            if(!matched && typeof self.schema.additionalProperties === "object") {
+              schema = $.extend(true,schema,self.schema.additionalProperties);
+            }
+            
+            // Add the property
+            var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+            var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
+
+            self.editors[name] = new editor({
+              jsoneditor: self.jsoneditor,
+              schema: schema,
+              container: holder,
+              path: self.path+'.'+name,
+              parent: self,
+              required: false
+            });
+            self.editors[name].not_core = true;
+            
+            holder.trigger('change');
+          }
+          // Start Editing
+          else {
+            self.adding_property = true;
+            self.addproperty_input.val('');
+            self.cancel_addproperty_button.show();
+            self.addproperty_holder.show(300);
+            self.theme.setButtonText(self.addproperty_button,'Save Property');
+          }
+          
+          return false;
+        });
+        
+        this.cancel_addproperty_button = this.theme.getButton('Cancel').appendTo(this.addproperty_controls).hide().on('click',function() {
+            self.cancel_addproperty_button.hide();
+            self.addproperty_holder.hide(300);
+            self.theme.setButtonText(self.addproperty_button,'Add Property');
+            self.adding_property = false;
+            
+            return false;
+        });
+      }
     }
       
     // When a child editor changes, refresh the value
@@ -169,12 +250,33 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     this.value = {};
     var self = this;
     var props = 0;
+    
+    var removed = false;
+    var new_editors = this.editors;
+    $.each(this.editors, function(i,editor) {
+      if(editor.property_removed && editor.not_core) {
+        new_editors = {};
+        removed = true;
+      }
+    });
+    
     $.each(this.editors, function(i,editor) {
       if(editor.addremove) editor.addremove.show();
-      if(editor.property_removed) return;
+      if(editor.property_removed) {
+        if(!editor.not_core && removed) new_editors[i] = editor;
+        else if(editor.not_core) {
+          var container = editor.container;
+          editor.destroy();
+          container.remove();
+        }
+        return;
+      }
+      else if(removed) new_editors[i] = editor;
+      
       props++;
       self.value[i] = editor.getValue();
     });
+    this.editors = new_editors;
     
     if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(JSON.stringify(this.value,null,2));
     
