@@ -169,39 +169,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
             self.addproperty_holder.hide(300);
             self.theme.setButtonText(self.addproperty_button,'Add Property');
             self.adding_property = false;
-            
-            // Determine the schema to use for this new property
-            var schema = {}, matched = false;
-            // Check if it matches any of the pattern properties
-            if(self.schema.patternProperties) {
-              $.each(self.schema.patternProperties,function(i,el) {
-                var regex = new RegExp(i);
-                if(regex.test(name)) {
-                  matched = true;
-                  schema = $.extend(true,schema,el);
-                }
-              });
-            }
-            // Otherwise, check if additionalProperties is a schema
-            if(!matched && typeof self.schema.additionalProperties === "object") {
-              schema = $.extend(true,schema,self.schema.additionalProperties);
-            }
-            
-            // Add the property
-            var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
-            var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
-
-            self.editors[name] = new editor({
-              jsoneditor: self.jsoneditor,
-              schema: schema,
-              container: holder,
-              path: self.path+'.'+name,
-              parent: self,
-              required: false
-            });
-            self.editors[name].not_core = true;
-            
-            holder.trigger('change');
+            self.addObjectProperty(name);
           }
           // Start Editing
           else {
@@ -231,6 +199,47 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       self.refreshValue();      
     });
     
+  },
+  addObjectProperty: function(name) {
+    var self = this;
+    
+    // If property with this name already exists
+    if(self.editors[name]) {
+      return false;
+    }
+    
+    // Determine the schema to use for this new property
+    var schema = {}, matched = false;
+    // Check if it matches any of the pattern properties
+    if(self.schema.patternProperties) {
+      $.each(self.schema.patternProperties,function(i,el) {
+        var regex = new RegExp(i);
+        if(regex.test(name)) {
+          matched = true;
+          schema = $.extend(true,schema,el);
+        }
+      });
+    }
+    // Otherwise, check if additionalProperties is a schema
+    if(!matched && typeof self.schema.additionalProperties === "object") {
+      schema = $.extend(true,schema,self.schema.additionalProperties);
+    }
+    
+    // Add the property
+    var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+    var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
+
+    self.editors[name] = new editor({
+      jsoneditor: self.jsoneditor,
+      schema: schema,
+      container: holder,
+      path: self.path+'.'+name,
+      parent: self,
+      required: false
+    });
+    self.editors[name].not_core = true;
+    
+    holder.trigger('change');
   },
   destroy: function() {
     $.each(this.editors, function(i,el) {
@@ -305,7 +314,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     
     if(typeof value !== "object" || value instanceof Array) value = {};
     
-    $.each(this.editors, function(i,editor) {
+    // First, set the values for all of the defined properties
+    $.each(this.editors, function(i,editor) {      
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
         if(editor.property_removed && editor.addremove) {
@@ -324,6 +334,20 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         editor.setValue(editor.getDefault(),initial);
       }
     });
+    
+    // If additional properties are allowed, create the editors for any of those
+    if(this.schema.additionalProperties !== false) {
+      var self = this;
+      $.each(value, function(i,val) {
+        if(!self.editors[i]) {
+          self.addObjectProperty(i);
+          if(self.editors[i]) {
+            self.editors[i].setValue(val,initial);
+          }
+        }
+      });
+    }
+    
     this.refreshValue();
     this.container.trigger('set');
   },

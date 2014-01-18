@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.18 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.19 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-16
+ * Date: 2014-01-18
  */
 
 /**
@@ -1558,39 +1558,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
             self.addproperty_holder.hide(300);
             self.theme.setButtonText(self.addproperty_button,'Add Property');
             self.adding_property = false;
-            
-            // Determine the schema to use for this new property
-            var schema = {}, matched = false;
-            // Check if it matches any of the pattern properties
-            if(self.schema.patternProperties) {
-              $.each(self.schema.patternProperties,function(i,el) {
-                var regex = new RegExp(i);
-                if(regex.test(name)) {
-                  matched = true;
-                  schema = $.extend(true,schema,el);
-                }
-              });
-            }
-            // Otherwise, check if additionalProperties is a schema
-            if(!matched && typeof self.schema.additionalProperties === "object") {
-              schema = $.extend(true,schema,self.schema.additionalProperties);
-            }
-            
-            // Add the property
-            var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
-            var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
-
-            self.editors[name] = new editor({
-              jsoneditor: self.jsoneditor,
-              schema: schema,
-              container: holder,
-              path: self.path+'.'+name,
-              parent: self,
-              required: false
-            });
-            self.editors[name].not_core = true;
-            
-            holder.trigger('change');
+            self.addObjectProperty(name);
           }
           // Start Editing
           else {
@@ -1620,6 +1588,47 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       self.refreshValue();      
     });
     
+  },
+  addObjectProperty: function(name) {
+    var self = this;
+    
+    // If property with this name already exists
+    if(self.editors[name]) {
+      return false;
+    }
+    
+    // Determine the schema to use for this new property
+    var schema = {}, matched = false;
+    // Check if it matches any of the pattern properties
+    if(self.schema.patternProperties) {
+      $.each(self.schema.patternProperties,function(i,el) {
+        var regex = new RegExp(i);
+        if(regex.test(name)) {
+          matched = true;
+          schema = $.extend(true,schema,el);
+        }
+      });
+    }
+    // Otherwise, check if additionalProperties is a schema
+    if(!matched && typeof self.schema.additionalProperties === "object") {
+      schema = $.extend(true,schema,self.schema.additionalProperties);
+    }
+    
+    // Add the property
+    var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+    var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
+
+    self.editors[name] = new editor({
+      jsoneditor: self.jsoneditor,
+      schema: schema,
+      container: holder,
+      path: self.path+'.'+name,
+      parent: self,
+      required: false
+    });
+    self.editors[name].not_core = true;
+    
+    holder.trigger('change');
   },
   destroy: function() {
     $.each(this.editors, function(i,el) {
@@ -1694,7 +1703,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     
     if(typeof value !== "object" || value instanceof Array) value = {};
     
-    $.each(this.editors, function(i,editor) {
+    // First, set the values for all of the defined properties
+    $.each(this.editors, function(i,editor) {      
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
         if(editor.property_removed && editor.addremove) {
@@ -1713,6 +1723,20 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         editor.setValue(editor.getDefault(),initial);
       }
     });
+    
+    // If additional properties are allowed, create the editors for any of those
+    if(this.schema.additionalProperties !== false) {
+      var self = this;
+      $.each(value, function(i,val) {
+        if(!self.editors[i]) {
+          self.addObjectProperty(i);
+          if(self.editors[i]) {
+            self.editors[i].setValue(val,initial);
+          }
+        }
+      });
+    }
+    
     this.refreshValue();
     this.container.trigger('set');
   },
@@ -2596,6 +2620,19 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     else {
       if(!this.schema.type || this.schema.type === "any") {
         this.types = ['string','number','integer','boolean','object','array','null'];
+        
+        // If any of these primitive types are disallowed
+        if(this.schema.disallow) {
+          var disallow = this.schema.disallow;
+          if(typeof schema.disallow !== 'object' || !(schema.disallow instanceof Array)) {
+            disallow = [this.schema.disallow];
+          }
+          var allowed_types = [];
+          $.each(this.types,function(i,type) {
+            if(disallow.indexOf(type) === -1) allowed_types.push(type);
+          });
+          this.types = allowed_types;
+        }
       }
       else if(this.schema.type instanceof Array) {
         this.types = this.schema.type;

@@ -16,6 +16,19 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     else {
       if(!this.schema.type || this.schema.type === "any") {
         this.types = ['string','number','integer','boolean','object','array','null'];
+        
+        // If any of these primitive types are disallowed
+        if(this.schema.disallow) {
+          var disallow = this.schema.disallow;
+          if(typeof schema.disallow !== 'object' || !(schema.disallow instanceof Array)) {
+            disallow = [this.schema.disallow];
+          }
+          var allowed_types = [];
+          $.each(this.types,function(i,type) {
+            if(disallow.indexOf(type) === -1) allowed_types.push(type);
+          });
+          this.types = allowed_types;
+        }
       }
       else if(this.schema.type instanceof Array) {
         this.types = this.schema.type;

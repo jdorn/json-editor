@@ -37,11 +37,13 @@ $("#editor_holder").jsoneditor(options);
 
 #### Options
 
-*  __schema__ - Required, a valid JSON Schema (either Version 3 or Version 4 of the draft spec)
+*  __schema__ - Required, a valid JSON Schema (either Version 3 or Version 4 of the draft spec).
 *  __startval__ - Optional, the starting value for the editor.  Must be valid against the schema.
-*  __ajax__ - Optional, if `true`, JSON Editor will load external urls in `$ref` via ajax.  Default `false`
+*  __ajax__ - Optional, if `true`, JSON Editor will load external urls in `$ref` via ajax.  Default `false`.
 *  __refs__ - Optional, an object containing schema definitions for urls.  Allows you to pre-define external schemas.
-*  __required_by_default__ - Optional, if `true`, all schemas that don't have the `required` property explicitly set will be required. Default `false`
+*  __required_by_default__ - Optional, if `true`, all schemas that don't have the `required` property explicitly set will be required. Default `false`.
+*  __theme__ - Optional, sets the CSS theme to use for the editor.  See the "CSS Integration" section below for more info.
+*  __template__ - Optional, sets the js template engine to use.  See the "Templates and Variables" section below for more info.
 
 Here's an example using all the options:
 
@@ -70,7 +72,9 @@ $("#editor_holder").jsoneditor({
       type: "string"
     }
   },
-  required_by_default: true
+  required_by_default: true,
+  theme: 'bootstrap3',
+  template: 'underscore'
 });
 ```
 
@@ -188,36 +192,9 @@ JSON Editor fully supports version 3 and 4 of the JSON Schema [core][core] and [
 [validation]: http://json-schema.org/latest/json-schema-validation.html
 [hyper]: http://json-schema.org/latest/json-schema-hypermedia.html
 
-The following schema keywords have no effect on the generated form and are
-only used during validation.
-
-*  disallow
-*  extends
-*  allOf
-*  anyOf
-*  not
-
-Some of the other keywords have caveats that affect their behavior:
-
-*  $ref
-*  definitions
-*  format
-
-These caveats are described in detail below.
-
-In addition to the keywords defined in the specification, 
-JSON Editor adds 3 custom keywords which allows you to adjust
-the generated HTML form in various ways:
-
-*  options
-*  template
-*  vars
-
-These keywords are also described in detail below.
-
 ### $ref and definitions
 
-JSON Editor supports references to external urls and local definitions.  Here's an example showing both:
+JSON Editor supports schema references to external urls and local definitions.  Here's an example showing both:
 
 ```json
 {
@@ -244,10 +221,12 @@ Local references must point to the `definitions` object of the root node of the 
 So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
 
 If loading an external url via Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
+If your urls don't meet this requirement, you can pass in the references to JSON Editor during initialization (see Usage section above).
 
 ### format
 
 JSON Editor supports the following values for the `format` parameter for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
+If the `enum` property is specified, `format` will be ignored.
 
 *  bbcode (requires SCEditor)
 *  color
@@ -510,7 +489,7 @@ Custom Validation
 ----------------
 
 JSON Editor provides a hook into the validation engine for adding your own custom validation.
-
+
 Let's say you want to force all schemas with `format` set to `date` to match the pattern `YYYY-MM-DD`.
 
 ```js
