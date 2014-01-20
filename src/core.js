@@ -56,8 +56,6 @@ $.fn.jsoneditor = function(options) {
   var schema = options.schema;
   var data = options.startval;
 
-  var editor_class = $.jsoneditor.getEditorClass(schema);
-
   var theme_class = $.jsoneditor.themes[options.theme || $.jsoneditor.theme];
 
   if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
@@ -94,13 +92,14 @@ $.fn.jsoneditor = function(options) {
     refs: options.refs
   });
   d.validator.ready(function(expanded) {
-    d.schema = expanded;
-
     if(d.ready) return;
-
+    
+    d.schema = expanded;
+    
+    var editor_class = $.jsoneditor.getEditorClass(d.schema);
     d.root = new editor_class({
       jsoneditor: $this,
-      schema: schema,
+      schema: d.schema,
       container: d.root_container,
       required: true
     });

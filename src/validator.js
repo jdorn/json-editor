@@ -11,7 +11,7 @@ $.jsoneditor.Validator = Class.extend({
     this.getRefs();
   },
   ready: function(callback) {
-    if(this.is_ready) callback.apply(self,[this.schema]);
+    if(this.is_ready) callback.apply(self,[this.expanded]);
     else {
       this.ready_callbacks.push(callback);
     }
@@ -22,10 +22,11 @@ $.jsoneditor.Validator = Class.extend({
     var self = this;
     this._getRefs(this.original_schema, function(schema) {
       self.schema = schema;
+      self.expanded = self.expandSchema(self.schema);
 
       self.is_ready = true;
       $.each(self.ready_callbacks,function(i,callback) {
-        callback.apply(self,[this.schema]);
+        callback.apply(self,[self.expanded]);
       });
     });
   },
@@ -673,5 +674,92 @@ $.jsoneditor.Validator = Class.extend({
     else {
       return !this._validateSchema(type,value).length;
     }
+  },
+  expandSchema: function(schema) {
+    var extended = schema;
+    
+    if(schema.allOf) {
+      for(var i=0; i<schema.allOf.length; i++) {
+        extended = this.extend(extended,this.expandSchema(schema.allOf[i]));
+      }
+      delete extended.allOf;
+    }
+    if(schema.extends) {
+      // If extends is a schema
+      if(!(schema.extends instanceof Array)) {
+        extended = this.extend(extended,this.expandSchema(schema.extends));
+      }
+      // If extends is an array of schemas
+      else {
+        for(var i=0; i<schema.extends.length; i++) {
+          extended = this.extend(extended,this.expandSchema(schema.extends[i]));
+        }
+      }
+      delete extended.extends;
+    }
+    
+    return extended;
+  },
+  extend: function(obj1, obj2) {
+    obj1 = $.extend(true,{},obj1);
+    obj2 = $.extend(true,{},obj2);
+    
+    var self = this;
+    var extended = {};
+    $.each(obj1, function(prop,val) {
+      // If this key is also defined in obj2, merge them
+      if(typeof obj2[prop] !== "undefined") {
+        // Required arrays should be unioned together
+        if(prop === 'required' && typeof val === "object" && val instanceof Array) {
+          // Union arrays and unique
+          extended.required = val.concat(obj2[prop]).reduce(function(p, c) {
+            if (p.indexOf(c) < 0) p.push(c);
+            return p;
+          }, []);
+        }
+        // Type should be intersected and is either an array or string
+        else if(prop === 'type') {
+          // Make sure we're dealing with arrays
+          if(typeof val !== "object") val = [val];
+          if(typeof obj2.type !== "object") obj2.type = [obj2.type];
+          
+          
+          extended.type = val.filter(function(n) {
+            return obj2.type.indexOf(n) !== -1
+          });
+          
+          // If there's only 1 type and it's a primitive, use a string instead of array
+          if(extended.type.length === 1 && typeof extended.type[0] === "string") {
+            extended.type = extended.type[0];
+          }
+        }
+        // All other arrays should be intersected (enum, etc.)
+        else if(typeof val === "object" && val instanceof Array){
+          extended[prop] = val.filter(function(n) {
+            return obj2[prop].indexOf(n) !== -1
+          });
+        }
+        // Objects should be recursively merged
+        else if(typeof val === "object" && val !== null) {
+          extended[prop] = self.extend(val,obj2[prop]);
+        }
+        // Otherwise, use the first value
+        else {
+          extended[prop] = val;
+        }
+      }
+      // Otherwise, just use the one in obj1
+      else {
+        extended[prop] = val;
+      }
+    });
+    // Properties in obj2 that aren't in obj1
+    $.each(obj2, function(prop,val) {
+      if(typeof obj1[prop] === "undefined") {
+        extended[prop] = val;
+      }
+    });
+    
+    return extended;
   }
 });
