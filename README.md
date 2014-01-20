@@ -355,7 +355,7 @@ Here's an example template macro that generates an email address based on a firs
       "title": "Generated Email",
       "type": "string",
       "template": "{{ fname }}.{{ lname }}@domain.com",
-      "vars": {
+      "watch": {
         "fname": "name.first",
         "lname": "name.last"
       }
@@ -364,44 +364,43 @@ Here's an example template macro that generates an email address based on a firs
 }
 ```
 
-Any time the `fname` or `lname` field is changed, the `generated_email` field will re-calculate its value.
+The `email` field will watch the `fname` and `lname` fields and re-calculate its value when either one changes.
 
-Any variables you want to use in the template must be declared in the `vars` object.  
-By default, the variable paths (`name.first` and `name.last` in this example) are relative to the root schema.
+Only fields specified in the `watch` object will be passed into the template.  By default, the paths (`name.first` and `name.last` in this example) are relative to the root schema.
 You can make the variable paths relative to any ancestor node with a schema `id` defined as well.  This is especially useful within arrays.  Here's an example:
 
 ```json
 {
-    "type": "array",
-    "items": {
-        "id": "http://example.com/person",
+  "type": "array",
+  "items": {
+    "id": "http://example.com/person",
+    "type": "object",
+    "properties": {
+      "address": {
         "type": "object",
         "properties": {
-            "address": {
-                "type": "object",
-                "properties": {
-                  "city": {
-                    "type": "string"
-                  },
-                  "state": {
-                    "type": "string"
-                  }
-                }
-            },
-            "location": {
-                "type": "string",
-                "template": "{{city}}, {{state}}",
-                "vars": {
-                    "city": ["http://example.com/person","address.city"],
-                    "state": ["http://example.com/person","address.state"]
-                }
-            }
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
         }
+      },
+      "location": {
+        "type": "string",
+        "template": "{{city}}, {{state}}",
+        "watch": {
+          "city": ["http://example.com/person","address.city"],
+          "state": ["http://example.com/person","address.state"]
+        }
+      }
     }
+  }
 }
 ```
 
-In this example, the `location` field will be generated using the `city` and `state` fields from each row.
+In this example, the `location` field in row X will watch row X's `address.city` and `address.state` fields.
 
 ### Custom Template Engines
 

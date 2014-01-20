@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.20 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.21 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-19
+ * Date: 2014-01-20
  */
 
 /**
@@ -977,6 +977,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
     if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
+    this.container.attr('data-schemapath',this.path);
     this.container.data('editor',this);
 
     this.key = this.path.split('.').pop();
@@ -1001,10 +1002,88 @@ $.jsoneditor.AbstractEditor = Class.extend({
         return false;
       });
     }
+    
+    // Watched fields
+    this.watched = {};
+    if(this.schema.vars) this.schema.watch = this.schema.vars;
+    this.watched_values = {};
+    if(this.schema.watch) {
+      this.watch_listener = function() {
+        window.setTimeout(function() {
+          if(self.refreshWatchedFieldValues()) {
+            self.onWatchedFieldChange();
+          }
+        });
+      };
+      $.each(this.schema.watch, function(name, path) {
+        var path_parts;
+        if(path instanceof Array) {
+          path_parts = [path[0]].concat(path[1].split('.'));
+        }
+        else {
+          path_parts = path.split('.'); 
+          if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
+        }
+        var first = path_parts.shift();
+
+        if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
+
+        // Find the root node for this template variable
+        var root = self.container.closest('[data-schemaid="'+first+'"]');
+        if(!root.length) throw "Could not find ancestor node with id "+first;
+
+        // Keep track of the root node and path for use when rendering the template
+        var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');
+        self.watched[name] = {
+          root: root,
+          path: path_parts,
+          adjusted_path: adjusted_path
+        };
+
+        // Listen for changes to the variable field
+        root.on('change set',self.watch_listener);
+      });
+      this.watch_listener();
+    }
 
     this.build();
 
     this.setValue(this.getDefault(), true);
+  },
+  refreshWatchedFieldValues: function() {
+    var watched = {};
+    var changed = false;
+    var self = this;
+    $.each(this.watched,function(name,attr) {
+      var obj = attr.root.data('editor').getValue();
+      var current_part = -1;
+      var val = null;
+      // Use "path.to.property" to get root['path']['to']['property']
+      while(1) {
+        current_part++;
+        if(current_part >= attr.path.length) {
+          val = obj;
+          break;
+        }
+
+        if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
+          break;
+        }
+
+        obj = obj[attr.path[current_part]];
+      }
+      if(self.watched_values[name] !== val) changed = true;
+      watched[name] = val;
+    });
+    this.watched_values = watched;
+    
+    return changed;
+  },
+  getWatchedFieldValues: function() {
+    return this.watched_values;
+  },
+  onWatchedFieldChange: function() {
+    
   },
   addProperty: function() {
     this.property_removed = false;
@@ -1033,6 +1112,14 @@ $.jsoneditor.AbstractEditor = Class.extend({
     return false;
   },
   destroy: function() {
+    var self = this;
+    $.each(this.watched,function(name,attr) {
+      attr.root.off('change',self.watch_listener);
+      attr.root.off('set',self.watch_listener);
+    });
+    this.watched = null;
+    this.watched_values = null;
+    this.watch_listener = null;
     this.value = null;
     this.container = null;
     this.jsoneditor = null;
@@ -1161,8 +1248,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     this.refreshValue();
 
-    if(this.getValue() !== value || from_template) this.input.trigger('change');
-    this.input.trigger('set');
+    if(this.getValue() !== value || from_template) this.container.trigger('change');
+    this.container.trigger('set');
   },
   removeProperty: function() {
     this._super();
@@ -1238,9 +1325,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.getOption('compact')) this.container.addClass('compact');
     
     this.input
-      .attr('data-schemapath',this.path)
       .attr('data-schematype',this.schema.type)
       .on('change keyup',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         // Don't allow changing if this field is a template
         if(self.schema.template) {
           $(this).val(self.value);
@@ -1251,13 +1340,15 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         // sanitize value
         var sanitized = self.sanitize(val);
         if(val !== sanitized) {
-          e.preventDefault();
-          e.stopPropagation();
           $(this).val(sanitized).trigger('change');
           return;
         }
 
         self.refreshValue();
+        
+        if(e.type === "change") {
+          self.container.trigger('change');
+        }
       });
 
     if(this.schema.format) this.input.attr('data-schemaformat',this.schema.format);
@@ -1269,8 +1360,10 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       self.afterInputReady();
     });
 
-    // If this schema is based on a macro template, set that up
-    if(this.schema.template) this.setupTemplate();
+    // Compile and store the template
+    if(this.schema.template) {
+      this.template = $.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
+    }
     else this.refreshValue();
   },
   afterInputReady: function() {
@@ -1296,7 +1389,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
           $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
           // Set the value and update
           self.input.val(val.html());
-          self.input.trigger('change');
+          self.container.trigger('change');
         });
       }
       // TODO: support other WYSIWYG editors
@@ -1315,7 +1408,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
           self.input.val(val);
-          self.input.trigger('change');
+          self.container.trigger('change');
         });
         
         this.epiceditor.load();
@@ -1327,16 +1420,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   refreshValue: function() {
     this.value = this.input.val();
   },
-  destroy: function() {
-    if(this.vars) {
-      var self = this;
-      // Remove event listeners for the macro template
-      $.each(this.vars,function(name,attr) {
-        attr.root.off('change','[data-schemapath="'+attr.adjusted_path+'"]',self.var_listener)
-      });
-      self.var_listener = null;
-    }
-    
+  destroy: function() {    
     // If using SCEditor, destroy the editor instance
     if(this.sceditor_instance) {
       this.sceditor_instance.destroy();
@@ -1346,58 +1430,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     }
     
     this.template = null;
-    this.vars = null;
     this.input.remove();
     if(this.label) this.label.remove();
     if(this.description) this.description.remove();
 
-
     this._super();
-  },
-  setupTemplate: function() {
-    // Compile and store the template
-    this.template = $.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
-
-    // Prepare the template vars
-    this.vars = {};
-    if(this.schema.vars) {
-      var self = this;
-      this.var_listener = function() {
-        window.setTimeout(function() {
-          self.refresh();
-        });
-      };
-      $.each(this.schema.vars,function(name,path) {
-        var path_parts;
-        if(path instanceof Array) {
-          path_parts = [path[0]].concat(path[1].split('.'));
-        }
-        else {
-          path_parts = path.split('.'); 
-          if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
-        }
-        var first = path_parts.shift();
-
-        if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
-
-        // Find the root node for this template variable
-        var root = self.container.closest('[data-schemaid="'+first+'"]');
-        if(!root.length) throw "Could not find ancestor node with id "+first;
-
-        // Keep track of the root node and path for use when rendering the template
-        var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');
-        self.vars[name] = {
-          root: root,
-          path: path_parts,
-          adjusted_path: adjusted_path
-        };
-
-        // Listen for changes to the variable field
-        root.on('change set','[data-schemapath="'+adjusted_path+'"]',self.var_listener);
-      });
-
-      self.var_listener();
-    }
   },
   /**
    * This is overridden in derivative editors
@@ -1408,31 +1445,10 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   /**
    * Re-calculates the value if needed
    */
-  refresh: function() {
+  onWatchedFieldChange: function() {
     // If this editor needs to be rendered by a macro template
     if(this.template) {
-      // Build up template variables
-      var vars = {};
-      $.each(this.vars,function(name,attr) {
-        var obj = attr.root.data('editor').getValue();
-        var current_part = -1;
-        var val = null;
-        // Use "path.to.property" to get root['path']['to']['property']
-        while(1) {
-          current_part++;
-          if(current_part >= attr.path.length) {
-            val = obj;
-            break;
-          }
-
-          if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
-            break;
-          }
-
-          obj = obj[attr.path[current_part]];
-        }
-        vars[name] = val;
-      });
+      var vars = this.getWatchedFieldValues();
       this.setValue(this.template(vars),false,true);
     }
   },
