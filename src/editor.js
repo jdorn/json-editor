@@ -47,11 +47,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.watched_values = {};
     if(this.schema.watch) {
       this.watch_listener = function() {
-        window.setTimeout(function() {
-          if(self.refreshWatchedFieldValues()) {
-            self.onWatchedFieldChange();
-          }
-        });
+        if(self.refreshWatchedFieldValues()) {
+          self.onWatchedFieldChange();
+        }
       };
       $.each(this.schema.watch, function(name, path) {
         var path_parts;
@@ -79,14 +77,18 @@ $.jsoneditor.AbstractEditor = Class.extend({
         };
 
         // Listen for changes to the variable field
-        root.on('change set',self.watch_listener);
+        root.on('change',self.watch_listener);
+        root.on('set',self.watch_listener);
       });
-      this.watch_listener();
     }
 
     this.build();
-
+    
     this.setValue(this.getDefault(), true);
+
+    if(this.watch_listener) {
+      this.watch_listener();
+    }
   },
   refreshWatchedFieldValues: function() {
     var watched = {};

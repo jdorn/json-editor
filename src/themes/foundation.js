@@ -6,16 +6,12 @@ $.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
     });
   }, 
   getSelectInput: function(options) {
-    var select = $("<select>").css({
+    return this._super(options).css({
       width: 'auto',
       minWidth: 'none',
       padding: 5,
       marginTop: 3
     });
-    $.each(options, function(i,val) {
-      select.append($("<option>").attr('value',val).text(val));
-    });
-    return select;
   },
   afterInputReady: function(input) {
     if(input.closest('.compact').length) {

@@ -1,5 +1,5 @@
 $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
-  getDefault: function() {
+  getDefault: function() {    
     return this.schema.default || '';
   },
   setValue: function(value,initial,from_template) {
@@ -9,8 +9,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     // Sanitize value before setting it
     var sanitized = this.sanitize(value);
-    if(this.schema.enum && this.schema.enum.indexOf(sanitized) < 0) {
-      sanitized = this.schema.enum[0];
+    if(this.select_options && this.select_options.indexOf(sanitized) < 0) {
+      sanitized = this.select_options[0];
     }
 
     this.input.val(sanitized);
@@ -48,7 +48,16 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     // Select box
     if(this.schema.enum) {
       this.input_type = 'select';
-      this.input = this.theme.getSelectInput(this.schema.enum);
+      this.select_options = this.schema.enum;
+      this.input = this.theme.getSelectInput(this.select_options);
+    }
+    // Dynamic Select box
+    else if(this.schema.enumSource) {
+      this.input_type = 'select';
+      this.input = this.theme.getSelectInput([]);
+      if(this.schema.enumValue) {
+        this.select_template = $.jsoneditor.compileTemplate(this.schema.enumValue, this.template_engine);
+      }
     }
     // Specific format
     else if(this.schema.format) {
@@ -114,6 +123,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         }
 
         var val = $(this).val();
+        
         // sanitize value
         var sanitized = self.sanitize(val);
         if(val !== sanitized) {
@@ -223,10 +233,44 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
    * Re-calculates the value if needed
    */
   onWatchedFieldChange: function() {
+    var self = this;
+    
     // If this editor needs to be rendered by a macro template
     if(this.template) {
       var vars = this.getWatchedFieldValues();
       this.setValue(this.template(vars),false,true);
+    }
+    // If this editor uses a dynamic select box
+    if(this.schema.enumSource) {
+      var vars = this.getWatchedFieldValues();
+      var select_options = [];
+      
+      if(!vars[this.schema.enumSource]) throw "Unknown enumSource "+this.schema.enumSource;
+      $.each(vars[this.schema.enumSource],function(i,el) {
+        var value;
+        if(self.select_template) {
+          value = self.select_template({
+            i: i,
+            item: el
+          });
+        }
+        else {
+          value = el;
+        }
+        value = ""+value;
+        
+        if(select_options.indexOf(value) === -1) select_options.push(value);
+      });
+      
+      var current_value = this.getValue();
+      this.theme.setSelectOptions(this.input, select_options);
+      this.select_options = select_options;
+      if(select_options.indexOf(current_value) === -1) {
+        this.setValue(select_options[0],false,true);
+      }
+      else {
+        this.input.val(current_value);
+      }
     }
   },
   showValidationErrors: function(errors) {

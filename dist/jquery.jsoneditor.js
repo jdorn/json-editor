@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.21 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.22 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1009,11 +1009,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.watched_values = {};
     if(this.schema.watch) {
       this.watch_listener = function() {
-        window.setTimeout(function() {
-          if(self.refreshWatchedFieldValues()) {
-            self.onWatchedFieldChange();
-          }
-        });
+        if(self.refreshWatchedFieldValues()) {
+          self.onWatchedFieldChange();
+        }
       };
       $.each(this.schema.watch, function(name, path) {
         var path_parts;
@@ -1041,14 +1039,18 @@ $.jsoneditor.AbstractEditor = Class.extend({
         };
 
         // Listen for changes to the variable field
-        root.on('change set',self.watch_listener);
+        root.on('change',self.watch_listener);
+        root.on('set',self.watch_listener);
       });
-      this.watch_listener();
     }
 
     this.build();
-
+    
     this.setValue(this.getDefault(), true);
+
+    if(this.watch_listener) {
+      this.watch_listener();
+    }
   },
   refreshWatchedFieldValues: function() {
     var watched = {};
@@ -1222,7 +1224,7 @@ $.jsoneditor.editors.null = $.jsoneditor.AbstractEditor.extend({
 });
 
 $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
-  getDefault: function() {
+  getDefault: function() {    
     return this.schema.default || '';
   },
   setValue: function(value,initial,from_template) {
@@ -1232,8 +1234,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     // Sanitize value before setting it
     var sanitized = this.sanitize(value);
-    if(this.schema.enum && this.schema.enum.indexOf(sanitized) < 0) {
-      sanitized = this.schema.enum[0];
+    if(this.select_options && this.select_options.indexOf(sanitized) < 0) {
+      sanitized = this.select_options[0];
     }
 
     this.input.val(sanitized);
@@ -1271,7 +1273,16 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     // Select box
     if(this.schema.enum) {
       this.input_type = 'select';
-      this.input = this.theme.getSelectInput(this.schema.enum);
+      this.select_options = this.schema.enum;
+      this.input = this.theme.getSelectInput(this.select_options);
+    }
+    // Dynamic Select box
+    else if(this.schema.enumSource) {
+      this.input_type = 'select';
+      this.input = this.theme.getSelectInput([]);
+      if(this.schema.enumValue) {
+        this.select_template = $.jsoneditor.compileTemplate(this.schema.enumValue, this.template_engine);
+      }
     }
     // Specific format
     else if(this.schema.format) {
@@ -1337,6 +1348,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         }
 
         var val = $(this).val();
+        
         // sanitize value
         var sanitized = self.sanitize(val);
         if(val !== sanitized) {
@@ -1446,10 +1458,44 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
    * Re-calculates the value if needed
    */
   onWatchedFieldChange: function() {
+    var self = this;
+    
     // If this editor needs to be rendered by a macro template
     if(this.template) {
       var vars = this.getWatchedFieldValues();
       this.setValue(this.template(vars),false,true);
+    }
+    // If this editor uses a dynamic select box
+    if(this.schema.enumSource) {
+      var vars = this.getWatchedFieldValues();
+      var select_options = [];
+      
+      if(!vars[this.schema.enumSource]) throw "Unknown enumSource "+this.schema.enumSource;
+      $.each(vars[this.schema.enumSource],function(i,el) {
+        var value;
+        if(self.select_template) {
+          value = self.select_template({
+            i: i,
+            item: el
+          });
+        }
+        else {
+          value = el;
+        }
+        value = ""+value;
+        
+        if(select_options.indexOf(value) === -1) select_options.push(value);
+      });
+      
+      var current_value = this.getValue();
+      this.theme.setSelectOptions(this.input, select_options);
+      this.select_options = select_options;
+      if(select_options.indexOf(current_value) === -1) {
+        this.setValue(select_options[0],false,true);
+      }
+      else {
+        this.input.val(current_value);
+      }
     }
   },
   showValidationErrors: function(errors) {
@@ -3133,10 +3179,14 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   getSelectInput: function(options) {
     var select = $("<select>");
+    if(options) this.setSelectOptions(select, options);
+    return select;
+  },
+  setSelectOptions: function(select, options) {
+    select.empty();
     $.each(options, function(i,val) {
       select.append($("<option>").attr('value',val).text(val));
     });
-    return select;
   },
   getTextareaInput: function() {
     return $("<textarea>").css({
@@ -3370,16 +3420,12 @@ $.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
     });
   }, 
   getSelectInput: function(options) {
-    var select = $("<select>").css({
+    return this._super(options).css({
       width: 'auto',
       minWidth: 'none',
       padding: 5,
       marginTop: 3
     });
-    $.each(options, function(i,val) {
-      select.append($("<option>").attr('value',val).text(val));
-    });
-    return select;
   },
   afterInputReady: function(input) {
     if(input.closest('.compact').length) {
@@ -3588,12 +3634,31 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
 });
 
 $.jsoneditor.templates.default = function() {
+  var expandVars = function(vars) {
+    var expanded = {};
+    $.each(vars, function(i,el) {
+      if(typeof el === "object" && el !== null) {
+        var tmp = {};
+        $.each(el, function(j,item) {
+          tmp[i+'.'+j] = item;
+        });
+        $.extend(expanded,expandVars(tmp));
+      }
+      else {
+        expanded[i] = el;
+      }
+    });
+    return expanded;
+  };
+  
   return {
     compile: function(template) {
       return function (vars) {
+        var expanded = expandVars(vars);
+        
         var ret = template+"";
         // Only supports basic {{var}} macro replacement
-        $.each(vars,function(key,value) {
+        $.each(expanded,function(key,value) {
           ret = ret.replace(new RegExp('\{\{\\s*'+key+'\\s*\}\}','g'),value);
         });
         return ret;

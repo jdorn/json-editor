@@ -45,10 +45,14 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   getSelectInput: function(options) {
     var select = $("<select>");
+    if(options) this.setSelectOptions(select, options);
+    return select;
+  },
+  setSelectOptions: function(select, options) {
+    select.empty();
     $.each(options, function(i,val) {
       select.append($("<option>").attr('value',val).text(val));
     });
-    return select;
   },
   getTextareaInput: function() {
     return $("<textarea>").css({

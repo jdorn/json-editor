@@ -304,14 +304,72 @@ Right now, there is only 1 supported option
 }
 ```
 
-Templates and Variables
+Dependencies
 ------------------
-A unique feature of JSON Editor is the support for template macros.  This lets you specify a field's value in terms of other fields.  
-Templates only work for fields of type `string`, `integer`, and `number`.
+Sometimes, it's necessary to have one field's value depend on anothers.  
 
-JSON Editor uses a barebones template engine by default (simple `{{variable}}` replacement only).
+The `dependencies` keyword from the JSON Schema specification is not nrealy flexible enough to handle most use cases, 
+so JSON Editor introduces a couple custom keywords that help in this regard.
 
-You can change the default by setting `$.jsoneditor.template` to one of the following supported template engines:
+The first step is to have a field "watch" other fields for changes.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string",
+      "watch": {
+        "fname": "first_name",
+        "lname": "last_name"
+      }
+    }
+  }
+}
+```
+
+The keyword `watch` tells JSON Editor which fields to watch for changes.  
+The keys (`fname` and `lname` in this example) are alphanumeric aliases for the fields.
+The values (`first_name` and `last_name`) are paths to the fields.  To access nested properties of objects, use a dot for separation (e.g. "path.to.field").
+You can make the paths relative to any ancestor node with a schema `id` defined as well.  This is especially useful within arrays.
+
+```json
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "id": "arr_item",
+    "properties": {
+      "first_name": {
+        "type": "string"
+      },
+      "last_name": {
+        "type": "string"
+      },
+      "full_name": {
+        "type": "string",
+        "watch": {
+          "fname": ["arr_item","first_name"],
+          "lname": ["arr_item","last_name"]
+        }
+      }
+    }
+  }
+}
+```
+
+Now, the `full_name` field in each element of the array will watch the `first_name` and `last_name` fields within the same array element.
+
+### Templates
+
+Watching fields by itself doesn't do anything.  For the example above, you need to tell JSON Editor that `full_name` should be `fname [space] lname`.
+JSON Editor uses a javascript template engine to accomplish this.  A barebones template engine is included by default (simple `{{variable}}` replacement only), but many of the most popular template engines are also supported:
 
 *  ejs
 *  handlebars
@@ -320,6 +378,8 @@ You can change the default by setting `$.jsoneditor.template` to one of the foll
 *  mustache
 *  swig
 *  underscore
+
+You can change the default by setting `$.jsoneditor.template` to one of the following supported template engines:
 
 ```javascript
 $.jsoneditor.template = 'handlebars';
@@ -334,73 +394,120 @@ $("#editor_holder").jsoneditor({
 });
 ```
 
-Here's an example template macro that generates an email address based on a first and last name:
+Here is the completed `full_name` example using the default barebones template engine:
+
+```js+jinja
+{
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string",
+      "template": "{{fname}} {{lname}}",
+      "watch": {
+        "fname": "first_name",
+        "lname": "last_name"
+      }
+    }
+  }
+}
+```
+
+### Enum Values
+
+Another common dependency is a drop down menu whose possible values depend on other fields.  Here's an example:
 
 ```json
 {
   "type": "object",
   "properties": {
-    "name": {
-      "type": "object",
-      "properties": {
-        "first": {
-          "type": "string"
-        },
-        "last": {
-          "type": "string"
-        }
+    "possible_colors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "color"
       }
     },
-    "email": {
-      "title": "Generated Email",
+    "primary_color": {
       "type": "string",
-      "template": "{{ fname }}.{{ lname }}@domain.com",
-      "watch": {
-        "fname": "name.first",
-        "lname": "name.last"
-      }
+      "format": "color"
     }
   }
 }
 ```
 
-The `email` field will watch the `fname` and `lname` fields and re-calculate its value when either one changes.
-
-Only fields specified in the `watch` object will be passed into the template.  By default, the paths (`name.first` and `name.last` in this example) are relative to the root schema.
-You can make the variable paths relative to any ancestor node with a schema `id` defined as well.  This is especially useful within arrays.  Here's an example:
+Let's say you want to force `primary_color` to be one of colors in the `possible_colors` array.  First, we must tell the `primary_color` field to watch the `possible_colors` array.
 
 ```json
 {
-  "type": "array",
-  "items": {
-    "id": "http://example.com/person",
-    "type": "object",
-    "properties": {
-      "address": {
-        "type": "object",
-        "properties": {
-          "city": {
-            "type": "string"
-          },
-          "state": {
-            "type": "string"
-          }
-        }
-      },
-      "location": {
-        "type": "string",
-        "template": "{{city}}, {{state}}",
-        "watch": {
-          "city": ["http://example.com/person","address.city"],
-          "state": ["http://example.com/person","address.state"]
-        }
-      }
+  "primary_color": {
+    "type": "string",
+    "format": "color",
+    "watch": {
+      "colors": "possible_colors"
     }
   }
 }
 ```
 
-In this example, the `location` field in row X will watch row X's `address.city` and `address.state` fields.
+Then, we use the special keyword `enumSource` to tell JSON Editor that we want to use this field to populate a drop down.
+
+```json
+{
+  "primary_color": {
+    "type": "string",
+    "format": "color",
+    "watch": {
+      "colors": "possible_colors"
+    },
+    "enumSource": "colors"
+  }
+}
+```
+
+Now, anytime the `possible_colors` array changes, the dropdown's values will be changed as well.
+
+The colors examples used an array of strings directly.  What if you want to modify the values or are dealing with non-string data?
+The `enumValue` keyword lets you specify a template that's used to render each array element.
+
+Here's an example where `possible_colors` is an array of objects instead of strings.
+
+```js+jinja
+{
+  "type": "object",
+  "properties": {
+    "possible_colors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "format": "color"
+          }
+        }
+      }
+    },
+    "primary_color": {
+      "type": "string",
+      "format": "color",
+      "watch": {
+        "colors": "possible_colors"
+      },
+      "enumSource": "colors",
+      "enumValue": "{{item.text}}"
+    }
+  }
+}
+```
+
+In the `enumValue` template, `item` refers to the array element.  The variable `i` is also available, which is the zero-based index.
+
 
 ### Custom Template Engines
 
