@@ -42,6 +42,7 @@ $("#editor_holder").jsoneditor(options);
 *  __ajax__ - Optional, if `true`, JSON Editor will load external urls in `$ref` via ajax.  Default `false`.
 *  __refs__ - Optional, an object containing schema definitions for urls.  Allows you to pre-define external schemas.
 *  __required_by_default__ - Optional, if `true`, all schemas that don't have the `required` property explicitly set will be required. Default `false`.
+*  __no_additional_properties__ - Optional, if `true`, objects can only contain properties defined with the `properties` keyword. Default `false`.
 *  __theme__ - Optional, sets the CSS theme to use for the editor.  See the "CSS Integration" section below for more info.
 *  __template__ - Optional, sets the js template engine to use.  See the "Templates and Variables" section below for more info.
 
@@ -73,6 +74,7 @@ $("#editor_holder").jsoneditor({
     }
   },
   required_by_default: true,
+  no_additional_properties: true,
   theme: 'bootstrap3',
   template: 'underscore'
 });
@@ -334,10 +336,13 @@ The first step is to have a field "watch" other fields for changes.
 }
 ```
 
-The keyword `watch` tells JSON Editor which fields to watch for changes.  
+The keyword `watch` tells JSON Editor which fields to watch for changes.
+
 The keys (`fname` and `lname` in this example) are alphanumeric aliases for the fields.
+
 The values (`first_name` and `last_name`) are paths to the fields.  To access nested properties of objects, use a dot for separation (e.g. "path.to.field").
-You can make the paths relative to any ancestor node with a schema `id` defined as well.  This is especially useful within arrays.
+
+By default paths are from the root of the schema, but you can make the paths relative to any ancestor node with a schema `id` defined as well.  This is especially useful within arrays.  Here's an example:
 
 ```json
 {
@@ -355,8 +360,8 @@ You can make the paths relative to any ancestor node with a schema `id` defined 
       "full_name": {
         "type": "string",
         "watch": {
-          "fname": ["arr_item","first_name"],
-          "lname": ["arr_item","last_name"]
+          "fname": "arr_item.first_name",
+          "lname": "arr_item.last_name"
         }
       }
     }
@@ -364,7 +369,7 @@ You can make the paths relative to any ancestor node with a schema `id` defined 
 }
 ```
 
-Now, the `full_name` field in each element of the array will watch the `first_name` and `last_name` fields within the same array element.
+Now, the `full_name` field in each array element will watch the `first_name` and `last_name` fields within the same array element.
 
 ### Templates
 
@@ -429,13 +434,11 @@ Another common dependency is a drop down menu whose possible values depend on ot
     "possible_colors": {
       "type": "array",
       "items": {
-        "type": "string",
-        "format": "color"
+        "type": "string"
       }
     },
     "primary_color": {
-      "type": "string",
-      "format": "color"
+      "type": "string"
     }
   }
 }
@@ -447,7 +450,6 @@ Let's say you want to force `primary_color` to be one of colors in the `possible
 {
   "primary_color": {
     "type": "string",
-    "format": "color",
     "watch": {
       "colors": "possible_colors"
     }
@@ -461,7 +463,6 @@ Then, we use the special keyword `enumSource` to tell JSON Editor that we want t
 {
   "primary_color": {
     "type": "string",
-    "format": "color",
     "watch": {
       "colors": "possible_colors"
     },
@@ -487,15 +488,13 @@ Here's an example where `possible_colors` is an array of objects instead of stri
         "type": "object",
         "properties": {
           "text": {
-            "type": "string",
-            "format": "color"
+            "type": "string"
           }
         }
       }
     },
     "primary_color": {
       "type": "string",
-      "format": "color",
       "watch": {
         "colors": "possible_colors"
       },

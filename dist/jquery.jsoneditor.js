@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.23 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.24 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1689,7 +1689,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           return false;
       });
       
-      if(this.schema.additionalProperties !== false) {
+      if(this.canHaveAdditionalProperties()) {
         this.adding_property = false;
         this.addproperty_button = this.theme.getButton('Add Property').appendTo(this.addproperty_controls).on('click',function() {
           // Add property
@@ -1736,7 +1736,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     self.editor_holder.on('change',function() {
       self.refreshValue();      
     });
-    
+  },
+  canHaveAdditionalProperties: function() {
+    return this.schema.additionalProperties !== false && !this.jsoneditor.data('jsoneditor').options.no_additional_properties;
   },
   addObjectProperty: function(name) {
     var self = this;
@@ -1874,7 +1876,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     });
     
     // If additional properties are allowed, create the editors for any of those
-    if(this.schema.additionalProperties !== false) {
+    if(this.canHaveAdditionalProperties()) {
       var self = this;
       $.each(value, function(i,val) {
         if(!self.editors[i]) {
