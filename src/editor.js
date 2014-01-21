@@ -3,6 +3,7 @@
  */
 $.jsoneditor.AbstractEditor = Class.extend({
   init: function(options) {
+    var self = this;
     this.container = options.container;
     this.jsoneditor = options.jsoneditor;
 
@@ -15,6 +16,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
     if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
+    if(this.schema.type && typeof this.schema.type === "string") this.container.attr('data-schematype',this.schema.type);
     this.container.attr('data-schemapath',this.path);
     this.container.data('editor',this);
 
@@ -26,8 +28,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
       this.title_links = this.theme.getFloatRightLinkHolder().appendTo(this.container);
 
       this.addremove = this.theme.getLink('remove '+this.getTitle()).appendTo(this.title_links);
-      
-      var self = this;
+
       this.addremove.on('click',function() {
         if(self.property_removed) {
           self.addProperty();

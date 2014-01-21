@@ -111,7 +111,6 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.getOption('compact')) this.container.addClass('compact');
     
     this.input
-      .attr('data-schematype',this.schema.type)
       .on('change keyup',function(e) {
         e.preventDefault();
         e.stopPropagation();

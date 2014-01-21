@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.22 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.23 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-20
+ * Date: 2014-01-21
  */
 
 /**
@@ -965,6 +965,7 @@ $.jsoneditor.Validator = Class.extend({
  */
 $.jsoneditor.AbstractEditor = Class.extend({
   init: function(options) {
+    var self = this;
     this.container = options.container;
     this.jsoneditor = options.jsoneditor;
 
@@ -977,6 +978,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
     if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
+    if(this.schema.type && typeof this.schema.type === "string") this.container.attr('data-schematype',this.schema.type);
     this.container.attr('data-schemapath',this.path);
     this.container.data('editor',this);
 
@@ -988,8 +990,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
       this.title_links = this.theme.getFloatRightLinkHolder().appendTo(this.container);
 
       this.addremove = this.theme.getLink('remove '+this.getTitle()).appendTo(this.title_links);
-      
-      var self = this;
+
       this.addremove.on('click',function() {
         if(self.property_removed) {
           self.addProperty();
@@ -1336,7 +1337,6 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.getOption('compact')) this.container.addClass('compact');
     
     this.input
-      .attr('data-schematype',this.schema.type)
       .on('change keyup',function(e) {
         e.preventDefault();
         e.stopPropagation();
