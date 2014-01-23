@@ -47,10 +47,15 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
     if(this.schema.watch) {
+      self.watch_listener_timer = 0;
       this.watch_listener = function() {
-        if(self.refreshWatchedFieldValues()) {
-          self.onWatchedFieldChange();
-        }
+        window.clearTimeout(self.watch_listener_timer);
+        self.watch_listener_timer = window.setTimeout(function() {
+          if(!self.watched) return;
+          if(self.refreshWatchedFieldValues()) {
+            self.onWatchedFieldChange();
+          }
+        });
       };
       $.each(this.schema.watch, function(name, path) {
         var path_parts;
@@ -116,6 +121,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
       if(self.watched_values[name] !== val) changed = true;
       watched[name] = val;
     });
+    
     this.watched_values = watched;
     
     return changed;

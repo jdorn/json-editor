@@ -116,7 +116,7 @@ if(errors.length) {
                         type: "string",
                         description: "This is generated automatically from the previous two fields",
                         template: "{{city}}, {{state}}",
-                        vars: {
+                        watch: {
                             city: 'location.city',
                             state: 'location.state'
                         }
