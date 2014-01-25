@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.25 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.26 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-23
+ * Date: 2014-01-25
  */
 
 /**
@@ -1239,6 +1239,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(typeof value === "object") value = JSON.stringify(value);
     if(typeof value !== "string") value = ""+value;
 
+    if(!from_template && value) this.last_set = value;
+
     // Sanitize value before setting it
     var sanitized = this.sanitize(value);
     if(this.select_options && this.select_options.indexOf(sanitized) < 0) {
@@ -1493,10 +1495,12 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         if(select_options.indexOf(value) === -1) select_options.push(value);
       });
       
-      var current_value = this.getValue();
       this.theme.setSelectOptions(this.input, select_options);
       this.select_options = select_options;
-      if(select_options.indexOf(current_value) === -1) {
+      if(this.last_set && select_options.indexOf(this.last_set) !== -1) {
+        this.setValue(this.last_set,false,true);
+      }
+      else if(select_options.indexOf(this.getValue()) === -1) {
         this.setValue(select_options[0],false,true);
       }
       else {
