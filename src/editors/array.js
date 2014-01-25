@@ -116,8 +116,10 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       parent: this,
       required: true
     });
-    
-    ret.array_controls = this.theme.getButtonHolder().appendTo(holder);
+
+    if(!ret.title_controls) {
+      ret.array_controls = this.theme.getButtonHolder().appendTo(holder);
+    }
     
     return ret;
   },

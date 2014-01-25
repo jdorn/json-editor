@@ -47,7 +47,9 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     });
   },
   getButtonHolder: function() {
-    return $("<div></div>").addClass('btn-group');
+    return $("<div></div>").addClass('btn-group').css({
+      marginBottom: 20
+    });
   },
   getButton: function(text) {
     return $("<button></button>").addClass('btn btn-default').text(text);

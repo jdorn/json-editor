@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.26 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.27 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -2066,8 +2066,10 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       parent: this,
       required: true
     });
-    
-    ret.array_controls = this.theme.getButtonHolder().appendTo(holder);
+
+    if(!ret.title_controls) {
+      ret.array_controls = this.theme.getButtonHolder().appendTo(holder);
+    }
     
     return ret;
   },
@@ -2475,7 +2477,10 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
     ret.controls_cell = this.theme.getTableCell().appendTo(row);
     ret.row = row;
-    ret.table_controls = this.theme.getButtonHolder().appendTo(ret.controls_cell);
+    ret.table_controls = this.theme.getButtonHolder().appendTo(ret.controls_cell).css({
+      margin: 0,
+      padding: 0
+    });
 
     return ret;
   },
@@ -3335,7 +3340,9 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     });
   },
   getButtonHolder: function() {
-    return $("<div></div>").addClass('btn-group');
+    return $("<div></div>").addClass('btn-group').css({
+      marginBottom: 20
+    });
   },
   getButton: function(text) {
     return $("<button></button>").addClass('btn btn-default').text(text);

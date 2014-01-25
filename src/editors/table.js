@@ -85,7 +85,10 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
     ret.controls_cell = this.theme.getTableCell().appendTo(row);
     ret.row = row;
-    ret.table_controls = this.theme.getButtonHolder().appendTo(ret.controls_cell);
+    ret.table_controls = this.theme.getButtonHolder().appendTo(ret.controls_cell).css({
+      margin: 0,
+      padding: 0
+    });
 
     return ret;
   },
