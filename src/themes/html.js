@@ -54,5 +54,5 @@ $.jsoneditor.themes.html = $.jsoneditor.AbstractTheme.extend({
       borderColor: ''
     });
     $('.errmsg',input.closest('.form-control')).remove();
-  },
+  }
 });

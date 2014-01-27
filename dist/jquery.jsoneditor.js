@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.27 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.28 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-25
+ * Date: 2014-01-27
  */
 
 /**
@@ -3575,7 +3575,7 @@ $.jsoneditor.themes.html = $.jsoneditor.AbstractTheme.extend({
       borderColor: ''
     });
     $('.errmsg',input.closest('.form-control')).remove();
-  },
+  }
 });
 
 $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
