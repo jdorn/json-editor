@@ -77,6 +77,8 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
 
     this.input = this.theme.getSelectInput(this.enum_options);
 
+    if(this.schema.readOnly || this.schema.readonly) this.input.prop('disabled',true);
+
     this.input
       .attr('data-schemapath',this.path)
       .attr('data-schematype',this.schema.type)

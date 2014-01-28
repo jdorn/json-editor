@@ -111,7 +111,9 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     else if(typeof this.schema.minLength !== "undefined") this.input.attr('pattern','.{'+this.schema.minLength+',}');
 
     if(this.getOption('compact')) this.container.addClass('compact');
-    
+
+    if(this.schema.readOnly || this.schema.readonly) this.input.prop('disabled',true);
+
     this.input
       .on('change keyup',function(e) {
         e.preventDefault();

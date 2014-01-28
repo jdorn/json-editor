@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.28 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.29 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-27
+ * Date: 2014-01-28
  */
 
 /**
@@ -1343,7 +1343,9 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     else if(typeof this.schema.minLength !== "undefined") this.input.attr('pattern','.{'+this.schema.minLength+',}');
 
     if(this.getOption('compact')) this.container.addClass('compact');
-    
+
+    if(this.schema.readOnly || this.schema.readonly) this.input.prop('disabled',true);
+
     this.input
       .on('change keyup',function(e) {
         e.preventDefault();
@@ -3119,6 +3121,8 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
     if(this.getOption('compact')) this.container.addClass('compact');
 
     this.input = this.theme.getSelectInput(this.enum_options);
+
+    if(this.schema.readOnly || this.schema.readonly) this.input.prop('disabled',true);
 
     this.input
       .attr('data-schemapath',this.path)
