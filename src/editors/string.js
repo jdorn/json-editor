@@ -278,9 +278,6 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       else if(select_options.indexOf(this.getValue()) === -1) {
         this.setValue(select_options[0],false,true);
       }
-      else {
-        this.input.val(current_value);
-      }
     }
   },
   showValidationErrors: function(errors) {
