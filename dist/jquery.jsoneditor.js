@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.29 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.30 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1376,6 +1376,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.schema.format) this.input.attr('data-schemaformat',this.schema.format);
 
     this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
+
+    // If the Select2 library is loaded
+    if(this.input_type === "select" && $.fn.select2) {
+      this.input.select2();
+    }
 
     // Any special formatting that needs to happen after the input is added to the dom
     window.setTimeout(function() {
@@ -3141,6 +3146,11 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
     this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
 
     this.value = this.enum_values[0];
+
+    // If the Select2 library is loaded use it when we have lots of items
+    if($.fn.select2 && this.enum_options.length > 2) {
+      this.input.select2();
+    }
 
     self.theme.afterInputReady(self.input);
   },

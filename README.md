@@ -24,7 +24,8 @@ Requirements
 *  A compatible javascript template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
 *  A compatible CSS Framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
 *  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode
-*  [EpicEditor](http://epiceditor.com/) for Markdown editing
+*  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
+*  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
 
 Usage
 --------------
@@ -586,7 +587,8 @@ The possibilities are endless.  Some ideas:
 *  Syntax highlighting code editor (Ace, Markup, etc.)
 *  A compact way to edit objects
 *  Radio button version of the `select` editor
-*  Typeahead for schemas with really long `enum` lists
+*  Autosuggest for strings (like enum, but not restricted to those values)
+*  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data urls
 
 

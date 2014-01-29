@@ -145,6 +145,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
 
+    // If the Select2 library is loaded
+    if(this.input_type === "select" && $.fn.select2) {
+      this.input.select2();
+    }
+
     // Any special formatting that needs to happen after the input is added to the dom
     window.setTimeout(function() {
       self.afterInputReady();
