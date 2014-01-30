@@ -23,6 +23,7 @@ Requirements
 
 *  A compatible javascript template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
 *  A compatible CSS Framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
+*  A compatible icon library (bootstrap 2/3 glyphicons, foundation icons 2/3, jqueryui, or font awesome 3/4)
 *  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
@@ -45,6 +46,7 @@ $("#editor_holder").jsoneditor(options);
 *  __required_by_default__ - Optional, if `true`, all schemas that don't have the `required` property explicitly set will be required. Default `false`.
 *  __no_additional_properties__ - Optional, if `true`, objects can only contain properties defined with the `properties` keyword. Default `false`.
 *  __theme__ - Optional, sets the CSS theme to use for the editor.  See the "CSS Integration" section below for more info.
+*  __iconlib__ - Optional, sets the icon library to use for the editor.  See the "CSS Integeration" section below for more info.
 *  __template__ - Optional, sets the js template engine to use.  See the "Templates and Variables" section below for more info.
 
 Here's an example using all the options:
@@ -183,7 +185,34 @@ $("#editor_holder").jsoneditor({
 });
 ```
 
-It's possible to create your own custom themes as well.  Look at any of the existing theme classes for examples.
+### Icon Libraries
+
+JSON Editor also supports several popular icon libraries.  The icon library must be set independently of the theme, even though there is some overlap.
+
+The supported icon libs are:
+
+*  bootstrap2 (glyphicons)
+*  bootstrap3 (glyphicons)
+*  foundation2
+*  foundation3
+*  jqueryui
+*  fontawesome3
+*  fontawesome4
+
+By default, no icons are used. Just like the CSS theme, you can set the icon lib globally or when initializing:
+
+```js
+// Set the global default
+$.jsoneditor.iconlib = "bootstrap2";
+
+// Set the icon lib during initialization
+$("#editor_holder").jsoneditor({
+  schema: schema,
+  iconlib: "fontawesome4"
+});
+```
+
+It's possible to create your own custom themes and/or icon libs as well.  Look at any of the existing classes for examples.
 
 
 JSON Schema Support

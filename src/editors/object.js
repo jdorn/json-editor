@@ -94,22 +94,22 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
       // Show/Hide button
       this.collapsed = false;
-      this.toggle_button = this.getTheme().getButton('Collapse').appendTo(this.title_controls).on('click',function() {
+      this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
         if(self.collapsed) {
           self.editor_holder.show(300);
           self.collapsed = false;
-          self.getTheme().setButtonText(self.toggle_button,'Collapse');
+          self.setButtonText(self.toggle_button,'','collapse','Collapse');
         }
         else {
           self.editor_holder.hide(300);
           self.collapsed = true;
-          self.getTheme().setButtonText(self.toggle_button,'Expand');
+          self.setButtonText(self.toggle_button,'','expand','Expand');
         }
       });
       
       // Edit JSON Button
       this.editing_json = false;
-      this.editjson_button = this.theme.getButton('Edit JSON').appendTo(this.editjson_controls).on('click',function() {
+      this.editjson_button = this.getButton('JSON','edit','Edit JSON').appendTo(this.editjson_controls).on('click',function() {
         // Save Changes
         if(self.editing_json) {
           // Get value from form
@@ -125,7 +125,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           // Hide the edit form
           self.cancel_editjson_button.hide();
           self.editjson_holder.hide(300);
-          self.theme.setButtonText(self.editjson_button,'Edit JSON');
+          self.setButtonText(self.editjson_button,'JSON','edito','Edit JSON');
           self.editing_json = false;
           
           // Set the value
@@ -137,15 +137,15 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           self.editing_json = true;
           self.cancel_editjson_button.show();
           self.editjson_holder.show(300);
-          self.theme.setButtonText(self.editjson_button,'Save JSON');
+          self.setButtonText(self.editjson_button,'JSON','save','Save JSON');
         }
         
         return false;
       });
-      this.cancel_editjson_button = this.theme.getButton('Cancel').appendTo(this.editjson_controls).hide().on('click',function() {
+      this.cancel_editjson_button = this.getButton('','cancel','Cancel').appendTo(this.editjson_controls).hide().on('click',function() {
           self.cancel_editjson_button.hide();
           self.editjson_holder.hide(300);
-          self.theme.setButtonText(self.editjson_button,'Edit JSON');
+          self.setButtonText(self.editjson_button,'JSON','edit','Edit JSON');
           self.editing_json = false;
           
           return false;
@@ -153,7 +153,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       
       if(this.canHaveAdditionalProperties()) {
         this.adding_property = false;
-        this.addproperty_button = this.theme.getButton('Add Property').appendTo(this.addproperty_controls).on('click',function() {
+        this.addproperty_button = this.getButton('Property','add','Add Property').appendTo(this.addproperty_controls).on('click',function() {
           // Add property
           if(self.adding_property) {
             var name = self.addproperty_input.val();
@@ -167,7 +167,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
             // Hide the edit form
             self.cancel_addproperty_button.hide();
             self.addproperty_holder.hide(300);
-            self.theme.setButtonText(self.addproperty_button,'Add Property');
+            self.setButtonText(self.addproperty_button,'Property','add','Add Property');
             self.adding_property = false;
             self.addObjectProperty(name);
           }
@@ -177,16 +177,16 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
             self.addproperty_input.val('');
             self.cancel_addproperty_button.show();
             self.addproperty_holder.show(300);
-            self.theme.setButtonText(self.addproperty_button,'Save Property');
+            self.setButtonText(self.addproperty_button,'Property','save','Save Property');
           }
           
           return false;
         });
         
-        this.cancel_addproperty_button = this.theme.getButton('Cancel').appendTo(this.addproperty_controls).hide().on('click',function() {
+        this.cancel_addproperty_button = this.getButton('','cancel','Cancel').appendTo(this.addproperty_controls).hide().on('click',function() {
             self.cancel_addproperty_button.hide();
             self.addproperty_holder.hide(300);
-            self.theme.setButtonText(self.addproperty_button,'Add Property');
+            self.setButtonText(self.addproperty_button,'Property','add','Add Property');
             self.adding_property = false;
             
             return false;

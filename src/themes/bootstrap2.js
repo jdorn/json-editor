@@ -51,8 +51,8 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
       marginBottom: 20
     });
   },
-  getButton: function(text) {
-    return $("<button></button>").addClass('btn btn-default').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).addClass('btn btn-default');
   },
   getTable: function() {
     return $("<table></table>").addClass('table table-bordered').css({

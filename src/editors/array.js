@@ -261,7 +261,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.rows[i] = this.getElementEditor(i);
     
     // Buttons to delete row, move row up, and move row down
-    self.rows[i].delete_button = this.theme.getButton('Delete '+self.getItemTitle())
+    self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle())
       .addClass('delete')
       .data('i',i)
       .on('click',function() {
@@ -277,7 +277,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         self.setValue(newval);
         self.container.trigger('change');
       });
-    self.rows[i].moveup_button = this.theme.getButton('Move up')
+    self.rows[i].moveup_button = this.getButton('','moveup','Move up')
       .data('i',i)
       .addClass('moveup')
       .on('click',function() {
@@ -292,7 +292,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         self.setValue(rows);
         self.container.trigger('change');
       });
-    self.rows[i].movedown_button = this.theme.getButton('Move down')
+    self.rows[i].movedown_button = this.getButton('','movedown','Move down')
       .addClass('movedown')
       .data('i',i)
       .on('click',function() {
@@ -321,23 +321,23 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     
     this.collapsed = false;
-    this.toggle_button = this.theme.getButton('Collapse').appendTo(this.title_controls).on('click',function() {
+    this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
         self.row_holder.show(300);
         self.controls.show(300);
-        self.theme.setButtonText($(this),'Collapse');
+        self.setButtonText($(this),'','collapse','Collapse');
       }
       else {
         self.collapsed = true;
         self.row_holder.hide(300);
         self.controls.hide(300);
-        self.theme.setButtonText($(this),'Expand');
+        self.setButtonText($(this),'','expand','Expand');
       }
     });
     
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.theme.getButton('Add '+this.getItemTitle())
+    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())
       .on('click',function() {
         self.addRow();
         self.refreshValue();
@@ -345,7 +345,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       })
       .appendTo(self.controls);
 
-    this.delete_last_row_button = this.theme.getButton('Delete Last '+this.getItemTitle())
+    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle())
       .on('click',function() {
         var rows = self.getValue();
         rows.pop();
@@ -354,7 +354,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       })
       .appendTo(self.controls);
 
-    this.remove_all_rows_button = this.theme.getButton('Delete All')
+    this.remove_all_rows_button = this.getButton('All','delete','Delete All')
       .on('click',function() {
         self.setValue([]);
         self.container.trigger('change');

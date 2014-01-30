@@ -37,8 +37,8 @@ $.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
   getButtonHolder: function() {
     return $("<div>").addClass('button-group');
   },
-  getButton: function(text) {
-    return $("<button>").addClass('small button').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).addClass('small button');
   },
   addInputError: function(input,text) {
     var group = input.closest('.form-control').addClass('error');
@@ -81,7 +81,7 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
       fontSize: '.8rem'
     });
   },
-  getButton: function(text) {
-    return $("<button>").addClass('tiny button').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).removeClass('small').addClass('tiny');
   }
 });

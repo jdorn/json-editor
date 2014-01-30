@@ -103,11 +103,17 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getButtonHolder: function() {
     return $("<div>");
   },
-  getButton: function(text) {
-    return $("<button>").text(text);
+  getButton: function(text, icon, title) {    
+    var button = $("<button>").text(text);
+    if(icon) button.prepend(' ').prepend(icon);
+    if(title) button.attr('title',title);
+    
+    return button;
   },
-  setButtonText: function(button, text) {
+  setButtonText: function(button, text, icon, title) {
     button.text(text);
+    if(icon) button.prepend(' ').prepend(icon);
+    if(title) button.attr('title',title);
   },
   getTable: function() {
     return $("<table></table>");

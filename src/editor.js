@@ -9,6 +9,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
     this.theme = this.jsoneditor.data('jsoneditor').theme;
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
+    this.iconlib = this.jsoneditor.data('jsoneditor').iconlib;
 
     this.options = $.extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
     this.schema = this.options.schema;
@@ -95,6 +96,28 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(this.watch_listener) {
       this.watch_listener();
     }
+  },
+  getButton: function(text, icon, title) {
+    if(!this.iconlib) icon = null;
+    else icon = this.iconlib.getIcon(icon);
+    
+    if(!icon && title) {
+      text = title;
+      title = null;
+    }
+    
+    return this.theme.getButton(text, icon, title);
+  },
+  setButtonText: function(button, text, icon, title) {
+    if(!this.iconlib) icon = null;
+    else icon = this.iconlib.getIcon(icon);
+    
+    if(!icon && title) {
+      text = title;
+      title = null;
+    }
+    
+    return this.theme.setButtonText(button, text, icon, title);
   },
   refreshWatchedFieldValues: function() {
     var watched = {};

@@ -25,6 +25,9 @@ module.exports = function(grunt) {
           
           'src/theme.js',
           'src/themes/*.js',
+          
+          'src/iconlib.js',
+          'src/iconlibs/*.js',
 
           'src/templates/*.js',
 

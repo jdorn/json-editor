@@ -45,8 +45,8 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
   getButtonHolder: function() {
     return $("<div>").addClass('btn-group');
   },
-  getButton: function(text) {
-    return $("<button>").addClass('btn btn-default').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).addClass('btn btn-default');
   },
   getTable: function() {
     return $("<table>").addClass("table table-bordered").css({

@@ -59,6 +59,7 @@ $.fn.jsoneditor = function(options) {
   var theme_class = $.jsoneditor.themes[options.theme || $.jsoneditor.theme];
 
   if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
+  
 
   // Store info about the jsoneditor in the element
   d = {
@@ -69,6 +70,10 @@ $.fn.jsoneditor = function(options) {
     template: options.template,
     ready: false
   };
+  
+  var icon_class = $.jsoneditor.iconlibs[options.iconlib || $.jsoneditor.iconlib];
+  if(icon_class) d.iconlib = new icon_class();
+  
   $this.data('jsoneditor',d);
 
   d.root_container = d.theme.getContainer().appendTo($this);
@@ -125,9 +130,11 @@ $.fn.jsoneditor = function(options) {
 $.jsoneditor = {
   template: null,
   theme:null,
+  iconlib: null,
   editors: {},
   templates: {},
   themes: {},
+  iconlibs: {},
   resolvers: [],
   custom_validators: [],
 

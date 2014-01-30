@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.31 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.32 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -79,6 +79,7 @@ $.fn.jsoneditor = function(options) {
   var theme_class = $.jsoneditor.themes[options.theme || $.jsoneditor.theme];
 
   if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
+  
 
   // Store info about the jsoneditor in the element
   d = {
@@ -89,6 +90,10 @@ $.fn.jsoneditor = function(options) {
     template: options.template,
     ready: false
   };
+  
+  var icon_class = $.jsoneditor.iconlibs[options.iconlib || $.jsoneditor.iconlib];
+  if(icon_class) d.iconlib = new icon_class();
+  
   $this.data('jsoneditor',d);
 
   d.root_container = d.theme.getContainer().appendTo($this);
@@ -145,9 +150,11 @@ $.fn.jsoneditor = function(options) {
 $.jsoneditor = {
   template: null,
   theme:null,
+  iconlib: null,
   editors: {},
   templates: {},
   themes: {},
+  iconlibs: {},
   resolvers: [],
   custom_validators: [],
 
@@ -971,6 +978,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
     this.theme = this.jsoneditor.data('jsoneditor').theme;
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
+    this.iconlib = this.jsoneditor.data('jsoneditor').iconlib;
 
     this.options = $.extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
     this.schema = this.options.schema;
@@ -1057,6 +1065,28 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(this.watch_listener) {
       this.watch_listener();
     }
+  },
+  getButton: function(text, icon, title) {
+    if(!this.iconlib) icon = null;
+    else icon = this.iconlib.getIcon(icon);
+    
+    if(!icon && title) {
+      text = title;
+      title = null;
+    }
+    
+    return this.theme.getButton(text, icon, title);
+  },
+  setButtonText: function(button, text, icon, title) {
+    if(!this.iconlib) icon = null;
+    else icon = this.iconlib.getIcon(icon);
+    
+    if(!icon && title) {
+      text = title;
+      title = null;
+    }
+    
+    return this.theme.setButtonText(button, text, icon, title);
   },
   refreshWatchedFieldValues: function() {
     var watched = {};
@@ -1646,22 +1676,22 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
       // Show/Hide button
       this.collapsed = false;
-      this.toggle_button = this.getTheme().getButton('Collapse').appendTo(this.title_controls).on('click',function() {
+      this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
         if(self.collapsed) {
           self.editor_holder.show(300);
           self.collapsed = false;
-          self.getTheme().setButtonText(self.toggle_button,'Collapse');
+          self.setButtonText(self.toggle_button,'','collapse','Collapse');
         }
         else {
           self.editor_holder.hide(300);
           self.collapsed = true;
-          self.getTheme().setButtonText(self.toggle_button,'Expand');
+          self.setButtonText(self.toggle_button,'','expand','Expand');
         }
       });
       
       // Edit JSON Button
       this.editing_json = false;
-      this.editjson_button = this.theme.getButton('Edit JSON').appendTo(this.editjson_controls).on('click',function() {
+      this.editjson_button = this.getButton('JSON','edit','Edit JSON').appendTo(this.editjson_controls).on('click',function() {
         // Save Changes
         if(self.editing_json) {
           // Get value from form
@@ -1677,7 +1707,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           // Hide the edit form
           self.cancel_editjson_button.hide();
           self.editjson_holder.hide(300);
-          self.theme.setButtonText(self.editjson_button,'Edit JSON');
+          self.setButtonText(self.editjson_button,'JSON','edito','Edit JSON');
           self.editing_json = false;
           
           // Set the value
@@ -1689,15 +1719,15 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           self.editing_json = true;
           self.cancel_editjson_button.show();
           self.editjson_holder.show(300);
-          self.theme.setButtonText(self.editjson_button,'Save JSON');
+          self.setButtonText(self.editjson_button,'JSON','save','Save JSON');
         }
         
         return false;
       });
-      this.cancel_editjson_button = this.theme.getButton('Cancel').appendTo(this.editjson_controls).hide().on('click',function() {
+      this.cancel_editjson_button = this.getButton('','cancel','Cancel').appendTo(this.editjson_controls).hide().on('click',function() {
           self.cancel_editjson_button.hide();
           self.editjson_holder.hide(300);
-          self.theme.setButtonText(self.editjson_button,'Edit JSON');
+          self.setButtonText(self.editjson_button,'JSON','edit','Edit JSON');
           self.editing_json = false;
           
           return false;
@@ -1705,7 +1735,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       
       if(this.canHaveAdditionalProperties()) {
         this.adding_property = false;
-        this.addproperty_button = this.theme.getButton('Add Property').appendTo(this.addproperty_controls).on('click',function() {
+        this.addproperty_button = this.getButton('Property','add','Add Property').appendTo(this.addproperty_controls).on('click',function() {
           // Add property
           if(self.adding_property) {
             var name = self.addproperty_input.val();
@@ -1719,7 +1749,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
             // Hide the edit form
             self.cancel_addproperty_button.hide();
             self.addproperty_holder.hide(300);
-            self.theme.setButtonText(self.addproperty_button,'Add Property');
+            self.setButtonText(self.addproperty_button,'Property','add','Add Property');
             self.adding_property = false;
             self.addObjectProperty(name);
           }
@@ -1729,16 +1759,16 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
             self.addproperty_input.val('');
             self.cancel_addproperty_button.show();
             self.addproperty_holder.show(300);
-            self.theme.setButtonText(self.addproperty_button,'Save Property');
+            self.setButtonText(self.addproperty_button,'Property','save','Save Property');
           }
           
           return false;
         });
         
-        this.cancel_addproperty_button = this.theme.getButton('Cancel').appendTo(this.addproperty_controls).hide().on('click',function() {
+        this.cancel_addproperty_button = this.getButton('','cancel','Cancel').appendTo(this.addproperty_controls).hide().on('click',function() {
             self.cancel_addproperty_button.hide();
             self.addproperty_holder.hide(300);
-            self.theme.setButtonText(self.addproperty_button,'Add Property');
+            self.setButtonText(self.addproperty_button,'Property','add','Add Property');
             self.adding_property = false;
             
             return false;
@@ -2215,7 +2245,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.rows[i] = this.getElementEditor(i);
     
     // Buttons to delete row, move row up, and move row down
-    self.rows[i].delete_button = this.theme.getButton('Delete '+self.getItemTitle())
+    self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle())
       .addClass('delete')
       .data('i',i)
       .on('click',function() {
@@ -2231,7 +2261,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         self.setValue(newval);
         self.container.trigger('change');
       });
-    self.rows[i].moveup_button = this.theme.getButton('Move up')
+    self.rows[i].moveup_button = this.getButton('','moveup','Move up')
       .data('i',i)
       .addClass('moveup')
       .on('click',function() {
@@ -2246,7 +2276,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         self.setValue(rows);
         self.container.trigger('change');
       });
-    self.rows[i].movedown_button = this.theme.getButton('Move down')
+    self.rows[i].movedown_button = this.getButton('','movedown','Move down')
       .addClass('movedown')
       .data('i',i)
       .on('click',function() {
@@ -2275,23 +2305,23 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     
     this.collapsed = false;
-    this.toggle_button = this.theme.getButton('Collapse').appendTo(this.title_controls).on('click',function() {
+    this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
         self.row_holder.show(300);
         self.controls.show(300);
-        self.theme.setButtonText($(this),'Collapse');
+        self.setButtonText($(this),'','collapse','Collapse');
       }
       else {
         self.collapsed = true;
         self.row_holder.hide(300);
         self.controls.hide(300);
-        self.theme.setButtonText($(this),'Expand');
+        self.setButtonText($(this),'','expand','Expand');
       }
     });
     
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.theme.getButton('Add '+this.getItemTitle())
+    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())
       .on('click',function() {
         self.addRow();
         self.refreshValue();
@@ -2299,7 +2329,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       })
       .appendTo(self.controls);
 
-    this.delete_last_row_button = this.theme.getButton('Delete Last '+this.getItemTitle())
+    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle())
       .on('click',function() {
         var rows = self.getValue();
         rows.pop();
@@ -2308,7 +2338,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       })
       .appendTo(self.controls);
 
-    this.remove_all_rows_button = this.theme.getButton('Delete All')
+    this.remove_all_rows_button = this.getButton('All','delete','Delete All')
       .on('click',function() {
         self.setValue([]);
         self.container.trigger('change');
@@ -2629,7 +2659,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     self.rows[i] = this.getElementEditor(i);
 
     // Buttons to delete row, move row up, and move row down
-    self.rows[i].delete_button = this.theme.getButton('Delete '+self.getItemTitle())
+    self.rows[i].delete_button = this.getButton('','delete','Delete')
       .addClass('delete')
       .data('i',i)
       .on('click',function() {
@@ -2645,7 +2675,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
         self.setValue(newval);
         self.container.trigger('change');
       });
-    self.rows[i].moveup_button = this.theme.getButton('Move up')
+    self.rows[i].moveup_button = this.getButton('','moveup','Move up')
       .data('i',i)
       .addClass('moveup')
       .on('click',function() {
@@ -2660,7 +2690,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
         self.setValue(rows);
         self.container.trigger('change');
       });
-    self.rows[i].movedown_button = this.theme.getButton('Move down')
+    self.rows[i].movedown_button = this.getButton('','movedown','Move down')
       .addClass('movedown')
       .data('i',i)
       .on('click',function() {
@@ -2687,23 +2717,23 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     var self = this;
 
     this.collapsed = false;
-    this.toggle_button = this.theme.getButton('Collapse').appendTo(this.title_controls).on('click',function() {
+    this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
         self.controls.show(300);
         self.row_holder.show(300);
-        self.theme.setButtonText($(this),'Collapse');
+        self.setButtonText($(this),'','collapse','Collapse');
       }
       else {
         self.collapsed = true;
         self.controls.hide(300);
         self.row_holder.hide(300);
-        self.theme.setButtonText($(this),'Expand');
+        self.setButtonText($(this),'','expand','Expand');
       }
     });
 
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.theme.getButton('Add '+this.getItemTitle())
+    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())
       .on('click',function() {
         self.addRow();
         self.refreshValue();
@@ -2711,7 +2741,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       })
       .appendTo(self.controls);
 
-    this.delete_last_row_button = this.theme.getButton('Delete Last '+this.getItemTitle())
+    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle())
       .on('click',function() {
         var rows = self.getValue();
         rows.pop();
@@ -2720,7 +2750,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       })
       .appendTo(self.controls);
 
-    this.remove_all_rows_button = this.theme.getButton('Delete All')
+    this.remove_all_rows_button = this.getButton('All','delete','Delete All')
       .on('click',function() {
         self.setValue([]);
         self.container.trigger('change');
@@ -3265,11 +3295,17 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getButtonHolder: function() {
     return $("<div>");
   },
-  getButton: function(text) {
-    return $("<button>").text(text);
+  getButton: function(text, icon, title) {    
+    var button = $("<button>").text(text);
+    if(icon) button.prepend(' ').prepend(icon);
+    if(title) button.attr('title',title);
+    
+    return button;
   },
-  setButtonText: function(button, text) {
+  setButtonText: function(button, text, icon, title) {
     button.text(text);
+    if(icon) button.prepend(' ').prepend(icon);
+    if(title) button.attr('title',title);
   },
   getTable: function() {
     return $("<table></table>");
@@ -3355,8 +3391,8 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
       marginBottom: 20
     });
   },
-  getButton: function(text) {
-    return $("<button></button>").addClass('btn btn-default').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).addClass('btn btn-default');
   },
   getTable: function() {
     return $("<table></table>").addClass('table table-bordered').css({
@@ -3422,8 +3458,8 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
   getButtonHolder: function() {
     return $("<div>").addClass('btn-group');
   },
-  getButton: function(text) {
-    return $("<button>").addClass('btn btn-default').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).addClass('btn btn-default');
   },
   getTable: function() {
     return $("<table>").addClass("table table-bordered").css({
@@ -3481,8 +3517,8 @@ $.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
   getButtonHolder: function() {
     return $("<div>").addClass('button-group');
   },
-  getButton: function(text) {
-    return $("<button>").addClass('small button').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).addClass('small button');
   },
   addInputError: function(input,text) {
     var group = input.closest('.form-control').addClass('error');
@@ -3525,8 +3561,8 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
       fontSize: '.8rem'
     });
   },
-  getButton: function(text) {
-    return $("<button>").addClass('tiny button').text(text);
+  getButton: function(text, icon, title) {
+    return this._super(text, icon, title).removeClass('small').addClass('tiny');
   }
 });
 
@@ -3639,13 +3675,68 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
       marginRight: '5px'
     });
   },
-  getButton: function(text) {
-    return $("<button>").addClass('ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only').append(
-      $("<span>").addClass('ui-button-text').text(text)
+  getButton: function(text, icon, title) {
+    var button = $("<button>")
+      .addClass('ui-button ui-widget ui-state-default ui-corner-all');
+      
+    // Icon only
+    if(icon && !text) {
+      button
+        .addClass('ui-button-icon-only')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+    }
+    // Icon and Text
+    else if(icon) {
+      button
+        .addClass('ui-button-text-icon-primary')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+    }
+    // Text only
+    else {
+      button
+        .addClass('ui-button-text-only')
+    }
+    
+    button.append(
+      $("<span>").addClass('ui-button-text').text(text||title||".")
     );
+    
+    button.attr('title',title);
+    
+    return button;
   },
-  setButtonText: function(button,text) {
-    $(".ui-button-text",button).text(text);
+  setButtonText: function(button,text, icon, title) {
+    button.empty();
+    
+    // Icon only
+    if(icon && !text) {
+      button
+        .removeClass('ui-button-text-icon-primary')
+        .removeClass('ui-button-text-only')
+        .addClass('ui-button-icon-only')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+    }
+    // Icon and Text
+    else if(icon) {
+      button
+        .removeClass('ui-button-icon-only')
+        .removeClass('ui-button-text-only')
+        .addClass('ui-button-text-icon-primary')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'))
+    }
+    // Text only
+    else {
+      button
+        .removeClass('ui-button-icon-only')
+        .removeClass('ui-button-text-icon-primary')
+        .addClass('ui-button-text-only')
+    }
+    
+    button.append(
+      $("<span>").addClass('ui-button-text').text(text||title||'.')
+    );
+
+    button.attr('title',title);
   },
   getIndentedPanel: function() {
     return $("<div>").addClass('ui-widget-content ui-corner-all').css({
@@ -3661,6 +3752,136 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
   removeInputError: function(input) {
     $('.errormsg',input.closest('.form-control')).remove();
   }
+});
+
+$.jsoneditor.AbstractIconLib = Class.extend({
+  mapping: {
+    collapse: '',
+    expand: '',
+    delete: '',
+    edit: '',
+    add: '',
+    cancel: '',
+    save: '',
+    moveup: '',
+    movedown: ''
+  },
+  icon_prefix: '',
+  getIconClass: function(key) {
+    if(this.mapping[key]) return this.icon_prefix+this.mapping[key];
+    else return null;
+  },
+  getIcon: function(key) {
+    var iconclass = this.getIconClass(key);
+    
+    if(!iconclass) return null;
+    else return $("<i>").addClass(iconclass);
+  }
+});
+
+$.jsoneditor.iconlibs.bootstrap2 = $.jsoneditor.AbstractIconLib.extend({
+  mapping: {
+    collapse: 'chevron-down',
+    expand: 'chevron-up',
+    delete: 'trash',
+    edit: 'pencil',
+    add: 'plus',
+    cancel: 'ban-circle',
+    save: 'ok',
+    moveup: 'arrow-up',
+    movedown: 'arrow-down'
+  },
+  icon_prefix: 'icon-'
+});
+
+$.jsoneditor.iconlibs.bootstrap3 = $.jsoneditor.AbstractIconLib.extend({
+  mapping: {
+    collapse: 'chevron-down',
+    expand: 'chevron-right',
+    delete: 'remove',
+    edit: 'pencil',
+    add: 'plus',
+    cancel: 'floppy-remove',
+    save: 'floppy-saved',
+    moveup: 'arrow-up',
+    movedown: 'arrow-down'
+  },
+  icon_prefix: 'glyphicon glyphicon-'
+});
+
+$.jsoneditor.iconlibs.fontawesome3 = $.jsoneditor.AbstractIconLib.extend({
+  mapping: {
+    collapse: 'chevron-down',
+    expand: 'chevron-right',
+    delete: 'remove',
+    edit: 'pencil',
+    add: 'plus',
+    cancel: 'ban-circle',
+    save: 'save',
+    moveup: 'arrow-up',
+    movedown: 'arrow-down'
+  },
+  icon_prefix: 'icon-'
+});
+
+$.jsoneditor.iconlibs.fontawesome4 = $.jsoneditor.AbstractIconLib.extend({
+  mapping: {
+    collapse: 'caret-square-o-down',
+    expand: 'caret-square-o-right',
+    delete: 'times',
+    edit: 'pencil',
+    add: 'plus',
+    cancel: 'ban',
+    save: 'save',
+    moveup: 'arrow-up',
+    movedown: 'arrow-down'
+  },
+  icon_prefix: 'fa fa-'
+});
+
+$.jsoneditor.iconlibs.foundation2 = $.jsoneditor.AbstractIconLib.extend({
+  mapping: {
+    collapse: 'minus',
+    expand: 'plus',
+    delete: 'remove',
+    edit: 'edit',
+    add: 'add-doc',
+    cancel: 'error',
+    save: 'checkmark',
+    moveup: 'up-arrow',
+    movedown: 'down-arrow'
+  },
+  icon_prefix: 'foundicon-'
+});
+
+$.jsoneditor.iconlibs.foundation3 = $.jsoneditor.AbstractIconLib.extend({
+  mapping: {
+    collapse: 'minus',
+    expand: 'plus',
+    delete: 'x',
+    edit: 'pencil',
+    add: 'page-add',
+    cancel: 'x-circle',
+    save: 'save',
+    moveup: 'arrow-up',
+    movedown: 'arrow-down'
+  },
+  icon_prefix: 'fi-'
+});
+
+$.jsoneditor.iconlibs.jqueryui = $.jsoneditor.AbstractIconLib.extend({
+  mapping: {
+    collapse: 'triangle-1-s',
+    expand: 'triangle-1-e',
+    delete: 'trash',
+    edit: 'pencil',
+    add: 'plusthick',
+    cancel: 'closethick',
+    save: 'disk',
+    moveup: 'arrowthick-1-n',
+    movedown: 'arrowthick-1-s'
+  },
+  icon_prefix: 'ui-icon ui-icon-'
 });
 
 $.jsoneditor.templates.default = function() {

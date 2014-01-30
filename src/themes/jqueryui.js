@@ -48,13 +48,68 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
       marginRight: '5px'
     });
   },
-  getButton: function(text) {
-    return $("<button>").addClass('ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only').append(
-      $("<span>").addClass('ui-button-text').text(text)
+  getButton: function(text, icon, title) {
+    var button = $("<button>")
+      .addClass('ui-button ui-widget ui-state-default ui-corner-all');
+      
+    // Icon only
+    if(icon && !text) {
+      button
+        .addClass('ui-button-icon-only')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+    }
+    // Icon and Text
+    else if(icon) {
+      button
+        .addClass('ui-button-text-icon-primary')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+    }
+    // Text only
+    else {
+      button
+        .addClass('ui-button-text-only')
+    }
+    
+    button.append(
+      $("<span>").addClass('ui-button-text').text(text||title||".")
     );
+    
+    button.attr('title',title);
+    
+    return button;
   },
-  setButtonText: function(button,text) {
-    $(".ui-button-text",button).text(text);
+  setButtonText: function(button,text, icon, title) {
+    button.empty();
+    
+    // Icon only
+    if(icon && !text) {
+      button
+        .removeClass('ui-button-text-icon-primary')
+        .removeClass('ui-button-text-only')
+        .addClass('ui-button-icon-only')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+    }
+    // Icon and Text
+    else if(icon) {
+      button
+        .removeClass('ui-button-icon-only')
+        .removeClass('ui-button-text-only')
+        .addClass('ui-button-text-icon-primary')
+        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'))
+    }
+    // Text only
+    else {
+      button
+        .removeClass('ui-button-icon-only')
+        .removeClass('ui-button-text-icon-primary')
+        .addClass('ui-button-text-only')
+    }
+    
+    button.append(
+      $("<span>").addClass('ui-button-text').text(text||title||'.')
+    );
+
+    button.attr('title',title);
   },
   getIndentedPanel: function() {
     return $("<div>").addClass('ui-widget-content ui-corner-all').css({
