@@ -26,9 +26,11 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.container);
       this.error_holder = $("<div></div>").appendTo(this.container);
     }
-    this.row_holder = this.theme.getIndentedPanel().appendTo(this.container);
     
-    this.controls = this.theme.getButtonHolder().appendTo(this.container);
+    this.panel = this.theme.getIndentedPanel().appendTo(this.container);
+    
+    this.row_holder = $("<div>").appendTo(this.panel);
+    this.controls = this.theme.getButtonHolder().appendTo(this.panel);
     
     this.row_holder.on('change',function() {
       self.refreshValue();
@@ -128,8 +130,10 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     if(this.title) this.title.remove();
     if(this.description) this.description.remove();
     if(this.row_holder) this.row_holder.remove();
+    if(this.controls) this.controls.remove();
+    if(this.panel) this.panel.remove();
     
-    this.rows = this.title = this.description = this.row_holder = null;
+    this.rows = this.title = this.description = this.row_holder = this.panel = this.controls = null;
 
     this._super();
   },

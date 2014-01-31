@@ -25,18 +25,22 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
     // Build header row for table
     if(tmp.getChildEditors()) {
-      this.item_has_child_editors = true;
-
-      if(!this.getOption('compact',false)) {
-        this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
-        this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
-        if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.container);
-        this.error_holder = $("<div></div>").appendTo(this.container);
-      }
+      this.item_has_child_editors = true;      
+    }
+    
+    if(!this.getOption('compact',false)) {
+      this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
+      this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
+      this.panel = this.theme.getIndentedPanel().appendTo(this.container);
+      if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.panel);
+      this.error_holder = $("<div></div>").appendTo(this.panel);
+    }
+    else {
+      this.panel = $("<div>").appendTo(this.container);
     }
 
-    this.table.appendTo(this.container);
-    this.controls = this.theme.getButtonHolder().appendTo(this.container);
+    this.table.appendTo(this.panel);
+    this.controls = this.theme.getButtonHolder().appendTo(this.panel);
 
     if(this.item_has_child_editors) {
       $.each(tmp.getChildEditors(), function(i,editor) {
@@ -98,8 +102,9 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     if(this.description) this.description.remove();
     if(this.row_holder) this.row_holder.remove();
     this.table.remove();
+    if(this.panel) this.panel.remove();
 
-    this.rows = this.title = this.description = this.row_holder = this.table = null;
+    this.rows = this.title = this.description = this.row_holder = this.table = this.panel = null;
 
     this._super();
   },
@@ -294,14 +299,12 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
-        self.controls.show(300);
-        self.row_holder.show(300);
+        self.panel.show(300);
         self.setButtonText($(this),'','collapse','Collapse');
       }
       else {
         self.collapsed = true;
-        self.controls.hide(300);
-        self.row_holder.hide(300);
+        self.panel.hide(300);
         self.setButtonText($(this),'','expand','Expand');
       }
     });
