@@ -21,10 +21,12 @@ Requirements
 
 ### Optional Requirements
 
-*  A compatible javascript template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
-*  A compatible CSS Framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
+The following are not required, but will improve the style and usefulness of JSON Editor.
+
+*  A compatible JS template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
+*  A compatible CSS framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
 *  A compatible icon library (bootstrap 2/3 glyphicons, foundation icons 2/3, jqueryui, or font awesome 3/4)
-*  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode
+*  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode content
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
 
