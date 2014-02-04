@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.33 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.34 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-01-30
+ * Date: 2014-02-03
  */
 
 /**
@@ -1476,6 +1476,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   refreshValue: function() {
     this.value = this.input.val();
+    if(typeof this.value !== "string") this.value = '';
   },
   destroy: function() {    
     // If using SCEditor, destroy the editor instance
@@ -2058,6 +2059,14 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     
     // Create a temporary editor with this schema and get info
     var tmp = $("<div>").appendTo(this.container);
+    
+    // Ignore events on this temporary editor
+    tmp.on('change set',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    });
+    
     var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
     editor = new editor({
       jsoneditor: this.jsoneditor,
@@ -2449,7 +2458,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.row_holder = this.theme.getTableBody().appendTo(this.table);
 
     // Determine the default value of array element
-    var tmp = this.getElementEditor(0);
+    var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
     this.item_title = this.schema.items.title || 'row';
 
@@ -2501,11 +2510,19 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
   getItemTitle: function() {
     return this.item_title;
   },
-  getElementEditor: function(i) {
+  getElementEditor: function(i,ignore) {
     var schema_copy = $.extend({},this.schema.items);
     var editor = $.jsoneditor.getEditorClass(schema_copy, this.jsoneditor);
     var row = this.theme.getTableRow().appendTo(this.row_holder);
     var holder = this.item_has_child_editors? row : this.theme.getTableCell().appendTo(row);
+
+    if(ignore) {
+      holder.on('change set',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      });
+    }
 
     var ret = new editor({
       jsoneditor: this.jsoneditor,

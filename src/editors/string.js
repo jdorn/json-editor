@@ -214,6 +214,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   refreshValue: function() {
     this.value = this.input.val();
+    if(typeof this.value !== "string") this.value = '';
   },
   destroy: function() {    
     // If using SCEditor, destroy the editor instance

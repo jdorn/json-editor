@@ -74,6 +74,14 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     
     // Create a temporary editor with this schema and get info
     var tmp = $("<div>").appendTo(this.container);
+    
+    // Ignore events on this temporary editor
+    tmp.on('change set',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    });
+    
     var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
     editor = new editor({
       jsoneditor: this.jsoneditor,
