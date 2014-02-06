@@ -3,8 +3,7 @@ JSON Editor
 
 ![JSON Schema -> HTML Editor -> JSON](https://raw.github.com/jdorn/json-editor/master/jsoneditor.png)
 
-JSON Editor will create an HTML editor from a JSON Schema and output JSON data that matches the schema.
-It supports a large subset of JSON Schema and can integrate with several popular CSS frameworks (bootstrap, foundation, and jQueryUI).
+JSON Editor takes a JSON Schema and uses it to generate an HTML form.  It has full support for JSON Schema version 3 and 4 and can integrate with several popular CSS frameworks (bootstrap, foundation, and jQueryUI).
 
 Check out an example: http://rawgithub.com/jdorn/json-editor/master/example.html
 
@@ -21,7 +20,7 @@ Requirements
 
 ### Optional Requirements
 
-The following are not required, but will improve the style and usefulness of JSON Editor.
+The following are not required, but will improve the style and usability of JSON Editor when present.
 
 *  A compatible JS template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
 *  A compatible CSS framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
@@ -41,15 +40,63 @@ $("#editor_holder").jsoneditor(options);
 
 #### Options
 
-*  __schema__ - Required, a valid JSON Schema (either Version 3 or Version 4 of the draft spec).
-*  __startval__ - Optional, the starting value for the editor.  Must be valid against the schema.
-*  __ajax__ - Optional, if `true`, JSON Editor will load external urls in `$ref` via ajax.  Default `false`.
-*  __refs__ - Optional, an object containing schema definitions for urls.  Allows you to pre-define external schemas.
-*  __required_by_default__ - Optional, if `true`, all schemas that don't have the `required` property explicitly set will be required. Default `false`.
-*  __no_additional_properties__ - Optional, if `true`, objects can only contain properties defined with the `properties` keyword. Default `false`.
-*  __theme__ - Optional, sets the CSS theme to use for the editor.  See the "CSS Integration" section below for more info.
-*  __iconlib__ - Optional, sets the icon library to use for the editor.  See the "CSS Integeration" section below for more info.
-*  __template__ - Optional, sets the js template engine to use.  See the "Templates and Variables" section below for more info.
+<table>
+  <thead>
+  <tr>
+    <th>Option</th>
+    <th>Description</th>
+    <th>Default Value</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td>ajax</td>
+    <td>If <code>true</code>, JSON Editor will load external urls in <code>$ref</code> via ajax.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>iconlib</td>
+    <td>The icon library to use for the editor.  See the <strong>CSS Integration</strong> section below for more info.</td>
+    <td><code>null</code></td>
+  </tr>
+  <tr>
+    <td>no_additional_properties</td>
+    <td>If <code>true</code>, objects can only contain properties defined with the <code>properties</code> keyword.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>refs</td>
+    <td>An object containing schema definitions for URLs.  Allows you to pre-define external schemas.</td>
+    <td><code>{}</code></td>
+  </tr>
+  <tr>
+    <td>required_by_default</td>
+    <td>If <code>true</code>, all schemas that don't explicitly set the <code>required</code> property will be required.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>schema</td>
+    <td>A valid JSON Schema to use for the editor.  Version 3 and Version 4 of the draft specification are supported.</td>
+    <td><code>{}</code></td>
+  </tr>
+  <tr>
+    <td>startval</td>
+    <td>Seed the editor with an initial value.  This should be valid against the editor's schema.</td>
+    <td><code>null</code></td>
+  </tr>
+  <tr>
+    <td>template</td>
+    <td>The JS template engine to use. See the <strong>Templates and Variables</strong> section below for more info.</td>
+    <td><code>default</code></td>
+  </tr>
+  <tr>
+    <td>theme</td>
+    <td>The CSS theme to use.  See the <strong>CSS Integration</strong> section below for more info.</td>
+    <td><code>html</code></td>
+  </tr>
+  </tbody>
+</table>
+
 
 Here's an example using all the options:
 
@@ -65,12 +112,17 @@ $("#editor_holder").jsoneditor({
       age: {
         description: "Will load via ajax.  If the ajax option was false, this would throw an exception",
         $ref: "http://example.com/age.json"
+      },
+      bio: {
+        type: "string",
+        format: "markdown"
       }
     }
   },
   startval: {
     name: "John Smith",
-    age: 21
+    age: 21,
+    bio: ""
   },
   ajax: true,
   refs: {
@@ -81,7 +133,8 @@ $("#editor_holder").jsoneditor({
   required_by_default: true,
   no_additional_properties: true,
   theme: 'bootstrap3',
-  template: 'underscore'
+  template: 'underscore',
+  iconlib: 'fontawesome4'
 });
 ```
 
