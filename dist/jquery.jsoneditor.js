@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.34 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.35 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-02-03
+ * Date: 2014-02-06
  */
 
 /**
@@ -290,9 +290,9 @@ $.jsoneditor.Validator = Class.extend({
       else if(self.refs[ref]) {
         schema = $.extend(true,{},self.refs[ref],schema);
         callback(schema);
-      }
-      // If we need to fetch an external url
-      else if(ref.match(/^[a-zA-Z]+:\/\//)) {
+      }      
+      // Otherwise, it needs to be loaded via ajax
+      else {
         if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
 
         $.getJSON(ref,function(response) {
@@ -312,11 +312,8 @@ $.jsoneditor.Validator = Class.extend({
           });
         })
           .fail(function() {
-            throw "Failed to fetch external ref - "+ref;
+            throw "Failed to fetch ref via ajax- "+ref;
           })
-      }
-      else {
-        throw "Unknown ref - "+ref;
       }
     }
     // Expand out any subschemas
@@ -2156,7 +2153,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     // Make sure value has between minItems and maxItems items in it
     if(this.schema.minItems) {
       while(value.length < this.schema.minItems) {
-        value.push(this.getItemDefault());
+        value.push(this.getItemInfo(value.length).default);
       }
     }
     if(this.getMax() && value.length > this.getMax()) {

@@ -3,9 +3,10 @@ JSON Editor
 
 ![JSON Schema -> HTML Editor -> JSON](https://raw.github.com/jdorn/json-editor/master/jsoneditor.png)
 
-JSON Editor takes a JSON Schema and uses it to generate an HTML form.  It has full support for JSON Schema version 3 and 4 and can integrate with several popular CSS frameworks (bootstrap, foundation, and jQueryUI).
+JSON Editor takes a JSON Schema and uses it to generate an HTML form.  
+It has full support for JSON Schema version 3 and 4 and can integrate with several popular CSS frameworks (bootstrap, foundation, and jQueryUI).
 
-Check out an example: http://rawgithub.com/jdorn/json-editor/master/example.html
+Check out an interactive demo: http://rawgithub.com/jdorn/json-editor/master/demo.html
 
 Download the [production version][min] or the [development version][max].
 
@@ -31,6 +32,14 @@ The following are not required, but will improve the style and usability of JSON
 
 Usage
 --------------
+
+If you learn best by example, check these out:
+
+*  Basic Usage Example - http://rawgithub.com/jdorn/json-editor/master/examples/basic.html
+*  Advanced Usage Example - http://rawgithub.com/jdorn/json-editor/master/examples/advanced.html
+*  CSS Integration Example - http://rawgithub.com/jdorn/json-editor/master/examples/css_integration.html
+
+The rest of this README contains detailed documentation about every aspect of JSON Editor.
 
 ### Initialize
 

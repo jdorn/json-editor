@@ -87,9 +87,9 @@ $.jsoneditor.Validator = Class.extend({
       else if(self.refs[ref]) {
         schema = $.extend(true,{},self.refs[ref],schema);
         callback(schema);
-      }
-      // If we need to fetch an external url
-      else if(ref.match(/^[a-zA-Z]+:\/\//)) {
+      }      
+      // Otherwise, it needs to be loaded via ajax
+      else {
         if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
 
         $.getJSON(ref,function(response) {
@@ -109,11 +109,8 @@ $.jsoneditor.Validator = Class.extend({
           });
         })
           .fail(function() {
-            throw "Failed to fetch external ref - "+ref;
+            throw "Failed to fetch ref via ajax- "+ref;
           })
-      }
-      else {
-        throw "Unknown ref - "+ref;
       }
     }
     // Expand out any subschemas

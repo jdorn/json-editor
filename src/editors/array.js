@@ -171,7 +171,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     // Make sure value has between minItems and maxItems items in it
     if(this.schema.minItems) {
       while(value.length < this.schema.minItems) {
-        value.push(this.getItemDefault());
+        value.push(this.getItemInfo(value.length).default);
       }
     }
     if(this.getMax() && value.length > this.getMax()) {

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Advanced JSON Editor Example</title>
+    
+    <!-- jQuery is the only dependency -->
+    <script src="http://code.jquery.com/jquery.js"></script>
+    
+    <script src="../dist/jquery.jsoneditor.js"></script>
+  </head>
+  <body>
+    <h1>Advanced JSON Editor Example</h1>
+    
+    <p>This example demonstrates the following:</p>
+    <ul>
+      <li>Loading external schemas via ajax (using $ref)</li>
+      <li>Setting the editor's value from javascript</li>
+      <li>Validating the editor's contents (try setting name to an empty string)</li>
+      <li>Macro templates (try changing the city or state fields and watch the citystate field update automatically)</li>
+    </ul>
+    
+    <button id='submit'>Submit (console.log)</button>
+    <button id='restore'>Restore to Default</button>
+    <span id='valid_indicator'></span>
+    
+    <div id='editor_holder'></div>
+    
+    <script>
+      // This is the starting value for the editor
+      // We will use this to seed the initial editor 
+      // and to provide a "Restore to Default" button.
+      var starting_value = [
+        {
+          name: "John Smith",
+          age: 35,
+          gender: "male",
+          location: {
+            city: "San Francisco",
+            state: "California"
+          },
+          pets: [
+            {
+              name: "Spot",
+              type: "dog",
+              fixed: true
+            },
+            {
+              name: "Whiskers",
+              type: "cat",
+              fixed: false
+            }
+          ]
+        }
+      ];
+      
+      // Initialize the editor
+      $("#editor_holder").jsoneditor({
+        // Enable fetching schemas via ajax
+        ajax: true,
+        
+        // The schema for the editor
+        schema: {
+          type: "array",
+          title: "People",
+          items: {
+            // Load the person.json schema via ajax
+            $ref: "person.json"
+          }
+        },
+        
+        // Seed the form with a starting value
+        startval: starting_value
+      });
+      
+      // Hook up the submit button to log to the console
+      $("#submit").on('click',function() {
+        // Get the value from the editor
+        var value = $("#editor_holder").jsoneditor('value');
+        
+        // Console log it
+        console.log(value);
+      });
+      
+      // Hook up the Restore to Default button
+      $("#restore").on('click',function() {
+        $("#editor_holder").jsoneditor('value',starting_value);
+      });
+      
+      // Hook up the validation indicator to update its 
+      // status whenever the editor changes
+      $("#editor_holder").on('change',function() {
+        // Get an array of errors from the validator
+        var errors = $("#editor_holder").jsoneditor('validate');
+        
+        // Not valid
+        if(errors.length) {
+          $("#valid_indicator").css({
+            color: 'red'
+          }).text("not valid");
+        }
+        // Valid
+        else {
+          $("#valid_indicator").css({
+            color: 'green'
+          }).text("valid");
+        }
+      });
+    </script>
+  </body>
+</html>

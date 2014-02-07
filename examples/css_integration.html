@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CSS Integration JSON Editor Example</title>
+    
+    <!-- Foundation CSS framework (Bootstrap and jQueryUI also supported) -->
+    <link rel='stylesheet' href='//cdn.jsdelivr.net/foundation/5.0.2/css/foundation.min.css'>
+    <!-- Font Awesome icons (Bootstrap, Foundation, and jQueryUI also supported) -->
+    <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css'>
+    
+    <!-- jQuery is the only dependency -->
+    <script src="http://code.jquery.com/jquery.js"></script>
+    
+    <script src="../dist/jquery.jsoneditor.js"></script>
+    
+    <script>
+    // Set the default CSS theme and icon library globally
+    $.jsoneditor.theme = 'foundation5';
+    $.jsoneditor.iconlib = 'fontawesome4';
+    </script>
+  </head>
+  <body>
+    <div class='row'>
+      <div class='medium-12 columns'>
+        <h1>CSS Integration JSON Editor Example</h1>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='medium-6 columns'>
+        <p>JSON Editor supports these popular CSS frameworks:</p>
+        <ul>
+          <li>Bootstrap 2</li>
+          <li>Bootstrap 3</li>
+          <li>Foundation 3</li>
+          <li>Foundation 4</li>
+          <li>Foundation 5 (shown here)</li>
+          <li>jQuery UI</li>
+        </ul>
+      </div>
+      <div class='medium-6 columns'>
+        <p>JSON Editor supports these popular icon libraries:</p>
+        <ul>
+          <li>Bootstrap 2 Glyphicons</li>
+          <li>Bootstrap 3 Glyphicons</li>
+          <li>Foundicons 2</li>
+          <li>Foundicons 3</li>
+          <li>jQueryUI</li>
+          <li>Font Awesome 3</li>
+          <li>Font Awesome 4 (shown here)</li>
+        </ul>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='medium-12-columns'>
+        <button id='submit' class='tiny'>Submit (console.log)</button>
+        <button id='restore' class='secondary tiny'>Restore to Default</button>
+        <span id='valid_indicator' class='label'></span>
+      </div>
+    </div>
+    <div class='row'>
+      <div id='editor_holder' class='medium-12 columns'></div>
+    </div>
+    
+    <script>
+      // This is the starting value for the editor
+      // We will use this to seed the initial editor 
+      // and to provide a "Restore to Default" button.
+      var starting_value = {
+        name: "John Smith",
+        age: 35,
+        gender: "male",
+        location: {
+          city: "San Francisco",
+          state: "California"
+        },
+        pets: [
+          {
+            name: "Spot",
+            type: "dog",
+            fixed: true
+          },
+          {
+            name: "Whiskers",
+            type: "cat",
+            fixed: false
+          }
+        ]
+      };
+      
+      // Initialize the editor
+      $("#editor_holder").jsoneditor({
+        // Enable fetching schemas via ajax
+        ajax: true,
+        
+        // The schema for the editor
+        schema: {
+          $ref: "person.json"
+        },
+        
+        // Seed the form with a starting value
+        startval: starting_value
+      });
+      
+      // Hook up the submit button to log to the console
+      $("#submit").on('click',function() {
+        // Get the value from the editor
+        var value = $("#editor_holder").jsoneditor('value');
+        
+        // Console log it
+        console.log(value);
+      });
+      
+      // Hook up the Restore to Default button
+      $("#restore").on('click',function() {
+        $("#editor_holder").jsoneditor('value',starting_value);
+      });
+      
+      // Hook up the validation indicator to update its 
+      // status whenever the editor changes
+      $("#editor_holder").on('change',function() {
+        // Get an array of errors from the validator
+        var errors = $("#editor_holder").jsoneditor('validate');
+        
+        // Not valid
+        if(errors.length) {
+          $("#valid_indicator").removeClass('success').addClass('alert').text("not valid");
+        }
+        // Valid
+        else {
+          $("#valid_indicator").removeClass('alert').addClass('success').text("valid");
+        }
+      });
+    </script>
+  </body>
+</html>
