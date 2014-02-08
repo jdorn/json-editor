@@ -66,5 +66,26 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
   },
   removeInputError: function(input) {
     $('.errormsg',input.closest('.control-group').removeClass('error')).remove();
+  },
+  getTabHolder: function() {
+    return $("<div class='tabbable tabs-left'><ul class='nav nav-tabs'></ul><div class='tab-content'></div></div>");
+  },
+  getTab: function(text) {
+    return $("<li><a href='#'>"+text+"</a></li>");
+  },
+  getTabContentHolder: function(tab_holder) {
+    return $("> .tab-content",tab_holder)
+  },
+  getTabContent: function() {
+    return $("<div class='tab-pane active'></div>");
+  },
+  markTabActive: function(tab) {
+    tab.addClass('active');
+  },
+  markTabInactive: function(tab) {
+    tab.removeClass('active');
+  },
+  addTab: function(holder, tab) {
+    $("> .nav-tabs",holder).append(tab);
   }
 });

@@ -124,5 +124,11 @@ $.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
   },
   removeInputError: function(input) {
     $('.errormsg',input.closest('.form-control')).remove();
+  },
+  markTabActive: function(tab) {
+    tab.removeClass('ui-widget-header').addClass('ui-state-active');
+  },
+  markTabInactive: function(tab) {
+    tab.removeClass('ui-state-active').addClass('ui-widget-header');
   }
 });

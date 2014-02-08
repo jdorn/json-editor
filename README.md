@@ -359,8 +359,16 @@ Here is an example that will show a color picker in browsers that support it:
 }
 ```
 
-For schemas of type `array`, the format `table` is supported, which is a more compact UI for editing arrays.
-To use this format, each array element must have the same schema.
+#### Arrays
+
+The default array editor takes up a lot of screen real estate.  The `table` and `tabs` formats provide more compact UIs for editing arrays.
+
+The `table` format works great when every array element has the same schema and is not too complex.
+
+The `tabs` format can handle any array, but only shows one array element at a time. It has tabs on the left for switching between them.
+
+
+Here's an example of the `table` format:
 
 ```json
 {

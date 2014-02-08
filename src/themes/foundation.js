@@ -57,6 +57,29 @@ $.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
     return this._super().css({
       fontSize: '.6em'
     });
+  },
+  getTabHolder: function() {
+    return $("<div class='row'><dl class='tabs vertical two columns'></dl><div class='tabs-content ten columns'></div></div>");
+  },
+  getTab: function(text) {
+    return $("<dd><a href='#'>"+text+"</a></dd>");
+  },
+  getTabContentHolder: function(tab_holder) {
+    return $("> .tabs-content",tab_holder)
+  },
+  getTabContent: function() {
+    return $("<div class='content active'></div>").css({
+      paddingLeft: 5
+    });
+  },
+  markTabActive: function(tab) {
+    tab.addClass('active');
+  },
+  markTabInactive: function(tab) {
+    tab.removeClass('active');
+  },
+  addTab: function(holder, tab) {
+    $("> .tabs",holder).append(tab);
   }
 });
 
@@ -83,5 +106,28 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
   },
   getButton: function(text, icon, title) {
     return this._super(text, icon, title).removeClass('small').addClass('tiny');
+  },
+  getTabHolder: function() {
+    return $("<div><dl class='tabs vertical'></dl><div class='tabs-content'></div></div>");
+  },
+  getTab: function(text) {
+    return $("<dd><a href='#'>"+text+"</a></dd>");
+  },
+  getTabContentHolder: function(tab_holder) {
+    return $("> .tabs-content",tab_holder)
+  },
+  getTabContent: function() {
+    return $("<div class='content active'></div>").css({
+      paddingLeft: 5
+    });
+  },
+  markTabActive: function(tab) {
+    tab.addClass('active');
+  },
+  markTabInactive: function(tab) {
+    tab.removeClass('active');
+  },
+  addTab: function(holder, tab) {
+    $("> .tabs",holder).append(tab);
   }
 });

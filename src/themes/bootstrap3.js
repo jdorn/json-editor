@@ -62,5 +62,19 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
   },
   removeInputError: function(input) {
     $('.errormsg',input.closest('.form-group').removeClass('has-error')).remove();
+  },
+  getTabHolder: function() {
+    var holder = this._super();
+    $("> .tabs",holder).addClass('list-group');
+    return holder;
+  },
+  getTab: function(text) {
+    return $("<a href='#' class='list-group-item'>").text(text);
+  },
+  markTabActive: function(tab) {
+    tab.addClass('active');
+  },
+  markTabInactive: function(tab) {
+    tab.removeClass('active');
   }
 });

@@ -143,5 +143,50 @@ $.jsoneditor.AbstractTheme = Class.extend({
   addTableRowError: function(row) {
   },
   removeTableRowError: function(row) {
+  },
+  getTabHolder: function() {
+    return $("<div><div style='float: left; width: 130px;' class='tabs'></div><div class='content' style='margin-left: 130px;'></div></div>").append($("<div>").css('clear','both'));
+  },
+  getTab: function(text) {
+    return $("<div></div>")
+      .text(text)
+      .css({
+        border: '1px solid #ccc',
+        borderWidth: '1px 0 1px 1px',
+        textAlign: 'center',
+        lineHeight: '30px',
+        borderRadius: 5,
+        borderBottomRightRadius: 0,
+        borderTopRightRadius: 0,
+        fontWeight: 'bold',
+        cursor: 'pointer'
+      });
+  },
+  getTabContentHolder: function(tab_holder) {
+    return $("> .content",tab_holder)
+  },
+  getTabControls: function(holder) {
+    return $("> .controls",holder);
+  },
+  getTabContent: function() {
+    return this.getIndentedPanel();
+  },
+  markTabActive: function(tab) {
+    tab.css({
+      opacity: 1,
+      background: 'white'
+    });
+  },
+  markTabInactive: function(tab) {
+    tab.css({
+      opacity:.5,
+      background: ''
+    });
+  },
+  addTab: function(holder, tab) {
+    $("> .tabs",holder).append(tab);
+  },
+  addTabControls: function(tab_holder, controls) {
+    tab_holder.append(controls);
   }
 });
