@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.38 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.39 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1817,6 +1817,11 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           self.setButtonText(self.toggle_button,'','expand','Expand');
         }
       });
+
+      // If it should start collapsed
+      if(this.options.collapsed) {
+        this.toggle_button.trigger('click');
+      }
       
       // Edit JSON Button
       this.editing_json = false;
@@ -2545,6 +2550,11 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         self.setButtonText($(this),'','expand','Expand');
       }
     });
+
+    // If it should start collapsed
+    if(this.options.collapsed) {
+      this.toggle_button.trigger('click');
+    }
     
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())
@@ -2996,6 +3006,11 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
         self.setButtonText($(this),'','expand','Expand');
       }
     });
+
+    // If it should start collapsed
+    if(this.options.collapsed) {
+      this.toggle_button.trigger('click');
+    }
 
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())

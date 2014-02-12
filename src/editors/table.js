@@ -317,6 +317,11 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       }
     });
 
+    // If it should start collapsed
+    if(this.options.collapsed) {
+      this.toggle_button.trigger('click');
+    }
+
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())
       .on('click',function() {

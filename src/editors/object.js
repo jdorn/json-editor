@@ -106,6 +106,11 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           self.setButtonText(self.toggle_button,'','expand','Expand');
         }
       });
+
+      // If it should start collapsed
+      if(this.options.collapsed) {
+        this.toggle_button.trigger('click');
+      }
       
       // Edit JSON Button
       this.editing_json = false;
