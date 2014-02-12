@@ -94,7 +94,9 @@ $.fn.jsoneditor = function(options) {
   // Let the validator resolve references in the schema asynchronously
   d.validator = new $.jsoneditor.Validator(schema,{
     ajax: options.ajax,
-    refs: options.refs
+    refs: options.refs,
+    no_additional_properties: options.no_additional_properties,
+    required_by_default: options.required_by_default
   });
   d.validator.ready(function(expanded) {
     if(d.ready) return;

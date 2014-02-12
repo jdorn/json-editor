@@ -201,9 +201,20 @@ $.jsoneditor.Validator = Class.extend({
         return errors;
       }
     }
+    // Value not defined
     else if(typeof value === "undefined") {
-      // Not required and not defined, no further validation needed
-      return errors;
+      // If required_by_default is set, all fields are required
+      if(this.options.required_by_default) {
+        errors.push({
+          path: path,
+          property: 'required',
+          message: 'Property must be set'
+        });
+      }
+      // Not required, no further validation needed
+      else {
+        return errors;
+      }
     }
     
     // `enum`
@@ -256,10 +267,19 @@ $.jsoneditor.Validator = Class.extend({
     // `oneOf`
     if(schema.oneOf) {
       valid = 0;
+      var oneof_errors = [];
       for(i=0; i<schema.oneOf.length; i++) {
-        if(!this._validateSchema(schema.oneOf[i],value,path).length) {
+        // Set the error paths to be path.oneOf[i].rest.of.path
+        var tmp = this._validateSchema(schema.oneOf[i],value,path);
+        if(!tmp.length) {
           valid++;
         }
+        
+        for(var j=0; j<tmp.length; j++) {
+          tmp[j].path = path+'.oneOf['+i+']'+tmp[j].path.substr(path.length);
+        }
+        oneof_errors = oneof_errors.concat(tmp);
+        
       }
       if(valid !== 1) {
         errors.push({
@@ -268,6 +288,7 @@ $.jsoneditor.Validator = Class.extend({
           message: 'Value must validate against exactly one of the provided schemas. '+
             'It currently validates against '+valid+' of the schemas.'
         });
+        errors = errors.concat(oneof_errors);
       }
     }
     
@@ -591,6 +612,11 @@ $.jsoneditor.Validator = Class.extend({
             }
           }
         }
+      }
+      
+      // The no_additional_properties option currently doesn't work with extended schemas that use oneOf or anyOf
+      if(typeof schema.additionalProperties === "undefined" && this.options.no_additional_properties && !schema.oneOf && !schema.anyOf) {
+        schema.additionalProperties = false;
       }
       
       // `additionalProperties`

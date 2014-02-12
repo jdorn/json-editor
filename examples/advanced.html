@@ -36,7 +36,8 @@
           gender: "male",
           location: {
             city: "San Francisco",
-            state: "California"
+            state: "California",
+            citystate: ""
           },
           pets: [
             {
@@ -62,14 +63,30 @@
         schema: {
           type: "array",
           title: "People",
+          format: "tabs",
           items: {
-            // Load the person.json schema via ajax
-            $ref: "person.json"
+            title: "Person",
+            oneOf: [
+              {
+                $ref: "basic_person.json",
+                title: "Basic Person"
+              },
+              {
+                $ref: "person.json",
+                title: "Complex Person"
+              }
+            ]
           }
         },
         
         // Seed the form with a starting value
-        startval: starting_value
+        startval: starting_value,
+        
+        // Disable additional properties
+        no_additional_properties: true,
+        
+        // Require all properties by default
+        required_by_default: true
       });
       
       // Hook up the submit button to log to the console

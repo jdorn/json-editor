@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.36 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.37 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-02-07
+ * Date: 2014-02-12
  */
 
 /**
@@ -114,7 +114,9 @@ $.fn.jsoneditor = function(options) {
   // Let the validator resolve references in the schema asynchronously
   d.validator = new $.jsoneditor.Validator(schema,{
     ajax: options.ajax,
-    refs: options.refs
+    refs: options.refs,
+    no_additional_properties: options.no_additional_properties,
+    required_by_default: options.required_by_default
   });
   d.validator.ready(function(expanded) {
     if(d.ready) return;
@@ -404,9 +406,20 @@ $.jsoneditor.Validator = Class.extend({
         return errors;
       }
     }
+    // Value not defined
     else if(typeof value === "undefined") {
-      // Not required and not defined, no further validation needed
-      return errors;
+      // If required_by_default is set, all fields are required
+      if(this.options.required_by_default) {
+        errors.push({
+          path: path,
+          property: 'required',
+          message: 'Property must be set'
+        });
+      }
+      // Not required, no further validation needed
+      else {
+        return errors;
+      }
     }
     
     // `enum`
@@ -459,10 +472,19 @@ $.jsoneditor.Validator = Class.extend({
     // `oneOf`
     if(schema.oneOf) {
       valid = 0;
+      var oneof_errors = [];
       for(i=0; i<schema.oneOf.length; i++) {
-        if(!this._validateSchema(schema.oneOf[i],value,path).length) {
+        // Set the error paths to be path.oneOf[i].rest.of.path
+        var tmp = this._validateSchema(schema.oneOf[i],value,path);
+        if(!tmp.length) {
           valid++;
         }
+        
+        for(var j=0; j<tmp.length; j++) {
+          tmp[j].path = path+'.oneOf['+i+']'+tmp[j].path.substr(path.length);
+        }
+        oneof_errors = oneof_errors.concat(tmp);
+        
       }
       if(valid !== 1) {
         errors.push({
@@ -471,6 +493,7 @@ $.jsoneditor.Validator = Class.extend({
           message: 'Value must validate against exactly one of the provided schemas. '+
             'It currently validates against '+valid+' of the schemas.'
         });
+        errors = errors.concat(oneof_errors);
       }
     }
     
@@ -794,6 +817,11 @@ $.jsoneditor.Validator = Class.extend({
             }
           }
         }
+      }
+      
+      // The no_additional_properties option currently doesn't work with extended schemas that use oneOf or anyOf
+      if(typeof schema.additionalProperties === "undefined" && this.options.no_additional_properties && !schema.oneOf && !schema.anyOf) {
+        schema.additionalProperties = false;
       }
       
       // `additionalProperties`
@@ -2948,6 +2976,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.types = [];
     
     if(this.schema.oneOf) {
+      this.oneOf = true;
       this.types = this.schema.oneOf;
       delete this.schema.oneOf;
     }
@@ -3029,7 +3058,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new $.jsoneditor.Validator(schema);
+      self.validators[i] = new $.jsoneditor.Validator(schema,{
+        required_by_default: self.jsoneditor.data('jsoneditor').options.required_by_default,
+        no_additional_properties: self.jsoneditor.data('jsoneditor').options.no_additional_properties
+      });
 
       var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
@@ -3080,9 +3112,28 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
   },
   showValidationErrors: function(errors) {
     var self = this;
-    $.each(this.editors,function(type,editor) {
-      editor.showValidationErrors(errors);
-    });
+    
+    // oneOf error paths need to remove the oneOf[i] part before passing to child editors
+    if(this.oneOf) {
+      $.each(this.editors,function(i,editor) {
+        var check = self.path+'.oneOf['+i+']';
+        var new_errors = [];
+        $.each(errors, function(j,error) {
+          if(error.path.substr(0,check.length)===check) {
+            var new_error = $.extend({},error);
+            new_error.path = self.path+new_error.path.substr(check.length);
+            new_errors.push(new_error);
+          }
+        });
+        
+        editor.showValidationErrors(new_errors);
+      });
+    }
+    else {
+      $.each(this.editors,function(type,editor) {
+        editor.showValidationErrors(errors);
+      });
+    }
   }
 });
 
