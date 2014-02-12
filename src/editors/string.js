@@ -69,7 +69,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         this.input = this.theme.getTextareaInput();
       }
       // WYSIWYG html/bbcode
-      if(this.schema.format === 'html' || this.schema.format === 'bbcode') {
+      else if(this.schema.format === 'html' || this.schema.format === 'bbcode') {
         this.input_type = this.schema.format;
         
         this.input = this.theme.getTextareaInput();

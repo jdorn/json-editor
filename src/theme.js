@@ -57,7 +57,8 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getTextareaInput: function() {
     return $("<textarea>").css({
       width: '100%',
-      height: 300
+      height: 300,
+      boxSizing: 'border-box'
     });
   },
   getRangeInput: function(min,max,step) {

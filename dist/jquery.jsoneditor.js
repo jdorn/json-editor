@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.39 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.40 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1459,7 +1459,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         this.input = this.theme.getTextareaInput();
       }
       // WYSIWYG html/bbcode
-      if(this.schema.format === 'html' || this.schema.format === 'bbcode') {
+      else if(this.schema.format === 'html' || this.schema.format === 'bbcode') {
         this.input_type = this.schema.format;
         
         this.input = this.theme.getTextareaInput();
@@ -3552,7 +3552,8 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getTextareaInput: function() {
     return $("<textarea>").css({
       width: '100%',
-      height: 300
+      height: 300,
+      boxSizing: 'border-box'
     });
   },
   getRangeInput: function(min,max,step) {
