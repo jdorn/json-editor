@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.37 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.38 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -292,7 +292,7 @@ $.jsoneditor.Validator = Class.extend({
       else if(self.refs[ref]) {
         schema = $.extend(true,{},self.refs[ref],schema);
         callback(schema);
-      }      
+      }
       // Otherwise, it needs to be loaded via ajax
       else {
         if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
@@ -383,16 +383,16 @@ $.jsoneditor.Validator = Class.extend({
     var errors = [];
     var valid, i, j;
     var stringified = JSON.stringify(value);
-    
+
     path = path || 'root';
-    
+
     // Work on a copy of the schema
     schema = $.extend(true,{},schema);
-    
+
     /*
      * Type Agnostic Validation
      */
-     
+
     // Version 3 `required`
     if(schema.required && schema.required === true) {
       if(typeof value === "undefined") {
@@ -401,7 +401,7 @@ $.jsoneditor.Validator = Class.extend({
           property: 'required',
           message: 'Property must be set'
         });
-        
+
         // Can't do any more validation at this point
         return errors;
       }
@@ -421,7 +421,7 @@ $.jsoneditor.Validator = Class.extend({
         return errors;
       }
     }
-    
+
     // `enum`
     if(schema.enum) {
       valid = false;
@@ -436,21 +436,21 @@ $.jsoneditor.Validator = Class.extend({
         });
       }
     }
-    
+
     // `extends` (version 3)
     if(schema.extends) {
       for(i=0; i<schema.extends.length; i++) {
         errors = errors.concat(this._validateSchema(schema.extends[i],value,path));
       }
     }
-    
+
     // `allOf`
     if(schema.allOf) {
       for(i=0; i<schema.allOf.length; i++) {
         errors = errors.concat(this._validateSchema(schema.allOf[i],value,path));
       }
     }
-    
+
     // `anyOf`
     if(schema.anyOf) {
       valid = false;
@@ -468,7 +468,7 @@ $.jsoneditor.Validator = Class.extend({
         });
       }
     }
-    
+
     // `oneOf`
     if(schema.oneOf) {
       valid = 0;
@@ -479,12 +479,12 @@ $.jsoneditor.Validator = Class.extend({
         if(!tmp.length) {
           valid++;
         }
-        
+
         for(var j=0; j<tmp.length; j++) {
           tmp[j].path = path+'.oneOf['+i+']'+tmp[j].path.substr(path.length);
         }
         oneof_errors = oneof_errors.concat(tmp);
-        
+
       }
       if(valid !== 1) {
         errors.push({
@@ -496,7 +496,7 @@ $.jsoneditor.Validator = Class.extend({
         errors = errors.concat(oneof_errors);
       }
     }
-    
+
     // `not`
     if(schema.not) {
       if(!this._validateSchema(schema.not,value,path).length) {
@@ -507,7 +507,7 @@ $.jsoneditor.Validator = Class.extend({
         });
       }
     }
-    
+
     // `type` (both Version 3 and Version 4 support)
     if(schema.type) {
       // Union type
@@ -570,11 +570,11 @@ $.jsoneditor.Validator = Class.extend({
         }
       }
     }
-    
+
     /*
      * Type Specific Validation
      */
-    
+
     // Number Specific Validation
     if(typeof value === "number") {
       // `multipleOf` and `divisibleBy`
@@ -588,7 +588,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // `maximum`
       if(schema.maximum) {
         if(schema.exclusiveMaximum && value >= schema.maximum) {
@@ -606,7 +606,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // `minimum`
       if(schema.minimum) {
         if(schema.exclusiveMinimum && value <= schema.minimum) {
@@ -637,7 +637,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // `minLength`
       if(schema.minLength) {
         if((value+"").length < schema.minLength) {
@@ -648,7 +648,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // `pattern`
       if(schema.pattern) {
         if(!(new RegExp(schema.pattern)).test(value)) {
@@ -661,7 +661,7 @@ $.jsoneditor.Validator = Class.extend({
       }
     }
     // Array specific validation
-    else if(typeof value === "object" && value !== null && value instanceof Array) {    
+    else if(typeof value === "object" && value !== null && value instanceof Array) {
       // `items` and `additionalItems`
       if(schema.items) {
         // `items` is an array
@@ -704,7 +704,7 @@ $.jsoneditor.Validator = Class.extend({
           }
         }
       }
-      
+
       // `maxItems`
       if(schema.maxItems) {
         if(value.length > schema.maxItems) {
@@ -715,7 +715,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // `minItems`
       if(schema.minItems) {
         if(value.length < schema.minItems) {
@@ -726,7 +726,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // `uniqueItems`
       if(schema.uniqueItems) {
         var seen = {};
@@ -761,7 +761,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // `minProperties`
       if(schema.minProperties) {
         valid = 0;
@@ -777,7 +777,7 @@ $.jsoneditor.Validator = Class.extend({
           });
         }
       }
-      
+
       // Version 4 `required`
       if(schema.required && schema.required instanceof Array) {
         for(i=0; i<schema.required.length; i++) {
@@ -790,7 +790,7 @@ $.jsoneditor.Validator = Class.extend({
           }
         }
       }
-      
+
       // `properties`
       var validated_properties = {};
       if(schema.properties) {
@@ -800,14 +800,14 @@ $.jsoneditor.Validator = Class.extend({
           errors = errors.concat(this._validateSchema(schema.properties[i],value[i],path+'.'+i));
         }
       }
-      
+
       // `patternProperties`
       if(schema.patternProperties) {
         for(i in schema.patternProperties) {
           if(!schema.patternProperties.hasOwnProperty(i)) continue;
-          
+
           var regex = new RegExp(i);
-          
+
           // Check which properties match
           for(j in value) {
             if(!value.hasOwnProperty(j)) continue;
@@ -818,12 +818,12 @@ $.jsoneditor.Validator = Class.extend({
           }
         }
       }
-      
+
       // The no_additional_properties option currently doesn't work with extended schemas that use oneOf or anyOf
       if(typeof schema.additionalProperties === "undefined" && this.options.no_additional_properties && !schema.oneOf && !schema.anyOf) {
         schema.additionalProperties = false;
       }
-      
+
       // `additionalProperties`
       if(typeof schema.additionalProperties !== "undefined") {
         for(i in value) {
@@ -850,15 +850,15 @@ $.jsoneditor.Validator = Class.extend({
           }
         }
       }
-      
+
       // `dependencies`
       if(schema.dependencies) {
         for(i in schema.dependencies) {
           if(!schema.dependencies.hasOwnProperty(i)) continue;
-          
+
           // Doesn't need to meet the dependency
           if(typeof value[i] === "undefined") continue;
-          
+
           // Property dependency
           if(schema.dependencies[i] instanceof Array) {
             for(j=0; j<schema.dependencies[i].length; j++) {
@@ -878,12 +878,12 @@ $.jsoneditor.Validator = Class.extend({
         }
       }
     }
-    
+
     // Custom type validation
     $.each($.jsoneditor.custom_validators,function(i,validator) {
       errors = errors.concat(validator(schema,value,path));
     });
-    
+
     return errors;
   },
   _checkType: function(type, value) {
@@ -904,14 +904,109 @@ $.jsoneditor.Validator = Class.extend({
     }
   },
   expandSchema: function(schema) {
+    var self = this;
     var extended = schema;
-    
+    var i;
+
+    // Version 3 `type`
+    if(typeof schema.type === 'object') {
+      // Array of types
+      if(schema.type instanceof Array) {
+        $.each(schema.type, function(key,value) {
+          // Schema
+          if(typeof value === 'object') {
+            schema.type[key] = self.expandSchema(value);
+          }
+        });
+      }
+      // Schema
+      else {
+        schema.type = self.expandSchema(schema.type);
+      }
+    }
+    // Version 3 `disallow`
+    if(typeof schema.disallow === 'object') {
+      // Array of types
+      if(schema.disallow instanceof Array) {
+        $.each(schema.disallow, function(key,value) {
+          // Schema
+          if(typeof value === 'object') {
+            schema.disallow[key] = self.expandSchema(value);
+          }
+        });
+      }
+      // Schema
+      else {
+        schema.disallow = self.expandSchema(schema.disallow);
+      }
+    }
+    // Version 4 `anyOf`
+    if(schema.anyOf) {
+      $.each(schema.anyOf, function(key,value) {
+        schema.anyOf[key] = self.expandSchema(value);
+      })
+    }
+    // Version 4 `dependencies` (schema dependencies)
+    if(schema.dependencies) {
+      $.each(schema.dependencies,function(key,value) {
+        if(typeof value === "object" && !(value instanceof Array)) {
+          schema.dependencies[key] = self.expandSchema(value);
+        }
+      });
+    }
+    // `items`
+    if(schema.items) {
+      // Array of items
+      if(schema.items instanceof Array) {
+        $.each(schema.items, function(key,value) {
+          // Schema
+          if(typeof value === 'object') {
+            schema.items[key] = self.expandSchema(value);
+          }
+        });
+      }
+      // Schema
+      else {
+        schema.items = self.expandSchema(schema.items);
+      }
+    }
+    // `properties`
+    if(schema.properties) {
+      $.each(schema.properties,function(key,value) {
+        if(typeof value === "object" && !(value instanceof Array)) {
+          schema.properties[key] = self.expandSchema(value);
+        }
+      });
+    }
+    // `patternProperties`
+    if(schema.patternProperties) {
+      $.each(schema.patternProperties,function(key,value) {
+        if(typeof value === "object" && !(value instanceof Array)) {
+          schema.patternProperties[key] = self.expandSchema(value);
+        }
+      });
+    }
+    // Version 4 `not`
+    if(schema.not) {
+      schema.not = this.expandSchema(schema.not);
+    }
+    // `additionalProperties`
+    if(schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      schema.additionalProperties = self.expandSchema(schema.additionalProperties);
+    }
+    // `additionalItems`
+    if(schema.additionalItems && typeof schema.additionalItems === "object") {
+      schema.additionalItems = self.expandSchema(schema.additionalItems);
+    }
+
+    // allOf schemas should be merged into the parent
     if(schema.allOf) {
-      for(var i=0; i<schema.allOf.length; i++) {
+      for(i=0; i<schema.allOf.length; i++) {
         extended = this.extend(extended,this.expandSchema(schema.allOf[i]));
       }
       delete extended.allOf;
     }
+    // extends schemas should be merged into parent
     if(schema.extends) {
       // If extends is a schema
       if(!(schema.extends instanceof Array)) {
@@ -919,19 +1014,27 @@ $.jsoneditor.Validator = Class.extend({
       }
       // If extends is an array of schemas
       else {
-        for(var i=0; i<schema.extends.length; i++) {
+        for(i=0; i<schema.extends.length; i++) {
           extended = this.extend(extended,this.expandSchema(schema.extends[i]));
         }
       }
       delete extended.extends;
     }
-    
+    // parent should be merged into oneOf schemas
+    if(schema.oneOf) {
+      var tmp = $.extend(true,{},extended);
+      delete tmp.oneOf;
+      for(i=0; i<schema.oneOf.length; i++) {
+        extended.oneOf[i] = this.extend(this.expandSchema(schema.oneOf[i]),tmp);
+      }
+    }
+
     return extended;
   },
   extend: function(obj1, obj2) {
     obj1 = $.extend(true,{},obj1);
     obj2 = $.extend(true,{},obj2);
-    
+
     var self = this;
     var extended = {};
     $.each(obj1, function(prop,val) {
@@ -950,12 +1053,12 @@ $.jsoneditor.Validator = Class.extend({
           // Make sure we're dealing with arrays
           if(typeof val !== "object") val = [val];
           if(typeof obj2.type !== "object") obj2.type = [obj2.type];
-          
-          
+
+
           extended.type = val.filter(function(n) {
             return obj2.type.indexOf(n) !== -1
           });
-          
+
           // If there's only 1 type and it's a primitive, use a string instead of array
           if(extended.type.length === 1 && typeof extended.type[0] === "string") {
             extended.type = extended.type[0];
@@ -987,7 +1090,7 @@ $.jsoneditor.Validator = Class.extend({
         extended[prop] = val;
       }
     });
-    
+
     return extended;
   }
 });
