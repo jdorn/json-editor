@@ -49,7 +49,7 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this;
-    if(!this.getOption('compact',false)) this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.input_type = 'select';

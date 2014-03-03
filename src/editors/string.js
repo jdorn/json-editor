@@ -44,7 +44,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this;
-    if(!this.getOption('compact',false)) this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     // Select box
@@ -241,7 +241,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   /**
    * Re-calculates the value if needed
    */
-  onWatchedFieldChange: function() {
+  onWatchedFieldChange: function() {    
     var self = this;
     
     // If this editor needs to be rendered by a macro template
@@ -280,6 +280,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         this.setValue(select_options[0],false,true);
       }
     }
+    
+    this._super();
   },
   showValidationErrors: function(errors) {
     var self = this;

@@ -74,6 +74,8 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
 
     this.editors = [];
     this.validators = [];
+    var options = $("option",this.switcher);
+    var option = 0;
     $.each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
 
@@ -107,8 +109,19 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         parent: self.parent,
         required: true
       });
+      
+      self.editors[i].option = options.eq(option);
+      
+      var refreshHeaderText = function() {
+        if(self.editors[i].option) self.editors[i].option.text(self.editors[i].getHeaderText());
+      }
+      
+      holder.on('change.header_text',refreshHeaderText);
+      refreshHeaderText();
 
       if(i !== self.type) holder.hide();
+      
+      option++;
     });
 
     this.editor_holder.on('change set',function() {

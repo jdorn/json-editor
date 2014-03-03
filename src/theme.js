@@ -38,7 +38,7 @@ $.jsoneditor.AbstractTheme = Class.extend({
     return this.getFormInputLabel(text);
   },
   getHeader: function(text) {
-    return $("<h3>").text(text);
+    return $("<h3>").append(text);
   },
   getCheckbox: function() {
     return this.getFormInputField('checkbox');
@@ -150,7 +150,7 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   getTab: function(text) {
     return $("<div></div>")
-      .text(text)
+      .append(text)
       .css({
         border: '1px solid #ccc',
         borderWidth: '1px 0 1px 1px',

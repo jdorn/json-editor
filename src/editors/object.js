@@ -53,7 +53,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
     // If the object should be rendered as a div
     else {
-      this.title = this.getTheme().getHeader(this.getTitle()).appendTo(this.container);
+      this.header = $("<span>").text(this.getTitle());
+      this.title = this.getTheme().getHeader(this.header).appendTo(this.container);
       
       this.editjson_holder = this.theme.getTextareaInput().appendTo(this.container).hide().css({
         height: 100,

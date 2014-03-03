@@ -43,21 +43,24 @@ $.jsoneditor.AbstractEditor = Class.extend({
       });
     }
     
+    this.container.on('change set',function() {
+      self.watch_listener();
+    });
+    
     // Watched fields
     this.watched = {};
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
+    self.watch_listener_timer = 0;
+    this.watch_listener = function() {
+      window.clearTimeout(self.watch_listener_timer);
+      self.watch_listener_timer = window.setTimeout(function() {
+        if(self.refreshWatchedFieldValues()) {
+          self.onWatchedFieldChange();
+        }
+      });
+    };
     if(this.schema.watch) {
-      self.watch_listener_timer = 0;
-      this.watch_listener = function() {
-        window.clearTimeout(self.watch_listener_timer);
-        self.watch_listener_timer = window.setTimeout(function() {
-          if(!self.watched) return;
-          if(self.refreshWatchedFieldValues()) {
-            self.onWatchedFieldChange();
-          }
-        });
-      };
       $.each(this.schema.watch, function(name, path) {
         var path_parts;
         if(path instanceof Array) {
@@ -88,14 +91,17 @@ $.jsoneditor.AbstractEditor = Class.extend({
         root.on('set',self.watch_listener);
       });
     }
+    
+    // Dynamic header
+    if(this.schema.headerTemplate) {
+      this.header_template = $.jsoneditor.compileTemplate(this.schema.headerTemplate, this.template_engine);
+    }
 
     this.build();
     
     this.setValue(this.getDefault(), true);
-
-    if(this.watch_listener) {
-      this.watch_listener();
-    }
+    this.updateHeaderText();
+    this.watch_listener();
   },
   getButton: function(text, icon, title) {
     if(!this.iconlib) icon = null;
@@ -120,30 +126,37 @@ $.jsoneditor.AbstractEditor = Class.extend({
     return this.theme.setButtonText(button, text, icon, title);
   },
   refreshWatchedFieldValues: function() {
+    if(!this.watched_values) return;
     var watched = {};
     var changed = false;
     var self = this;
-    $.each(this.watched,function(name,attr) {
-      var obj = attr.root.data('editor').getValue();
-      var current_part = -1;
-      var val = null;
-      // Use "path.to.property" to get root['path']['to']['property']
-      while(1) {
-        current_part++;
-        if(current_part >= attr.path.length) {
-          val = obj;
-          break;
-        }
+    
+    if(this.watched) {
+      $.each(this.watched,function(name,attr) {
+        var obj = attr.root.data('editor').getValue();
+        var current_part = -1;
+        var val = null;
+        // Use "path.to.property" to get root['path']['to']['property']
+        while(1) {
+          current_part++;
+          if(current_part >= attr.path.length) {
+            val = obj;
+            break;
+          }
 
-        if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
-          break;
-        }
+          if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
+            break;
+          }
 
-        obj = obj[attr.path[current_part]];
-      }
-      if(self.watched_values[name] !== val) changed = true;
-      watched[name] = val;
-    });
+          obj = obj[attr.path[current_part]];
+        }
+        if(self.watched_values[name] !== val) changed = true;
+        watched[name] = val;
+      });
+    }
+    
+    watched.self = this.getValue();
+    if(this.watched_values.self !== watched.self) changed = true;
     
     this.watched_values = watched;
     
@@ -152,8 +165,27 @@ $.jsoneditor.AbstractEditor = Class.extend({
   getWatchedFieldValues: function() {
     return this.watched_values;
   },
+  updateHeaderText: function() {
+    if(this.header) this.header.text(this.getHeaderText());
+  },
+  getHeaderText: function() {
+    return this.header_text || this.getTitle();
+  },
   onWatchedFieldChange: function() {
-    
+    if(this.header_template) {
+      var vars = $.extend(true,this.getWatchedFieldValues(),{
+        key: this.key,
+        i: this.key,
+        title: this.getTitle()
+      });
+      var header_text = this.header_template(vars);
+      
+      if(header_text !== this.header_text) {
+        this.header_text = header_text;
+        this.updateHeaderText();
+        this.container.trigger('change.header_text');
+      }
+    }
   },
   addProperty: function() {
     this.property_removed = false;
@@ -190,6 +222,8 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.watched = null;
     this.watched_values = null;
     this.watch_listener = null;
+    this.header_text = null;
+    this.header_template = null;
     this.value = null;
     this.container = null;
     this.jsoneditor = null;

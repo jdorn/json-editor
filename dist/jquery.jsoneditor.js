@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.40 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.41 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-02-12
+ * Date: 2014-03-02
  */
 
 /**
@@ -1140,21 +1140,24 @@ $.jsoneditor.AbstractEditor = Class.extend({
       });
     }
     
+    this.container.on('change set',function() {
+      self.watch_listener();
+    });
+    
     // Watched fields
     this.watched = {};
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
+    self.watch_listener_timer = 0;
+    this.watch_listener = function() {
+      window.clearTimeout(self.watch_listener_timer);
+      self.watch_listener_timer = window.setTimeout(function() {
+        if(self.refreshWatchedFieldValues()) {
+          self.onWatchedFieldChange();
+        }
+      });
+    };
     if(this.schema.watch) {
-      self.watch_listener_timer = 0;
-      this.watch_listener = function() {
-        window.clearTimeout(self.watch_listener_timer);
-        self.watch_listener_timer = window.setTimeout(function() {
-          if(!self.watched) return;
-          if(self.refreshWatchedFieldValues()) {
-            self.onWatchedFieldChange();
-          }
-        });
-      };
       $.each(this.schema.watch, function(name, path) {
         var path_parts;
         if(path instanceof Array) {
@@ -1185,14 +1188,17 @@ $.jsoneditor.AbstractEditor = Class.extend({
         root.on('set',self.watch_listener);
       });
     }
+    
+    // Dynamic header
+    if(this.schema.headerTemplate) {
+      this.header_template = $.jsoneditor.compileTemplate(this.schema.headerTemplate, this.template_engine);
+    }
 
     this.build();
     
     this.setValue(this.getDefault(), true);
-
-    if(this.watch_listener) {
-      this.watch_listener();
-    }
+    this.updateHeaderText();
+    this.watch_listener();
   },
   getButton: function(text, icon, title) {
     if(!this.iconlib) icon = null;
@@ -1217,30 +1223,37 @@ $.jsoneditor.AbstractEditor = Class.extend({
     return this.theme.setButtonText(button, text, icon, title);
   },
   refreshWatchedFieldValues: function() {
+    if(!this.watched_values) return;
     var watched = {};
     var changed = false;
     var self = this;
-    $.each(this.watched,function(name,attr) {
-      var obj = attr.root.data('editor').getValue();
-      var current_part = -1;
-      var val = null;
-      // Use "path.to.property" to get root['path']['to']['property']
-      while(1) {
-        current_part++;
-        if(current_part >= attr.path.length) {
-          val = obj;
-          break;
-        }
+    
+    if(this.watched) {
+      $.each(this.watched,function(name,attr) {
+        var obj = attr.root.data('editor').getValue();
+        var current_part = -1;
+        var val = null;
+        // Use "path.to.property" to get root['path']['to']['property']
+        while(1) {
+          current_part++;
+          if(current_part >= attr.path.length) {
+            val = obj;
+            break;
+          }
 
-        if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
-          break;
-        }
+          if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
+            break;
+          }
 
-        obj = obj[attr.path[current_part]];
-      }
-      if(self.watched_values[name] !== val) changed = true;
-      watched[name] = val;
-    });
+          obj = obj[attr.path[current_part]];
+        }
+        if(self.watched_values[name] !== val) changed = true;
+        watched[name] = val;
+      });
+    }
+    
+    watched.self = this.getValue();
+    if(this.watched_values.self !== watched.self) changed = true;
     
     this.watched_values = watched;
     
@@ -1249,8 +1262,27 @@ $.jsoneditor.AbstractEditor = Class.extend({
   getWatchedFieldValues: function() {
     return this.watched_values;
   },
+  updateHeaderText: function() {
+    if(this.header) this.header.text(this.getHeaderText());
+  },
+  getHeaderText: function() {
+    return this.header_text || this.getTitle();
+  },
   onWatchedFieldChange: function() {
-    
+    if(this.header_template) {
+      var vars = $.extend(true,this.getWatchedFieldValues(),{
+        key: this.key,
+        i: this.key,
+        title: this.getTitle()
+      });
+      var header_text = this.header_template(vars);
+      
+      if(header_text !== this.header_text) {
+        this.header_text = header_text;
+        this.updateHeaderText();
+        this.container.trigger('change.header_text');
+      }
+    }
   },
   addProperty: function() {
     this.property_removed = false;
@@ -1287,6 +1319,8 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.watched = null;
     this.watched_values = null;
     this.watch_listener = null;
+    this.header_text = null;
+    this.header_template = null;
     this.value = null;
     this.container = null;
     this.jsoneditor = null;
@@ -1434,7 +1468,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this;
-    if(!this.getOption('compact',false)) this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     // Select box
@@ -1631,7 +1665,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   /**
    * Re-calculates the value if needed
    */
-  onWatchedFieldChange: function() {
+  onWatchedFieldChange: function() {    
     var self = this;
     
     // If this editor needs to be rendered by a macro template
@@ -1670,6 +1704,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
         this.setValue(select_options[0],false,true);
       }
     }
+    
+    this._super();
   },
   showValidationErrors: function(errors) {
     var self = this;
@@ -1764,7 +1800,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
     // If the object should be rendered as a div
     else {
-      this.title = this.getTheme().getHeader(this.getTitle()).appendTo(this.container);
+      this.header = $("<span>").text(this.getTitle());
+      this.title = this.getTheme().getHeader(this.header).appendTo(this.container);
       
       this.editjson_holder = this.theme.getTextareaInput().appendTo(this.container).hide().css({
         height: 100,
@@ -2141,7 +2178,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
 
     if(!this.getOption('compact',false)) {
-      this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
+      this.header = $("<span>").text(this.getTitle());
+      this.title = this.theme.getHeader(this.header).appendTo(this.container);
       this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
       if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.container);
       this.error_holder = $("<div></div>").appendTo(this.container);
@@ -2167,6 +2205,9 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
 
     this.row_holder.on('change',function() {
       self.refreshValue();
+    });
+    this.row_holder.on('change.header_text',function() {
+      self.refreshTabs();
     });
     
     // Add controls
@@ -2310,6 +2351,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     $.each(this.rows, function(i,row) {
       if(!row.tab) return;
 
+      row.tab_text.text(row.getHeaderText());
+
       if(row.tab === self.active_tab) {
         self.theme.markTabActive(row.tab);
         row.container.show();
@@ -2442,7 +2485,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.rows[i] = this.getElementEditor(i);
 
     if(self.tabs_holder) {
-      self.rows[i].tab = self.theme.getTab(this.getItemInfo(i).title+" "+i)
+      self.rows[i].tab_text = $("<span>");
+      self.rows[i].tab = self.theme.getTab(self.rows[i].tab_text)
         .on('click', function() {
           self.active_tab = self.rows[i].tab;
           self.refreshTabs();
@@ -2529,6 +2573,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     }
 
     if(value) self.rows[i].setValue(value);
+    self.refreshTabs();
   },
   addControls: function() {
     var self = this;
@@ -3158,6 +3203,8 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
 
     this.editors = [];
     this.validators = [];
+    var options = $("option",this.switcher);
+    var option = 0;
     $.each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
 
@@ -3191,8 +3238,19 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         parent: self.parent,
         required: true
       });
+      
+      self.editors[i].option = options.eq(option);
+      
+      var refreshHeaderText = function() {
+        if(self.editors[i].option) self.editors[i].option.text(self.editors[i].getHeaderText());
+      }
+      
+      holder.on('change.header_text',refreshHeaderText);
+      refreshHeaderText();
 
       if(i !== self.type) holder.hide();
+      
+      option++;
     });
 
     this.editor_holder.on('change set',function() {
@@ -3272,7 +3330,8 @@ $.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var container = this.getContainer();
-    this.title = this.getTheme().getHeader(this.getTitle()).appendTo(this.container);
+    this.header = $("<span>").text(this.getTitle());
+    this.title = this.getTheme().getHeader(this.header).appendTo(this.container);
 
     this.options.enum_titles = this.options.enum_titles || [];
 
@@ -3429,7 +3488,7 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this;
-    if(!this.getOption('compact',false)) this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.input_type = 'select';
@@ -3533,7 +3592,7 @@ $.jsoneditor.AbstractTheme = Class.extend({
     return this.getFormInputLabel(text);
   },
   getHeader: function(text) {
-    return $("<h3>").text(text);
+    return $("<h3>").append(text);
   },
   getCheckbox: function() {
     return this.getFormInputField('checkbox');
@@ -3645,7 +3704,7 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   getTab: function(text) {
     return $("<div></div>")
-      .text(text)
+      .append(text)
       .css({
         border: '1px solid #ccc',
         borderWidth: '1px 0 1px 1px',
@@ -3760,7 +3819,7 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     return $("<div class='tabbable tabs-left'><ul class='nav nav-tabs'></ul><div class='tab-content'></div></div>");
   },
   getTab: function(text) {
-    return $("<li><a href='#'>"+text+"</a></li>");
+    return $("<li></li>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
     return $("> .tab-content",tab_holder)
@@ -3850,7 +3909,7 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
     return holder;
   },
   getTab: function(text) {
-    return $("<a href='#' class='list-group-item'>").text(text);
+    return $("<a href='#' class='list-group-item'>").append(text);
   },
   markTabActive: function(tab) {
     tab.addClass('active');
@@ -3924,7 +3983,7 @@ $.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
     return $("<div class='row'><dl class='tabs vertical two columns'></dl><div class='tabs-content ten columns'></div></div>");
   },
   getTab: function(text) {
-    return $("<dd><a href='#'>"+text+"</a></dd>");
+    return $("<dd></dd>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
     return $("> .tabs-content",tab_holder)
@@ -3973,7 +4032,7 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
     return $("<div><dl class='tabs vertical'></dl><div class='tabs-content'></div></div>");
   },
   getTab: function(text) {
-    return $("<dd><a href='#'>"+text+"</a></dd>");
+    return $("<dd></dd>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
     return $("> .tabs-content",tab_holder)

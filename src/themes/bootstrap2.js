@@ -71,7 +71,7 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     return $("<div class='tabbable tabs-left'><ul class='nav nav-tabs'></ul><div class='tab-content'></div></div>");
   },
   getTab: function(text) {
-    return $("<li><a href='#'>"+text+"</a></li>");
+    return $("<li></li>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
     return $("> .tab-content",tab_holder)

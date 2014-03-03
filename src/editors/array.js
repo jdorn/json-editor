@@ -23,7 +23,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
 
     if(!this.getOption('compact',false)) {
-      this.title = this.theme.getHeader(this.getTitle()).appendTo(this.container);
+      this.header = $("<span>").text(this.getTitle());
+      this.title = this.theme.getHeader(this.header).appendTo(this.container);
       this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
       if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.container);
       this.error_holder = $("<div></div>").appendTo(this.container);
@@ -49,6 +50,9 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
 
     this.row_holder.on('change',function() {
       self.refreshValue();
+    });
+    this.row_holder.on('change.header_text',function() {
+      self.refreshTabs();
     });
     
     // Add controls
@@ -192,6 +196,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     $.each(this.rows, function(i,row) {
       if(!row.tab) return;
 
+      row.tab_text.text(row.getHeaderText());
+
       if(row.tab === self.active_tab) {
         self.theme.markTabActive(row.tab);
         row.container.show();
@@ -324,7 +330,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.rows[i] = this.getElementEditor(i);
 
     if(self.tabs_holder) {
-      self.rows[i].tab = self.theme.getTab(this.getItemInfo(i).title+" "+i)
+      self.rows[i].tab_text = $("<span>");
+      self.rows[i].tab = self.theme.getTab(self.rows[i].tab_text)
         .on('click', function() {
           self.active_tab = self.rows[i].tab;
           self.refreshTabs();
@@ -411,6 +418,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     }
 
     if(value) self.rows[i].setValue(value);
+    self.refreshTabs();
   },
   addControls: function() {
     var self = this;

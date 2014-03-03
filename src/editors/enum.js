@@ -15,7 +15,8 @@ $.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var container = this.getContainer();
-    this.title = this.getTheme().getHeader(this.getTitle()).appendTo(this.container);
+    this.header = $("<span>").text(this.getTitle());
+    this.title = this.getTheme().getHeader(this.header).appendTo(this.container);
 
     this.options.enum_titles = this.options.enum_titles || [];
 

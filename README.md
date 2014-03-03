@@ -412,7 +412,7 @@ Dependencies
 ------------------
 Sometimes, it's necessary to have one field's value depend on anothers.  
 
-The `dependencies` keyword from the JSON Schema specification is not nrealy flexible enough to handle most use cases, 
+The `dependencies` keyword from the JSON Schema specification is not nearly flexible enough to handle most use cases, 
 so JSON Editor introduces a couple custom keywords that help in this regard.
 
 The first step is to have a field "watch" other fields for changes.
@@ -609,6 +609,30 @@ Here's an example where `possible_colors` is an array of objects instead of stri
 
 In the `enumValue` template, `item` refers to the array element.  The variable `i` is also available, which is the zero-based index.
 
+### Dynamic Headers
+
+The `title` keyword of a schema is used to add user friendly headers to the editing UI.  Sometimes though, dynamic headers, which change based on other fields, are helpful.
+
+Consider the example of an array of children.  Without dynamic headers, the UI for the array elements would show `Child 0`, `Child 1`, etc..  
+It would be much nicer if the headers could be dynamic and incorporate information about the children, such as `0 - John (age 9)`, `1 - Sarah (age 11)`.
+
+To accomplish this, use the `headerTemplate` property.  All of the watched variables are passed into this template, along with the static title `title` (e.g. "Child"), the index `i` (e.g. "0" and "1"), and the field's value `self` (e.g. `{"name": "John", "age": 9}`).
+
+```js+jinja
+{
+  "type": "array",
+  "title": "Children",
+  "items": {
+    "type": "object",
+    "title": "Child",
+    "headerTemplate": "{{ i }} - {{ self.name }} (age {{ self.age }})",
+    "properties": {
+      "name": { "type": "string" },
+      "age": { "type": "integer" }
+    }
+  }
+}
+```
 
 ### Custom Template Engines
 

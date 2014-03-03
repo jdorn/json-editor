@@ -69,7 +69,7 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
     return holder;
   },
   getTab: function(text) {
-    return $("<a href='#' class='list-group-item'>").text(text);
+    return $("<a href='#' class='list-group-item'>").append(text);
   },
   markTabActive: function(tab) {
     tab.addClass('active');
