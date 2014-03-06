@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.41 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.42 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-03-02
+ * Date: 2014-03-06
  */
 
 /**
@@ -1265,8 +1265,10 @@ $.jsoneditor.AbstractEditor = Class.extend({
   updateHeaderText: function() {
     if(this.header) this.header.text(this.getHeaderText());
   },
-  getHeaderText: function() {
-    return this.header_text || this.getTitle();
+  getHeaderText: function(title_only) {
+    if(this.header_text) return this.header_text;
+    else if(title_only) return this.schema.title;
+    else return this.getTitle();
   },
   onWatchedFieldChange: function() {
     if(this.header_template) {
@@ -1373,6 +1375,27 @@ $.jsoneditor.AbstractEditor = Class.extend({
     var disp = [];
     var used = {};
     
+    // Determine how many times each attribute name is used.
+    // This helps us pick the most distinct display text for the schemas.
+    $.each(arr,function(i,el) {
+      if(el.title) {
+        used[el.title] = used[el.title] || 0;
+        used[el.title]++;
+      }
+      if(el.description) {
+        used[el.description] = used[el.description] || 0;
+        used[el.description]++;
+      }
+      if(el.format) {
+        used[el.format] = used[el.format] || 0;
+        used[el.format]++;
+      }
+      if(el.type) {
+        used[el.type] = used[el.type] || 0;
+        used[el.type]++;
+      }
+    });
+    
     // Determine display text for each element of the array
     $.each(arr,function(i,el)  {
       var name;
@@ -1380,19 +1403,16 @@ $.jsoneditor.AbstractEditor = Class.extend({
       // If it's a simple string
       if(typeof el === "string") name = el;
       // Object
-      else if(el.title && !used[el.title]) name = el.title;
-      else if(el.format && !used[el.format]) name = el.format;
-      else if(el.description && !used[el.description]) name = el.descripton;
-      else if(el.type && !used[el.type]) name = el.type;
+      else if(el.title && used[el.title]<=1) name = el.title;
+      else if(el.format && used[el.format]<=1) name = el.format;
+      else if(el.type && used[el.type]<=1) name = el.type;
+      else if(el.description && used[el.description]<=1) name = el.descripton;
       else if(el.title) name = el.title;
       else if(el.format) name = el.format;
-      else if(el.description) name = el.description;
       else if(el.type) name = el.type;
+      else if(el.description) name = el.description;
       else if(JSON.stringify(el).length < 50) name = JSON.stringify(el);
       else name = "type";
-      
-      used[name] = used[name] || 0;
-      used[name]++;
       
       disp.push(name);
     });
@@ -3241,12 +3261,9 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       
       self.editors[i].option = options.eq(option);
       
-      var refreshHeaderText = function() {
-        if(self.editors[i].option) self.editors[i].option.text(self.editors[i].getHeaderText());
-      }
-      
-      holder.on('change.header_text',refreshHeaderText);
-      refreshHeaderText();
+      holder.on('change.header_text',function() {
+        self.refreshHeaderText();
+      });
 
       if(i !== self.type) holder.hide();
       
@@ -3256,8 +3273,19 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editor_holder.on('change set',function() {
       self.refreshValue();
     });
+    this.refreshHeaderText();
 
     this.switcher.val(this.display_text[this.type]);
+  },
+  refreshHeaderText: function() {
+    var schemas = [];
+    $.each(this.editors, function(i,editor) {
+      schemas.push(editor.schema);
+    });
+    var display_text = this.getDisplayText(schemas);
+    $.each(this.editors, function(i,editor) {
+      if(editor.option) editor.option.text(display_text[i]);
+    });
   },
   refreshValue: function() {
     this.value = this.editors[this.type].getValue();

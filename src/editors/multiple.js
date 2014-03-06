@@ -112,12 +112,9 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       
       self.editors[i].option = options.eq(option);
       
-      var refreshHeaderText = function() {
-        if(self.editors[i].option) self.editors[i].option.text(self.editors[i].getHeaderText());
-      }
-      
-      holder.on('change.header_text',refreshHeaderText);
-      refreshHeaderText();
+      holder.on('change.header_text',function() {
+        self.refreshHeaderText();
+      });
 
       if(i !== self.type) holder.hide();
       
@@ -127,8 +124,19 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editor_holder.on('change set',function() {
       self.refreshValue();
     });
+    this.refreshHeaderText();
 
     this.switcher.val(this.display_text[this.type]);
+  },
+  refreshHeaderText: function() {
+    var schemas = [];
+    $.each(this.editors, function(i,editor) {
+      schemas.push(editor.schema);
+    });
+    var display_text = this.getDisplayText(schemas);
+    $.each(this.editors, function(i,editor) {
+      if(editor.option) editor.option.text(display_text[i]);
+    });
   },
   refreshValue: function() {
     this.value = this.editors[this.type].getValue();
