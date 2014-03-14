@@ -9,9 +9,15 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     });
   },
   afterInputReady: function(input) {
+    if(input.data('control-group')) {
+      return;
+    }
+    input.data('control-group',input.closest('.control-group'));
+    input.data('controls',input.closest('controls'));
+
     if(input.closest('.compact').length) {
-      input.closest('.control-group').removeClass('control-group');
-      input.closest('.controls').removeClass('controls');
+      input.data('control-group').removeClass('control-group');
+      input.data('controls').removeClass('controls');
       input.css('margin-bottom',0);
     }
 
@@ -59,13 +65,20 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     });
   },
   addInputError: function(input,text) {
-    var controls = $('.controls',input.closest('.control-group').addClass('error'));
-    var errmsg = $('.errormsg',controls);
-    if(!errmsg.length) errmsg = $("<p class='help-block errormsg'>").appendTo(controls);
+    if(!input.data('control-group')) return;
+    input.data('control-group').addClass('error');
+    var errmsg = input.data('errmsg');
+    if(!errmsg) {
+      errmsg = $("<p class='help-block errormsg'>").appendTo(input.data('controls'));
+      input.data('errmsg',errmsg);
+    }
+
     errmsg.text(text);
   },
   removeInputError: function(input) {
-    $('.errormsg',input.closest('.control-group').removeClass('error')).remove();
+    if(!input.data('errmsg')) return;
+    input.data('errmsg').remove();
+    input.data('control-group').removeClass('error');
   },
   getTabHolder: function() {
     return $("<div class='tabbable tabs-left'><ul class='nav nav-tabs'></ul><div class='tab-content'></div></div>");

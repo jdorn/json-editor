@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.44 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.45 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-03-13
+ * Date: 2014-03-14
  */
 
 /**
@@ -284,13 +284,13 @@ $.jsoneditor.Validator = Class.extend({
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
         self.refs[ref].push(function() {
-          schema = $.extend(true,{},self.refs[ref],schema);
+          schema = $.extend(true,{},schema,self.refs[ref],schema);
           callback(schema);
         });
       }
       // If this reference has already been loaded
       else if(self.refs[ref]) {
-        schema = $.extend(true,{},self.refs[ref],schema);
+        schema = $.extend(true,{},schema,self.refs[ref],schema);
         callback(schema);
       }
       // Otherwise, it needs to be loaded via ajax
@@ -304,7 +304,7 @@ $.jsoneditor.Validator = Class.extend({
           self._getRefs(response, function(ref_schema) {
             var list = self.refs[ref];
             self.refs[ref] = ref_schema;
-            schema = $.extend(true,{},self.refs[ref],schema);
+            schema = $.extend(true,{},schema,self.refs[ref],schema);
             callback(schema);
 
             // If anything is waiting on this to load
@@ -3843,9 +3843,15 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     });
   },
   afterInputReady: function(input) {
+    if(input.data('control-group')) {
+      return;
+    }
+    input.data('control-group',input.closest('.control-group'));
+    input.data('controls',input.closest('controls'));
+
     if(input.closest('.compact').length) {
-      input.closest('.control-group').removeClass('control-group');
-      input.closest('.controls').removeClass('controls');
+      input.data('control-group').removeClass('control-group');
+      input.data('controls').removeClass('controls');
       input.css('margin-bottom',0);
     }
 
@@ -3893,13 +3899,20 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     });
   },
   addInputError: function(input,text) {
-    var controls = $('.controls',input.closest('.control-group').addClass('error'));
-    var errmsg = $('.errormsg',controls);
-    if(!errmsg.length) errmsg = $("<p class='help-block errormsg'>").appendTo(controls);
+    if(!input.data('control-group')) return;
+    input.data('control-group').addClass('error');
+    var errmsg = input.data('errmsg');
+    if(!errmsg) {
+      errmsg = $("<p class='help-block errormsg'>").appendTo(input.data('controls'));
+      input.data('errmsg',errmsg);
+    }
+
     errmsg.text(text);
   },
   removeInputError: function(input) {
-    $('.errormsg',input.closest('.control-group').removeClass('error')).remove();
+    if(!input.data('errmsg')) return;
+    input.data('errmsg').remove();
+    input.data('control-group').removeClass('error');
   },
   getTabHolder: function() {
     return $("<div class='tabbable tabs-left'><ul class='nav nav-tabs'></ul><div class='tab-content'></div></div>");
