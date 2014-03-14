@@ -61,7 +61,6 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       self.refreshValue();
     });
 
-
     // Add controls
     this.addControls();
   },
@@ -145,6 +144,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     var serialized = JSON.stringify(value);
     if(serialized === this.serialized) return;
 
+    var numrows_changed = false;
+
     var self = this;
     $.each(value,function(i,val) {
       if(self.rows[i]) {
@@ -153,6 +154,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       }
       else {
         self.addRow(val);
+        numrows_changed = true;
       }
     });
 
@@ -164,22 +166,23 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       self.rows[j].destroy();
       holder.remove();
       self.rows[j] = null;
+      numrows_changed = true;
     }
     self.rows = self.rows.slice(0,value.length);
 
     self.refreshValue();
+    if(numrows_changed) self.refreshRowButtons();
     
     self.container.trigger('set');
 
     // TODO: sortable
   },
-  refreshValue: function() {
+  refreshRowButtons: function() {
     var self = this;
-    this.value = [];
-
+    
     // If we currently have minItems items in the array
     var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
-
+    
     $.each(this.rows,function(i,editor) {
       // Hide the move down button for the last row
       if(i === self.rows.length - 1) {
@@ -196,12 +199,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       else {
         editor.delete_button.show();
       }
-
-      // Get the value for this editor
-      self.value[i] = editor.getValue();
     });
-    this.serialized = JSON.stringify(this.value);
-
+  
     if(!this.value.length) {
       this.delete_last_row_button.hide();
       this.remove_all_rows_button.hide();
@@ -242,6 +241,16 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     else {
       this.add_row_button.show();
     }
+  },
+  refreshValue: function() {
+    var self = this;
+    this.value = [];
+
+    $.each(this.rows,function(i,editor) {
+      // Get the value for this editor
+      self.value[i] = editor.getValue();
+    });
+    this.serialized = JSON.stringify(this.value);
   },
   addRow: function(value) {
     var self = this;
@@ -331,6 +340,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       .on('click',function() {
         self.addRow();
         self.refreshValue();
+        self.refreshRowButtons();
         self.container.trigger('change');
       })
       .appendTo(self.controls);

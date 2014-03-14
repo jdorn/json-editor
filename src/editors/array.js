@@ -52,8 +52,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     this.row_holder.on('change',function() {
       self.refreshValue();
     });
-    this.row_holder.on('change.header_text',function() {
-      self.refreshTabs();
+    this.row_holder.on('change_header_text',function() {
+      self.refreshTabs(true);
     });
     
     // Add controls
@@ -202,20 +202,23 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       return this.schema.maxItems || Infinity;
     }
   },
-  refreshTabs: function() {
+  refreshTabs: function(refresh_headers) {
     var self = this;
     $.each(this.rows, function(i,row) {
       if(!row.tab) return;
 
-      row.tab_text.text(row.getHeaderText());
-
-      if(row.tab === self.active_tab) {
-        self.theme.markTabActive(row.tab);
-        row.container.show();
+      if(refresh_headers) {
+        row.tab_text.text(row.getHeaderText());
       }
       else {
-        self.theme.markTabInactive(row.tab);
-        row.container.hide();
+        if(row.tab === self.active_tab) {
+          self.theme.markTabActive(row.tab);
+          row.container.show();
+        }
+        else {
+          self.theme.markTabInactive(row.tab);
+          row.container.hide();
+        }
       }
     });
   },
@@ -282,67 +285,74 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   },
   refreshValue: function() {
     var self = this;
+    var oldi = this.value? this.value.length : 0;
     this.value = [];
 
-    // If we currently have minItems items in the array
-    var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
-
     $.each(this.rows,function(i,editor) {
-      // Hide the move down button for the last row
-      if(i === self.rows.length - 1) {
-        editor.movedown_button.hide();
-      }
-      else {
-        editor.movedown_button.show();
-      }
-
-      // Hide the delete button if we have minItems items
-      if(minItems) {
-        editor.delete_button.hide();
-      }
-      else {
-        editor.delete_button.show();
-      }
-
       // Get the value for this editor
       self.value[i] = editor.getValue();
     });
-    this.serialized = JSON.stringify(this.value);
     
-    if(!this.value.length) {
-      this.delete_last_row_button.hide();
-      this.remove_all_rows_button.hide();
-    }
-    else if(this.value.length === 1) {      
-      this.remove_all_rows_button.hide();  
+    if(oldi !== this.value.length) {
+      // If we currently have minItems items in the array
+      var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
+      
+      $.each(this.rows,function(i,editor) {
+        // Hide the move down button for the last row
+        if(i === self.rows.length - 1) {
+          editor.movedown_button.hide();
+        }
+        else {
+          editor.movedown_button.show();
+        }
 
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems) {
+        // Hide the delete button if we have minItems items
+        if(minItems) {
+          editor.delete_button.hide();
+        }
+        else {
+          editor.delete_button.show();
+        }
+
+        // Get the value for this editor
+        self.value[i] = editor.getValue();
+      });
+      
+      if(!this.value.length) {
         this.delete_last_row_button.hide();
+        this.remove_all_rows_button.hide();
+      }
+      else if(this.value.length === 1) {      
+        this.remove_all_rows_button.hide();  
+
+        // If there are minItems items in the array, hide the delete button beneath the rows
+        if(minItems) {
+          this.delete_last_row_button.hide();
+        }
+        else {
+          this.delete_last_row_button.show();
+        }
       }
       else {
-        this.delete_last_row_button.show();
+        // If there are minItems items in the array, hide the delete button beneath the rows
+        if(minItems) {
+          this.delete_last_row_button.hide();
+          this.delete_last_row_button.hide();
+        }
+        else {
+          this.delete_last_row_button.show();
+          this.remove_all_rows_button.show();
+        }
       }
-    }
-    else {
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems) {
-        this.delete_last_row_button.hide();
-        this.delete_last_row_button.hide();
+
+      // If there are maxItems in the array, hide the add button beneath the rows
+      if(this.getMax() && this.getMax() <= this.rows.length) {
+        this.add_row_button.hide();
       }
       else {
-        this.delete_last_row_button.show();
-        this.remove_all_rows_button.show();
-      }
+        this.add_row_button.show();
+      } 
     }
-
-    // If there are maxItems in the array, hide the add button beneath the rows
-    if(this.getMax() && this.getMax() <= this.rows.length) {
-      this.add_row_button.hide();
-    }
-    else {
-      this.add_row_button.show();
-    } 
   },
   addRow: function(value) {
     var self = this;
@@ -352,7 +362,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.row_cache[i] = self.rows[i];
 
     if(self.tabs_holder) {
-      self.rows[i].tab_text = $("<span>");
+      self.rows[i].tab_text = $("<span>").text(self.rows[i].getHeaderText());
       self.rows[i].tab = self.theme.getTab(self.rows[i].tab_text)
         .on('click', function() {
           self.active_tab = self.rows[i].tab;

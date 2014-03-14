@@ -1,4 +1,4 @@
-/*! JSON Editor v0.4.43 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.4.44 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1148,10 +1148,12 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.watched = {};
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
-    self.watch_listener_timer = 0;
+    this.watch_listener_firing = false;
     this.watch_listener = function() {
-      window.clearTimeout(self.watch_listener_timer);
-      self.watch_listener_timer = window.setTimeout(function() {
+      if(self.watch_listener_firing) return;
+      self.watch_listener_firing = true;
+      window.requestAnimationFrame(function() {
+        self.watch_listener_firing = false;
         if(self.refreshWatchedFieldValues()) {
           self.onWatchedFieldChange();
         }
@@ -1282,7 +1284,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
       if(header_text !== this.header_text) {
         this.header_text = header_text;
         this.updateHeaderText();
-        this.container.trigger('change.header_text');
+        this.container.trigger('change_header_text');
       }
     }
   },
@@ -1557,7 +1559,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     if(this.getOption('compact')) this.container.addClass('compact');
 
-    if(this.schema.readOnly || this.schema.readonly) this.input.prop('disabled',true);
+    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.prop('disabled',true);
 
     this.input
       .on('change keyup',function(e) {
@@ -1911,6 +1913,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         else {
           self.editing_json = true;
           self.cancel_editjson_button.show();
+          self.editjson_holder.val(JSON.stringify(self.value,null,2));
           self.editjson_holder.show(300);
           self.setButtonText(self.editjson_button,'JSON','save','Save JSON');
         }
@@ -2064,9 +2067,6 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       self.value[i] = editor.getValue();
     });
     this.editors = new_editors;
-    this.serialized = JSON.stringify(this.value,null,2);
-    
-    if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(this.serialized);
     
     // See if we need to show/hide the add/remove property links
     if(typeof this.schema.minProperties !== "undefined") {
@@ -2092,9 +2092,6 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     value = value || {};
     
     if(typeof value !== "object" || value instanceof Array) value = {};
-    
-    var serialized = JSON.stringify(value,null,2);
-    if(serialized===this.serialized) return;
     
     // First, set the values for all of the defined properties
     $.each(this.editors, function(i,editor) {      
@@ -2234,8 +2231,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     this.row_holder.on('change',function() {
       self.refreshValue();
     });
-    this.row_holder.on('change.header_text',function() {
-      self.refreshTabs();
+    this.row_holder.on('change_header_text',function() {
+      self.refreshTabs(true);
     });
     
     // Add controls
@@ -2384,20 +2381,23 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       return this.schema.maxItems || Infinity;
     }
   },
-  refreshTabs: function() {
+  refreshTabs: function(refresh_headers) {
     var self = this;
     $.each(this.rows, function(i,row) {
       if(!row.tab) return;
 
-      row.tab_text.text(row.getHeaderText());
-
-      if(row.tab === self.active_tab) {
-        self.theme.markTabActive(row.tab);
-        row.container.show();
+      if(refresh_headers) {
+        row.tab_text.text(row.getHeaderText());
       }
       else {
-        self.theme.markTabInactive(row.tab);
-        row.container.hide();
+        if(row.tab === self.active_tab) {
+          self.theme.markTabActive(row.tab);
+          row.container.show();
+        }
+        else {
+          self.theme.markTabInactive(row.tab);
+          row.container.hide();
+        }
       }
     });
   },
@@ -2464,67 +2464,74 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   },
   refreshValue: function() {
     var self = this;
+    var oldi = this.value? this.value.length : 0;
     this.value = [];
 
-    // If we currently have minItems items in the array
-    var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
-
     $.each(this.rows,function(i,editor) {
-      // Hide the move down button for the last row
-      if(i === self.rows.length - 1) {
-        editor.movedown_button.hide();
-      }
-      else {
-        editor.movedown_button.show();
-      }
-
-      // Hide the delete button if we have minItems items
-      if(minItems) {
-        editor.delete_button.hide();
-      }
-      else {
-        editor.delete_button.show();
-      }
-
       // Get the value for this editor
       self.value[i] = editor.getValue();
     });
-    this.serialized = JSON.stringify(this.value);
     
-    if(!this.value.length) {
-      this.delete_last_row_button.hide();
-      this.remove_all_rows_button.hide();
-    }
-    else if(this.value.length === 1) {      
-      this.remove_all_rows_button.hide();  
+    if(oldi !== this.value.length) {
+      // If we currently have minItems items in the array
+      var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
+      
+      $.each(this.rows,function(i,editor) {
+        // Hide the move down button for the last row
+        if(i === self.rows.length - 1) {
+          editor.movedown_button.hide();
+        }
+        else {
+          editor.movedown_button.show();
+        }
 
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems) {
+        // Hide the delete button if we have minItems items
+        if(minItems) {
+          editor.delete_button.hide();
+        }
+        else {
+          editor.delete_button.show();
+        }
+
+        // Get the value for this editor
+        self.value[i] = editor.getValue();
+      });
+      
+      if(!this.value.length) {
         this.delete_last_row_button.hide();
+        this.remove_all_rows_button.hide();
+      }
+      else if(this.value.length === 1) {      
+        this.remove_all_rows_button.hide();  
+
+        // If there are minItems items in the array, hide the delete button beneath the rows
+        if(minItems) {
+          this.delete_last_row_button.hide();
+        }
+        else {
+          this.delete_last_row_button.show();
+        }
       }
       else {
-        this.delete_last_row_button.show();
+        // If there are minItems items in the array, hide the delete button beneath the rows
+        if(minItems) {
+          this.delete_last_row_button.hide();
+          this.delete_last_row_button.hide();
+        }
+        else {
+          this.delete_last_row_button.show();
+          this.remove_all_rows_button.show();
+        }
       }
-    }
-    else {
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems) {
-        this.delete_last_row_button.hide();
-        this.delete_last_row_button.hide();
+
+      // If there are maxItems in the array, hide the add button beneath the rows
+      if(this.getMax() && this.getMax() <= this.rows.length) {
+        this.add_row_button.hide();
       }
       else {
-        this.delete_last_row_button.show();
-        this.remove_all_rows_button.show();
-      }
+        this.add_row_button.show();
+      } 
     }
-
-    // If there are maxItems in the array, hide the add button beneath the rows
-    if(this.getMax() && this.getMax() <= this.rows.length) {
-      this.add_row_button.hide();
-    }
-    else {
-      this.add_row_button.show();
-    } 
   },
   addRow: function(value) {
     var self = this;
@@ -2534,7 +2541,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.row_cache[i] = self.rows[i];
 
     if(self.tabs_holder) {
-      self.rows[i].tab_text = $("<span>");
+      self.rows[i].tab_text = $("<span>").text(self.rows[i].getHeaderText());
       self.rows[i].tab = self.theme.getTab(self.rows[i].tab_text)
         .on('click', function() {
           self.active_tab = self.rows[i].tab;
@@ -2853,7 +2860,6 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       self.refreshValue();
     });
 
-
     // Add controls
     this.addControls();
   },
@@ -2937,6 +2943,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     var serialized = JSON.stringify(value);
     if(serialized === this.serialized) return;
 
+    var numrows_changed = false;
+
     var self = this;
     $.each(value,function(i,val) {
       if(self.rows[i]) {
@@ -2945,6 +2953,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       }
       else {
         self.addRow(val);
+        numrows_changed = true;
       }
     });
 
@@ -2956,22 +2965,23 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       self.rows[j].destroy();
       holder.remove();
       self.rows[j] = null;
+      numrows_changed = true;
     }
     self.rows = self.rows.slice(0,value.length);
 
     self.refreshValue();
+    if(numrows_changed) self.refreshRowButtons();
     
     self.container.trigger('set');
 
     // TODO: sortable
   },
-  refreshValue: function() {
+  refreshRowButtons: function() {
     var self = this;
-    this.value = [];
-
+    
     // If we currently have minItems items in the array
     var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
-
+    
     $.each(this.rows,function(i,editor) {
       // Hide the move down button for the last row
       if(i === self.rows.length - 1) {
@@ -2988,12 +2998,8 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       else {
         editor.delete_button.show();
       }
-
-      // Get the value for this editor
-      self.value[i] = editor.getValue();
     });
-    this.serialized = JSON.stringify(this.value);
-
+  
     if(!this.value.length) {
       this.delete_last_row_button.hide();
       this.remove_all_rows_button.hide();
@@ -3034,6 +3040,16 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     else {
       this.add_row_button.show();
     }
+  },
+  refreshValue: function() {
+    var self = this;
+    this.value = [];
+
+    $.each(this.rows,function(i,editor) {
+      // Get the value for this editor
+      self.value[i] = editor.getValue();
+    });
+    this.serialized = JSON.stringify(this.value);
   },
   addRow: function(value) {
     var self = this;
@@ -3123,6 +3139,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       .on('click',function() {
         self.addRow();
         self.refreshValue();
+        self.refreshRowButtons();
         self.container.trigger('change');
       })
       .appendTo(self.controls);
@@ -3302,7 +3319,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       
       self.editors[i].option = options.eq(option);
       
-      holder.on('change.header_text',function() {
+      holder.on('change_header_text',function() {
         self.refreshHeaderText();
       });
 

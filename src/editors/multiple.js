@@ -112,7 +112,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       
       self.editors[i].option = options.eq(option);
       
-      holder.on('change.header_text',function() {
+      holder.on('change_header_text',function() {
         self.refreshHeaderText();
       });
 

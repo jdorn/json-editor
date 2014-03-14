@@ -51,10 +51,12 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.watched = {};
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
-    self.watch_listener_timer = 0;
+    this.watch_listener_firing = false;
     this.watch_listener = function() {
-      window.clearTimeout(self.watch_listener_timer);
-      self.watch_listener_timer = window.setTimeout(function() {
+      if(self.watch_listener_firing) return;
+      self.watch_listener_firing = true;
+      window.requestAnimationFrame(function() {
+        self.watch_listener_firing = false;
         if(self.refreshWatchedFieldValues()) {
           self.onWatchedFieldChange();
         }
@@ -185,7 +187,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
       if(header_text !== this.header_text) {
         this.header_text = header_text;
         this.updateHeaderText();
-        this.container.trigger('change.header_text');
+        this.container.trigger('change_header_text');
       }
     }
   },
