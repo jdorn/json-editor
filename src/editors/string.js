@@ -6,6 +6,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     value = value || '';
     if(typeof value === "object") value = JSON.stringify(value);
     if(typeof value !== "string") value = ""+value;
+    if(value === this.serialized) return;
 
     if(!from_template && value) this.last_set = value;
 
@@ -215,6 +216,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
   refreshValue: function() {
     this.value = this.input.val();
     if(typeof this.value !== "string") this.value = '';
+    this.serialized = this.value;
   },
   destroy: function() {    
     // If using SCEditor, destroy the editor instance

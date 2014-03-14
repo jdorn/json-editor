@@ -20,6 +20,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     this.rows = [];
+    this.row_cache = [];
     var self = this;
 
     if(!this.getOption('compact',false)) {
@@ -156,32 +157,42 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     return ret;
   },
   destroy: function() {
-    this.empty();
+    this.empty(true);
     if(this.title) this.title.remove();
     if(this.description) this.description.remove();
     if(this.row_holder) this.row_holder.remove();
     if(this.controls) this.controls.remove();
     if(this.panel) this.panel.remove();
     
-    this.rows = this.title = this.description = this.row_holder = this.panel = this.controls = null;
+    this.rows = this.row_cache = this.title = this.description = this.row_holder = this.panel = this.controls = null;
 
     this._super();
   },
-  empty: function() {
+  empty: function(hard) {
     if(!this.rows) return;
     var self = this;
     $.each(this.rows,function(i,row) {
-      self.destroyRow(row);
+      if(hard) {
+        if(row.tab) row.tab.remove();
+        self.destroyRow(row,true);
+        self.row_cache[i] = null;
+      }
       self.rows[i] = null;
     });
     self.rows = [];
-
+    if(hard) self.row_cache = [];
   },
-  destroyRow: function(row) {
+  destroyRow: function(row,hard) {
     var holder = row.container;
-    if(row.tab) row.tab.remove();
-    row.destroy();
-    holder.remove();
+    if(hard) {
+      row.destroy();
+      holder.remove();
+      if(row.tab) row.tab.remove();
+    }
+    else {
+      if(row.tab) row.tab.hide();
+      holder.hide();
+    }
   },
   getMax: function() {
     if((this.schema.items instanceof Array) && this.schema.additionalItems == false) {
@@ -213,6 +224,9 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     value = value || [];
     
     if(!(value instanceof Array)) value = [value];
+    
+    var serialized = JSON.stringify(value);
+    if(serialized === this.serialized) return;
 
     // Make sure value has between minItems and maxItems items in it
     if(this.schema.minItems) {
@@ -229,6 +243,12 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       if(self.rows[i]) {
         // TODO: don't set the row's value if it hasn't changed
         self.rows[i].setValue(val);
+      }
+      else if(self.row_cache[i]) {
+        self.rows[i] = self.row_cache[i];
+        self.rows[i].setValue(val);
+        self.rows[i].container.show();
+        if(self.rows[i].tab) self.rows[i].tab.show();
       }
       else {
         self.addRow(val);
@@ -287,6 +307,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       // Get the value for this editor
       self.value[i] = editor.getValue();
     });
+    this.serialized = JSON.stringify(this.value);
     
     if(!this.value.length) {
       this.delete_last_row_button.hide();
@@ -328,6 +349,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var i = this.rows.length;
     
     self.rows[i] = this.getElementEditor(i);
+    self.row_cache[i] = self.rows[i];
 
     if(self.tabs_holder) {
       self.rows[i].tab_text = $("<span>");
@@ -449,8 +471,16 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())
       .on('click',function() {
-        self.addRow();
-        self.active_tab = self.rows[self.rows.length-1].tab;
+        var i = self.rows.length;
+        if(self.row_cache[i]) {
+          self.rows[i] = self.row_cache[i];
+          self.rows[i].container.show();
+          if(self.rows[i].tab) self.rows[i].tab.show();
+        }
+        else {
+          self.addRow();
+        }
+        self.active_tab = self.rows[i].tab;
         self.refreshTabs();
         self.refreshValue();
         self.container.trigger('change');

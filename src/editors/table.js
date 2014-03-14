@@ -141,6 +141,9 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     if(this.schema.maxItems && value.length > this.schema.maxItems) {
       value = value.slice(0,this.schema.maxItems);
     }
+    
+    var serialized = JSON.stringify(value);
+    if(serialized === this.serialized) return;
 
     var self = this;
     $.each(value,function(i,val) {
@@ -197,6 +200,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
       // Get the value for this editor
       self.value[i] = editor.getValue();
     });
+    this.serialized = JSON.stringify(this.value);
 
     if(!this.value.length) {
       this.delete_last_row_button.hide();

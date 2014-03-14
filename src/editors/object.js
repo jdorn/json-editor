@@ -265,6 +265,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   },
   refreshValue: function() {
     this.value = {};
+    this.serialized = '';
     var self = this;
     var props = 0;
     
@@ -294,8 +295,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       self.value[i] = editor.getValue();
     });
     this.editors = new_editors;
+    this.serialized = JSON.stringify(this.value,null,2);
     
-    if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(JSON.stringify(this.value,null,2));
+    if(!this.editing_json && this.editjson_holder) this.editjson_holder.val(this.serialized);
     
     // See if we need to show/hide the add/remove property links
     if(typeof this.schema.minProperties !== "undefined") {
@@ -321,6 +323,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     value = value || {};
     
     if(typeof value !== "object" || value instanceof Array) value = {};
+    
+    var serialized = JSON.stringify(value,null,2);
+    if(serialized===this.serialized) return;
     
     // First, set the values for all of the defined properties
     $.each(this.editors, function(i,editor) {      
