@@ -44,7 +44,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
     if(this.item_has_child_editors) {
       $.each(tmp.getChildEditors(), function(i,editor) {
-        self.header_row.append(self.theme.getTableHeaderCell().text(editor.getTitle()).attr('title',editor.schema.title));
+        self.header_row.append(self.theme.getTableHeaderCell().text(editor.getTitle()));
       });
     }
     else {

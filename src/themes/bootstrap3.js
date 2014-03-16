@@ -65,7 +65,7 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
   },
   getTabHolder: function() {
     var holder = this._super();
-    $("> .tabs",holder).addClass('list-group');
+    $(holder.get(0).children[0]).addClass('list-group');
     return holder;
   },
   getTab: function(text) {

@@ -63,9 +63,9 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   getRangeInput: function(min,max,step) {
     return $("<input type='range'>")
-      .attr('min',min)
-      .attr('max',max)
-      .attr('step',step);
+      .attr('min',min||0)
+      .attr('max',max||100)
+      .attr('step',step||1);
   },
   getFormInputField: function(type) {
     return $("<input type='"+type+"'>");
@@ -164,10 +164,10 @@ $.jsoneditor.AbstractTheme = Class.extend({
       });
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabControls: function(holder) {
-    return $("> .controls",holder);
+    return $(tab_holder.get(0).children[2]);
   },
   getTabContent: function() {
     return this.getIndentedPanel();
@@ -185,7 +185,7 @@ $.jsoneditor.AbstractTheme = Class.extend({
     });
   },
   addTab: function(holder, tab) {
-    $("> .tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   },
   addTabControls: function(tab_holder, controls) {
     tab_holder.append(controls);

@@ -91,26 +91,34 @@ $.jsoneditor.Validator = Class.extend({
       // Otherwise, it needs to be loaded via ajax
       else {
         if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
+      
+        var r = new XMLHttpRequest(); 
+        r.open("GET", ref, true);
+        r.onreadystatechange = function () {
+          if (r.readyState != 4) return; 
+          if(r.status === 200) {
+            var response = JSON.parse(r.responseText);
+            self.refs[ref] = [];
 
-        $.getJSON(ref,function(response) {
-          self.refs[ref] = [];
+            // Recursively expand this schema
+            self._getRefs(response, function(ref_schema) {
+              var list = self.refs[ref];
+              self.refs[ref] = ref_schema;
+              schema = $.extend(true,{},schema,self.refs[ref],schema);
+              callback(schema);
 
-          // Recursively expand this schema
-          self._getRefs(response, function(ref_schema) {
-            var list = self.refs[ref];
-            self.refs[ref] = ref_schema;
-            schema = $.extend(true,{},schema,self.refs[ref],schema);
-            callback(schema);
-
-            // If anything is waiting on this to load
-            $.each(list,function(i,v) {
-              v();
+              // If anything is waiting on this to load
+              $.each(list,function(i,v) {
+                v();
+              });
             });
-          });
-        })
-          .fail(function() {
-            throw "Failed to fetch ref via ajax- "+ref;
-          })
+            return;
+          }
+          
+          // Request failed
+          throw "Failed to fetch ref via ajax- "+ref;
+        };
+        r.send();
       }
     }
     // Expand out any subschemas

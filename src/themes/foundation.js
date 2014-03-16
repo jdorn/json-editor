@@ -65,7 +65,7 @@ $.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
     return $("<dd></dd>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .tabs-content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabContent: function() {
     return $("<div class='content active'></div>").css({
@@ -79,7 +79,7 @@ $.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
     tab.removeClass('active');
   },
   addTab: function(holder, tab) {
-    $("> .tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   }
 });
 
@@ -114,7 +114,7 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
     return $("<dd></dd>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .tabs-content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabContent: function() {
     return $("<div class='content active'></div>").css({
@@ -128,6 +128,6 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
     tab.removeClass('active');
   },
   addTab: function(holder, tab) {
-    $("> .tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   }
 });

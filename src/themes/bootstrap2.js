@@ -87,7 +87,7 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     return $("<li></li>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .tab-content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabContent: function() {
     return $("<div class='tab-pane active'></div>");
@@ -99,6 +99,6 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     tab.removeClass('active');
   },
   addTab: function(holder, tab) {
-    $("> .nav-tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   }
 });

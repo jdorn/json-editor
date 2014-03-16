@@ -1,8 +1,8 @@
-/*! JSON Editor v0.4.45 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.0 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-03-14
+ * Date: 2014-03-16
  */
 
 /**
@@ -296,26 +296,34 @@ $.jsoneditor.Validator = Class.extend({
       // Otherwise, it needs to be loaded via ajax
       else {
         if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
+      
+        var r = new XMLHttpRequest(); 
+        r.open("GET", ref, true);
+        r.onreadystatechange = function () {
+          if (r.readyState != 4) return; 
+          if(r.status === 200) {
+            var response = JSON.parse(r.responseText);
+            self.refs[ref] = [];
 
-        $.getJSON(ref,function(response) {
-          self.refs[ref] = [];
+            // Recursively expand this schema
+            self._getRefs(response, function(ref_schema) {
+              var list = self.refs[ref];
+              self.refs[ref] = ref_schema;
+              schema = $.extend(true,{},schema,self.refs[ref],schema);
+              callback(schema);
 
-          // Recursively expand this schema
-          self._getRefs(response, function(ref_schema) {
-            var list = self.refs[ref];
-            self.refs[ref] = ref_schema;
-            schema = $.extend(true,{},schema,self.refs[ref],schema);
-            callback(schema);
-
-            // If anything is waiting on this to load
-            $.each(list,function(i,v) {
-              v();
+              // If anything is waiting on this to load
+              $.each(list,function(i,v) {
+                v();
+              });
             });
-          });
-        })
-          .fail(function() {
-            throw "Failed to fetch ref via ajax- "+ref;
-          })
+            return;
+          }
+          
+          // Request failed
+          throw "Failed to fetch ref via ajax- "+ref;
+        };
+        r.send();
       }
     }
     // Expand out any subschemas
@@ -2843,7 +2851,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
 
     if(this.item_has_child_editors) {
       $.each(tmp.getChildEditors(), function(i,editor) {
-        self.header_row.append(self.theme.getTableHeaderCell().text(editor.getTitle()).attr('title',editor.schema.title));
+        self.header_row.append(self.theme.getTableHeaderCell().text(editor.getTitle()));
       });
     }
     else {
@@ -3703,9 +3711,9 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   getRangeInput: function(min,max,step) {
     return $("<input type='range'>")
-      .attr('min',min)
-      .attr('max',max)
-      .attr('step',step);
+      .attr('min',min||0)
+      .attr('max',max||100)
+      .attr('step',step||1);
   },
   getFormInputField: function(type) {
     return $("<input type='"+type+"'>");
@@ -3804,10 +3812,10 @@ $.jsoneditor.AbstractTheme = Class.extend({
       });
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabControls: function(holder) {
-    return $("> .controls",holder);
+    return $(tab_holder.get(0).children[2]);
   },
   getTabContent: function() {
     return this.getIndentedPanel();
@@ -3825,7 +3833,7 @@ $.jsoneditor.AbstractTheme = Class.extend({
     });
   },
   addTab: function(holder, tab) {
-    $("> .tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   },
   addTabControls: function(tab_holder, controls) {
     tab_holder.append(controls);
@@ -3921,7 +3929,7 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     return $("<li></li>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .tab-content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabContent: function() {
     return $("<div class='tab-pane active'></div>");
@@ -3933,7 +3941,7 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     tab.removeClass('active');
   },
   addTab: function(holder, tab) {
-    $("> .nav-tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   }
 });
 
@@ -4004,7 +4012,7 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
   },
   getTabHolder: function() {
     var holder = this._super();
-    $("> .tabs",holder).addClass('list-group');
+    $(holder.get(0).children[0]).addClass('list-group');
     return holder;
   },
   getTab: function(text) {
@@ -4085,7 +4093,7 @@ $.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
     return $("<dd></dd>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .tabs-content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabContent: function() {
     return $("<div class='content active'></div>").css({
@@ -4099,7 +4107,7 @@ $.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
     tab.removeClass('active');
   },
   addTab: function(holder, tab) {
-    $("> .tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   }
 });
 
@@ -4134,7 +4142,7 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
     return $("<dd></dd>").append($("<a href='#'>").append(text));
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .tabs-content",tab_holder)
+    return $(tab_holder.get(0).children[1]);
   },
   getTabContent: function() {
     return $("<div class='content active'></div>").css({
@@ -4148,7 +4156,7 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
     tab.removeClass('active');
   },
   addTab: function(holder, tab) {
-    $("> .tabs",holder).append(tab);
+    $(holder.get(0).children[0]).append(tab);
   }
 });
 
@@ -4630,4 +4638,4 @@ $.jsoneditor.resolvers.unshift(function(schema) {
 });
 
 
-})(jQuery);
+})(window.jQuery || window.Zepto);
