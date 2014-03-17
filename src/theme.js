@@ -142,11 +142,14 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getTableBody: function() {
     return document.createElement('tbody');
   },
-  getTableHeaderCell: function() {
-    return document.createElement('th');
+  getTableHeaderCell: function(text) {
+    var el = document.createElement('th');
+    el.textContent = text;
+    return el;
   },
   getTableCell: function() {
-    return document.createElement('td');
+    var el = document.createElement('td');
+    return el;
   },
   getErrorMessage: function(text) {
     var el = document.createElement('p');

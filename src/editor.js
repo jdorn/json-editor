@@ -241,7 +241,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.header_text = null;
     this.header_template = null;
     this.value = null;
-    this.container.parentNode.removeChild(this.container);
+    if(this.container.parentNode) this.container.parentNode.removeChild(this.container);
     this.container = null;
     this.jsoneditor = null;
     this.schema = null;

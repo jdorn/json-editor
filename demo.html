@@ -136,9 +136,26 @@ if(errors.length) {
                 },
                 required: ["city","state"]
             },
+            status: {
+              type: "object",
+              enum: [
+                {
+                    single: true,
+                    kids: 'none'
+                },
+                {
+                    married: true,
+                    kids: 1
+                },
+                {
+                    married: true,
+                    kids: [{gender: 'boy'},{gender: 'girl'}]
+                }
+              ]  
+            },
             pets: {
                 type: "array",
-                format: "tabs",
+                format: "table",
                 title: "Pets",
                 uniqueItems: true,
                 items: {

@@ -3,6 +3,6 @@ $.jsoneditor.editors.null = $.jsoneditor.AbstractEditor.extend({
     return null;
   },
   setValue: function() {
-    this.container.trigger('set');
+    this.fireSetEvent();
   }
 });
