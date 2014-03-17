@@ -83,15 +83,15 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
           return {};
         }
         else if(this.schema.additionalItems) {
-          return $.extend(true,{},this.schema.additionalItems);
+          return $extend({},this.schema.additionalItems);
         }
       }
       else {
-        return $.extend(true,{},this.schema.items[i]);
+        return $extend({},this.schema.items[i]);
       }
     }
     else if(this.schema.items) {
-      return $.extend(true,{},this.schema.items);
+      return $extend({},this.schema.items);
     }
     else {
       return {};

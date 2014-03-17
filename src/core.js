@@ -1,9 +1,22 @@
 // Placeholder
-var $extend = function() {
-  var args = Array.prototype.slice.call(arguments,0);
-  if(args[0] !== true) args.shift(true);
-  return $.extend.apply($,args);
+var $extend = function(destination) {
+  var source;
+  for(var i=1; i<arguments.length; i++) {
+    source = arguments[i];
+    for (var property in source) {
+      if(!source.hasOwnProperty(property)) continue;
+      if(source[property] && source[property].constructor && source[property].constructor === Object) {
+        destination[property] = destination[property] || {};
+        $extend(destination[property], source[property]);
+      }
+      else {
+        destination[property] = source[property];
+      }
+    }
+  }
+  return destination;
 };
+
 var $each = $.each;
 var _raf = window.requestAnimationFrame;
 var $trigger = function(el,event) {

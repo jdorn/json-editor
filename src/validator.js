@@ -37,7 +37,7 @@ $.jsoneditor.Validator = Class.extend({
     var waiting, finished, check_if_finished, called;
 
     // Work on a deep copy of the schema
-    schema = $.extend(true,{},schema);
+    schema = $extend({},schema);
 
     // First expand out any definition in the root node
     if(is_root && schema.definitions) {
@@ -79,13 +79,13 @@ $.jsoneditor.Validator = Class.extend({
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
         self.refs[ref].push(function() {
-          schema = $.extend(true,{},schema,self.refs[ref],schema);
+          schema = $extend({},schema,self.refs[ref],schema);
           callback(schema);
         });
       }
       // If this reference has already been loaded
       else if(self.refs[ref]) {
-        schema = $.extend(true,{},schema,self.refs[ref],schema);
+        schema = $extend({},schema,self.refs[ref],schema);
         callback(schema);
       }
       // Otherwise, it needs to be loaded via ajax
@@ -104,7 +104,7 @@ $.jsoneditor.Validator = Class.extend({
             self._getRefs(response, function(ref_schema) {
               var list = self.refs[ref];
               self.refs[ref] = ref_schema;
-              schema = $.extend(true,{},schema,self.refs[ref],schema);
+              schema = $extend({},schema,self.refs[ref],schema);
               callback(schema);
 
               // If anything is waiting on this to load
@@ -190,7 +190,7 @@ $.jsoneditor.Validator = Class.extend({
     path = path || 'root';
 
     // Work on a copy of the schema
-    schema = $.extend(true,{},schema);
+    schema = $extend({},schema);
 
     /*
      * Type Agnostic Validation
@@ -825,7 +825,7 @@ $.jsoneditor.Validator = Class.extend({
     }
     // parent should be merged into oneOf schemas
     if(schema.oneOf) {
-      var tmp = $.extend(true,{},extended);
+      var tmp = $extend({},extended);
       delete tmp.oneOf;
       for(i=0; i<schema.oneOf.length; i++) {
         extended.oneOf[i] = this.extend(this.expandSchema(schema.oneOf[i]),tmp);
@@ -835,8 +835,8 @@ $.jsoneditor.Validator = Class.extend({
     return extended;
   },
   extend: function(obj1, obj2) {
-    obj1 = $.extend(true,{},obj1);
-    obj2 = $.extend(true,{},obj2);
+    obj1 = $extend({},obj1);
+    obj2 = $extend({},obj2);
 
     var self = this;
     var extended = {};

@@ -65,13 +65,13 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.addControls();
   },
   getItemDefault: function() {
-    return $.extend(true,{},{default:this.item_default}).default;
+    return $extend({},{default:this.item_default}).default;
   },
   getItemTitle: function() {
     return this.item_title;
   },
   getElementEditor: function(i,ignore) {
-    var schema_copy = $.extend({},this.schema.items);
+    var schema_copy = $extend({},this.schema.items);
     var editor = $.jsoneditor.getEditorClass(schema_copy, this.jsoneditor);
     var row = this.theme.getTableRow().appendTo(this.row_holder);
     var holder = this.item_has_child_editors? row : this.theme.getTableCell().appendTo(row);

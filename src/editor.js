@@ -22,7 +22,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
     this.iconlib = this.jsoneditor.data('jsoneditor').iconlib;
 
-    this.options = $extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
+    this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
     this.schema = this.options.schema;
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
@@ -187,7 +187,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
   },
   onWatchedFieldChange: function() {
     if(this.header_template) {
-      var vars = $extend(true,this.getWatchedFieldValues(),{
+      var vars = $extend(this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,
         title: this.getTitle()

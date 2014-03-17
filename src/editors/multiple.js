@@ -76,11 +76,11 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       var schema;
       
       if(typeof type === "string") {
-        schema = $.extend(true,{},self.schema);
+        schema = $extend({},self.schema);
         schema.type = type;
       }
       else {
-        schema = $.extend(true,{},self.schema,type);
+        schema = $extend({},self.schema,type);
 
         // If we need to merge `required` arrays
         if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
@@ -175,7 +175,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         var new_errors = [];
         $.each(errors, function(j,error) {
           if(error.path.substr(0,check.length)===check) {
-            var new_error = $.extend({},error);
+            var new_error = $extend({},error);
             new_error.path = self.path+new_error.path.substr(check.length);
             new_errors.push(new_error);
           }

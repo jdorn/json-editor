@@ -19,11 +19,24 @@
 var Class;!function(){var a=!1,b=/xyz/.test(function(){})?/\b_super\b/:/.*/;Class=function(){},Class.extend=function(c){function g(){!a&&this.init&&this.init.apply(this,arguments)}var d=this.prototype;a=!0;var e=new this;a=!1;for(var f in c)e[f]="function"==typeof c[f]&&"function"==typeof d[f]&&b.test(c[f])?function(a,b){return function(){var c=this._super;this._super=d[a];var e=b.apply(this,arguments);return this._super=c,e}}(f,c[f]):c[f];return g.prototype=e,g.prototype.constructor=g,g.extend=arguments.callee,g}}();
 
 // Placeholder
-var $extend = function() {
-  var args = Array.prototype.slice.call(arguments,0);
-  if(args[0] !== true) args.shift(true);
-  return $.extend.apply($,args);
+var $extend = function(destination) {
+  var source;
+  for(var i=1; i<arguments.length; i++) {
+    source = arguments[i];
+    for (var property in source) {
+      if(!source.hasOwnProperty(property)) continue;
+      if(source[property] && source[property].constructor && source[property].constructor === Object) {
+        destination[property] = destination[property] || {};
+        $extend(destination[property], source[property]);
+      }
+      else {
+        destination[property] = source[property];
+      }
+    }
+  }
+  return destination;
 };
+
 var $each = $.each;
 var _raf = window.requestAnimationFrame;
 var $trigger = function(el,event) {
@@ -278,7 +291,7 @@ $.jsoneditor.Validator = Class.extend({
     var waiting, finished, check_if_finished, called;
 
     // Work on a deep copy of the schema
-    schema = $.extend(true,{},schema);
+    schema = $extend({},schema);
 
     // First expand out any definition in the root node
     if(is_root && schema.definitions) {
@@ -320,13 +333,13 @@ $.jsoneditor.Validator = Class.extend({
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
         self.refs[ref].push(function() {
-          schema = $.extend(true,{},schema,self.refs[ref],schema);
+          schema = $extend({},schema,self.refs[ref],schema);
           callback(schema);
         });
       }
       // If this reference has already been loaded
       else if(self.refs[ref]) {
-        schema = $.extend(true,{},schema,self.refs[ref],schema);
+        schema = $extend({},schema,self.refs[ref],schema);
         callback(schema);
       }
       // Otherwise, it needs to be loaded via ajax
@@ -345,7 +358,7 @@ $.jsoneditor.Validator = Class.extend({
             self._getRefs(response, function(ref_schema) {
               var list = self.refs[ref];
               self.refs[ref] = ref_schema;
-              schema = $.extend(true,{},schema,self.refs[ref],schema);
+              schema = $extend({},schema,self.refs[ref],schema);
               callback(schema);
 
               // If anything is waiting on this to load
@@ -431,7 +444,7 @@ $.jsoneditor.Validator = Class.extend({
     path = path || 'root';
 
     // Work on a copy of the schema
-    schema = $.extend(true,{},schema);
+    schema = $extend({},schema);
 
     /*
      * Type Agnostic Validation
@@ -1066,7 +1079,7 @@ $.jsoneditor.Validator = Class.extend({
     }
     // parent should be merged into oneOf schemas
     if(schema.oneOf) {
-      var tmp = $.extend(true,{},extended);
+      var tmp = $extend({},extended);
       delete tmp.oneOf;
       for(i=0; i<schema.oneOf.length; i++) {
         extended.oneOf[i] = this.extend(this.expandSchema(schema.oneOf[i]),tmp);
@@ -1076,8 +1089,8 @@ $.jsoneditor.Validator = Class.extend({
     return extended;
   },
   extend: function(obj1, obj2) {
-    obj1 = $.extend(true,{},obj1);
-    obj2 = $.extend(true,{},obj2);
+    obj1 = $extend({},obj1);
+    obj2 = $extend({},obj2);
 
     var self = this;
     var extended = {};
@@ -1163,7 +1176,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
     this.iconlib = this.jsoneditor.data('jsoneditor').iconlib;
 
-    this.options = $extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
+    this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
     this.schema = this.options.schema;
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
@@ -1328,7 +1341,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
   },
   onWatchedFieldChange: function() {
     if(this.header_template) {
-      var vars = $extend(true,this.getWatchedFieldValues(),{
+      var vars = $extend(this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,
         title: this.getTitle()
@@ -1826,7 +1839,7 @@ $.jsoneditor.editors.integer = $.jsoneditor.editors.number.extend({
 
 $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return $extend(true,{},this.schema.default || {});
+    return $extend({},this.schema.default || {});
   },
   getChildEditors: function() {
     return this.editors;
@@ -2077,13 +2090,13 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         var regex = new RegExp(i);
         if(regex.test(name)) {
           matched = true;
-          schema = $extend(true,schema,el);
+          schema = $extend(schema,el);
         }
       });
     }
     // Otherwise, check if additionalProperties is a schema
     if(!matched && typeof self.schema.additionalProperties === "object") {
-      schema = $extend(true,schema,self.schema.additionalProperties);
+      schema = $extend(schema,self.schema.additionalProperties);
     }
     
     // Add the property
@@ -2345,15 +2358,15 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
           return {};
         }
         else if(this.schema.additionalItems) {
-          return $.extend(true,{},this.schema.additionalItems);
+          return $extend({},this.schema.additionalItems);
         }
       }
       else {
-        return $.extend(true,{},this.schema.items[i]);
+        return $extend({},this.schema.items[i]);
       }
     }
     else if(this.schema.items) {
-      return $.extend(true,{},this.schema.items);
+      return $extend({},this.schema.items);
     }
     else {
       return {};
@@ -2931,13 +2944,13 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.addControls();
   },
   getItemDefault: function() {
-    return $.extend(true,{},{default:this.item_default}).default;
+    return $extend({},{default:this.item_default}).default;
   },
   getItemTitle: function() {
     return this.item_title;
   },
   getElementEditor: function(i,ignore) {
-    var schema_copy = $.extend({},this.schema.items);
+    var schema_copy = $extend({},this.schema.items);
     var editor = $.jsoneditor.getEditorClass(schema_copy, this.jsoneditor);
     var row = this.theme.getTableRow().appendTo(this.row_holder);
     var holder = this.item_has_child_editors? row : this.theme.getTableCell().appendTo(row);
@@ -3350,11 +3363,11 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       var schema;
       
       if(typeof type === "string") {
-        schema = $.extend(true,{},self.schema);
+        schema = $extend({},self.schema);
         schema.type = type;
       }
       else {
-        schema = $.extend(true,{},self.schema,type);
+        schema = $extend({},self.schema,type);
 
         // If we need to merge `required` arrays
         if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
@@ -3449,7 +3462,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         var new_errors = [];
         $.each(errors, function(j,error) {
           if(error.path.substr(0,check.length)===check) {
-            var new_error = $.extend({},error);
+            var new_error = $extend({},error);
             new_error.path = self.path+new_error.path.substr(check.length);
             new_errors.push(new_error);
           }

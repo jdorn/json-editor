@@ -1,6 +1,6 @@
 $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return $extend(true,{},this.schema.default || {});
+    return $extend({},this.schema.default || {});
   },
   getChildEditors: function() {
     return this.editors;
@@ -251,13 +251,13 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         var regex = new RegExp(i);
         if(regex.test(name)) {
           matched = true;
-          schema = $extend(true,schema,el);
+          schema = $extend(schema,el);
         }
       });
     }
     // Otherwise, check if additionalProperties is a schema
     if(!matched && typeof self.schema.additionalProperties === "object") {
-      schema = $extend(true,schema,self.schema.additionalProperties);
+      schema = $extend(schema,self.schema.additionalProperties);
     }
     
     // Add the property
