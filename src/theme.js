@@ -216,9 +216,6 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getTabContentHolder: function(tab_holder) {
     return tab_holder.children[1];
   },
-  getTabControls: function(holder) {
-    return tab_holder.children[3];
-  },
   getTabContent: function() {
     return this.getIndentedPanel();
   },
@@ -236,8 +233,5 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
-  },
-  addTabControls: function(tab_holder, controls) {
-    tab_holder.appendChild(controls);
   }
 });

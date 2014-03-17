@@ -41,7 +41,6 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         this.tabs_holder = this.theme.getTabHolder();
         this.container.appendChild(this.tabs_holder);
         this.row_holder = this.theme.getTabContentHolder(this.tabs_holder);
-        this.tabs_holder.appendChild(this.row_holder);
 
         this.active_tab = null;
       }
@@ -209,7 +208,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var holder = row.container;
     if(hard) {
       row.destroy();
-      holder.parentNode.removeChild(holder);
+      if(holder.parentNode) holder.parentNode.removeChild(holder);
       if(row.tab) row.tab.parentNode.removeChild(row.tab);
     }
     else {

@@ -2329,7 +2329,6 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         this.tabs_holder = this.theme.getTabHolder();
         this.container.appendChild(this.tabs_holder);
         this.row_holder = this.theme.getTabContentHolder(this.tabs_holder);
-        this.tabs_holder.appendChild(this.row_holder);
 
         this.active_tab = null;
       }
@@ -2497,7 +2496,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var holder = row.container;
     if(hard) {
       row.destroy();
-      holder.parentNode.removeChild(holder);
+      if(holder.parentNode) holder.parentNode.removeChild(holder);
       if(row.tab) row.tab.parentNode.removeChild(row.tab);
     }
     else {
@@ -3934,9 +3933,6 @@ $.jsoneditor.AbstractTheme = Class.extend({
   getTabContentHolder: function(tab_holder) {
     return tab_holder.children[1];
   },
-  getTabControls: function(holder) {
-    return tab_holder.children[3];
-  },
   getTabContent: function() {
     return this.getIndentedPanel();
   },
@@ -3954,9 +3950,6 @@ $.jsoneditor.AbstractTheme = Class.extend({
   },
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
-  },
-  addTabControls: function(tab_holder, controls) {
-    tab_holder.appendChild(controls);
   }
 });
 
@@ -3966,183 +3959,254 @@ $.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
     return this._super(min, max, step);
   },
   getSelectInput: function(options) {
-    return this._super(options).css({
-      width: 'auto'
-    });
+    var input = this._super(options);
+    input.style.width = 'auto';
+    return input;
   },
   afterInputReady: function(input) {
-    if(input.data('control-group')) {
-      return;
-    }
-    input.data('control-group',input.closest('.control-group'));
-    input.data('controls',input.closest('controls'));
-
-    if(input.closest('.compact').length) {
-      input.data('control-group').removeClass('control-group');
-      input.data('controls').removeClass('controls');
-      input.css('margin-bottom',0);
+    if(input.controlgroup) return;
+    input.controlgroup = this.closest(input,'.control-group');
+    input.controls = this.closest(input,'controls');
+    if(this.closest(input,'.compact')) {
+      input.controlgroup.className = input.controlgroup.className.replace(/control-group/g,'').replace(/[ ]{2,}/g,' ');
+      input.controls.className = input.controlgroup.className.replace(/controls/g,'').replace(/[ ]{2,}/g,' ');
+      input.style.marginBottom = 0;
     }
 
     // TODO: use bootstrap slider
   },
   getIndentedPanel: function() {
-    return $("<div></div>").addClass('well well-small');
+    var el = document.createElement('div');
+    el.className = 'well well-small';
+    return el;
   },
   getFormInputDescription: function(text) {
-    return $("<p></p>").addClass('help-inline').text(text);
+    var el = document.createElement('p');
+    el.className = 'help-inline';
+    el.textContent = text;
+    return el;
   },
   getFormControl: function(label, input, description) {
-    var ret = $("<div></div>").addClass('control-group');
+    var ret = document.createElement('div');
+    ret.className = 'control-group';
 
-    var controls;
+    var controls = document.createElement('div');
+    controls.className = 'controls';
 
-    if(label && input.attr('type') === 'checkbox') {
-      controls = $("<div></div>").addClass('controls').appendTo(ret);
-      label.addClass('checkbox').append(input).appendTo(controls);
+    if(label && input.getAttribute('type') === 'checkbox') {
+      ret.appendChild(controls);
+      label.className += ' checkbox';
+      label.appendChild(input);
+      controls.appendChild(label);
     }
     else {
-      if(label) label.addClass('control-label').appendTo(ret);
-      controls = $("<div></div>").addClass('controls').append(input).appendTo(ret);
+      if(label) {
+        label.className += ' control-label';
+        ret.appendChild(label);
+      }
+      controls.appendChild(input);
+      ret.appendChild(controls);
     }
 
-    if(description) controls.append(description);
+    if(description) controls.appendChild(description);
 
     return ret;
   },
   getHeaderButtonHolder: function() {
-    return $("<div></div>").addClass('btn-group').css({
-      marginLeft: 10
-    });
+    var el = this.getButtonHolder();
+    el.style.marginLeft = '10px';
+    return el;
   },
   getButtonHolder: function() {
-    return $("<div></div>").addClass('btn-group');
+    var el = document.createElement('div');
+    el.className = 'btn-group';
+    return el;
   },
   getButton: function(text, icon, title) {
-    return this._super(text, icon, title).addClass('btn btn-default');
+    var el =  this._super(text, icon, title);
+    el.className += ' btn btn-default';
+    return el;
   },
   getTable: function() {
-    return $("<table></table>").addClass('table table-bordered').css({
-      width: 'auto',
-      maxWidth: 'none'
-    });
+    var el = document.createElement('table');
+    el.className = 'table table-bordered';
+    el.style.width = 'auto';
+    el.style.maxWidth = 'none';
+    return el;
   },
   addInputError: function(input,text) {
-    if(!input.data('control-group')) return;
-    input.data('control-group').addClass('error');
-    var errmsg = input.data('errmsg');
-    if(!errmsg) {
-      errmsg = $("<p class='help-block errormsg'>").appendTo(input.data('controls'));
-      input.data('errmsg',errmsg);
+    if(!input.controlgroup) return;
+    input.controlgroup.className += ' error';
+    if(!input.errmsg) {
+      input.errmsg = document.createElement('p');
+      input.errmsg.className = 'help-block errormsg';
+      input.controls.appendChild(input.errmsg);
+    }
+    else {
+      input.errmsg.style.display = '';
     }
 
-    errmsg.text(text);
+    input.errmsg.textContent = text;
   },
   removeInputError: function(input) {
-    if(!input.data('errmsg')) return;
-    input.data('errmsg').remove();
-    input.data('control-group').removeClass('error');
+    if(!input.errmsg) return;
+    input.errmsg.style.display = 'none';
+    input.controlgroup.className = input.controlgroup.className.replace(/\s?error/g,'');
   },
   getTabHolder: function() {
-    return $("<div class='tabbable tabs-left'><ul class='nav nav-tabs'></ul><div class='tab-content'></div></div>");
+    var el = document.createElement('div');
+    el.className = 'tabbable tabs-left';
+    el.innerHTML = "<ul class='nav nav-tabs'></ul><div class='tab-content'></div>";
+    return el;
   },
   getTab: function(text) {
-    return $("<li></li>").append($("<a href='#'>").append(text));
+    var el = document.createElement('li');
+    var a = document.createElement('a');
+    a.setAttribute('href','#');
+    a.appendChild(text);
+    el.appendChild(a);
+    return el;
   },
   getTabContentHolder: function(tab_holder) {
-    return $(tab_holder.get(0).children[1]);
+    return tab_holder.children[1];
   },
   getTabContent: function() {
-    return $("<div class='tab-pane active'></div>");
+    var el = document.createElement('div');
+    el.className = 'tab-pane active';
+    return el;
   },
   markTabActive: function(tab) {
-    tab.addClass('active');
+    tab.className += ' active';
   },
   markTabInactive: function(tab) {
-    tab.removeClass('active');
+    tab.className = tab.className.replace(/\s?active/g,'');
   },
   addTab: function(holder, tab) {
-    $(holder.get(0).children[0]).append(tab);
+    holder.children[0].appendChild(tab);
   }
 });
 
 $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
   getSelectInput: function(options) {
-    return this._super(options).addClass('form-control').css({
-      width: 'auto'
-    });
+    var el = this._super(options);
+    el.className += 'form-control';
+    el.style.width = 'auto';
+    return el;
+  },
+  afterInputReady: function(input) {
+    if(input.controlgroup) return;
+    input.controlgroup = this.closest(input,'.form-group');
+    if(this.closest(input,'.compact')) {
+      input.controlgroup.style.marginBottom = 0;
+    }
+
+    // TODO: use bootstrap slider
   },
   getTextareaInput: function() {
-    return $("<textarea>").addClass('form-control');
+    var el = document.createElement('textarea');
+    el.className = 'form-control';
+    return el;
   },
   getRangeInput: function(min, max, step) {
     // TODO: use better slider
-    return this._super();
+    return this._super(min, max, step);
   },
   getFormInputField: function(type) {
-    return this._super(type).addClass('form-control');
+    var el = this._super(type);
+    el.className += 'form-control';
+    return el;
   },
   getFormControl: function(label, input, description) {
-    var group = $("<div></div>");
+    var group = document.createElement('div');
 
-    if(label && input.attr('type') === 'checkbox') {
-      group.addClass('checkbox');
-      label.append(input).appendTo(group);
+    if(label && input.getAttribute('type') === 'checkbox') {
+      group.className += ' checkbox';
+      label.appendChild(input)
+      group.appendChild(label);
     } 
     else {
-      group.addClass('form-group');
-      if(label) label.appendTo(group).addClass('control-label');
-      input.appendTo(group);
+      group.className += ' form-group';
+      if(label) {
+        label.className += ' control-label';
+        group.appendChild(label);
+      }
+      group.appendChild(input);
     }
 
-    if(description) group.append(description);
+    if(description) group.appendChild(description);
 
     return group;
   },
   getIndentedPanel: function() {
-    return $("<div>").addClass('well well-sm');
+    var el = document.createElement('div');
+    el.className = 'well well-sm';
+    return el;
   },
   getFormInputDescription: function(text) {
-    return $("<p>").addClass('help-block').text(text);
+    var el = document.createElement('p');
+    el.className = 'help-block';
+    el.textContent = text;
+    return el;
   },
   getHeaderButtonHolder: function() {
-    return this.getButtonHolder().css({
-      marginLeft: 10
-    });
+    var el = this.getButtonHolder();
+    el.style.marginLeft = '10px';
+    return el;
   },
   getButtonHolder: function() {
-    return $("<div>").addClass('btn-group');
+    var el = document.createElement('div');
+    el.className = 'btn-group';
+    return el;
   },
   getButton: function(text, icon, title) {
-    return this._super(text, icon, title).addClass('btn btn-default');
+    var el = this._super(text, icon, title);
+    el.className += 'btn btn-default';
+    return el;
   },
   getTable: function() {
-    return $("<table>").addClass("table table-bordered").css({
-      width: 'auto',
-      maxWidth: 'none'
-    });
+    var el = document.createElement('table');
+    el.className = 'table table-bordered';
+    el.style.width = 'auto';
+    el.style.maxWidth = 'none';
+    return el;
   },
+
   addInputError: function(input,text) {
-    var group = input.closest('.form-group').addClass('has-error');
-    var errmsg = $('.errormsg',group);
-    if(!errmsg.length) errmsg = $("<p class='help-block errormsg'>").appendTo(group);
-    errmsg.text(text);
+    if(!input.controlgroup) return;
+    input.controlgroup.className += ' has-error';
+    if(!input.errmsg) {
+      input.errmsg = document.createElement('p');
+      input.errmsg.className = 'help-block errormsg';
+      input.controlgroup.appendChild(input.errmsg);
+    }
+    else {
+      input.errmsg.style.display = '';
+    }
+
+    input.errmsg.textContent = text;
   },
   removeInputError: function(input) {
-    $('.errormsg',input.closest('.form-group').removeClass('has-error')).remove();
+    if(!input.errmsg) return;
+    input.errmsg.style.display = 'none';
+    input.controlgroup.className = input.controlgroup.className.replace(/\s?has-error/g,'');
   },
   getTabHolder: function() {
-    var holder = this._super();
-    $(holder.get(0).children[0]).addClass('list-group');
-    return holder;
+    var el = this._super();
+    el.children[0].className += ' list-group';
+    return el;
   },
   getTab: function(text) {
-    return $("<a href='#' class='list-group-item'>").append(text);
+    var el = document.createElement('a');
+    el.className = 'list-group-item';
+    el.setAttribute('href','#');
+    el.textContent = text.textContent;
+    return el;
   },
   markTabActive: function(tab) {
-    tab.addClass('active');
+    tab.className += ' active';
   },
   markTabInactive: function(tab) {
-    tab.removeClass('active');
+    tab.className = tab.className.replace(/\s?active/g,'');
   }
 });
 
