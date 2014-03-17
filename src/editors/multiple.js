@@ -5,7 +5,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this;
-    var container = this.getContainer();
+    var container = this.container;
 
     this.types = [];
     
@@ -42,42 +42,36 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     
     this.display_text = this.getDisplayText(this.types);
 
-    this.switcher = this.theme.getSelectInput(this.display_text)
-      .appendTo(container)
-      .on('change',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        self.type = self.display_text.indexOf($(this).val());
+    this.switcher = this.theme.getSelectInput(this.display_text);
+    container.appendChild(this.switcher);
+    this.switcher.addEventListener('change',function(e) {
+      self.type = self.display_text.indexOf($(this).val());
 
-        var current_value = self.getValue();
+      var current_value = self.getValue();
 
-        $.each(self.editors,function(type,editor) {
-          if(self.type === type) {
-            editor.setValue(current_value,true);
-            editor.container.show();
-          }
-          else editor.container.hide();
-        });
-
-        self.container.trigger('change');
-        
-        return false;
-      })
-      .css({
-        marginBottom: 0,
-        float: 'right'
+      $.each(self.editors,function(type,editor) {
+        if(self.type === type) {
+          editor.setValue(current_value,true);
+          editor.container.style.display = '';
+        }
+        else editor.container.style.display = 'none';
       });
+      self.refreshValue();
+    })
+    this.switcher.style.marginBottom = 0;
+    this.switcher.style.float = 'right';
 
-    this.editor_holder = this.theme.getIndentedPanel().appendTo(container);
+    this.editor_holder = this.theme.getIndentedPanel();
+    container.appendChild(this.editor_holder);
     this.type = 0;
 
     this.editors = [];
     this.validators = [];
-    var options = $("option",this.switcher);
+    var options = this.switcher.getElementsByTagName('option');
     var option = 0;
     $.each(this.types,function(i,type) {
-      var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
+      var holder = self.theme.getChildEditorHolder();
+      self.editor_holder.appendChild(holder);
 
       var schema;
       
@@ -110,23 +104,26 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         required: true
       });
       
-      self.editors[i].option = options.eq(option);
+      self.editors[i].option = options[option];
       
-      holder.on('change_header_text',function() {
+      holder.addEventListener('change_header_text',function() {
         self.refreshHeaderText();
       });
 
-      if(i !== self.type) holder.hide();
+      if(i !== self.type) holder.style.display = 'none';
       
       option++;
     });
 
-    this.editor_holder.on('change set',function() {
+    this.editor_holder.addEventListener('change',function() {
+      self.refreshValue();
+    });
+    this.editor_holder.addEventListener('set',function() {
       self.refreshValue();
     });
     this.refreshHeaderText();
 
-    this.switcher.val(this.display_text[this.type]);
+    this.switcher.value = this.display_text[this.type];
   },
   refreshHeaderText: function() {
     var schemas = [];
@@ -135,7 +132,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     });
     var display_text = this.getDisplayText(schemas);
     $.each(this.editors, function(i,editor) {
-      if(editor.option) editor.option.text(display_text[i]);
+      if(editor.option) {
+        editor.option.innerHTML = '';
+        editor.option.appendChild(document.createTextNode(display_text[i]));
+      }
     });
   },
   refreshValue: function() {
@@ -147,7 +147,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     $.each(this.validators, function(i,validator) {
       if(!validator.validate(val).length) {
         self.type = i;
-        self.switcher.val(self.display_text[i]).trigger('change');
+        self.switcher.value = self.display_text[i];
         return false;
       }
     });
@@ -155,14 +155,14 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    this.container.trigger('set');
+    this.fireSetEvent();
   },
   destroy: function() {
     $.each(this.editors, function(type,editor) {
       editor.destroy();
     });
-    this.editor_holder.remove();
-    this.switcher.remove();
+    this.editor_holder.parentNode.removeChild(this.editor_holder);
+    this.switcher.parentNode.removeChild(this.switcher);
     this._super();
   },
   showValidationErrors: function(errors) {

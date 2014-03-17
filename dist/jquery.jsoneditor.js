@@ -18,6 +18,33 @@
 // Inspired by base2 and Prototype
 var Class;!function(){var a=!1,b=/xyz/.test(function(){})?/\b_super\b/:/.*/;Class=function(){},Class.extend=function(c){function g(){!a&&this.init&&this.init.apply(this,arguments)}var d=this.prototype;a=!0;var e=new this;a=!1;for(var f in c)e[f]="function"==typeof c[f]&&"function"==typeof d[f]&&b.test(c[f])?function(a,b){return function(){var c=this._super;this._super=d[a];var e=b.apply(this,arguments);return this._super=c,e}}(f,c[f]):c[f];return g.prototype=e,g.prototype.constructor=g,g.extend=arguments.callee,g}}();
 
+// Placeholder
+var $extend = function() {
+  var args = Array.prototype.slice.call(arguments,0);
+  if(args[0] !== true) args.shift(true);
+  return $.extend.apply($,args);
+};
+var $each = $.each;
+var _raf = window.requestAnimationFrame;
+var $trigger = function(el,event) {
+  var e = document.createEvent('HTMLEvents');
+  e.initEvent(event, true, true);
+  el.dispatchEvent(e);
+};
+var $triggerc = function(el,event) {
+  if (window.CustomEvent) {
+    var e = new CustomEvent(event,{
+      bubbles: true,
+      cancelable: true
+    });
+  } else {
+    var e = document.createEvent('CustomEvent');
+    e.initCustomEvent(event, true, true);
+  }
+
+  el.dispatchEvent(e);
+};
+
 /**
  * Turn an element into a schema editor
  * @param options Options (must contain at least a `schema` property)
@@ -96,20 +123,29 @@ $.fn.jsoneditor = function(options) {
   
   $this.data('jsoneditor',d);
 
-  d.root_container = d.theme.getContainer().appendTo($this);
+  d.root_container = d.theme.getContainer();
+  $this.append(d.root_container);
 
-  // Stop all change events before the editor is ready
-  d.root_container.on('change',function(e) {
+  // Stop all change/set events while the editor is initializing
+  var change_blocker = function(e) {
     if(!d.ready) {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
-
+  };
+  d.root_container.addEventListener('change',change_blocker);
+  
+  // Re-run and cache validation when anything changes
+  var validate_cache = function() {
+    if(!d.ready) return;
+    
     // Validate and cache results
     d.validation_results = d.validator.validate(d.root.getValue());
     d.root.showValidationErrors(d.validation_results);
-  });
+  }
+  d.root_container.addEventListener('change',validate_cache);
+  d.root_container.addEventListener('set',validate_cache);
 
   // Let the validator resolve references in the schema asynchronously
   d.validator = new $.jsoneditor.Validator(schema,{
@@ -140,9 +176,9 @@ $.fn.jsoneditor = function(options) {
     d.ready = true;
 
     // Fire ready event asynchronously
-    window.setTimeout(function() {
-      $this.trigger('ready');
-      $this.trigger('change');
+    _raf(function() {
+      $triggerc(d.root_container,'ready');
+      $trigger(d.root_container,'change');
     });
   });
 
@@ -1107,35 +1143,47 @@ $.jsoneditor.Validator = Class.extend({
  * All editors should extend from this class
  */
 $.jsoneditor.AbstractEditor = Class.extend({
+  fireChangeEvent: function() {
+    $trigger(this.container,'change');
+  },
+  fireSetEvent: function() {
+    $triggerc(this.container,'set');
+  },
+  fireChangeHeaderEvent: function() {
+    $triggerc(this.container,'change_header_text');
+  },
   init: function(options) {
     var self = this;
     this.container = options.container;
     this.jsoneditor = options.jsoneditor;
+    
+    //if(this.container.context) this.container = this.container.get(0);
 
     this.theme = this.jsoneditor.data('jsoneditor').theme;
     this.template_engine = this.jsoneditor.data('jsoneditor').template;
     this.iconlib = this.jsoneditor.data('jsoneditor').iconlib;
 
-    this.options = $.extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
+    this.options = $extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
     this.schema = this.options.schema;
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
-    if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
-    if(this.schema.type && typeof this.schema.type === "string") this.container.attr('data-schematype',this.schema.type);
-    this.container.attr('data-schemapath',this.path);
-    this.container.data('editor',this);
+    if(this.schema.id) this.container.setAttribute('data-schemaid',this.schema.id);
+    if(this.schema.type && typeof this.schema.type === "string") this.container.setAttribute('data-schematype',this.schema.type);
+    this.container.setAttribute('data-schemapath',this.path);
+    $(this.container).data('editor',this);
+    this.container.editor = this;
 
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
     
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
-      this.title_links = this.theme.getFloatRightLinkHolder().appendTo(this.container);
+      this.title_links = this.container.appendChild(this.theme.getFloatRightLinkHolder());
 
-      this.addremove = this.theme.getLink('remove '+this.getTitle()).appendTo(this.title_links);
+      this.addremove = this.title_links.appendChild(this.theme.getLink('remove '+this.getTitle()));
 
-      this.addremove.on('click',function() {
+      this.addremove.addEventListener('click',function() {
         if(self.property_removed) {
           self.addProperty();
         }
@@ -1143,14 +1191,13 @@ $.jsoneditor.AbstractEditor = Class.extend({
           self.removeProperty();
         }
       
-        self.container.trigger('change');
+        self.fireChangeEvent();
         return false;
       });
     }
     
-    this.container.on('change set',function() {
-      self.watch_listener();
-    });
+    this.container.addEventListener('change',self.watch_listener);
+    this.container.addEventListener('set',self.watch_listener);
     
     // Watched fields
     this.watched = {};
@@ -1158,44 +1205,40 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.watched_values = {};
     this.watch_listener_firing = false;
     this.watch_listener = function() {
-      if(self.watch_listener_firing) return;
-      self.watch_listener_firing = true;
-      window.requestAnimationFrame(function() {
-        self.watch_listener_firing = false;
-        if(self.refreshWatchedFieldValues()) {
-          self.onWatchedFieldChange();
-        }
-      });
+      if(self.refreshWatchedFieldValues()) {
+        self.onWatchedFieldChange();
+      }
     };
     if(this.schema.watch) {
-      $.each(this.schema.watch, function(name, path) {
+      $each(this.schema.watch, function(name, path) {
         var path_parts;
         if(path instanceof Array) {
           path_parts = [path[0]].concat(path[1].split('.'));
         }
         else {
-          path_parts = path.split('.'); 
-          if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
+          path_parts = path.split('.');
+          if(!self.theme.closest(self.container,'[data-schemaid="'+path_parts[0]+'"]')) path_parts.unshift('#');
         }
         var first = path_parts.shift();
 
         if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
 
         // Find the root node for this template variable
-        var root = self.container.closest('[data-schemaid="'+first+'"]');
-        if(!root.length) throw "Could not find ancestor node with id "+first;
+        var root = self.theme.closest(self.container,'[data-schemaid="'+first+'"]');
+        if(!root) throw "Could not find ancestor node with id "+first;
 
         // Keep track of the root node and path for use when rendering the template
-        var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');
+        var adjusted_path = root.getAttribute('data-schemapath') + '.' + path_parts.join('.');
         self.watched[name] = {
           root: root,
           path: path_parts,
+          editor: $(root).data('editor'),
           adjusted_path: adjusted_path
         };
 
         // Listen for changes to the variable field
-        root.on('change',self.watch_listener);
-        root.on('set',self.watch_listener);
+        root.addEventListener('change',self.watch_listener);
+        root.addEventListener('set',self.watch_listener);
       });
     }
     
@@ -1239,8 +1282,8 @@ $.jsoneditor.AbstractEditor = Class.extend({
     var self = this;
     
     if(this.watched) {
-      $.each(this.watched,function(name,attr) {
-        var obj = attr.root.data('editor').getValue();
+      $each(this.watched,function(name,attr) {
+        var obj = attr.editor.getValue();
         var current_part = -1;
         var val = null;
         // Use "path.to.property" to get root['path']['to']['property']
@@ -1273,7 +1316,10 @@ $.jsoneditor.AbstractEditor = Class.extend({
     return this.watched_values;
   },
   updateHeaderText: function() {
-    if(this.header) this.header.text(this.getHeaderText());
+    if(this.header) {
+      this.header.innerHTML = '';
+      this.header.appendChild(document.createTextNode(this.getHeaderText()));
+    }
   },
   getHeaderText: function(title_only) {
     if(this.header_text) return this.header_text;
@@ -1282,7 +1328,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
   },
   onWatchedFieldChange: function() {
     if(this.header_template) {
-      var vars = $.extend(true,this.getWatchedFieldValues(),{
+      var vars = $extend(true,this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,
         title: this.getTitle()
@@ -1292,17 +1338,19 @@ $.jsoneditor.AbstractEditor = Class.extend({
       if(header_text !== this.header_text) {
         this.header_text = header_text;
         this.updateHeaderText();
-        this.container.trigger('change_header_text');
+        this.fireChangeHeaderEvent();
       }
     }
   },
   addProperty: function() {
     this.property_removed = false;
-    this.addremove.text('remove '+this.getTitle());
+    this.addremove.innerHTML = '';
+    this.addremove.appendChild(document.createTextNode('remove '+this.getTitle()));
   },
   removeProperty: function() {
     this.property_removed = true;
-    this.addremove.text('add '+this.getTitle());
+    this.addremove.innerHTML = '';
+    this.addremove.appendChild(document.createTextNode('add '+this.getTitle()));
   },
   build: function() {
 
@@ -1324,9 +1372,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
   },
   destroy: function() {
     var self = this;
-    $.each(this.watched,function(name,attr) {
-      attr.root.off('change',self.watch_listener);
-      attr.root.off('set',self.watch_listener);
+    $each(this.watched,function(name,attr) {
+      attr.root.removeEventListener('change',self.watch_listener);
+      attr.root.removeEventListener('set',self.watch_listener);
     });
     this.watched = null;
     this.watched_values = null;
@@ -1334,6 +1382,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.header_text = null;
     this.header_template = null;
     this.value = null;
+    this.container.parentNode.removeChild(this.container);
     this.container = null;
     this.jsoneditor = null;
     this.schema = null;
@@ -1387,7 +1436,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     
     // Determine how many times each attribute name is used.
     // This helps us pick the most distinct display text for the schemas.
-    $.each(arr,function(i,el) {
+    $each(arr,function(i,el) {
       if(el.title) {
         used[el.title] = used[el.title] || 0;
         used[el.title]++;
@@ -1407,7 +1456,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     });
     
     // Determine display text for each element of the array
-    $.each(arr,function(i,el)  {
+    $each(arr,function(i,el)  {
       var name;
       
       // If it's a simple string
@@ -1429,7 +1478,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     
     // Replace identical display text with "text 1", "text 2", etc.
     var inc = {};
-    $.each(disp,function(i,name) {
+    $each(disp,function(i,name) {
       inc[name] = inc[name] || 0;
       inc[name]++;
       
@@ -1457,6 +1506,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     return this.schema.default || '';
   },
   setValue: function(value,initial,from_template) {
+    var self = this;
+    
     value = value || '';
     if(typeof value === "object") value = JSON.stringify(value);
     if(typeof value !== "string") value = ""+value;
@@ -1470,7 +1521,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       sanitized = this.select_options[0];
     }
 
-    this.input.val(sanitized);
+    this.input.value = sanitized;
     
     // If using SCEditor, update the WYSIWYG
     if(this.sceditor_instance) {
@@ -1482,19 +1533,21 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     this.refreshValue();
 
-    if(this.getValue() !== value || from_template) this.container.trigger('change');
-    this.container.trigger('set');
+    if(this.getValue() !== value || from_template) {
+      self.fireChangeEvent();
+    }
+    this.fireSetEvent();
   },
   removeProperty: function() {
     this._super();
-    this.input.hide(500);
-    if(this.description) this.description.hide(500);
+    this.input.style.display = 'none';
+    if(this.description) this.description.style.display = 'none';
     this.theme.disableLabel(this.label);
   },
   addProperty: function() {
     this._super();
-    this.input.show(500);
-    if(this.description) this.description.show(500);
+    this.input.style.display = '';
+    if(this.description) this.description.style.display = '';
     this.theme.enableLabel(this.label);
   },
   build: function() {
@@ -1561,52 +1614,45 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     }
     
     // minLength, maxLength, and pattern
-    if(typeof this.schema.maxLength !== "undefined") this.input.attr('maxlength',this.schema.maxLength);
-    if(typeof this.schema.pattern !== "undefined") this.input.attr('pattern',this.schema.pattern);
-    else if(typeof this.schema.minLength !== "undefined") this.input.attr('pattern','.{'+this.schema.minLength+',}');
+    if(typeof this.schema.maxLength !== "undefined") this.input.setAttribute('maxlength',this.schema.maxLength);
+    if(typeof this.schema.pattern !== "undefined") this.input.setAttribute('pattern',this.schema.pattern);
+    else if(typeof this.schema.minLength !== "undefined") this.input.setAttribute('pattern','.{'+this.schema.minLength+',}');
 
-    if(this.getOption('compact')) this.container.addClass('compact');
+    if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.prop('disabled',true);
+    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.disabled = true;
 
     this.input
-      .on('change keyup',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
+      .addEventListener('change',function(e) {        
         // Don't allow changing if this field is a template
         if(self.schema.template) {
-          $(this).val(self.value);
+          this.value = self.value;
           return;
         }
 
-        var val = $(this).val();
+        var val = this.value;
         
         // sanitize value
         var sanitized = self.sanitize(val);
         if(val !== sanitized) {
-          $(this).val(sanitized).trigger('change');
-          return;
+          this.value = sanitized;
         }
 
         self.refreshValue();
-        
-        if(e.type === "change") {
-          self.container.trigger('change');
-        }
       });
 
-    if(this.schema.format) this.input.attr('data-schemaformat',this.schema.format);
+    if(this.schema.format) this.input.setAttribute('data-schemaformat',this.schema.format);
 
-    this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
+    this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
+    this.container.appendChild(this.control);
 
     // If the Select2 library is loaded
     if(this.input_type === "select" && $.fn.select2) {
-      this.input.select2();
+      $(this.input).select2();
     }
 
     // Any special formatting that needs to happen after the input is added to the dom
-    window.setTimeout(function() {
+    _raf(function() {
       self.afterInputReady();
     });
 
@@ -1623,14 +1669,14 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.input_type === 'html' || this.input_type === 'bbcode') {
       // If SCEditor is loaded
       if($.fn.sceditor) {
-        self.input.sceditor({
+        $(self.input).sceditor({
           plugins: self.input_type==='html'? 'xhtml' : 'bbcode',
           emoticonsEnabled: false,
           width: '100%',
           height: 300
         });
         
-        self.sceditor_instance = self.input.sceditor('instance');
+        self.sceditor_instance = $(self.input).sceditor('instance');
         
         self.sceditor_instance.blur(function() {
           // Get editor's value
@@ -1638,8 +1684,8 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
           // Remove sceditor spans/divs
           $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
           // Set the value and update
-          self.input.val(val.html());
-          self.container.trigger('change');
+          self.input.value = val.html();
+          self.fireChangeEvent();
         });
       }
       // TODO: support other WYSIWYG editors
@@ -1647,18 +1693,19 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     // Markdown
     else if(this.input_type === 'markdown') {
       if(window.EpicEditor) {
-        this.epiceditor_container = $("<div>").insertBefore(this.input);
-        this.input.hide();
+        this.epiceditor_container = document.createElement('div');
+        this.input.parentNode.insertBefore(this.epiceditor_container,this.input);
+        this.input.style.display = 'none';
         this.epiceditor = new EpicEditor({
-          container: this.epiceditor_container.get(0),
+          container: this.epiceditor_container,
           clientSideStorage: false,
           basePath: '//cdnjs.cloudflare.com/ajax/libs/epiceditor/0.2.0'
         });
         
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
-          self.input.val(val);
-          self.container.trigger('change');
+          self.input.value = val;
+          self.fireChangeEvent();
         });
         
         this.epiceditor.load();
@@ -1668,11 +1715,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     self.theme.afterInputReady(self.input);
   },
   refreshValue: function() {
-    this.value = this.input.val();
+    this.value = this.input.value;
     if(typeof this.value !== "string") this.value = '';
     this.serialized = this.value;
   },
-  destroy: function() {    
+  destroy: function() {
     // If using SCEditor, destroy the editor instance
     if(this.sceditor_instance) {
       this.sceditor_instance.destroy();
@@ -1682,9 +1729,9 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     }
     
     this.template = null;
-    this.input.remove();
-    if(this.label) this.label.remove();
-    if(this.description) this.description.remove();
+    this.input.parentNode.removeChild(this.input);
+    if(this.label) this.label.parentNode.removeChild(this.label);
+    if(this.description) this.description.parentNode.removeChild(this.description);
 
     this._super();
   },
@@ -1779,27 +1826,27 @@ $.jsoneditor.editors.integer = $.jsoneditor.editors.number.extend({
 
 $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
   getDefault: function() {
-    return $.extend(true,{},this.schema.default || {});
+    return $extend(true,{},this.schema.default || {});
   },
   getChildEditors: function() {
     return this.editors;
   },
   addProperty: function() {
     this._super();
-    this.editor_holder.show(500);
-    this.title_controls.show(500);
-    this.editjson_controls.show(500);
-    if(this.addproperty_controls) this.addproperty_controls.show(500);
+    this.editor_holder.style.display = 'block';
+    this.title_controls.style.display = 'block';
+    this.editjson_controls.style.display = 'block';
+    if(this.addproperty_controls) this.addproperty_controls.style.display = 'block';
     this.theme.enableHeader(this.title);
   },
   removeProperty: function() {
     this._super();
-    this.editor_holder.hide(500);
-    this.title_controls.hide(500);
-    this.editjson_controls.hide(500);
-    if(this.addproperty_controls) this.addproperty_controls.hide(500);
-    this.cancel_editjson_button.trigger('click');
-    if(this.cancel_addproperty_button) this.cancel_addproperty_button.trigger('click');
+    this.editor_holder.style.display = 'none';
+    this.title_controls.style.display = 'none';
+    this.editjson_controls.style.display = 'none';
+    if(this.addproperty_controls) this.addproperty_controls.style.display = 'none';
+    $(this.cancel_editjson_button).trigger('click');
+    if(this.cancel_addproperty_button) $(this.cancel_addproperty_button).trigger('click');
     this.theme.disableHeader(this.title);
   },
   build: function() {
@@ -1811,9 +1858,9 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     // If the object should be rendered as a table row
     if(this.getOption('table_row',false)) {
       this.editor_holder = this.container;
-      $.each(this.schema.properties, function(key,schema) {
+      $each(this.schema.properties, function(key,schema) {
         var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
-        var holder = self.getTheme().getTableCell().appendTo(self.editor_holder);
+        var holder = self.editor_holder.appendChild(self.getTheme().getTableCell());
 
         self.editors[key] = new editor({
           jsoneditor: self.jsoneditor,
@@ -1832,24 +1879,35 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
     // If the object should be rendered as a div
     else {
-      this.header = $("<span>").text(this.getTitle());
-      this.title = this.getTheme().getHeader(this.header).appendTo(this.container);
+      this.title = this.getTheme().getHeader(this.getTitle());
+      this.container.appendChild(this.title);
       
-      this.editjson_holder = this.theme.getTextareaInput().appendTo(this.container).hide().css({
-        height: 100,
-        width: '100%'
-      });
+      this.editjson_holder = this.theme.getTextareaInput();
+      this.container.appendChild(this.editjson_holder);
+      this.editjson_holder.style.display = 'none';
+      this.editjson_holder.style.height = '100px';
+      this.editjson_holder.style.width = '100%';
       
-      this.addproperty_holder = $("<div>").appendTo(this.container).hide();
-      this.addproperty_input = this.theme.getFormInputField('text').appendTo(this.addproperty_holder).attr('placeholder','Property name...');
+      this.addproperty_holder = document.createElement('div');
+      this.container.appendChild(this.addproperty_holder);
+      this.addproperty_holder.style.display = 'none';
+      this.addproperty_input = this.theme.getFormInputField('text');
+      this.addproperty_holder.appendChild(this.addproperty_input);
+      this.addproperty_input.setAttribute('placeholder','Property name...');
       
-      if(this.schema.description) this.description = this.getTheme().getDescription(this.schema.description).appendTo(this.container);
-      this.error_holder = $("<div></div>").appendTo(this.container);
-      this.editor_holder = this.getTheme().getIndentedPanel().appendTo(this.container);
+      if(this.schema.description) {
+        this.description = this.getTheme().getDescription(this.schema.description);
+        this.container.append(this.description);
+      }
+      this.error_holder = document.createElement('div');
+      this.container.appendChild(this.error_holder);
+      this.editor_holder = this.getTheme().getIndentedPanel();
+      this.container.appendChild(this.editor_holder);
 
-      $.each(this.schema.properties, function(key,schema) {
+      $each(this.schema.properties, function(key,schema) {
         var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
-        var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
+        var holder = self.getTheme().getChildEditorHolder();
+        self.editor_holder.appendChild(holder);
 
         // If the property is required
         var required;
@@ -1868,20 +1926,25 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       });
 
       // Control buttons
-      this.title_controls = this.getTheme().getHeaderButtonHolder().appendTo(this.title);
-      this.editjson_controls = this.getTheme().getHeaderButtonHolder().appendTo(this.title);
-      this.addproperty_controls = this.getTheme().getHeaderButtonHolder().appendTo(this.title);
+      this.title_controls = this.getTheme().getHeaderButtonHolder();
+      this.editjson_controls = this.getTheme().getHeaderButtonHolder();
+      this.addproperty_controls = this.getTheme().getHeaderButtonHolder();
+      this.title.appendChild(this.title_controls);
+      this.title.appendChild(this.editjson_controls);
+      this.title.appendChild(this.addproperty_controls);
 
       // Show/Hide button
       this.collapsed = false;
-      this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
+      this.toggle_button = this.getButton('','collapse','Collapse');
+      this.title_controls.appendChild(this.toggle_button)
+      this.toggle_button.addEventListener('click',function() {
         if(self.collapsed) {
-          self.editor_holder.show(300);
+          self.editor_holder.style.display = '';
           self.collapsed = false;
           self.setButtonText(self.toggle_button,'','collapse','Collapse');
         }
         else {
-          self.editor_holder.hide(300);
+          self.editor_holder.style.display = 'none';
           self.collapsed = true;
           self.setButtonText(self.toggle_button,'','expand','Expand');
         }
@@ -1889,17 +1952,19 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
       // If it should start collapsed
       if(this.options.collapsed) {
-        this.toggle_button.trigger('click');
+        $(this.toggle_button).trigger('click');
       }
       
       // Edit JSON Button
       this.editing_json = false;
-      this.editjson_button = this.getButton('JSON','edit','Edit JSON').appendTo(this.editjson_controls).on('click',function() {
+      this.editjson_button = this.getButton('JSON','edit','Edit JSON');
+      this.editjson_controls.appendChild(this.editjson_button)
+      this.editjson_button.addEventListener('click',function() {
         // Save Changes
         if(self.editing_json) {
           // Get value from form
           try {
-            var value = JSON.parse(self.editjson_holder.val());
+            var value = JSON.parse(self.editjson_holder.value);
           }
           catch(e) {
             // Error parsing the JSON
@@ -1908,29 +1973,32 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           }
           
           // Hide the edit form
-          self.cancel_editjson_button.hide();
-          self.editjson_holder.hide(300);
+          self.cancel_editjson_button.style.display = 'none';
+          self.editjson_holder.style.display = 'none';
           self.setButtonText(self.editjson_button,'JSON','edito','Edit JSON');
           self.editing_json = false;
           
           // Set the value
           self.setValue(value);
-          self.editor_holder.trigger('change');
+          $(self.editor_holder).trigger('change');
         }
         // Start Editing
         else {
           self.editing_json = true;
-          self.cancel_editjson_button.show();
-          self.editjson_holder.val(JSON.stringify(self.value,null,2));
-          self.editjson_holder.show(300);
+          self.cancel_editjson_button.style.display = '';
+          self.editjson_holder.value = JSON.stringify(self.value,null,2);
+          self.editjson_holder.style.display = '';
           self.setButtonText(self.editjson_button,'JSON','save','Save JSON');
         }
         
         return false;
       });
-      this.cancel_editjson_button = this.getButton('','cancel','Cancel').appendTo(this.editjson_controls).hide().on('click',function() {
-          self.cancel_editjson_button.hide();
-          self.editjson_holder.hide(300);
+      this.cancel_editjson_button = this.getButton('','cancel','Cancel');
+      this.editjson_controls.appendChild(this.cancel_editjson_button);
+      this.cancel_editjson_button.style.display = 'none';
+      this.cancel_editjson_button.addEventListener('click',function() {
+          self.cancel_editjson_button.style.display = 'none'
+          self.editjson_holder.style.display = 'none';
           self.setButtonText(self.editjson_button,'JSON','edit','Edit JSON');
           self.editing_json = false;
           
@@ -1939,10 +2007,12 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       
       if(this.canHaveAdditionalProperties()) {
         this.adding_property = false;
-        this.addproperty_button = this.getButton('Property','add','Add Property').appendTo(this.addproperty_controls).on('click',function() {
+        this.addproperty_button = this.getButton('Property','add','Add Property');
+        this.addproperty_controls.appendChild(this.addproperty_button)
+        this.addproperty_button.addEventListener('click',function() {
           // Add property
           if(self.adding_property) {
-            var name = self.addproperty_input.val();
+            var name = self.addproperty_input.value;
             
             // If property with this name already exists
             if(self.editors[name]) {
@@ -1951,8 +2021,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
             }
             
             // Hide the edit form
-            self.cancel_addproperty_button.hide();
-            self.addproperty_holder.hide(300);
+            self.cancel_addproperty_button.style.display = 'none';
+            self.addproperty_holder.style.display = 'none';
             self.setButtonText(self.addproperty_button,'Property','add','Add Property');
             self.adding_property = false;
             self.addObjectProperty(name);
@@ -1960,18 +2030,21 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           // Start Editing
           else {
             self.adding_property = true;
-            self.addproperty_input.val('');
-            self.cancel_addproperty_button.show();
-            self.addproperty_holder.show(300);
+            self.addproperty_input.value = '';
+            self.cancel_addproperty_button.style.display = '';
+            self.addproperty_holder.style.display = '';
             self.setButtonText(self.addproperty_button,'Property','save','Save Property');
           }
           
           return false;
         });
         
-        this.cancel_addproperty_button = this.getButton('','cancel','Cancel').appendTo(this.addproperty_controls).hide().on('click',function() {
-            self.cancel_addproperty_button.hide();
-            self.addproperty_holder.hide(300);
+        this.cancel_addproperty_button = this.getButton('','cancel','Cancel');
+        this.addproperty_controls.appendChild(this.cancel_addproperty_button);
+        this.cancel_addproperty_button.style.display = 'none';
+        this.cancel_addproperty_button.addEventListener('click',function() {
+            self.cancel_addproperty_button.style.display = 'none'
+            self.addproperty_holder.style.display = 'none'
             self.setButtonText(self.addproperty_button,'Property','add','Add Property');
             self.adding_property = false;
             
@@ -1981,8 +2054,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
       
     // When a child editor changes, refresh the value
-    self.editor_holder.on('change',function() {
-      self.refreshValue();      
+    self.editor_holder.addEventListener('change',function() {
+      self.refreshValue();
     });
   },
   canHaveAdditionalProperties: function() {
@@ -2000,22 +2073,23 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     var schema = {}, matched = false;
     // Check if it matches any of the pattern properties
     if(self.schema.patternProperties) {
-      $.each(self.schema.patternProperties,function(i,el) {
+      $each(self.schema.patternProperties,function(i,el) {
         var regex = new RegExp(i);
         if(regex.test(name)) {
           matched = true;
-          schema = $.extend(true,schema,el);
+          schema = $extend(true,schema,el);
         }
       });
     }
     // Otherwise, check if additionalProperties is a schema
     if(!matched && typeof self.schema.additionalProperties === "object") {
-      schema = $.extend(true,schema,self.schema.additionalProperties);
+      schema = $extend(true,schema,self.schema.additionalProperties);
     }
     
     // Add the property
     var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
-    var holder = self.getTheme().getChildEditorHolder().appendTo(self.editor_holder);
+    var holder = self.getTheme().getChildEditorHolder();
+    self.editor_holder.appendChild(holder);
 
     self.editors[name] = new editor({
       jsoneditor: self.jsoneditor,
@@ -2027,18 +2101,18 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     });
     self.editors[name].not_core = true;
     
-    holder.trigger('change');
+    $(holder).trigger('change');
   },
   destroy: function() {
-    $.each(this.editors, function(i,el) {
+    $each(this.editors, function(i,el) {
       el.destroy();
     });
-    this.editor_holder.empty();
-    if(this.title) this.title.remove();
-    if(this.error_holder) this.error_holder.remove();
+    this.editor_holder.innerHTML = '';
+    if(this.title) this.title.parentNode.removeChild(this.title);
+    if(this.error_holder) this.error_holder.parentNode.removeChild(this.error_holder);
 
     this.editors = null;
-    this.editor_holder.remove();
+    this.editor_holder.parentNode.removeChild(this.editor_holder);
     this.editor_holder = null;
 
     this._super();
@@ -2059,13 +2133,13 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     });
     
     $.each(this.editors, function(i,editor) {
-      if(editor.addremove) editor.addremove.show();
+      if(editor.addremove) editor.addremove.style.display = '';
       if(editor.property_removed) {
         if(!editor.not_core && removed) new_editors[i] = editor;
         else if(editor.not_core) {
           var container = editor.container;
           editor.destroy();
-          container.remove();
+          container.parentNode.removeChild(container);
         }
         return;
       }
@@ -2081,7 +2155,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       if(props <= this.schema.minProperties) {
         $.each(this.editors, function(i,editor) {
           if(!editor.property_removed && editor.addremove) {
-            editor.addremove.hide();
+            editor.addremove.style.display = 'none';
           }
         });
       }
@@ -2090,7 +2164,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       if(props >= this.schema.maxProperties) {
         $.each(this.editors, function(i,editor) {
           if(editor.property_removed && editor.addremove) {
-            editor.addremove.hide();
+            editor.addremove.style.display = 'none';
           }
         });
       }
@@ -2106,7 +2180,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
         if(editor.property_removed && editor.addremove) {
-          editor.addremove.trigger('click');
+          $(editor.addremove).trigger('click');
         }
         
         editor.setValue(value[i],initial);
@@ -2114,7 +2188,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       else {
         // If property isn't required, remove property
         if(!initial && !editor.property_removed && !editor.isRequired() && editor.addremove) {
-          editor.addremove.trigger('click');
+          $(editor.addremove).trigger('click');
           return;
         }
         
@@ -2136,7 +2210,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
     
     this.refreshValue();
-    this.container.trigger('set');
+    this.fireSetEvent();
   },
   showValidationErrors: function(errors) {
     var self = this;
@@ -2157,14 +2231,15 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     if(this.error_holder) {
       if(my_errors.length) {
         var message = [];
-        this.error_holder.empty().show();
+        this.error_holder.innerHTML = '';
+        this.error_holder.style.display = '';
         $.each(my_errors, function(i,error) {
-          self.error_holder.append(self.theme.getErrorMessage(error.message));
+          self.error_holder.appendChild(self.theme.getErrorMessage(error.message));
         });
       }
       // Hide error area
       else {
-        this.error_holder.hide();
+        this.error_holder.style.display = 'none';
       }
     }
 
@@ -2191,18 +2266,18 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   },
   addProperty: function() {
     this._super();
-    this.row_holder.show(500);
-    if(this.tabs_holder) this.tabs_holder.show(500);
-    this.controls.show(500);
-    this.title_controls.show(500);
+    this.row_holder.style.display = '';
+    if(this.tabs_holder) this.tabs_holder.style.display = '';
+    this.controls.style.display = '';
+    this.title_controls.style.display = '';
     this.theme.enableHeader(this.title);
   },
   removeProperty: function() {
     this._super();
-    this.row_holder.hide(500);
-    if(this.tabs_holder) this.tabs_holder.hide(500);
-    this.controls.hide(500);
-    this.title_controls.hide(500);
+    this.row_holder.style.display = 'none';
+    if(this.tabs_holder) this.tabs_holder.style.display = 'none';
+    this.controls.style.display = 'none';
+    this.title_controls.style.display = 'none';
     this.theme.disableHeader(this.title);
   },
   build: function() {
@@ -2211,35 +2286,49 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
 
     if(!this.getOption('compact',false)) {
-      this.header = $("<span>").text(this.getTitle());
-      this.title = this.theme.getHeader(this.header).appendTo(this.container);
-      this.title_controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
-      if(this.schema.description) this.description = this.theme.getDescription(this.schema.description).appendTo(this.container);
-      this.error_holder = $("<div></div>").appendTo(this.container);
+      this.title = this.theme.getHeader(this.getTitle())
+      this.container.appendChild(this.title);
+      this.title_controls = this.theme.getHeaderButtonHolder();
+      this.title.appendChild(this.title_controls);
+      if(this.schema.description) {
+        this.description = this.theme.getDescription(this.schema.description)
+        this.container.appendChild(this.description);
+      }
+      this.error_holder = document.createElement('div');
+      this.container.appendChild(this.error_holder);
 
       if(this.schema.format === 'tabs') {
-        this.controls = this.theme.getHeaderButtonHolder().appendTo(this.title);
-        this.tabs_holder = this.theme.getTabHolder().appendTo(this.container);
+        this.controls = this.theme.getHeaderButtonHolder();
+        this.title.appendChild(this.controls);
+        this.tabs_holder = this.theme.getTabHolder();
+        this.container.appendChild(this.tabs_holder);
         this.row_holder = this.theme.getTabContentHolder(this.tabs_holder);
+        this.tabs_holder.appendChild(this.row_holder);
 
         this.active_tab = null;
       }
       else {
-        this.panel = this.theme.getIndentedPanel().appendTo(this.container);
-        this.row_holder = $("<div>").appendTo(this.panel);
-        this.controls = this.theme.getButtonHolder().appendTo(this.panel);
+        this.panel = this.theme.getIndentedPanel();
+        this.container.appendChild(this.panel);
+        this.row_holder = document.createElement('div');
+        this.panel.appendChild(this.row_holder);
+        this.controls = this.theme.getButtonHolder();
+        this.panel.appendChild(this.controls);
       }
     }
     else {
-      this.panel = this.theme.getIndentedPanel().appendTo(this.container);
-      this.controls = this.theme.getButtonHolder().appendTo(this.panel);
-      this.row_holder = $("<div>").appendTo(this.panel);
+        this.panel = this.theme.getIndentedPanel();
+        this.container.appendChild(this.panel);
+        this.controls = this.theme.getButtonHolder();
+        this.panel.appendChild(this.controls);
+        this.row_holder = document.createElement('div');
+        this.panel.appendChild(this.row_holder);
     }
 
-    this.row_holder.on('change',function() {
+    this.row_holder.addEventListener('change',function() {
       self.refreshValue();
     });
-    this.row_holder.on('change_header_text',function() {
+    this.row_holder.addEventListener('change_header_text',function() {
       self.refreshTabs(true);
     });
     
@@ -2280,13 +2369,21 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     if(typeof this.item_info[stringified] !== "undefined") return this.item_info[stringified];
     
     // Create a temporary editor with this schema and get info
-    var tmp = $("<div>").appendTo(this.container);
+    var tmp = document.createElement('div');
+    this.container.appendChild(tmp);
     
     // Ignore events on this temporary editor
-    tmp.on('change set',function(e) {
+    tmp.addEventListener('change',function(e) {
       e.preventDefault();
       e.stopPropagation();
-      return false;
+    });
+    tmp.addEventListener('set',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    tmp.addEventListener('change_header_text',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
     });
     
     var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
@@ -2326,7 +2423,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       holder = this.theme.getIndentedPanel();
     }
 
-    holder.appendTo(this.row_holder);
+    this.row_holder.appendChild(holder);
 
     var ret = new editor({
       jsoneditor: this.jsoneditor,
@@ -2338,18 +2435,19 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     });
 
     if(!ret.title_controls) {
-      ret.array_controls = this.theme.getButtonHolder().appendTo(holder);
+      ret.array_controls = this.theme.getButtonHolder();
+      holder.appendChild(ret.array_controls);
     }
     
     return ret;
   },
   destroy: function() {
     this.empty(true);
-    if(this.title) this.title.remove();
-    if(this.description) this.description.remove();
-    if(this.row_holder) this.row_holder.remove();
-    if(this.controls) this.controls.remove();
-    if(this.panel) this.panel.remove();
+    if(this.title) this.title.parentNode.removeChild(this.title);
+    if(this.description) this.description.parentNode.removeChild(this.description);
+    if(this.row_holder) this.row_holder.parentNode.removeChild(this.row_holder);
+    if(this.controls) this.controls.parentNode.removeChild(this.controls);
+    if(this.panel) this.panel.parentNode.removeChild(this.panel);
     
     this.rows = this.row_cache = this.title = this.description = this.row_holder = this.panel = this.controls = null;
 
@@ -2360,7 +2458,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     $.each(this.rows,function(i,row) {
       if(hard) {
-        if(row.tab) row.tab.remove();
+        if(row.tab) row.tab.parentNode.removeChild(row.tab);
         self.destroyRow(row,true);
         self.row_cache[i] = null;
       }
@@ -2373,12 +2471,12 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var holder = row.container;
     if(hard) {
       row.destroy();
-      holder.remove();
-      if(row.tab) row.tab.remove();
+      holder.parentNode.removeChild(holder);
+      if(row.tab) row.tab.parentNode.removeChild(row.tab);
     }
     else {
-      if(row.tab) row.tab.hide();
-      holder.hide();
+      if(row.tab) row.tab.style.display = 'none';
+      holder.style.display = 'none';
     }
   },
   getMax: function() {
@@ -2395,16 +2493,16 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       if(!row.tab) return;
 
       if(refresh_headers) {
-        row.tab_text.text(row.getHeaderText());
+        row.tab_text.textContent = row.getHeaderText();
       }
       else {
         if(row.tab === self.active_tab) {
           self.theme.markTabActive(row.tab);
-          row.container.show();
+          row.container.style.display = '';
         }
         else {
           self.theme.markTabInactive(row.tab);
-          row.container.hide();
+          row.container.style.display = 'none';
         }
       }
     });
@@ -2437,8 +2535,8 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       else if(self.row_cache[i]) {
         self.rows[i] = self.row_cache[i];
         self.rows[i].setValue(val);
-        self.rows[i].container.show();
-        if(self.rows[i].tab) self.rows[i].tab.show();
+        self.rows[i].container.style.display = '';
+        if(self.rows[i].tab) self.rows[i].tab.style.display = '';
       }
       else {
         self.addRow(val);
@@ -2466,7 +2564,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.refreshValue();
     self.refreshTabs();
     
-    self.container.trigger('set');
+    $triggerc(self.container,'set');
     
     // TODO: sortable
   },
@@ -2487,18 +2585,18 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       $.each(this.rows,function(i,editor) {
         // Hide the move down button for the last row
         if(i === self.rows.length - 1) {
-          editor.movedown_button.hide();
+          editor.movedown_button.style.display = 'none';
         }
         else {
-          editor.movedown_button.show();
+          editor.movedown_button.style.display = '';
         }
 
         // Hide the delete button if we have minItems items
         if(minItems) {
-          editor.delete_button.hide();
+          editor.delete_button.style.display = 'none';
         }
         else {
-          editor.delete_button.show();
+          editor.delete_button.style.display = '';
         }
 
         // Get the value for this editor
@@ -2506,38 +2604,38 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       });
       
       if(!this.value.length) {
-        this.delete_last_row_button.hide();
-        this.remove_all_rows_button.hide();
+        this.delete_last_row_button.style.display = 'none';
+        this.remove_all_rows_button.style.display = 'none';
       }
       else if(this.value.length === 1) {      
-        this.remove_all_rows_button.hide();  
+        this.remove_all_rows_button.style.display = 'none';  
 
         // If there are minItems items in the array, hide the delete button beneath the rows
         if(minItems) {
-          this.delete_last_row_button.hide();
+          this.delete_last_row_button.style.display = 'none';
         }
         else {
-          this.delete_last_row_button.show();
+          this.delete_last_row_button.style.display = '';
         }
       }
       else {
         // If there are minItems items in the array, hide the delete button beneath the rows
         if(minItems) {
-          this.delete_last_row_button.hide();
-          this.delete_last_row_button.hide();
+          this.delete_last_row_button.style.display = 'none';
+          this.delete_last_row_button.style.display = 'none';
         }
         else {
-          this.delete_last_row_button.show();
-          this.remove_all_rows_button.show();
+          this.delete_last_row_button.style.display = '';
+          this.remove_all_rows_button.style.display = '';
         }
       }
 
       // If there are maxItems in the array, hide the add button beneath the rows
       if(this.getMax() && this.getMax() <= this.rows.length) {
-        this.add_row_button.hide();
+        this.add_row_button.style.display = 'none';
       }
       else {
-        this.add_row_button.show();
+        this.add_row_button.style.display = '';
       } 
     }
   },
@@ -2549,91 +2647,94 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     self.row_cache[i] = self.rows[i];
 
     if(self.tabs_holder) {
-      self.rows[i].tab_text = $("<span>").text(self.rows[i].getHeaderText());
-      self.rows[i].tab = self.theme.getTab(self.rows[i].tab_text)
-        .on('click', function() {
-          self.active_tab = self.rows[i].tab;
-          self.refreshTabs();
-          return false;
-        });
+      self.rows[i].tab_text = document.createElement('span');
+      self.rows[i].tab_text.textContent = self.rows[i].getHeaderText();
+      self.rows[i].tab = self.theme.getTab(self.rows[i].tab_text);
+      self.rows[i].tab.addEventListener('click', function(e) {
+        self.active_tab = self.rows[i].tab;
+        self.refreshTabs();
+        e.preventDefault();
+        e.stopPropagation();
+      });
 
       self.theme.addTab(self.tabs_holder, self.rows[i].tab);
     }
     
     // Buttons to delete row, move row up, and move row down
-    self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle())
-      .addClass('delete')
-      .data('i',i)
-      .on('click',function() {
-        var i = $(this).data('i');
+    self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle());
+    
+    self.rows[i].delete_button.className += ' delete';
+    self.rows[i].delete_button.setAttribute('data-i',i);
+    self.rows[i].delete_button.addEventListener('click',function() {
+      var i = this.getAttribute('data-i')*1;
 
-        var value = self.getValue();
+      var value = self.getValue();
 
-        var newval = [];
-        var new_active_tab = null;
-        $.each(value,function(j,row) {
-          if(j===i) {
-            // If the one we're deleting is the active tab
-            if(self.rows[j].tab === self.active_tab) {
-              // Make the next tab active if there is one
-              if(self.rows[j+1]) new_active_tab = self.rows[j+1].tab;
-              // Otherwise, make the previous tab active if there is one
-              else if(j) new_active_tab = self.rows[j-1].tab;
-            }
-            
-            return; // If this is the one we're deleting
+      var newval = [];
+      var new_active_tab = null;
+      $.each(value,function(j,row) {
+        if(j===i) {
+          // If the one we're deleting is the active tab
+          if(self.rows[j].tab === self.active_tab) {
+            // Make the next tab active if there is one
+            if(self.rows[j+1]) new_active_tab = self.rows[j+1].tab;
+            // Otherwise, make the previous tab active if there is one
+            else if(j) new_active_tab = self.rows[j-1].tab;
           }
-          newval.push(row);
-        });
-        self.setValue(newval);
-        if(new_active_tab) {
-          self.active_tab = new_active_tab;
-          self.refreshTabs();
+          
+          return; // If this is the one we're deleting
         }
-        
-        self.container.trigger('change');
+        newval.push(row);
       });
-    self.rows[i].moveup_button = this.getButton('','moveup','Move up')
-      .data('i',i)
-      .addClass('moveup')
-      .on('click',function() {
-        var i = $(this).data('i');
-
-        if(i<=0) return;
-        var rows = self.getValue();
-        var tmp = rows[i-1];
-        rows[i-1] = rows[i];
-        rows[i] = tmp;
-
-        self.setValue(rows);
-        self.active_tab = self.rows[i-1].tab;
+      self.setValue(newval);
+      if(new_active_tab) {
+        self.active_tab = new_active_tab;
         self.refreshTabs();
+      }
+      
+      self.fireChangeEvent();
+    });
+    self.rows[i].moveup_button = this.getButton('','moveup','Move up');
+    self.rows[i].moveup_button.className += ' moveup';
+    self.rows[i].moveup_button.setAttribute('data-i',i);
+    self.rows[i].moveup_button.addEventListener('click',function() {
+      var i = this.getAttribute('data-i')*1;
 
-        self.container.trigger('change');
-      });
-    self.rows[i].movedown_button = this.getButton('','movedown','Move down')
-      .addClass('movedown')
-      .data('i',i)
-      .on('click',function() {
-        var i = $(this).data('i');
+      if(i<=0) return;
+      var rows = self.getValue();
+      var tmp = rows[i-1];
+      rows[i-1] = rows[i];
+      rows[i] = tmp;
 
-        var rows = self.getValue();
-        if(i>=rows.length-1) return;
-        var tmp = rows[i+1];
-        rows[i+1] = rows[i];
-        rows[i] = tmp;
+      self.setValue(rows);
+      self.active_tab = self.rows[i-1].tab;
+      self.refreshTabs();
 
-        self.setValue(rows);
-        self.active_tab = self.rows[i+1].tab;
-        self.refreshTabs();
-        self.container.trigger('change');
-      });
+      self.fireChangeEvent();
+    });
+    self.rows[i].movedown_button = this.getButton('','movedown','Move down');
+    self.rows[i].movedown_button.className += ' movedown';
+    self.rows[i].movedown_button.setAttribute('data-i',i);
+    self.rows[i].movedown_button.addEventListener('click',function() {
+      var i = this.getAttribute('data-i')*1;
+
+      var rows = self.getValue();
+      if(i>=rows.length-1) return;
+      var tmp = rows[i+1];
+      rows[i+1] = rows[i];
+      rows[i] = tmp;
+
+      self.setValue(rows);
+      self.active_tab = self.rows[i+1].tab;
+      self.refreshTabs();
+      self.fireChangeEvent();
+    });
 
     var controls_holder = self.rows[i].title_controls || self.rows[i].array_controls;
     if(controls_holder) {
-      controls_holder.append(self.rows[i].delete_button);
-      if(i) controls_holder.append(self.rows[i].moveup_button);
-      controls_holder.append(self.rows[i].movedown_button);
+      controls_holder.appendChild(self.rows[i].delete_button);
+      if(i) controls_holder.appendChild(self.rows[i].moveup_button);
+      controls_holder.appendChild(self.rows[i].movedown_button);
     }
 
     if(value) self.rows[i].setValue(value);
@@ -2643,129 +2744,86 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     
     this.collapsed = false;
-    this.toggle_button = this.getButton('','collapse','Collapse').appendTo(this.title_controls).on('click',function() {
+    this.toggle_button = this.getButton('','collapse','Collapse');
+    this.title_controls.appendChild(this.toggle_button)
+    this.title_controls.addEventListener('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
-        self.row_holder.show(300);
-        if(self.tabs_holder) self.tabs_holder.show(300);
-        self.controls.show(300);
-        self.setButtonText($(this),'','collapse','Collapse');
+        self.row_holder.style.display = '';
+        if(self.tabs_holder) self.tabs_holder.style.display = '';
+        self.controls.style.display = '';
+        self.setButtonText(this,'','collapse','Collapse');
       }
       else {
         self.collapsed = true;
-        self.row_holder.hide(300);
-        if(self.tabs_holder) self.tabs_holder.hide(300);
-        self.controls.hide(300);
-        self.setButtonText($(this),'','expand','Expand');
+        self.row_holder.style.display = 'none';
+        if(self.tabs_holder) self.tabs_holder.style.display = 'none';
+        self.controls.style.display = 'none';
+        self.setButtonText(this,'','expand','Expand');
       }
     });
 
     // If it should start collapsed
     if(this.options.collapsed) {
-      this.toggle_button.trigger('click');
+      $trigger(this.toggle_button.trigger,'click');
     }
     
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle())
-      .on('click',function() {
-        var i = self.rows.length;
-        if(self.row_cache[i]) {
-          self.rows[i] = self.row_cache[i];
-          self.rows[i].container.show();
-          if(self.rows[i].tab) self.rows[i].tab.show();
-        }
-        else {
-          self.addRow();
-        }
-        self.active_tab = self.rows[i].tab;
+    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
+    
+    this.add_row_button.addEventListener('click',function() {
+      var i = self.rows.length;
+      if(self.row_cache[i]) {
+        self.rows[i] = self.row_cache[i];
+        self.rows[i].container.style.display = '';
+        if(self.rows[i].tab) self.rows[i].tab.style.display = '';
+      }
+      else {
+        self.addRow();
+      }
+      self.active_tab = self.rows[i].tab;
+      self.refreshTabs();
+      self.refreshValue();
+      self.fireChangeEvent();
+    });
+    self.controls.appendChild(this.add_row_button);
+
+    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
+    this.delete_last_row_button.addEventListener('click',function() {
+      var rows = self.getValue();
+      
+      var new_active_tab = null;
+      if(self.rows.length > 1 && self.rows[self.rows.length-1].tab === self.active_tab) new_active_tab = self.rows[self.rows.length-2].tab;
+      
+      rows.pop();
+      self.setValue(rows);
+      if(new_active_tab) {
+        self.active_tab = new_active_tab;
         self.refreshTabs();
-        self.refreshValue();
-        self.container.trigger('change');
-      })
-      .appendTo(self.controls);
+      }
+      self.fireChangeEvent();
+    })
+    self.controls.appendChild(this.delete_last_row_button);
 
-    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle())
-      .on('click',function() {
-        var rows = self.getValue();
-        
-        var new_active_tab = null;
-        if(self.rows.length > 1 && self.rows[self.rows.length-1].tab === self.active_tab) new_active_tab = self.rows[self.rows.length-2].tab;
-        
-        rows.pop();
-        self.setValue(rows);
-        if(new_active_tab) {
-          self.active_tab = new_active_tab;
-          self.refreshTabs();
-        }
-        self.container.trigger('change');
-      })
-      .appendTo(self.controls);
-
-    this.remove_all_rows_button = this.getButton('All','delete','Delete All')
-      .on('click',function() {
-        self.setValue([]);
-        self.container.trigger('change');
-      })
-      .appendTo(self.controls);
+    this.remove_all_rows_button = this.getButton('All','delete','Delete All');
+    this.remove_all_rows_button.addEventListener('click',function() {
+      self.setValue([]);
+      self.fireChangeEvent();
+    })
+    self.controls.appendChild(this.remove_all_rows_button);
 
     if(self.tabs) {
-      this.add_row_button.css({
-        width: '100%',
-        textAlign: 'left',
-        marginBottom: 3
-      });
-      this.delete_last_row_button.css({
-        width: '100%',
-        textAlign: 'left',
-        marginBottom: 3
-      });
-      this.remove_all_rows_button.css({
-        width: '100%',
-        textAlign: 'left',
-        marginBottom: 3
-      });
-
-      // Make rows sortable
-      this.tabs
-        .on('sortupdate',function(e,ui) {
-          var oldi = ui.oldindex;
-          var newi = ui.item.index();
-
-          e.stopPropagation();
-          e.preventDefault();
-
-          if(oldi == newi) return;
-
-          // Get the new value for the array
-          var value = self.getValue();
-          var newval = [];
-          var row = value[oldi];
-          var before = oldi>newi;
-          $.each(value,function(i,el) {
-            if(i===oldi) return;
-
-            if(before) {
-              if(i===newi) newval.push(row);
-              newval.push(el);
-            }
-            else {
-              newval.push(el);
-              if(i===newi) newval.push(row);
-            }
-          });
-
-          // Move the element back to where it was
-          ui.item.detach();
-          if(oldi) {
-            self.row_holder.children().eq(oldi-1).after(ui.item);
-          }
-          else {
-            self.row_holder.children().eq(0).before(ui.item);
-          }
-
-          self.setValue(newval);
-          self.div.trigger('change');
-        })
+      this.add_row_button.style.width = '100%';
+      this.add_row_button.style.textAlign = 'left';
+      this.add_row_button.style.marginBottom = '3px';
+      
+      this.delete_last_row_button.style.width = '100%';
+      this.delete_last_row_button.style.textAlign = 'left';
+      this.delete_last_row_button.style.marginBottom = '3px';
+      
+      this.remove_all_rows_button.style.width = '100%';
+      this.remove_all_rows_button.style.textAlign = 'left';
+      this.remove_all_rows_button.style.marginBottom = '3px';
     }
   },
   showValidationErrors: function(errors) {
@@ -2787,14 +2845,15 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     if(this.error_holder) {
       if(my_errors.length) {
         var message = [];
-        this.error_holder.empty().show();
+        this.error_holder.innerHTML = '';
+        this.error_holder.style.display = '';
         $.each(my_errors, function(i,error) {
-          self.error_holder.append(self.theme.getErrorMessage(error.message));
+          self.error_holder.appendChild(self.theme.getErrorMessage(error.message));
         });
       }
       // Hide error area
       else {
-        this.error_holder.hide();
+        this.error_holder.style.display = 'none';
       }
     }
 
@@ -3220,7 +3279,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this;
-    var container = this.getContainer();
+    var container = this.container;
 
     this.types = [];
     
@@ -3257,42 +3316,36 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     
     this.display_text = this.getDisplayText(this.types);
 
-    this.switcher = this.theme.getSelectInput(this.display_text)
-      .appendTo(container)
-      .on('change',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        self.type = self.display_text.indexOf($(this).val());
+    this.switcher = this.theme.getSelectInput(this.display_text);
+    container.appendChild(this.switcher);
+    this.switcher.addEventListener('change',function(e) {
+      self.type = self.display_text.indexOf($(this).val());
 
-        var current_value = self.getValue();
+      var current_value = self.getValue();
 
-        $.each(self.editors,function(type,editor) {
-          if(self.type === type) {
-            editor.setValue(current_value,true);
-            editor.container.show();
-          }
-          else editor.container.hide();
-        });
-
-        self.container.trigger('change');
-        
-        return false;
-      })
-      .css({
-        marginBottom: 0,
-        float: 'right'
+      $.each(self.editors,function(type,editor) {
+        if(self.type === type) {
+          editor.setValue(current_value,true);
+          editor.container.style.display = '';
+        }
+        else editor.container.style.display = 'none';
       });
+      self.refreshValue();
+    })
+    this.switcher.style.marginBottom = 0;
+    this.switcher.style.float = 'right';
 
-    this.editor_holder = this.theme.getIndentedPanel().appendTo(container);
+    this.editor_holder = this.theme.getIndentedPanel();
+    container.appendChild(this.editor_holder);
     this.type = 0;
 
     this.editors = [];
     this.validators = [];
-    var options = $("option",this.switcher);
+    var options = this.switcher.getElementsByTagName('option');
     var option = 0;
     $.each(this.types,function(i,type) {
-      var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
+      var holder = self.theme.getChildEditorHolder();
+      self.editor_holder.appendChild(holder);
 
       var schema;
       
@@ -3325,23 +3378,26 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         required: true
       });
       
-      self.editors[i].option = options.eq(option);
+      self.editors[i].option = options[option];
       
-      holder.on('change_header_text',function() {
+      holder.addEventListener('change_header_text',function() {
         self.refreshHeaderText();
       });
 
-      if(i !== self.type) holder.hide();
+      if(i !== self.type) holder.style.display = 'none';
       
       option++;
     });
 
-    this.editor_holder.on('change set',function() {
+    this.editor_holder.addEventListener('change',function() {
+      self.refreshValue();
+    });
+    this.editor_holder.addEventListener('set',function() {
       self.refreshValue();
     });
     this.refreshHeaderText();
 
-    this.switcher.val(this.display_text[this.type]);
+    this.switcher.value = this.display_text[this.type];
   },
   refreshHeaderText: function() {
     var schemas = [];
@@ -3350,7 +3406,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     });
     var display_text = this.getDisplayText(schemas);
     $.each(this.editors, function(i,editor) {
-      if(editor.option) editor.option.text(display_text[i]);
+      if(editor.option) {
+        editor.option.innerHTML = '';
+        editor.option.appendChild(document.createTextNode(display_text[i]));
+      }
     });
   },
   refreshValue: function() {
@@ -3362,7 +3421,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     $.each(this.validators, function(i,validator) {
       if(!validator.validate(val).length) {
         self.type = i;
-        self.switcher.val(self.display_text[i]).trigger('change');
+        self.switcher.value = self.display_text[i];
         return false;
       }
     });
@@ -3370,14 +3429,14 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    this.container.trigger('set');
+    this.fireSetEvent();
   },
   destroy: function() {
     $.each(this.editors, function(type,editor) {
       editor.destroy();
     });
-    this.editor_holder.remove();
-    this.switcher.remove();
+    this.editor_holder.parentNode.removeChild(this.editor_holder);
+    this.switcher.parentNode.removeChild(this.switcher);
     this._super();
   },
   showValidationErrors: function(errors) {
@@ -3544,12 +3603,12 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
       sanitized = this.enum_values[0];
     }
 
-    this.input.val(this.enum_options[this.enum_values.indexOf(sanitized)]);
+    this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     this.value = sanitized;
 
-    if(sanitized !== value) this.input.trigger('change');
+    if(sanitized !== value) $trigger(this.input,'change');
 
-    this.input.trigger('set');
+    $trigger(this.input,'set');
   },
   typecast: function(value) {
     if(this.schema.type === "boolean") {
@@ -3570,14 +3629,14 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
   },
   removeProperty: function() {
     this._super();
-    this.input.hide(500);
-    if(this.description) this.description.hide(500);
+    this.input.style.display = 'none';
+    if(this.description) this.description.style.display = 'none';
     this.theme.disableLabel(this.label);
   },
   addProperty: function() {
     this._super();
-    this.input.show(500);
-    if(this.description) this.description.show(500);
+    this.input.style.display = '';
+    if(this.description) this.description.style.display = '';
     this.theme.enableLabel(this.label);
   },
   build: function() {
@@ -3606,41 +3665,39 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
       throw "'select' editor requires the enum property to be set."
     }
 
-    if(this.getOption('compact')) this.container.addClass('compact');
+    if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
     this.input = this.theme.getSelectInput(this.enum_options);
 
-    if(this.schema.readOnly || this.schema.readonly) this.input.prop('disabled',true);
+    if(this.schema.readOnly || this.schema.readonly) this.input.disabled = true;
 
-    this.input
-      .attr('data-schemapath',this.path)
-      .attr('data-schematype',this.schema.type)
-      .on('change keyup',function(e) {
-        var val = $(this).val();
+    this.input.addEventListener('change',function(e) {
+      var val = this.value;
 
-        var sanitized = val;
-        if(self.enum_options.indexOf(val) === -1) {
-          sanitized = self.enum_options[0];
-        }
+      var sanitized = val;
+      if(self.enum_options.indexOf(val) === -1) {
+        sanitized = self.enum_options[0];
+      }
 
-        self.value = self.enum_values[self.enum_options.indexOf(val)];
-      });
+      self.value = self.enum_values[self.enum_options.indexOf(val)];
+    });
 
-    this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
+    this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
+    this.container.appendChild(this.control);
 
     this.value = this.enum_values[0];
 
     // If the Select2 library is loaded use it when we have lots of items
     if($.fn.select2 && this.enum_options.length > 2) {
-      this.input.select2();
+      $(this.input).select2();
     }
 
     self.theme.afterInputReady(self.input);
   },
   destroy: function() {
-    if(this.label) this.label.remove();
-    if(this.description) this.description.remove();
-    this.input.remove();
+    if(this.label) this.label.parentNode.removeChild(this.label);
+    if(this.description) this.description.parentNode.removeChild(this.description);
+    this.input.parentNode.removeChild(this.input);
 
     this._super();
   }
@@ -3648,97 +3705,109 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
 
 $.jsoneditor.AbstractTheme = Class.extend({
   getContainer: function() {
-    return $("<div>");
+    return document.createElement('div');
   },
   getFloatRightLinkHolder: function() {
-    return $("<div>").css({
-      float: 'right',
-      marginLeft: '10px'
-    });
+    var el = document.createElement('div');
+    el.style = el.style || {};
+    el.style.float = 'right';
+    el.style['margin-left'] = '10px';
+    return el;
   },
   getLink: function(text) {
-    return $("<a href='#'>").text(text);
+    var el = document.createElement('a');
+    el.setAttribute('href','#');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   disableHeader: function(header) {
-    header.css({
-      color: "#ccc"
-    });
+    header.style.color = '#ccc';
   },
   disableLabel: function(label) {
-    label.css({
-      color: "#ccc"
-    });
+    label.style.color = '#ccc';
   },
   enableHeader: function(header) {
-    header.css({
-      color: ''
-    });
+    header.style.color = '';
   },
   enableLabel: function(label) {
-    label.css({
-      color: ''
-    });
+    label.style.color = '';
   },
   getFormInputLabel: function(text) {
-    return $("<label>").text(text);
+    var el = document.createElement('label');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   getCheckboxLabel: function(text) {
     return this.getFormInputLabel(text);
   },
   getHeader: function(text) {
-    return $("<h3>").append(text);
+    var el = document.createElement('h3');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   getCheckbox: function() {
     return this.getFormInputField('checkbox');
   },
   getSelectInput: function(options) {
-    var select = $("<select>");
+    var select = document.createElement('select');
     if(options) this.setSelectOptions(select, options);
     return select;
   },
   setSelectOptions: function(select, options) {
-    select.empty();
-    $.each(options, function(i,val) {
-      select.append($("<option>").attr('value',val).text(val));
-    });
+    select.innerHTML = '';
+    for(var i=0; i<options.length; i++) {
+      var option = document.createElement('option');
+      option.setAttribute('value',options[i]);
+      option.appendChild(document.createTextNode(options[i]));
+      select.appendChild(option);
+    }
   },
   getTextareaInput: function() {
-    return $("<textarea>").css({
-      width: '100%',
-      height: 300,
-      boxSizing: 'border-box'
-    });
+    var el = document.createElement('textarea');
+    el.style = el.style || {};
+    el.style.width = '100%';
+    el.style.height = '300px';
+    el.style.boxSizing = 'border-box';
+    return el;
   },
   getRangeInput: function(min,max,step) {
-    return $("<input type='range'>")
-      .attr('min',min||0)
-      .attr('max',max||100)
-      .attr('step',step||1);
+    var el = this.getFormInputField('range');
+    el.setAttribute('min',min);
+    el.setAttribute('max',max);
+    el.setAttribute('step',step);
+    return el;
   },
   getFormInputField: function(type) {
-    return $("<input type='"+type+"'>");
+    var el = document.createElement('input');
+    el.setAttribute('type',type);
+    return el;
   },
   afterInputReady: function(input) {
     
   },
   getFormControl: function(label, input, description) {
-    return $("<div>").addClass('form-control')
-      .append(label)
-      .append(input)
-      .append(description)
+    var el = document.createElement('div');
+    el.setAttribute('class','form-control');
+    if(label) el.appendChild(label);
+    el.appendChild(input);
+    if(description) el.appendChild(description);
+    return el;
   },
   getIndentedPanel: function() {
-    return $("<div>").css({
-      paddingLeft: 10,
-      marginLeft: 10,
-      borderLeft: '1px solid #ccc'
-    });
+    var el = document.createElement('div');
+    el.style = el.style || {};
+    el.style.paddingLeft = '10px';
+    el.style.marginLeft = '10px';
+    el.style.borderLeft = '1px solid #ccc';
+    return el;
   },
   getChildEditorHolder: function() {
-    return $("<div>");
+    return document.createElement('div');
   },
   getDescription: function(text) {
-    return $("<p>").text(text);
+    var el = document.createElement('p');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   getCheckboxDescription: function(text) {
     return this.getDescription(text);
@@ -3750,40 +3819,46 @@ $.jsoneditor.AbstractTheme = Class.extend({
     return this.getButtonHolder();
   },
   getButtonHolder: function() {
-    return $("<div>");
+    return document.createElement('div');
   },
   getButton: function(text, icon, title) {    
-    var button = $("<button>").text(text);
-    if(icon) button.prepend(' ').prepend(icon);
-    if(title) button.attr('title',title);
-    
-    return button;
+    var el = document.createElement('button');
+    this.setButtonText(el,text,icon,title);
+    return el;
   },
   setButtonText: function(button, text, icon, title) {
-    button.text(text);
-    if(icon) button.prepend(' ').prepend(icon);
-    if(title) button.attr('title',title);
+    button.innerHTML = '';
+    if(icon) {
+      button.appendChild(icon);
+      button.innerHTML += ' ';
+    }
+    button.appendChild(document.createTextNode(text));
+    if(title) button.setAttribute('title',title);
   },
   getTable: function() {
-    return $("<table></table>");
+    return document.createElement('table');
   },
   getTableRow: function() {
-    return $("<tr></tr>");
+    return document.createElement('tr');
   },
   getTableHead: function() {
-    return $("<thead></thead>");
+    return document.createElement('thead');
   },
   getTableBody: function() {
-    return $("<tbody></tbody>");
+    return document.createElement('tbody');
   },
   getTableHeaderCell: function() {
-    return $("<th></th>");
+    return document.createElement('th');
   },
   getTableCell: function() {
-    return $("<td></td>");
+    return document.createElement('td');
   },
   getErrorMessage: function(text) {
-    return $("<p style='color: red;'></p>").text(text);
+    var el = document.createElement('p');
+    el.style = el.style || {};
+    el.style.color = 'red';
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   addInputError: function(input, text) {
   },
@@ -3794,49 +3869,78 @@ $.jsoneditor.AbstractTheme = Class.extend({
   removeTableRowError: function(row) {
   },
   getTabHolder: function() {
-    return $("<div><div style='float: left; width: 130px;' class='tabs'></div><div class='content' style='margin-left: 130px;'></div></div>").append($("<div>").css('clear','both'));
+    var el = document.createElement('div');
+    el.innerHTML = "<div style='float: left; width: 130px;' class='tabs'></div><div class='content' style='margin-left: 130px;'></div><div style='clear:both;'></div>";
+    return el;
   },
-  getTab: function(text) {
-    return $("<div></div>")
-      .append(text)
-      .css({
-        border: '1px solid #ccc',
-        borderWidth: '1px 0 1px 1px',
-        textAlign: 'center',
-        lineHeight: '30px',
-        borderRadius: 5,
-        borderBottomRightRadius: 0,
-        borderTopRightRadius: 0,
-        fontWeight: 'bold',
-        cursor: 'pointer'
-      });
+  applyStyles: function(el,styles) {
+    el.style = el.style || {};
+    for(var i in styles) {
+      if(!styles.hasOwnProperty(i)) continue;
+      el.style[i] = styles[i];
+    }
+  },
+  closest: function(elem, selector) {
+    var matchesSelector = elem.matches || elem.webkitMatchesSelector || elem.mozMatchesSelector || elem.msMatchesSelector;
+
+    while (elem && elem !== document) {
+      try {
+      if (matchesSelector.bind(elem)(selector)) {
+        return elem;
+      } else {
+        elem = elem.parentNode;
+      }
+      }
+      catch(e) {
+        console.log(elem,selector);
+        throw e;
+      }
+    }
+    return false;
+  },
+  getTab: function(span) {
+    var el = document.createElement('div');
+    el.appendChild(span);
+    el.style = el.style || {};
+    this.applyStyles(el,{
+      border: '1px solid #ccc',
+      borderWidth: '1px 0 1px 1px',
+      textAlign: 'center',
+      lineHeight: '30px',
+      borderRadius: '5px',
+      borderBottomRightRadius: 0,
+      borderTopRightRadius: 0,
+      fontWeight: 'bold',
+      cursor: 'pointer'
+    });
+    return el;
   },
   getTabContentHolder: function(tab_holder) {
-    return $(tab_holder.get(0).children[1]);
+    return tab_holder.children[1];
   },
   getTabControls: function(holder) {
-    return $(tab_holder.get(0).children[2]);
+    return tab_holder.children[3];
   },
   getTabContent: function() {
     return this.getIndentedPanel();
   },
   markTabActive: function(tab) {
-    tab.css({
+    this.applyStyles(tab,{
       opacity: 1,
       background: 'white'
     });
   },
   markTabInactive: function(tab) {
-    tab.css({
+    this.applyStyles(tab,{
       opacity:.5,
       background: ''
     });
   },
   addTab: function(holder, tab) {
-    $(holder.get(0).children[0]).append(tab);
+    holder.children[0].appendChild(tab);
   },
   addTabControls: function(tab_holder, controls) {
-    tab_holder.append(controls);
+    tab_holder.appendChild(controls);
   }
 });
 
@@ -4162,60 +4266,79 @@ $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
 
 $.jsoneditor.themes.html = $.jsoneditor.AbstractTheme.extend({
   getFormInputLabel: function(text) {
-    return this._super(text).css({
+    var el = this._super(text);
+    this.applyStyles(el,{
       display: "block",
-      marginBottom: 3
+      marginBottom: '3px'
     });
+    return el;
   },
   getFormInputDescription: function(text) {
-    return this._super(text).css({
+    var el = this._super(text);
+    this.applyStyles(el,{
       fontSize: '.8em',
       margin: 0,
       display: 'inline-block',
       fontStyle: 'italic'
     });
+    return el;
   },
   getIndentedPanel: function() {
-    return $("<div>").css({
+    var el = this._super();
+    this.applyStyles(el,{
       border: '1px solid #ddd',
-      padding: 5,
-      margin: 5,
-      borderRadius: 3
+      padding: '5px',
+      margin: '5px',
+      borderRadius: '3px'
     });
+    return el;
   },
   getChildEditorHolder: function() {
-    return $("<div>").css({
-      marginBottom: 8
+    var el = this._super();
+    this.applyStyles(el,{
+      marginBottom: '8px'
     });
+    return el;
   },
   getHeaderButtonHolder: function() {
-    return this.getButtonHolder().css({
+    var el = this.getButtonHolder();
+    this.applyStyles(el,{
       display: 'inline-block',
-      marginLeft: 10,
+      marginLeft: '10px',
       fontSize: '.8em',
       verticalAlign: 'middle'
     });
+    return el;
   },
   getTable: function() {
-    return $("<table>").css({
+    var el = this._super();
+    this.applyStyles(el,{
       borderBottom: '1px solid #ccc',
-      marginBottom: 5
+      marginBottom: '5px'
     });
+    return el;
   },
   addInputError: function(input, text) {
-    input.css({
-      borderColor: 'red'
-    });
-    var group = input.closest('.form-control');
-    var errmsg = $('.errmsg',group);
-    if(!errmsg.length) errmsg = $("<div style='color: red;' class='errmsg'>").appendTo(group);
-    errmsg.text(text);
+    input.style.borderColor = 'red';
+    
+    if(!input.errmsg) {
+      var group = this.closest(input,'.form-control');
+      input.errmsg = document.createElement('div');
+      input.errmsg.setAttribute('class','errmsg');
+      input.errmsg.style = input.errmsg.style || {};
+      input.errmsg.style.color = 'red';
+      group.appendChild(input.errmsg);
+    }
+    else {
+      input.errmsg.style.display = 'block';
+    }
+    
+    input.errmsg.innerHTML = '';
+    input.errmsg.appendChild(document.createTextNode(text));
   },
   removeInputError: function(input) {
-    input.css({
-      borderColor: ''
-    });
-    $('.errmsg',input.closest('.form-control')).remove();
+    input.style.borderColor = '';
+    if(input.errmsg) input.errmsg.style.display = 'none';
   }
 });
 

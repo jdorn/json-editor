@@ -1,58 +1,77 @@
 $.jsoneditor.themes.html = $.jsoneditor.AbstractTheme.extend({
   getFormInputLabel: function(text) {
-    return this._super(text).css({
+    var el = this._super(text);
+    this.applyStyles(el,{
       display: "block",
-      marginBottom: 3
+      marginBottom: '3px'
     });
+    return el;
   },
   getFormInputDescription: function(text) {
-    return this._super(text).css({
+    var el = this._super(text);
+    this.applyStyles(el,{
       fontSize: '.8em',
       margin: 0,
       display: 'inline-block',
       fontStyle: 'italic'
     });
+    return el;
   },
   getIndentedPanel: function() {
-    return $("<div>").css({
+    var el = this._super();
+    this.applyStyles(el,{
       border: '1px solid #ddd',
-      padding: 5,
-      margin: 5,
-      borderRadius: 3
+      padding: '5px',
+      margin: '5px',
+      borderRadius: '3px'
     });
+    return el;
   },
   getChildEditorHolder: function() {
-    return $("<div>").css({
-      marginBottom: 8
+    var el = this._super();
+    this.applyStyles(el,{
+      marginBottom: '8px'
     });
+    return el;
   },
   getHeaderButtonHolder: function() {
-    return this.getButtonHolder().css({
+    var el = this.getButtonHolder();
+    this.applyStyles(el,{
       display: 'inline-block',
-      marginLeft: 10,
+      marginLeft: '10px',
       fontSize: '.8em',
       verticalAlign: 'middle'
     });
+    return el;
   },
   getTable: function() {
-    return $("<table>").css({
+    var el = this._super();
+    this.applyStyles(el,{
       borderBottom: '1px solid #ccc',
-      marginBottom: 5
+      marginBottom: '5px'
     });
+    return el;
   },
   addInputError: function(input, text) {
-    input.css({
-      borderColor: 'red'
-    });
-    var group = input.closest('.form-control');
-    var errmsg = $('.errmsg',group);
-    if(!errmsg.length) errmsg = $("<div style='color: red;' class='errmsg'>").appendTo(group);
-    errmsg.text(text);
+    input.style.borderColor = 'red';
+    
+    if(!input.errmsg) {
+      var group = this.closest(input,'.form-control');
+      input.errmsg = document.createElement('div');
+      input.errmsg.setAttribute('class','errmsg');
+      input.errmsg.style = input.errmsg.style || {};
+      input.errmsg.style.color = 'red';
+      group.appendChild(input.errmsg);
+    }
+    else {
+      input.errmsg.style.display = 'block';
+    }
+    
+    input.errmsg.innerHTML = '';
+    input.errmsg.appendChild(document.createTextNode(text));
   },
   removeInputError: function(input) {
-    input.css({
-      borderColor: ''
-    });
-    $('.errmsg',input.closest('.form-control')).remove();
+    input.style.borderColor = '';
+    if(input.errmsg) input.errmsg.style.display = 'none';
   }
 });

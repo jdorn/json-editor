@@ -1,3 +1,30 @@
+// Placeholder
+var $extend = function() {
+  var args = Array.prototype.slice.call(arguments,0);
+  if(args[0] !== true) args.shift(true);
+  return $.extend.apply($,args);
+};
+var $each = $.each;
+var _raf = window.requestAnimationFrame;
+var $trigger = function(el,event) {
+  var e = document.createEvent('HTMLEvents');
+  e.initEvent(event, true, true);
+  el.dispatchEvent(e);
+};
+var $triggerc = function(el,event) {
+  if (window.CustomEvent) {
+    var e = new CustomEvent(event,{
+      bubbles: true,
+      cancelable: true
+    });
+  } else {
+    var e = document.createEvent('CustomEvent');
+    e.initCustomEvent(event, true, true);
+  }
+
+  el.dispatchEvent(e);
+};
+
 /**
  * Turn an element into a schema editor
  * @param options Options (must contain at least a `schema` property)
@@ -76,20 +103,29 @@ $.fn.jsoneditor = function(options) {
   
   $this.data('jsoneditor',d);
 
-  d.root_container = d.theme.getContainer().appendTo($this);
+  d.root_container = d.theme.getContainer();
+  $this.append(d.root_container);
 
-  // Stop all change events before the editor is ready
-  d.root_container.on('change',function(e) {
+  // Stop all change/set events while the editor is initializing
+  var change_blocker = function(e) {
     if(!d.ready) {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
-
+  };
+  d.root_container.addEventListener('change',change_blocker);
+  
+  // Re-run and cache validation when anything changes
+  var validate_cache = function() {
+    if(!d.ready) return;
+    
     // Validate and cache results
     d.validation_results = d.validator.validate(d.root.getValue());
     d.root.showValidationErrors(d.validation_results);
-  });
+  }
+  d.root_container.addEventListener('change',validate_cache);
+  d.root_container.addEventListener('set',validate_cache);
 
   // Let the validator resolve references in the schema asynchronously
   d.validator = new $.jsoneditor.Validator(schema,{
@@ -120,9 +156,9 @@ $.fn.jsoneditor = function(options) {
     d.ready = true;
 
     // Fire ready event asynchronously
-    window.setTimeout(function() {
-      $this.trigger('ready');
-      $this.trigger('change');
+    _raf(function() {
+      $triggerc(d.root_container,'ready');
+      $trigger(d.root_container,'change');
     });
   });
 
