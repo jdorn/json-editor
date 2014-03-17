@@ -194,7 +194,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   empty: function(hard) {
     if(!this.rows) return;
     var self = this;
-    $.each(this.rows,function(i,row) {
+    $each(this.rows,function(i,row) {
       if(hard) {
         if(row.tab) row.tab.parentNode.removeChild(row.tab);
         self.destroyRow(row,true);
@@ -227,7 +227,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
   },
   refreshTabs: function(refresh_headers) {
     var self = this;
-    $.each(this.rows, function(i,row) {
+    $each(this.rows, function(i,row) {
       if(!row.tab) return;
 
       if(refresh_headers) {
@@ -265,7 +265,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     }
 
     var self = this;
-    $.each(value,function(i,val) {
+    $each(value,function(i,val) {
       if(self.rows[i]) {
         // TODO: don't set the row's value if it hasn't changed
         self.rows[i].setValue(val);
@@ -289,7 +289,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
 
     // Set the active tab
     var new_active_tab = null;
-    $.each(self.rows, function(i,row) {
+    $each(self.rows, function(i,row) {
       if(row.tab === self.active_tab) {
         new_active_tab = row.tab;
         return false;
@@ -311,7 +311,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var oldi = this.value? this.value.length : 0;
     this.value = [];
 
-    $.each(this.rows,function(i,editor) {
+    $each(this.rows,function(i,editor) {
       // Get the value for this editor
       self.value[i] = editor.getValue();
     });
@@ -320,7 +320,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       // If we currently have minItems items in the array
       var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
       
-      $.each(this.rows,function(i,editor) {
+      $each(this.rows,function(i,editor) {
         // Hide the move down button for the last row
         if(i === self.rows.length - 1) {
           editor.movedown_button.style.display = 'none';
@@ -410,7 +410,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
 
       var newval = [];
       var new_active_tab = null;
-      $.each(value,function(j,row) {
+      $each(value,function(j,row) {
         if(j===i) {
           // If the one we're deleting is the active tab
           if(self.rows[j].tab === self.active_tab) {
@@ -570,7 +570,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     // Get all the errors that pertain to this editor
     var my_errors = [];
     var other_errors = [];
-    $.each(errors, function(i,error) {
+    $each(errors, function(i,error) {
       if(error.path === self.path) {
         my_errors.push(error);
       }
@@ -585,7 +585,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
         var message = [];
         this.error_holder.innerHTML = '';
         this.error_holder.style.display = '';
-        $.each(my_errors, function(i,error) {
+        $each(my_errors, function(i,error) {
           self.error_holder.appendChild(self.theme.getErrorMessage(error.message));
         });
       }
@@ -596,7 +596,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     }
 
     // Show errors for child editors
-    $.each(this.rows, function(i,row) {
+    $each(this.rows, function(i,row) {
       row.showValidationErrors(other_errors);
     });
   }

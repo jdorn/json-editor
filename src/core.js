@@ -1,43 +1,3 @@
-// Placeholder
-var $extend = function(destination) {
-  var source;
-  for(var i=1; i<arguments.length; i++) {
-    source = arguments[i];
-    for (var property in source) {
-      if(!source.hasOwnProperty(property)) continue;
-      if(source[property] && source[property].constructor && source[property].constructor === Object) {
-        destination[property] = destination[property] || {};
-        $extend(destination[property], source[property]);
-      }
-      else {
-        destination[property] = source[property];
-      }
-    }
-  }
-  return destination;
-};
-
-var $each = $.each;
-var _raf = window.requestAnimationFrame;
-var $trigger = function(el,event) {
-  var e = document.createEvent('HTMLEvents');
-  e.initEvent(event, true, true);
-  el.dispatchEvent(e);
-};
-var $triggerc = function(el,event) {
-  if (window.CustomEvent) {
-    var e = new CustomEvent(event,{
-      bubbles: true,
-      cancelable: true
-    });
-  } else {
-    var e = document.createEvent('CustomEvent');
-    e.initCustomEvent(event, true, true);
-  }
-
-  el.dispatchEvent(e);
-};
-
 /**
  * Turn an element into a schema editor
  * @param options Options (must contain at least a `schema` property)
@@ -192,7 +152,7 @@ $.jsoneditor = {
   getEditorClass: function(schema, editor) {
     var classname;
 
-    $.each($.jsoneditor.resolvers,function(i,resolver) {
+    $each($.jsoneditor.resolvers,function(i,resolver) {
       var tmp;
       if(tmp = resolver(schema)) {
         if($.jsoneditor.editors[tmp]) {

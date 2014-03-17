@@ -25,7 +25,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
             disallow = [this.schema.disallow];
           }
           var allowed_types = [];
-          $.each(this.types,function(i,type) {
+          $each(this.types,function(i,type) {
             if(disallow.indexOf(type) === -1) allowed_types.push(type);
           });
           this.types = allowed_types;
@@ -49,7 +49,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
 
       var current_value = self.getValue();
 
-      $.each(self.editors,function(type,editor) {
+      $each(self.editors,function(type,editor) {
         if(self.type === type) {
           editor.setValue(current_value,true);
           editor.container.style.display = '';
@@ -69,7 +69,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.validators = [];
     var options = this.switcher.getElementsByTagName('option');
     var option = 0;
-    $.each(this.types,function(i,type) {
+    $each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder();
       self.editor_holder.appendChild(holder);
 
@@ -127,11 +127,11 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
   },
   refreshHeaderText: function() {
     var schemas = [];
-    $.each(this.editors, function(i,editor) {
+    $each(this.editors, function(i,editor) {
       schemas.push(editor.schema);
     });
     var display_text = this.getDisplayText(schemas);
-    $.each(this.editors, function(i,editor) {
+    $each(this.editors, function(i,editor) {
       if(editor.option) {
         editor.option.innerHTML = '';
         editor.option.appendChild(document.createTextNode(display_text[i]));
@@ -144,7 +144,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
   setValue: function(val,initial) {
     // Determine type by getting the first one that validates
     var self = this;
-    $.each(this.validators, function(i,validator) {
+    $each(this.validators, function(i,validator) {
       if(!validator.validate(val).length) {
         self.type = i;
         self.switcher.value = self.display_text[i];
@@ -158,7 +158,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.fireSetEvent();
   },
   destroy: function() {
-    $.each(this.editors, function(type,editor) {
+    $each(this.editors, function(type,editor) {
       editor.destroy();
     });
     this.editor_holder.parentNode.removeChild(this.editor_holder);
@@ -170,10 +170,10 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     
     // oneOf error paths need to remove the oneOf[i] part before passing to child editors
     if(this.oneOf) {
-      $.each(this.editors,function(i,editor) {
+      $each(this.editors,function(i,editor) {
         var check = self.path+'.oneOf['+i+']';
         var new_errors = [];
-        $.each(errors, function(j,error) {
+        $each(errors, function(j,error) {
           if(error.path.substr(0,check.length)===check) {
             var new_error = $extend({},error);
             new_error.path = self.path+new_error.path.substr(check.length);
@@ -185,7 +185,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       });
     }
     else {
-      $.each(this.editors,function(type,editor) {
+      $each(this.editors,function(type,editor) {
         editor.showValidationErrors(errors);
       });
     }

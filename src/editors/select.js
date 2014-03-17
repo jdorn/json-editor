@@ -58,7 +58,7 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
 
     // Enum options enumerated
     if(this.schema.enum) {
-      $.each(this.schema.enum,function(i,option) {
+      $each(this.schema.enum,function(i,option) {
         self.enum_options[i] = ""+option;
         self.enum_values[i] = self.typecast(option);
       });

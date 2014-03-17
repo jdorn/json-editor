@@ -255,7 +255,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       var select_options = [];
       
       if(!vars[this.schema.enumSource]) throw "Unknown enumSource "+this.schema.enumSource;
-      $.each(vars[this.schema.enumSource],function(i,el) {
+      $each(vars[this.schema.enumSource],function(i,el) {
         var value;
         if(self.select_template) {
           value = self.select_template({
@@ -287,7 +287,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     var self = this;
 
     var messages = [];
-    $.each(errors,function(i,error) {
+    $each(errors,function(i,error) {
       if(error.path === self.path) {
         messages.push(error.message);
       }

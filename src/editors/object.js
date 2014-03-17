@@ -299,14 +299,14 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     
     var removed = false;
     var new_editors = this.editors;
-    $.each(this.editors, function(i,editor) {
+    $each(this.editors, function(i,editor) {
       if(editor.property_removed && editor.not_core) {
         new_editors = {};
         removed = true;
       }
     });
     
-    $.each(this.editors, function(i,editor) {
+    $each(this.editors, function(i,editor) {
       if(editor.addremove) editor.addremove.style.display = '';
       if(editor.property_removed) {
         if(!editor.not_core && removed) new_editors[i] = editor;
@@ -327,7 +327,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     // See if we need to show/hide the add/remove property links
     if(typeof this.schema.minProperties !== "undefined") {
       if(props <= this.schema.minProperties) {
-        $.each(this.editors, function(i,editor) {
+        $each(this.editors, function(i,editor) {
           if(!editor.property_removed && editor.addremove) {
             editor.addremove.style.display = 'none';
           }
@@ -336,7 +336,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
     if(typeof this.schema.maxProperties !== "undefined") {
       if(props >= this.schema.maxProperties) {
-        $.each(this.editors, function(i,editor) {
+        $each(this.editors, function(i,editor) {
           if(editor.property_removed && editor.addremove) {
             editor.addremove.style.display = 'none';
           }
@@ -350,7 +350,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     if(typeof value !== "object" || value instanceof Array) value = {};
     
     // First, set the values for all of the defined properties
-    $.each(this.editors, function(i,editor) {      
+    $each(this.editors, function(i,editor) {      
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
         if(editor.property_removed && editor.addremove) {
@@ -373,7 +373,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     // If additional properties are allowed, create the editors for any of those
     if(this.canHaveAdditionalProperties()) {
       var self = this;
-      $.each(value, function(i,val) {
+      $each(value, function(i,val) {
         if(!self.editors[i]) {
           self.addObjectProperty(i);
           if(self.editors[i]) {
@@ -392,7 +392,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     // Get all the errors that pertain to this editor
     var my_errors = [];
     var other_errors = [];
-    $.each(errors, function(i,error) {
+    $each(errors, function(i,error) {
       if(error.path === self.path) {
         my_errors.push(error);
       }
@@ -407,7 +407,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
         var message = [];
         this.error_holder.innerHTML = '';
         this.error_holder.style.display = '';
-        $.each(my_errors, function(i,error) {
+        $each(my_errors, function(i,error) {
           self.error_holder.appendChild(self.theme.getErrorMessage(error.message));
         });
       }
@@ -428,7 +428,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
 
     // Show errors for child editors
-    $.each(this.editors, function(i,editor) {
+    $each(this.editors, function(i,editor) {
       editor.showValidationErrors(other_errors);
     });
   }

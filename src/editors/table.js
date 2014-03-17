@@ -43,7 +43,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     this.controls = this.theme.getButtonHolder().appendTo(this.panel);
 
     if(this.item_has_child_editors) {
-      $.each(tmp.getChildEditors(), function(i,editor) {
+      $each(tmp.getChildEditors(), function(i,editor) {
         self.header_row.append(self.theme.getTableHeaderCell().text(editor.getTitle()));
       });
     }
@@ -118,7 +118,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
   empty: function() {
     if(!this.rows) return;
     var self = this;
-    $.each(this.rows,function(i,row) {
+    $each(this.rows,function(i,row) {
       if(!self.item_has_child_editors) {
         row.row.remove();
       }
@@ -147,7 +147,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     var numrows_changed = false;
 
     var self = this;
-    $.each(value,function(i,val) {
+    $each(value,function(i,val) {
       if(self.rows[i]) {
         // TODO: don't set the row's value if it hasn't changed
         self.rows[i].setValue(val);
@@ -183,7 +183,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     // If we currently have minItems items in the array
     var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
     
-    $.each(this.rows,function(i,editor) {
+    $each(this.rows,function(i,editor) {
       // Hide the move down button for the last row
       if(i === self.rows.length - 1) {
         editor.movedown_button.hide();
@@ -246,7 +246,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
     var self = this;
     this.value = [];
 
-    $.each(this.rows,function(i,editor) {
+    $each(this.rows,function(i,editor) {
       // Get the value for this editor
       self.value[i] = editor.getValue();
     });
@@ -268,7 +268,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
         var value = self.getValue();
 
         var newval = [];
-        $.each(value,function(j,row) {
+        $each(value,function(j,row) {
           if(j===i) return; // If this is the one we're deleting
           newval.push(row);
         });
@@ -377,7 +377,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
         var newval = [];
         var row = value[oldi];
         var before = oldi>newi;
-        $.each(value,function(i,el) {
+        $each(value,function(i,el) {
           if(i===oldi) return;
 
           if(before) {

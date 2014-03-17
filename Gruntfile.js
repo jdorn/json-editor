@@ -7,6 +7,7 @@ module.exports = function(grunt) {
         src: [
           'src/intro.js',
           'src/class.js',
+          'src/utilities.js',
           'src/core.js',
 
           'src/validator.js',

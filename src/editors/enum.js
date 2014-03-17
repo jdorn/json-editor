@@ -55,7 +55,7 @@ $.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     self.selected = -1;
     var stringified = JSON.stringify(this.value);
-    $.each(this.enum, function(i, el) {
+    $each(this.enum, function(i, el) {
       if(stringified === JSON.stringify(el)) {
         self.selected = i;
         return false;
@@ -83,7 +83,7 @@ $.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
       if(el instanceof Array) ret = $("<ol></ol>");
       else ret = $("<ul></ul>");
 
-      $.each(el,function(i,child) {
+      $each(el,function(i,child) {
         var html = self.getHTML(child);
 
         // Add the keys to object children
