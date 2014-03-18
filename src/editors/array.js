@@ -195,7 +195,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     $each(this.rows,function(i,row) {
       if(hard) {
-        if(row.tab) row.tab.parentNode.removeChild(row.tab);
+        if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
         self.destroyRow(row,true);
         self.row_cache[i] = null;
       }

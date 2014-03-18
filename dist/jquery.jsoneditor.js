@@ -2483,7 +2483,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var self = this;
     $each(this.rows,function(i,row) {
       if(hard) {
-        if(row.tab) row.tab.parentNode.removeChild(row.tab);
+        if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
         self.destroyRow(row,true);
         self.row_cache[i] = null;
       }
@@ -4213,134 +4213,170 @@ $.jsoneditor.themes.bootstrap3 = $.jsoneditor.AbstractTheme.extend({
 // Base Foundation theme
 $.jsoneditor.themes.foundation = $.jsoneditor.AbstractTheme.extend({
   getChildEditorHolder: function() {
-    return $("<div>").css({
-      marginBottom: 15
-    });
+    var el = document.createElement('div');
+    el.style.marginBottom = '15px';
+    return el;
   }, 
   getSelectInput: function(options) {
-    return this._super(options).css({
-      width: 'auto',
-      minWidth: 'none',
-      padding: 5,
-      marginTop: 3
-    });
+    var el = this._super(options);
+    el.style.width = 'auto';
+    el.style.minWidth = 'none';
+    el.style.padding = '5px';
+    el.style.marginTop = '3px';
+    return el;
   },
   afterInputReady: function(input) {
-    if(input.closest('.compact').length) {
-      input.css('margin-bottom',0);
+    if(this.closest(input,'.compact')) {
+      input.style.marginBottom = 0;
     }
+    input.group = this.closest(input,'.form-control');
   },
   getFormInputDescription: function(text) {
-    return $("<p></p>").text(text).css({
-      marginTop: -10,
-      fontStyle: 'italic'
-    });
+    var el = document.createElement('p');
+    el.textContent = text;
+    el.style.marginTop = '-10px';
+    el.style.fontStyle = 'italic';
+    return el;
   },
   getIndentedPanel: function() {
-    return $("<div>").addClass('panel');
+    var el = document.createElement('div');
+    el.className = 'panel';
+    return el;
   },
   getHeaderButtonHolder: function() {
-    return this.getButtonHolder().css({
-      display: 'inline-block',
-      marginLeft: 10,
-      verticalAlign: 'middle'
-    });
+    var el = this.getButtonHolder();
+    el.style.display = 'inline-block';
+    el.style.marginLeft = '10px';
+    el.style.verticalAlign = 'middle';
+    return el;
   },
   getButtonHolder: function() {
-    return $("<div>").addClass('button-group');
+    var el = document.createElement('div');
+    el.className = 'button-group';
+    return el;
   },
   getButton: function(text, icon, title) {
-    return this._super(text, icon, title).addClass('small button');
+    var el = this._super(text, icon, title);
+    el.className += ' small button';
+    return el;
   },
   addInputError: function(input,text) {
-    var group = input.closest('.form-control').addClass('error');
-    var errmsg = $('.errormsg',group);
-    if(!errmsg.length) errmsg = $("<small class='errormsg'>").insertAfter(input);
-    errmsg.text(text);
+    if(!input.group) return;
+    input.group.className += ' error';
+    
+    if(!input.errmsg) {
+      input.insertAdjacentHTML('afterend','<small class="errormsg"></small>');
+      input.errmsg = input.parentNode.getElementsByClassName('errormsg')[0];
+    }
+    else {
+      input.errmsg.style.display = '';
+    }
+    
+    input.errmsg.textContent = text;
   },
   removeInputError: function(input) {
-    $('.errormsg',input.closest('.form-control').removeClass('error')).remove();
+    if(!input.errmsg) return;
+    input.errmsg.style.display = 'none';
   }
 });
 
 // Foundation 3 Specific Theme
 $.jsoneditor.themes.foundation3 = $.jsoneditor.themes.foundation.extend({
   getHeaderButtonHolder: function() {
-    return this._super().css({
-      fontSize: '.6em'
-    });
+    var el = this._super();
+    el.style.fontSize = '.6em';
+    return el;
   },
   getTabHolder: function() {
-    return $("<div class='row'><dl class='tabs vertical two columns'></dl><div class='tabs-content ten columns'></div></div>");
+    var el = document.createElement('div');
+    el.className = 'row';
+    el.innerHTML = "<dl class='tabs vertical two columns'></dl><div class='tabs-content ten columns'></div>";
+    return el;
   },
   getTab: function(text) {
-    return $("<dd></dd>").append($("<a href='#'>").append(text));
+    var el = document.createElement('dd');
+    var a = document.createElement('a');
+    a.setAttribute('href','#');
+    a.appendChild(text);
+    el.appendChild(a);
+    return el;
   },
   getTabContentHolder: function(tab_holder) {
-    return $(tab_holder.get(0).children[1]);
+    return tab_holder.children[1];
   },
   getTabContent: function() {
-    return $("<div class='content active'></div>").css({
-      paddingLeft: 5
-    });
+    var el = document.createElement('div');
+    el.className = 'content active';
+    el.style.paddingLeft = '5px';
+    return el;
   },
   markTabActive: function(tab) {
-    tab.addClass('active');
+    tab.className += ' active';
   },
   markTabInactive: function(tab) {
-    tab.removeClass('active');
+    tab.className = tab.className.replace(/\s*active/g,'');
   },
   addTab: function(holder, tab) {
-    $(holder.get(0).children[0]).append(tab);
+    holder.children[0].appendChild(tab);
   }
 });
 
 // Foundation 4 Specific Theme
 $.jsoneditor.themes.foundation4 = $.jsoneditor.themes.foundation.extend({
   getHeaderButtonHolder: function() {
-    return this._super().css({
-      fontSize: '.6em'
-    });
+    var el = this._super();
+    el.style.fontSize = '.6em';
+    return el;
   },
   getFormInputDescription: function(text) {
-    return this._super(text).css({
-      fontSize: '.8rem'
-    });
+    var el = this._super(text);
+    el.style.fontSize = '.8rem';
+    return el;
   }
 });
 
 // Foundation 5 Specific Theme
 $.jsoneditor.themes.foundation5 = $.jsoneditor.themes.foundation.extend({
   getFormInputDescription: function(text) {
-    return this._super(text).css({
-      fontSize: '.8rem'
-    });
+    var el = this._super(text);
+    el.style.fontSize = '.8rem';
+    return el;
   },
   getButton: function(text, icon, title) {
-    return this._super(text, icon, title).removeClass('small').addClass('tiny');
+    var el = this._super(text,icon,title);
+    el.className = el.className.replace(/\s*small/g,'') + ' tiny';
+    return el;
   },
   getTabHolder: function() {
-    return $("<div><dl class='tabs vertical'></dl><div class='tabs-content'></div></div>");
+    var el = document.createElement('div');
+    el.innerHTML = "<dl class='tabs vertical'></dl><div class='tabs-content'></div>";
+    return el;
   },
   getTab: function(text) {
-    return $("<dd></dd>").append($("<a href='#'>").append(text));
+    var el = document.createElement('dd');
+    var a = document.createElement('a');
+    a.setAttribute('href','#');
+    a.appendChild(text);
+    el.appendChild(a);
+    return el;
   },
   getTabContentHolder: function(tab_holder) {
-    return $(tab_holder.get(0).children[1]);
+    return tab_holder.children[1];
   },
   getTabContent: function() {
-    return $("<div class='content active'></div>").css({
-      paddingLeft: 5
-    });
+    var el = document.createElement('div');
+    el.className = 'content active';
+    el.style.paddingLeft = '5px';
+    return el;
   },
   markTabActive: function(tab) {
-    tab.addClass('active');
+    tab.className += ' active';
   },
   markTabInactive: function(tab) {
-    tab.removeClass('active');
+    tab.className = tab.className.replace(/\s*active/g,'');
   },
   addTab: function(holder, tab) {
-    $(holder.get(0).children[0]).append(tab);
+    holder.children[0].appendChild(tab);
   }
 });
 
@@ -4578,7 +4614,10 @@ $.jsoneditor.AbstractIconLib = Class.extend({
     var iconclass = this.getIconClass(key);
     
     if(!iconclass) return null;
-    else return $("<i>").addClass(iconclass);
+    
+    var i = document.createElement('i');
+    i.className = iconclass;
+    return i;
   }
 });
 

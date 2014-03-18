@@ -19,6 +19,9 @@ $.jsoneditor.AbstractIconLib = Class.extend({
     var iconclass = this.getIconClass(key);
     
     if(!iconclass) return null;
-    else return $("<i>").addClass(iconclass);
+    
+    var i = document.createElement('i');
+    i.className = iconclass;
+    return i;
   }
 });
