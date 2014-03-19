@@ -1,4 +1,4 @@
-$.jsoneditor.themes.html = $.jsoneditor.AbstractTheme.extend({
+JSONEditor.defaults.themes.html = JSONEditor.AbstractTheme.extend({
   getFormInputLabel: function(text) {
     var el = this._super(text);
     this.applyStyles(el,{

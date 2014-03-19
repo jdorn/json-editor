@@ -1,2 +1,2 @@
-
-})(window.jQuery || window.Zepto);
+  window.JSONEditor = JSONEditor;
+})();

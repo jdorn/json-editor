@@ -1,7 +1,7 @@
 /**
  * All editors should extend from this class
  */
-$.jsoneditor.AbstractEditor = Class.extend({
+JSONEditor.AbstractEditor = Class.extend({
   fireChangeEvent: function() {
     $trigger(this.container,'change');
   },
@@ -18,9 +18,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
     
     //if(this.container.context) this.container = this.container.get(0);
 
-    this.theme = this.jsoneditor.data('jsoneditor').theme;
-    this.template_engine = this.jsoneditor.data('jsoneditor').template;
-    this.iconlib = this.jsoneditor.data('jsoneditor').iconlib;
+    this.theme = this.jsoneditor.theme;
+    this.template_engine = this.jsoneditor.template;
+    this.iconlib = this.jsoneditor.iconlib;
 
     this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
     this.schema = this.options.schema;
@@ -30,8 +30,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     if(this.schema.id) this.container.setAttribute('data-schemaid',this.schema.id);
     if(this.schema.type && typeof this.schema.type === "string") this.container.setAttribute('data-schematype',this.schema.type);
     this.container.setAttribute('data-schemapath',this.path);
-    $(this.container).data('editor',this);
-    this.container.editor = this;
+    this.jsoneditor._data(this.container,'editor',this);
 
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
@@ -42,7 +41,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
 
       this.addremove = this.title_links.appendChild(this.theme.getLink('remove '+this.getTitle()));
 
-      this.addremove.addEventListener('click',function() {
+      this.addremove.addEventListener('click',function(e) {
         if(self.property_removed) {
           self.addProperty();
         }
@@ -51,7 +50,8 @@ $.jsoneditor.AbstractEditor = Class.extend({
         }
       
         self.fireChangeEvent();
-        return false;
+        
+        e.preventDefault();
       });
     }
     
@@ -80,7 +80,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
         }
         var first = path_parts.shift();
 
-        if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
+        if(first === '#') first = self.jsoneditor.schema.id || 'root';
 
         // Find the root node for this template variable
         var root = self.theme.closest(self.container,'[data-schemaid="'+first+'"]');
@@ -91,7 +91,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
         self.watched[name] = {
           root: root,
           path: path_parts,
-          editor: $(root).data('editor'),
+          editor: self.jsoneditor._data(root,'editor'),
           adjusted_path: adjusted_path
         };
 
@@ -103,7 +103,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     
     // Dynamic header
     if(this.schema.headerTemplate) {
-      this.header_template = $.jsoneditor.compileTemplate(this.schema.headerTemplate, this.template_engine);
+      this.header_template = this.jsoneditor.compileTemplate(this.schema.headerTemplate, this.template_engine);
     }
 
     this.build();
@@ -256,7 +256,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     else if(typeof this.schema.required === "boolean") {
       return this.schema.required;
     }
-    else if(this.jsoneditor.data('jsoneditor').options.required_by_default) {
+    else if(this.jsoneditor.options.required_by_default) {
       return true
     }
     else {

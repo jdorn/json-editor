@@ -1,4 +1,4 @@
-$.jsoneditor.AbstractIconLib = Class.extend({
+JSONEditor.AbstractIconLib = Class.extend({
   mapping: {
     collapse: '',
     expand: '',

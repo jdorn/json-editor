@@ -1,4 +1,4 @@
-$.jsoneditor.themes.jqueryui = $.jsoneditor.AbstractTheme.extend({
+JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
   getTable: function() {
     return $("<table>").attr('cellpadding',5).attr('cellspacing',0);
   },

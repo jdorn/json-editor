@@ -1,4 +1,4 @@
-$.jsoneditor.templates.mustache = function() {
+JSONEditor.defaults.templates.mustache = function() {
   if(!window.Mustache) return false;
 
   return {

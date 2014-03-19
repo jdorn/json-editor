@@ -34,6 +34,8 @@ module.exports = function(grunt) {
 
           'src/defaults.js',
           
+          'src/jquery.js',
+          
           'src/outro.js'
         ],
         dest: 'dist/jquery.jsoneditor.js'

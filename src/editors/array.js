@@ -1,4 +1,4 @@
-$.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || [];
   },
@@ -123,7 +123,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
       e.stopPropagation();
     });
     
-    var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
+    var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
     editor = new editor({
       jsoneditor: this.jsoneditor,
       schema: schema,
@@ -147,7 +147,7 @@ $.jsoneditor.editors.array = $.jsoneditor.AbstractEditor.extend({
     var schema = this.getItemSchema(i);
     schema.title = item_info.title+' '+i;
 
-    var editor = $.jsoneditor.getEditorClass(schema, this.jsoneditor);
+    var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
 
     var holder;
     if(this.tabs_holder) {

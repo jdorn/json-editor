@@ -1,4 +1,4 @@
-$.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
+JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
   addProperty: function() {
     this._super();
     if(this.value.length) this.table.style.display = '';
@@ -85,7 +85,7 @@ $.jsoneditor.editors.table = $.jsoneditor.editors.array.extend({
   },
   getElementEditor: function(i,ignore) {
     var schema_copy = $extend({},this.schema.items);
-    var editor = $.jsoneditor.getEditorClass(schema_copy, this.jsoneditor);
+    var editor = this.jsoneditor.getEditorClass(schema_copy, this.jsoneditor);
     var row = this.row_holder.appendChild(this.theme.getTableRow());
     var holder = row;
     if(!this.item_has_child_editors) {

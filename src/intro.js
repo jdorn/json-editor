@@ -9,4 +9,4 @@
  * See README.md for requirements and usage info
  */
 
-(function($) {  
+(function() {

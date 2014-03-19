@@ -1,4 +1,4 @@
-$.jsoneditor.Validator = Class.extend({
+JSONEditor.Validator = Class.extend({
   init: function(schema, options) {
     this.original_schema = schema;
     this.options = options || {};
@@ -683,7 +683,7 @@ $.jsoneditor.Validator = Class.extend({
     }
 
     // Custom type validation
-    $each($.jsoneditor.custom_validators,function(i,validator) {
+    $each(JSONEditor.defaults.custom_validators,function(i,validator) {
       errors = errors.concat(validator(schema,value,path));
     });
 

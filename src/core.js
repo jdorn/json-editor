@@ -1,161 +1,137 @@
-/**
- * Turn an element into a schema editor
- * @param options Options (must contain at least a `schema` property)
- */
-$.fn.jsoneditor = function(options) {
-  var $this = $(this), d;
+var JSONEditor = function(element,options) {
+  options = options || {};
+  this.element = element;
+  this.options = options;
+  this.init();
+};
+JSONEditor.prototype = {
+  init: function() {
+    var self = this;
+    
+    this.ready = false;
 
-  // Get/Set value
-  if(options === 'value') {    
-    d = $this.data('jsoneditor');
-    if(!d) throw "JSON Editor must be instantiated before getting or setting the value";
-    if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before getting/setting the value";
+    var theme_class = JSONEditor.defaults.themes[this.options.theme || JSONEditor.defaults.theme];
+    if(!theme_class) throw "Unknown theme " + (this.options.theme || JSONEditor.defaults.theme);
+    
+    this.schema = this.options.schema;
+    this.theme = new theme_class();
+    this.template = this.options.template;
+    this.uuid = 0;
+    this.__data = {};
+    
+    var icon_class = JSONEditor.defaults.iconlibs[this.options.iconlib || JSONEditor.defaults.iconlib];
+    if(icon_class) this.iconlib = new icon_class();
 
-    // Setting value
-    if(arguments.length > 1) {      
-      d.root.setValue(arguments[1]);
-      return this;
+    this.root_container = this.theme.getContainer();
+    this.element.appendChild(this.root_container);
+
+    // Stop all change/set events while the editor is initializing
+    var change_blocker = function(e) {
+      if(!self.ready) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+    this.root_container.addEventListener('change',change_blocker);
+    
+    // Re-run and cache validation when anything changes
+    var validate_cache = function() {
+      if(!self.ready) return;
+      
+      // Validate and cache results
+      self.validation_results = self.validator.validate(self.root.getValue());
+      self.root.showValidationErrors(self.validation_results);
     }
-    // Getting value
-    else {
-      return d.root.getValue();
-    }
-  }
-  // Destroy editor
-  else if(options === 'destroy') {
-    d = $this.data('jsoneditor');
-    if(!d) return this;
-    if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before destroying";
-    d.schema = null;
-    d.options = null;
-    d.root.destroy();
-    d = null;
-    $this.data('jsoneditor',null);
-    $this.empty();
+    this.root_container.addEventListener('change',validate_cache);
+    this.root_container.addEventListener('set',validate_cache);
 
+    this.validator = new JSONEditor.Validator(this.schema,{
+      ajax: this.options.ajax,
+      refs: this.options.refs,
+      no_additional_properties: this.options.no_additional_properties,
+      required_by_default: this.options.required_by_default
+    });
+    
+    this.validator.ready(function(expanded) {
+      if(self.ready) return;
+      
+      self.schema = expanded;
+      
+      // Create the root editor
+      var editor_class = self.getEditorClass(self.schema);
+      self.root = new editor_class({
+        jsoneditor: self,
+        schema: self.schema,
+        container: self.root_container,
+        required: true
+      });
+
+      // Starting data
+      if(self.options.startval) self.root.setValue(self.options.startval);
+
+      self.validation_results = self.validator.validate(self.root.getValue());
+      self.root.showValidationErrors(self.validation_results);
+
+      self.ready = true;
+
+      // Fire ready event asynchronously
+      _raf(function() {
+        $triggerc(self.element,'ready');
+        $trigger(self.element,'change');
+      });
+    });
+  },
+  getValue: function() {
+    if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before getting the value";
+
+    return this.root.getValue();
+  },
+  setValue: function(value) {
+    if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before setting the value";
+
+    this.root.setValue(value);
     return this;
-  }
-  // Validate
-  else if(options === 'validate') {
-    d = $this.data('jsoneditor');
-    if(!d) throw "JSON Editor must be instantiated before trying to validate";
-    if(!d.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before running validation";
-
-    // Custom value to validate
-    if(arguments.length > 1) {
-      return d.validator.validate(arguments[1]);
+  },
+  validate: function(value) {
+    if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before validating";
+    
+    // Custom value
+    if(arguments.length === 1) {
+      return this.validator.validate(arguments[1]);
     }
     // Current value (use cached result)
     else {
-      return d.validation_results;
+      return this.validation_results;
     }
-  }
-
-  options = options || {};
-
-  var schema = options.schema;
-  var data = options.startval;
-
-  var theme_class = $.jsoneditor.themes[options.theme || $.jsoneditor.theme];
-
-  if(!theme_class) throw "Unknown theme " + (options.theme || $.jsoneditor.theme);
-  
-
-  // Store info about the jsoneditor in the element
-  d = {
-    schema: schema,
-    options: options,
-    refs: {},
-    theme: new theme_class(),
-    template: options.template,
-    ready: false
-  };
-  
-  var icon_class = $.jsoneditor.iconlibs[options.iconlib || $.jsoneditor.iconlib];
-  if(icon_class) d.iconlib = new icon_class();
-  
-  $this.data('jsoneditor',d);
-
-  d.root_container = d.theme.getContainer();
-  $this.append(d.root_container);
-
-  // Stop all change/set events while the editor is initializing
-  var change_blocker = function(e) {
-    if(!d.ready) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-  };
-  d.root_container.addEventListener('change',change_blocker);
-  
-  // Re-run and cache validation when anything changes
-  var validate_cache = function() {
-    if(!d.ready) return;
+  },
+  destroy: function() {
+    if(this.destroyed) return;
+    if(!this.ready) return;
     
-    // Validate and cache results
-    d.validation_results = d.validator.validate(d.root.getValue());
-    d.root.showValidationErrors(d.validation_results);
-  }
-  d.root_container.addEventListener('change',validate_cache);
-  d.root_container.addEventListener('set',validate_cache);
-
-  // Let the validator resolve references in the schema asynchronously
-  d.validator = new $.jsoneditor.Validator(schema,{
-    ajax: options.ajax,
-    refs: options.refs,
-    no_additional_properties: options.no_additional_properties,
-    required_by_default: options.required_by_default
-  });
-  d.validator.ready(function(expanded) {
-    if(d.ready) return;
+    this.schema = null;
+    this.options = null;
+    this.root.destroy();
+    this.root = null;
+    this.root_container = null;
+    this.validator = null;
+    this.validation_results = null;
+    this.theme = null;
+    this.iconlib = null;
+    this.template = null;
+    this.__data = null;
+    this.ready = false;
+    this.element.innerHTML = '';
     
-    d.schema = expanded;
-    
-    var editor_class = $.jsoneditor.getEditorClass(d.schema);
-    d.root = new editor_class({
-      jsoneditor: $this,
-      schema: d.schema,
-      container: d.root_container,
-      required: true
-    });
-
-    // Starting data
-    if(data) d.root.setValue(data);
-
-    d.validation_results = d.validator.validate(d.root.getValue());
-    d.root.showValidationErrors(d.validation_results);
-
-    d.ready = true;
-
-    // Fire ready event asynchronously
-    _raf(function() {
-      $triggerc(d.root_container,'ready');
-      $trigger(d.root_container,'change');
-    });
-  });
-
-  return this;
-};
-
-$.jsoneditor = {
-  template: null,
-  theme:null,
-  iconlib: null,
-  editors: {},
-  templates: {},
-  themes: {},
-  iconlibs: {},
-  resolvers: [],
-  custom_validators: [],
-
+    this.destroyed = true;
+  },
   getEditorClass: function(schema, editor) {
     var classname;
 
-    $each($.jsoneditor.resolvers,function(i,resolver) {
+    $each(JSONEditor.defaults.resolvers,function(i,resolver) {
       var tmp;
       if(tmp = resolver(schema)) {
-        if($.jsoneditor.editors[tmp]) {
+        if(JSONEditor.defaults.editors[tmp]) {
           classname = tmp;
           return false;
         }
@@ -163,19 +139,19 @@ $.jsoneditor = {
     });
 
     if(!classname) throw "Unknown editor for schema "+JSON.stringify(schema);
-    if(!$.jsoneditor.editors[classname]) throw "Unknown editor "+classname;
+    if(!JSONEditor.defaults.editors[classname]) throw "Unknown editor "+classname;
 
-    return $.jsoneditor.editors[classname];
+    return JSONEditor.defaults.editors[classname];
   },
   compileTemplate: function(template, name) {
-    name = name || $.jsoneditor.template;
+    name = name || JSONEditor.defaults.template;
 
     var engine;
 
     // Specifying a preset engine
     if(typeof name === 'string') {
-      if(!$.jsoneditor.templates[name]) throw "Unknown template engine "+name;
-      engine = $.jsoneditor.templates[name]();
+      if(!JSONEditor.defaults.templates[name]) throw "Unknown template engine "+name;
+      engine = JSONEditor.defaults.templates[name]();
 
       if(!engine) throw "Template engine "+name+" missing required library.";
     }
@@ -188,6 +164,36 @@ $.jsoneditor = {
     if(!engine.compile) throw "Invalid template engine set";
 
     return engine.compile(template);
+  },
+  _data: function(el,key,value) {
+    // Setting data
+    if(arguments.length === 3) {
+      var uuid;
+      if(el.hasAttribute('data-jsoneditor-'+key)) {
+        uuid = el.getAttribute('data-jsoneditor-'+key);
+      }
+      else {
+        uuid = this.uuid++;
+        el.setAttribute('data-jsoneditor-'+key,uuid);
+      }
+    
+      this.__data[uuid] = value;
+    }
+    // Getting data
+    else {
+      // No data stored
+      if(!el.hasAttribute('data-jsoneditor-'+key)) return null;
+      
+      return this.__data[el.getAttribute('data-jsoneditor-'+key)];
+    }
   }
 };
 
+JSONEditor.defaults = {
+  themes: {},
+  templates: {},
+  iconlibs: {},
+  editors: {},
+  resolvers: [],
+  custom_validators: []
+};

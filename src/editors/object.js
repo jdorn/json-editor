@@ -1,4 +1,4 @@
-$.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return $extend({},this.schema.default || {});
   },
@@ -19,8 +19,8 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     this.title_controls.style.display = 'none';
     this.editjson_controls.style.display = 'none';
     if(this.addproperty_controls) this.addproperty_controls.style.display = 'none';
-    $(this.cancel_editjson_button).trigger('click');
-    if(this.cancel_addproperty_button) $(this.cancel_addproperty_button).trigger('click');
+    $trigger(this.cancel_editjson_button,'click');
+    if(this.cancel_addproperty_button) $trigger(this.cancel_addproperty_button,'click');
     this.theme.disableHeader(this.title);
   },
   build: function() {
@@ -33,7 +33,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     if(this.getOption('table_row',false)) {
       this.editor_holder = this.container;
       $each(this.schema.properties, function(key,schema) {
-        var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+        var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
         var holder = self.editor_holder.appendChild(self.getTheme().getTableCell());
 
         self.editors[key] = new editor({
@@ -79,7 +79,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       this.container.appendChild(this.editor_holder);
 
       $each(this.schema.properties, function(key,schema) {
-        var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+        var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
         var holder = self.getTheme().getChildEditorHolder();
         self.editor_holder.appendChild(holder);
 
@@ -126,7 +126,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
 
       // If it should start collapsed
       if(this.options.collapsed) {
-        $(this.toggle_button).trigger('click');
+        $trigger(this.toggle_button,'click');
       }
       
       // Edit JSON Button
@@ -154,7 +154,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
           
           // Set the value
           self.setValue(value);
-          $(self.editor_holder).trigger('change');
+          $trigger(self.editor_holder,'change');
         }
         // Start Editing
         else {
@@ -233,7 +233,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     });
   },
   canHaveAdditionalProperties: function() {
-    return this.schema.additionalProperties !== false && !this.jsoneditor.data('jsoneditor').options.no_additional_properties;
+    return this.schema.additionalProperties !== false && !this.jsoneditor.options.no_additional_properties;
   },
   addObjectProperty: function(name) {
     var self = this;
@@ -261,7 +261,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     }
     
     // Add the property
-    var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+    var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
     var holder = self.getTheme().getChildEditorHolder();
     self.editor_holder.appendChild(holder);
 
@@ -275,7 +275,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
     });
     self.editors[name].not_core = true;
     
-    $(holder).trigger('change');
+    $trigger(holder,'change');
   },
   destroy: function() {
     $each(this.editors, function(i,el) {
@@ -354,7 +354,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
         if(editor.property_removed && editor.addremove) {
-          $(editor.addremove).trigger('click');
+          $trigger(editor.addremove,'click');
         }
         
         editor.setValue(value[i],initial);
@@ -362,7 +362,7 @@ $.jsoneditor.editors.object = $.jsoneditor.AbstractEditor.extend({
       else {
         // If property isn't required, remove property
         if(!initial && !editor.property_removed && !editor.isRequired() && editor.addremove) {
-          $(editor.addremove).trigger('click');
+          $trigger(editor.addremove,'click');
           return;
         }
         

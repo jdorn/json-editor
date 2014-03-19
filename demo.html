@@ -28,11 +28,10 @@
     <link rel='stylehseet' href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.css'>
     <!---->
     
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src='dist/jquery.jsoneditor.js'></script>
     <script>
-    $.jsoneditor.theme = 'bootstrap2';
-    $.jsoneditor.iconlib = 'bootstrap2';
+    JSONEditor.defaults.theme = 'bootstrap2';
+    JSONEditor.defaults.iconlib = 'bootstrap2';
     </script>
 </head>
 <body>
@@ -89,6 +88,7 @@ if(errors.length) {
     </div>
 </div>
 <script>
+(function() {
     var schema = {
         title: "Person",
         type: "object",
@@ -177,53 +177,63 @@ if(errors.length) {
         required: ["name","age"]
     };
 
-    $(document).ready(function() {
-        // Display the initial schema
-        $("#schema").val(JSON.stringify(schema,null,2));
-        $("#output").val('');
-
-        // When the 'update schema' button is clicked, re-initialize the editor
-        $("#setschema").on('click',function() {
-            try {
-                schema = JSON.parse($("#schema").val());
-            }
-            catch(e) {
-                alert('Invalid Schema: '+e.message);
-                return;
-            }
-
-            var params = {
-                schema: schema
-            };
-
-            if($("#output").val()) params.startval = JSON.parse($("#output").val());
-
-            $("#editor").jsoneditor('destroy').jsoneditor(params);
-        });
-
-        // Initialize the editor
-        $("#setschema").trigger('click');
-
-        // When the value of the editor changes, update the JSON output
-        $("#editor").on('change',function(e) {
-            var json = $("#editor").jsoneditor('value');
-
-            $("#output").val(JSON.stringify(json,null,2));
-            
-            var validation_errors = $("#editor").jsoneditor('validate');
-            if(validation_errors.length) {
-                $("#validate").val(JSON.stringify(validation_errors,null,2));
-            }
-            else {
-                $("#validate").val('valid');
-            }
-        });
-
-        // When the 'update form' button is clicked, set the editor's value
-        $("#setvalue").on('click',function() {
-            $("#editor").jsoneditor('value',JSON.parse($("#output").val()));
-        });
+    // Divs/textareas on the page
+    var $schema = document.getElementById('schema');
+    var $output = document.getElementById('output');
+    var $editor = document.getElementById('editor');
+    var $validate = document.getElementById('validate');
+    
+    // Buttons
+    var $set_schema_button = document.getElementById('setschema');
+    var $set_value_button = document.getElementById('setvalue');
+    
+    // Initialize the editor
+    var jsoneditor = new JSONEditor($editor,{
+       schema: schema 
     });
+    
+    // Start the schema and output textareas with initial values
+    $schema.value = JSON.stringify(schema,null,2);
+    $output.value = '';
+    
+    // When the 'update form' button is clicked, set the editor's value
+    $set_value_button.addEventListener('click',function() {
+       jsoneditor.setValue(JSON.parse($output.value));
+    });
+    
+    // Update the schema when the button is clicked
+    $set_schema_button.addEventListener('click',function() {
+       try {
+           schema = JSON.parse($schema.value);
+       }
+       catch(e) {
+           alert('Invalid Schema: '+e.message);
+       }
+       
+       // Destroy the existing jsoneditor
+       jsoneditor.destroy();
+       
+       // Create a new jsoneditor
+       jsoneditor = new JSONEditor($editor,{
+           schema: schema
+       });
+    });
+    
+    // When the value of the editor changes, update the JSON output
+    $editor.addEventListener('change',function(e) {
+        var json = jsoneditor.getValue();
+        
+        $output.value = JSON.stringify(json,null,2);
+        
+        var validation_errors = jsoneditor.validate();
+        if(validation_errors.length) {
+            $validate.value = JSON.stringify(validation_errors,null,2);
+        }
+        else {
+            $validate.value = 'valid';
+        }
+    });
+})();
 </script>
 </body>
 </html>

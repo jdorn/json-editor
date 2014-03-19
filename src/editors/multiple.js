@@ -1,5 +1,5 @@
 // Multiple Editor (for when `type` is an array)
-$.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return null;
   },
@@ -45,7 +45,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     this.switcher = this.theme.getSelectInput(this.display_text);
     container.appendChild(this.switcher);
     this.switcher.addEventListener('change',function(e) {
-      self.type = self.display_text.indexOf($(this).val());
+      self.type = self.display_text.indexOf(this.value);
 
       var current_value = self.getValue();
 
@@ -88,12 +88,12 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new $.jsoneditor.Validator(schema,{
-        required_by_default: self.jsoneditor.data('jsoneditor').options.required_by_default,
-        no_additional_properties: self.jsoneditor.data('jsoneditor').options.no_additional_properties
+      self.validators[i] = new JSONEditor.Validator(schema,{
+        required_by_default: self.jsoneditor.options.required_by_default,
+        no_additional_properties: self.jsoneditor.options.no_additional_properties
       });
 
-      var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+      var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
       self.editors[i] = new editor({
         jsoneditor: self.jsoneditor,

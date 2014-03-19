@@ -1,4 +1,4 @@
-$.jsoneditor.AbstractTheme = Class.extend({
+JSONEditor.AbstractTheme = Class.extend({
   getContainer: function() {
     return document.createElement('div');
   },

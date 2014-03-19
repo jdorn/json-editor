@@ -1,4 +1,4 @@
-$.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   getDefault: function() {    
     return this.schema.default || '';
   },
@@ -63,7 +63,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       this.input_type = 'select';
       this.input = this.theme.getSelectInput([]);
       if(this.schema.enumValue) {
-        this.select_template = $.jsoneditor.compileTemplate(this.schema.enumValue, this.template_engine);
+        this.select_template = this.jsoneditor.compileTemplate(this.schema.enumValue, this.template_engine);
       }
     }
     // Specific format
@@ -144,7 +144,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     this.container.appendChild(this.control);
 
     // If the Select2 library is loaded
-    if(this.input_type === "select" && $.fn.select2) {
+    if(this.input_type === "select" && window.$ && $.fn && $.fn.select2) {
       $(this.input).select2();
     }
 
@@ -155,7 +155,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     // Compile and store the template
     if(this.schema.template) {
-      this.template = $.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
+      this.template = this.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
     }
     else this.refreshValue();
   },

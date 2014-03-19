@@ -1,5 +1,5 @@
 // Enum Editor (used for objects and arrays with enumerated values)
-$.jsoneditor.editors.enum = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.enum[0];
   },

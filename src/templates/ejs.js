@@ -1,4 +1,4 @@
-$.jsoneditor.templates.ejs = function() {
+JSONEditor.defaults.templates.ejs = function() {
   if(!window.EJS) return false;
 
   return {
