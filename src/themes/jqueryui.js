@@ -1,134 +1,151 @@
 JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
   getTable: function() {
-    return $("<table>").attr('cellpadding',5).attr('cellspacing',0);
+    var el = this._super();
+    el.setAttribute('cellpadding',5);
+    el.setAttribute('cellspacing',0);
+    return el;
   },
-  getTableHeaderCell: function() {
-    return $("<th>").addClass('ui-state-active').css({
-      fontWeight: 'bold'
-    });
+  getTableHeaderCell: function(text) {
+    var el = this._super(text);
+    el.className = 'ui-state-active';
+    el.style.fontWeight = 'bold';
+    return el;
   },
   getTableCell: function() {
-    return $("<td>").addClass('ui-widget-content');
+    var el = this._super();
+    el.className = 'ui-widget-content';
+    return el;
   },
   getHeaderButtonHolder: function() {
-    return this.getButtonHolder().css({
-      marginLeft: 10,
-      fontSize: '.6em',
-      display: 'inline-block'
-    });
+    var el = this.getButtonHolder();
+    el.style.marginLeft = '10px';
+    el.style.fontSize = '.6em';
+    el.style.display = 'inline-block';
+    return el;
   },
   getFormInputDescription: function(text) {
-    return this.getDescription(text).css({
-      display: 'inline-block',
-      marginLeft: 10
-    });
+    var el = this.getDescription(text);
+    el.style.marginLeft = '10px';
+    el.style.display = 'inline-block';
+    return el;
   },
   getFormControl: function(label, input, description) {
-    return $("<div>").addClass('form-control')
-      .css({
-        padding: '8px 0'
-      })
-      .append(label)
-      .append(input)
-      .append(description)
+    var el = document.createElement('div');
+    el.className = 'form-control';
+    el.style.padding = '8px 0';
+    if(label) el.appendChild(label);
+    el.appendChild(input);
+    if(description) el.appendChild(description);
+    return el;
   },
   getDescription: function(text) {
-    return $("<span>").css({
-      fontSize: '.8em',
-      fontStyle: 'italic'
-    }).text(text);
+    var el = document.createElement('span');
+    el.style.fontSize = '.8em';
+    el.style.fontStyle = 'italic';
+    el.textContent = text;
+    return el;
   },
   getButtonHolder: function() {
-    return $("<div>").addClass('ui-buttonset').css({
-      fontSize: '.7em'
-    });
+    var el = document.createElement('div');
+    el.className = 'ui-buttonset';
+    el.style.fontSize = '.7em';
+    return el;
   },
   getFormInputLabel: function(text) {
-    return $("<label>").text(text).css({
-      marginRight: '5px'
-    });
+    var el = document.createElement('label');
+    el.style.marginRight = '5px';
+    el.textContent = text;
+    return el;
   },
   getButton: function(text, icon, title) {
-    var button = $("<button>")
-      .addClass('ui-button ui-widget ui-state-default ui-corner-all');
-      
+    var button = document.createElement("button");
+    button.className = 'ui-button ui-widget ui-state-default ui-corner-all';
+
     // Icon only
     if(icon && !text) {
-      button
-        .addClass('ui-button-icon-only')
-        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+      button.className += ' ui-button-icon-only';
+      icon.className += ' ui-button-icon-primary ui-icon-primary';
+      button.appendChild(icon);
     }
     // Icon and Text
     else if(icon) {
-      button
-        .addClass('ui-button-text-icon-primary')
-        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+      button.className += ' ui-button-text-icon-primary';
+      icon.className += ' ui-button-icon-primary ui-icon-primary';
+      button.appendChild(icon);
     }
     // Text only
     else {
-      button
-        .addClass('ui-button-text-only')
+      button.className += ' ui-button-text-only';
     }
-    
-    button.append(
-      $("<span>").addClass('ui-button-text').text(text||title||".")
-    );
-    
-    button.attr('title',title);
+
+    var el = document.createElement('span');
+    el.className = 'ui-button-text';
+    el.textContent = text||title||".";
+    button.appendChild(el);
+
+    button.setAttribute('title',title);
     
     return button;
   },
   setButtonText: function(button,text, icon, title) {
-    button.empty();
-    
+    button.innerHTML = '';
+    button.className = 'ui-button ui-widget ui-state-default ui-corner-all';
+
     // Icon only
     if(icon && !text) {
-      button
-        .removeClass('ui-button-text-icon-primary')
-        .removeClass('ui-button-text-only')
-        .addClass('ui-button-icon-only')
-        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'));
+      button.className += ' ui-button-icon-only';
+      icon.className += ' ui-button-icon-primary ui-icon-primary';
+      button.appendChild(icon);
     }
     // Icon and Text
     else if(icon) {
-      button
-        .removeClass('ui-button-icon-only')
-        .removeClass('ui-button-text-only')
-        .addClass('ui-button-text-icon-primary')
-        .append(icon.addClass('ui-button-icon-primary ui-icon-primary'))
+      button.className += ' ui-button-text-icon-primary';
+      icon.className += ' ui-button-icon-primary ui-icon-primary';
+      button.appendChild(icon);
     }
     // Text only
     else {
-      button
-        .removeClass('ui-button-icon-only')
-        .removeClass('ui-button-text-icon-primary')
-        .addClass('ui-button-text-only')
+      button.className += ' ui-button-text-only';
     }
-    
-    button.append(
-      $("<span>").addClass('ui-button-text').text(text||title||'.')
-    );
 
-    button.attr('title',title);
+    var el = document.createElement('span');
+    el.className = 'ui-button-text';
+    el.textContent = text||title||".";
+    button.appendChild(el);
+
+    button.setAttribute('title',title);
   },
   getIndentedPanel: function() {
-    return $("<div>").addClass('ui-widget-content ui-corner-all').css({
-      padding: '1em 1.4em'
-    });
+    var el = document.createElement('div');
+    el.className = 'ui-widget-content ui-corner-all';
+    el.style.padding = '1em 1.4em';
+    return el;
+  },
+  afterInputReady: function(input) {
+    if(input.controls) return;
+    input.controls = this.closest(input,'.form-control');
   },
   addInputError: function(input,text) {
-    var group = input.closest('.form-control');
-    var errmsg = $('.errormsg',group);
-    if(!errmsg.length) errmsg = $("<div class='errormsg ui-state-error'>").appendTo(group);
-    errmsg.text(text);
+    if(!input.controls) return;
+    if(!input.errmsg) {
+      input.errmsg = document.createElement('div');
+      input.errmsg.className = 'ui-state-error';
+      input.controls.appendChild(input.errmsg);
+    }
+    else {
+      input.errmsg.style.display = '';
+    }
+
+    input.errmsg.textContent = text;
   },
   removeInputError: function(input) {
-    $('.errormsg',input.closest('.form-control')).remove();
+    if(!input.errmsg) return;
+    input.errmsg.style.display = 'none';
   },
   markTabActive: function(tab) {
-    tab.removeClass('ui-widget-header').addClass('ui-state-active');
+    tab.className = tab.className.replace(/\s*ui-widget-header/g,'')+' ui-state-active';
   },
   markTabInactive: function(tab) {
-    tab.removeClass('ui-state-active').addClass('ui-widget-header');
+    tab.className = tab.className.replace(/\s*ui-state-active/g,'')+' ui-widget-header';
   }
 });
