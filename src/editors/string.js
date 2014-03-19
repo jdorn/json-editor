@@ -18,6 +18,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       sanitized = this.select_options[0];
     }
 
+    if(this.input.value === sanitized) {
+      return;
+    }
+
     this.input.value = sanitized;
     
     // If using SCEditor, update the WYSIWYG

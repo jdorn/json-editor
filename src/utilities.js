@@ -1,10 +1,26 @@
+var $isplainobject = function( obj ) {
+  // Not own constructor property must be Object
+  if ( obj.constructor &&
+    !obj.hasOwnProperty('constructor') &&
+    !obj.constructor.prototype.hasOwnProperty('isPrototypeOf')) {
+    return false;
+  }
+
+  // Own properties are enumerated firstly, so to speed up,
+  // if last one is own, then all properties are own.
+
+  var key;
+  for ( key in obj ) {}
+
+  return key === undefined || obj.hasOwnProperty(key);
+};
+
 var $extend = function(destination) {
-  var source;
-  for(var i=1; i<arguments.length; i++) {
+  var source, i,property;
+  for(i=1; i<arguments.length; i++) {
     source = arguments[i];
-    for (var property in source) {
-      if(!source.hasOwnProperty(property)) continue;
-      if(source[property] && source[property].constructor && source[property].constructor === Object) {
+    for (property in source) {
+      if(source[property] && $isplainobject(source[property])) {
         destination[property] = destination[property] || {};
         $extend(destination[property], source[property]);
       }
@@ -17,7 +33,7 @@ var $extend = function(destination) {
 };
 
 var $each = function(obj,callback) {
-  if(obj.length) {
+  if(typeof obj.length !== 'undefined') {
     for(var i=0; i<obj.length; i++) {
       if(callback(i,obj[i])===false) return;
     }

@@ -18,13 +18,29 @@
 // Inspired by base2 and Prototype
 var Class;!function(){var a=!1,b=/xyz/.test(function(){})?/\b_super\b/:/.*/;Class=function(){},Class.extend=function(c){function g(){!a&&this.init&&this.init.apply(this,arguments)}var d=this.prototype;a=!0;var e=new this;a=!1;for(var f in c)e[f]="function"==typeof c[f]&&"function"==typeof d[f]&&b.test(c[f])?function(a,b){return function(){var c=this._super;this._super=d[a];var e=b.apply(this,arguments);return this._super=c,e}}(f,c[f]):c[f];return g.prototype=e,g.prototype.constructor=g,g.extend=arguments.callee,g}}();
 
+var $isplainobject = function( obj ) {
+  // Not own constructor property must be Object
+  if ( obj.constructor &&
+    !obj.hasOwnProperty('constructor') &&
+    !obj.constructor.prototype.hasOwnProperty('isPrototypeOf')) {
+    return false;
+  }
+
+  // Own properties are enumerated firstly, so to speed up,
+  // if last one is own, then all properties are own.
+
+  var key;
+  for ( key in obj ) {}
+
+  return key === undefined || obj.hasOwnProperty(key);
+};
+
 var $extend = function(destination) {
-  var source;
-  for(var i=1; i<arguments.length; i++) {
+  var source, i,property;
+  for(i=1; i<arguments.length; i++) {
     source = arguments[i];
-    for (var property in source) {
-      if(!source.hasOwnProperty(property)) continue;
-      if(source[property] && source[property].constructor && source[property].constructor === Object) {
+    for (property in source) {
+      if(source[property] && $isplainobject(source[property])) {
         destination[property] = destination[property] || {};
         $extend(destination[property], source[property]);
       }
@@ -37,7 +53,7 @@ var $extend = function(destination) {
 };
 
 var $each = function(obj,callback) {
-  if(obj.length) {
+  if(typeof obj.length !== 'undefined') {
     for(var i=0; i<obj.length; i++) {
       if(callback(i,obj[i])===false) return;
     }
@@ -1235,15 +1251,18 @@ JSONEditor.AbstractEditor = Class.extend({
     this.watched = {};
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
-    this.watch_listener_firing = false;
     this.watch_listener = function() {
       if(self.refreshWatchedFieldValues()) {
         self.onWatchedFieldChange();
       }
     };
     if(this.schema.watch) {
-      $each(this.schema.watch, function(name, path) {
-        var path_parts;
+      var path,path_parts,first,root,adjusted_path;
+
+      for(var name in this.schema.watch) {
+        if(!this.schema.watch.hasOwnProperty(name)) continue;
+        path = this.schema.watch[name];
+
         if(path instanceof Array) {
           path_parts = [path[0]].concat(path[1].split('.'));
         }
@@ -1251,16 +1270,16 @@ JSONEditor.AbstractEditor = Class.extend({
           path_parts = path.split('.');
           if(!self.theme.closest(self.container,'[data-schemaid="'+path_parts[0]+'"]')) path_parts.unshift('#');
         }
-        var first = path_parts.shift();
+        first = path_parts.shift();
 
         if(first === '#') first = self.jsoneditor.schema.id || 'root';
 
         // Find the root node for this template variable
-        var root = self.theme.closest(self.container,'[data-schemaid="'+first+'"]');
+        root = self.theme.closest(self.container,'[data-schemaid="'+first+'"]');
         if(!root) throw "Could not find ancestor node with id "+first;
 
         // Keep track of the root node and path for use when rendering the template
-        var adjusted_path = root.getAttribute('data-schemapath') + '.' + path_parts.join('.');
+        adjusted_path = root.getAttribute('data-schemapath') + '.' + path_parts.join('.');
         self.watched[name] = {
           root: root,
           path: path_parts,
@@ -1271,7 +1290,7 @@ JSONEditor.AbstractEditor = Class.extend({
         // Listen for changes to the variable field
         root.addEventListener('change',self.watch_listener);
         root.addEventListener('set',self.watch_listener);
-      });
+      }
     }
     
     // Dynamic header
@@ -1314,10 +1333,13 @@ JSONEditor.AbstractEditor = Class.extend({
     var self = this;
     
     if(this.watched) {
-      $each(this.watched,function(name,attr) {
-        var obj = attr.editor.getValue();
-        var current_part = -1;
-        var val = null;
+      var obj,current_part,val,attr;
+      for(var name in this.watched) {
+        if(!this.watched.hasOwnProperty(name)) continue;
+        attr = this.watched[name];
+        obj = attr.editor.getValue();
+        current_part = -1;
+        val = null;
         // Use "path.to.property" to get root['path']['to']['property']
         while(1) {
           current_part++;
@@ -1334,7 +1356,7 @@ JSONEditor.AbstractEditor = Class.extend({
         }
         if(self.watched_values[name] !== val) changed = true;
         watched[name] = val;
-      });
+      }
     }
     
     watched.self = this.getValue();
@@ -1551,6 +1573,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     var sanitized = this.sanitize(value);
     if(this.select_options && this.select_options.indexOf(sanitized) < 0) {
       sanitized = this.select_options[0];
+    }
+
+    if(this.input.value === sanitized) {
+      return;
     }
 
     this.input.value = sanitized;
@@ -1929,7 +1955,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       if(this.schema.description) {
         this.description = this.getTheme().getDescription(this.schema.description);
-        this.container.append(this.description);
+        this.container.appendChild(this.description);
       }
       this.error_holder = document.createElement('div');
       this.container.appendChild(this.error_holder);
@@ -2503,7 +2529,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     if(hard) {
       row.destroy();
       if(holder.parentNode) holder.parentNode.removeChild(holder);
-      if(row.tab) row.tab.parentNode.removeChild(row.tab);
+      if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
     }
     else {
       if(row.tab) row.tab.style.display = 'none';
@@ -3621,12 +3647,14 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       sanitized = this.enum_values[0];
     }
 
+    if(this.value === sanitized) {
+      return;
+    }
+
     this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     this.value = sanitized;
 
-    if(sanitized !== value) $trigger(this.input,'change');
-
-    $trigger(this.input,'set');
+    this.fireSetEvent();
   },
   typecast: function(value) {
     if(this.schema.type === "boolean") {

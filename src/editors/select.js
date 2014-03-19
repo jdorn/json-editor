@@ -11,12 +11,14 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       sanitized = this.enum_values[0];
     }
 
+    if(this.value === sanitized) {
+      return;
+    }
+
     this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     this.value = sanitized;
 
-    if(sanitized !== value) $trigger(this.input,'change');
-
-    $trigger(this.input,'set');
+    this.fireSetEvent();
   },
   typecast: function(value) {
     if(this.schema.type === "boolean") {

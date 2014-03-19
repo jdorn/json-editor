@@ -71,7 +71,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       if(this.schema.description) {
         this.description = this.getTheme().getDescription(this.schema.description);
-        this.container.append(this.description);
+        this.container.appendChild(this.description);
       }
       this.error_holder = document.createElement('div');
       this.container.appendChild(this.error_holder);

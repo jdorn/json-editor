@@ -209,7 +209,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     if(hard) {
       row.destroy();
       if(holder.parentNode) holder.parentNode.removeChild(holder);
-      if(row.tab) row.tab.parentNode.removeChild(row.tab);
+      if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
     }
     else {
       if(row.tab) row.tab.style.display = 'none';

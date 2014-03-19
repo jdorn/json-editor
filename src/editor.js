@@ -62,15 +62,18 @@ JSONEditor.AbstractEditor = Class.extend({
     this.watched = {};
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
-    this.watch_listener_firing = false;
     this.watch_listener = function() {
       if(self.refreshWatchedFieldValues()) {
         self.onWatchedFieldChange();
       }
     };
     if(this.schema.watch) {
-      $each(this.schema.watch, function(name, path) {
-        var path_parts;
+      var path,path_parts,first,root,adjusted_path;
+
+      for(var name in this.schema.watch) {
+        if(!this.schema.watch.hasOwnProperty(name)) continue;
+        path = this.schema.watch[name];
+
         if(path instanceof Array) {
           path_parts = [path[0]].concat(path[1].split('.'));
         }
@@ -78,16 +81,16 @@ JSONEditor.AbstractEditor = Class.extend({
           path_parts = path.split('.');
           if(!self.theme.closest(self.container,'[data-schemaid="'+path_parts[0]+'"]')) path_parts.unshift('#');
         }
-        var first = path_parts.shift();
+        first = path_parts.shift();
 
         if(first === '#') first = self.jsoneditor.schema.id || 'root';
 
         // Find the root node for this template variable
-        var root = self.theme.closest(self.container,'[data-schemaid="'+first+'"]');
+        root = self.theme.closest(self.container,'[data-schemaid="'+first+'"]');
         if(!root) throw "Could not find ancestor node with id "+first;
 
         // Keep track of the root node and path for use when rendering the template
-        var adjusted_path = root.getAttribute('data-schemapath') + '.' + path_parts.join('.');
+        adjusted_path = root.getAttribute('data-schemapath') + '.' + path_parts.join('.');
         self.watched[name] = {
           root: root,
           path: path_parts,
@@ -98,7 +101,7 @@ JSONEditor.AbstractEditor = Class.extend({
         // Listen for changes to the variable field
         root.addEventListener('change',self.watch_listener);
         root.addEventListener('set',self.watch_listener);
-      });
+      }
     }
     
     // Dynamic header
@@ -141,10 +144,13 @@ JSONEditor.AbstractEditor = Class.extend({
     var self = this;
     
     if(this.watched) {
-      $each(this.watched,function(name,attr) {
-        var obj = attr.editor.getValue();
-        var current_part = -1;
-        var val = null;
+      var obj,current_part,val,attr;
+      for(var name in this.watched) {
+        if(!this.watched.hasOwnProperty(name)) continue;
+        attr = this.watched[name];
+        obj = attr.editor.getValue();
+        current_part = -1;
+        val = null;
         // Use "path.to.property" to get root['path']['to']['property']
         while(1) {
           current_part++;
@@ -161,7 +167,7 @@ JSONEditor.AbstractEditor = Class.extend({
         }
         if(self.watched_values[name] !== val) changed = true;
         watched[name] = val;
-      });
+      }
     }
     
     watched.self = this.getValue();
