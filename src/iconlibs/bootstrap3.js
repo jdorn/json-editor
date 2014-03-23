@@ -1,4 +1,4 @@
-$.jsoneditor.iconlibs.bootstrap3 = $.jsoneditor.AbstractIconLib.extend({
+JSONEditor.defaults.iconlibs.bootstrap3 = JSONEditor.AbstractIconLib.extend({
   mapping: {
     collapse: 'chevron-down',
     expand: 'chevron-right',

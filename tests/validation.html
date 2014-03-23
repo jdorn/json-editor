@@ -3,7 +3,7 @@
 <head>
     <title>JSON Editor Validation Example</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src='../dist/jquery.jsoneditor.js'></script>
+    <script src='../dist/jsoneditor.js'></script>
 </head>
 <body>
 <script>
@@ -688,7 +688,7 @@
         animel.queue(function(next) {
             console.log(i);
 
-            var validator = new $.jsoneditor.Validator(test.schema,{
+            var validator = new JSONEditor.Validator(test.schema,{
                 ajax: true,
                 ready: function() {
                     var self = this;

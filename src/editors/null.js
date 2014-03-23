@@ -1,8 +1,8 @@
-$.jsoneditor.editors.null = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.null = JSONEditor.AbstractEditor.extend({
   getValue: function() {
     return null;
   },
   setValue: function() {
-    this.container.trigger('set');
+    this.jsoneditor.notifyWatchers(this.path);
   }
 });

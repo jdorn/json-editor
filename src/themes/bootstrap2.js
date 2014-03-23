@@ -1,104 +1,132 @@
-$.jsoneditor.themes.bootstrap2 = $.jsoneditor.AbstractTheme.extend({
+JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   getRangeInput: function(min, max, step) {
     // TODO: use bootstrap slider
     return this._super(min, max, step);
   },
   getSelectInput: function(options) {
-    return this._super(options).css({
-      width: 'auto'
-    });
+    var input = this._super(options);
+    input.style.width = 'auto';
+    return input;
   },
   afterInputReady: function(input) {
-    if(input.data('control-group')) {
-      return;
-    }
-    input.data('control-group',input.closest('.control-group'));
-    input.data('controls',input.closest('controls'));
-
-    if(input.closest('.compact').length) {
-      input.data('control-group').removeClass('control-group');
-      input.data('controls').removeClass('controls');
-      input.css('margin-bottom',0);
+    if(input.controlgroup) return;
+    input.controlgroup = this.closest(input,'.control-group');
+    input.controls = this.closest(input,'controls');
+    if(this.closest(input,'.compact')) {
+      input.controlgroup.className = input.controlgroup.className.replace(/control-group/g,'').replace(/[ ]{2,}/g,' ');
+      input.controls.className = input.controlgroup.className.replace(/controls/g,'').replace(/[ ]{2,}/g,' ');
+      input.style.marginBottom = 0;
     }
 
     // TODO: use bootstrap slider
   },
   getIndentedPanel: function() {
-    return $("<div></div>").addClass('well well-small');
+    var el = document.createElement('div');
+    el.className = 'well well-small';
+    return el;
   },
   getFormInputDescription: function(text) {
-    return $("<p></p>").addClass('help-inline').text(text);
+    var el = document.createElement('p');
+    el.className = 'help-inline';
+    el.textContent = text;
+    return el;
   },
   getFormControl: function(label, input, description) {
-    var ret = $("<div></div>").addClass('control-group');
+    var ret = document.createElement('div');
+    ret.className = 'control-group';
 
-    var controls;
+    var controls = document.createElement('div');
+    controls.className = 'controls';
 
-    if(label && input.attr('type') === 'checkbox') {
-      controls = $("<div></div>").addClass('controls').appendTo(ret);
-      label.addClass('checkbox').append(input).appendTo(controls);
+    if(label && input.getAttribute('type') === 'checkbox') {
+      ret.appendChild(controls);
+      label.className += ' checkbox';
+      label.appendChild(input);
+      controls.appendChild(label);
     }
     else {
-      if(label) label.addClass('control-label').appendTo(ret);
-      controls = $("<div></div>").addClass('controls').append(input).appendTo(ret);
+      if(label) {
+        label.className += ' control-label';
+        ret.appendChild(label);
+      }
+      controls.appendChild(input);
+      ret.appendChild(controls);
     }
 
-    if(description) controls.append(description);
+    if(description) controls.appendChild(description);
 
     return ret;
   },
   getHeaderButtonHolder: function() {
-    return $("<div></div>").addClass('btn-group').css({
-      marginLeft: 10
-    });
+    var el = this.getButtonHolder();
+    el.style.marginLeft = '10px';
+    return el;
   },
   getButtonHolder: function() {
-    return $("<div></div>").addClass('btn-group');
+    var el = document.createElement('div');
+    el.className = 'btn-group';
+    return el;
   },
   getButton: function(text, icon, title) {
-    return this._super(text, icon, title).addClass('btn btn-default');
+    var el =  this._super(text, icon, title);
+    el.className += ' btn btn-default';
+    return el;
   },
   getTable: function() {
-    return $("<table></table>").addClass('table table-bordered').css({
-      width: 'auto',
-      maxWidth: 'none'
-    });
+    var el = document.createElement('table');
+    el.className = 'table table-bordered';
+    el.style.width = 'auto';
+    el.style.maxWidth = 'none';
+    return el;
   },
   addInputError: function(input,text) {
-    if(!input.data('control-group')) return;
-    input.data('control-group').addClass('error');
-    var errmsg = input.data('errmsg');
-    if(!errmsg) {
-      errmsg = $("<p class='help-block errormsg'>").appendTo(input.data('controls'));
-      input.data('errmsg',errmsg);
+    if(!input.controlgroup) return;
+    input.controlgroup.className += ' error';
+    if(!input.errmsg) {
+      input.errmsg = document.createElement('p');
+      input.errmsg.className = 'help-block errormsg';
+      input.controls.appendChild(input.errmsg);
+    }
+    else {
+      input.errmsg.style.display = '';
     }
 
-    errmsg.text(text);
+    input.errmsg.textContent = text;
   },
   removeInputError: function(input) {
-    if(!input.data('errmsg')) return;
-    input.data('errmsg').remove();
-    input.data('control-group').removeClass('error');
+    if(!input.errmsg) return;
+    input.errmsg.style.display = 'none';
+    input.controlgroup.className = input.controlgroup.className.replace(/\s?error/g,'');
   },
   getTabHolder: function() {
-    return $("<div class='tabbable tabs-left'><ul class='nav nav-tabs'></ul><div class='tab-content'></div></div>");
+    var el = document.createElement('div');
+    el.className = 'tabbable tabs-left';
+    el.innerHTML = "<ul class='nav nav-tabs'></ul><div class='tab-content'></div>";
+    return el;
   },
   getTab: function(text) {
-    return $("<li></li>").append($("<a href='#'>").append(text));
+    var el = document.createElement('li');
+    var a = document.createElement('a');
+    a.setAttribute('href','#');
+    a.appendChild(text);
+    el.appendChild(a);
+    return el;
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .tab-content",tab_holder)
+    return tab_holder.children[1];
   },
   getTabContent: function() {
-    return $("<div class='tab-pane active'></div>");
+    var el = document.createElement('div');
+    el.className = 'tab-pane active';
+    return el;
   },
   markTabActive: function(tab) {
-    tab.addClass('active');
+    tab.className += ' active';
   },
   markTabInactive: function(tab) {
-    tab.removeClass('active');
+    tab.className = tab.className.replace(/\s?active/g,'');
   },
   addTab: function(holder, tab) {
-    $("> .nav-tabs",holder).append(tab);
+    holder.children[0].appendChild(tab);
   }
 });

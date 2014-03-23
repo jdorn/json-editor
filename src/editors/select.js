@@ -1,4 +1,4 @@
-$.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || '';
   },
@@ -11,12 +11,13 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
       sanitized = this.enum_values[0];
     }
 
-    this.input.val(this.enum_options[this.enum_values.indexOf(sanitized)]);
+    if(this.value === sanitized) {
+      return;
+    }
+
+    this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     this.value = sanitized;
-
-    if(sanitized !== value) this.input.trigger('change');
-
-    this.input.trigger('set');
+    this.jsoneditor.notifyWatchers(this.path);
   },
   typecast: function(value) {
     if(this.schema.type === "boolean") {
@@ -37,14 +38,14 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
   },
   removeProperty: function() {
     this._super();
-    this.input.hide(500);
-    if(this.description) this.description.hide(500);
+    this.input.style.display = 'none';
+    if(this.description) this.description.style.display = 'none';
     this.theme.disableLabel(this.label);
   },
   addProperty: function() {
     this._super();
-    this.input.show(500);
-    if(this.description) this.description.show(500);
+    this.input.style.display = '';
+    if(this.description) this.description.style.display = '';
     this.theme.enableLabel(this.label);
   },
   build: function() {
@@ -58,7 +59,7 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
 
     // Enum options enumerated
     if(this.schema.enum) {
-      $.each(this.schema.enum,function(i,option) {
+      $each(this.schema.enum,function(i,option) {
         self.enum_options[i] = ""+option;
         self.enum_values[i] = self.typecast(option);
       });
@@ -73,41 +74,47 @@ $.jsoneditor.editors.select = $.jsoneditor.AbstractEditor.extend({
       throw "'select' editor requires the enum property to be set."
     }
 
-    if(this.getOption('compact')) this.container.addClass('compact');
+    if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
     this.input = this.theme.getSelectInput(this.enum_options);
 
-    if(this.schema.readOnly || this.schema.readonly) this.input.prop('disabled',true);
+    if(this.schema.readOnly || this.schema.readonly) this.input.disabled = true;
 
-    this.input
-      .attr('data-schemapath',this.path)
-      .attr('data-schematype',this.schema.type)
-      .on('change keyup',function(e) {
-        var val = $(this).val();
+    this.input.addEventListener('change',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      var val = this.value;
 
-        var sanitized = val;
-        if(self.enum_options.indexOf(val) === -1) {
-          sanitized = self.enum_options[0];
-        }
+      var sanitized = val;
+      if(self.enum_options.indexOf(val) === -1) {
+        sanitized = self.enum_options[0];
+      }
 
-        self.value = self.enum_values[self.enum_options.indexOf(val)];
-      });
+      self.value = self.enum_values[self.enum_options.indexOf(val)];
+      
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
+      self.jsoneditor.notifyWatchers(self.path);
+    });
 
-    this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
+    this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
+    this.container.appendChild(this.control);
 
     this.value = this.enum_values[0];
 
     // If the Select2 library is loaded use it when we have lots of items
-    if($.fn.select2 && this.enum_options.length > 2) {
-      this.input.select2();
+    if(window.$ && $.fn && $.fn.select2 && this.enum_options.length > 2) {
+      $(this.input).select2();
     }
 
     self.theme.afterInputReady(self.input);
+    this.jsoneditor.notifyWatchers(this.path);
   },
   destroy: function() {
-    if(this.label) this.label.remove();
-    if(this.description) this.description.remove();
-    this.input.remove();
+    if(this.label) this.label.parentNode.removeChild(this.label);
+    if(this.description) this.description.parentNode.removeChild(this.description);
+    this.input.parentNode.removeChild(this.input);
 
     this._super();
   }

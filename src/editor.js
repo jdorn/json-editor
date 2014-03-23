@@ -1,36 +1,58 @@
 /**
  * All editors should extend from this class
  */
-$.jsoneditor.AbstractEditor = Class.extend({
+JSONEditor.AbstractEditor = Class.extend({
+  fireChangeHeaderEvent: function() {
+    $triggerc(this.container,'change_header_text');
+  },
+  onChildEditorChange: function(editor) {
+    if(!this.watch_listener) return;
+    this.watch_listener();
+    this.jsoneditor.notifyWatchers(this.path);
+    if(this.parent) this.parent.onChildEditorChange(this);
+    else this.jsoneditor.onChange();
+  },
+  register: function() {
+    this.jsoneditor.registerEditor(this);
+  },
+  unregister: function() {
+    if(!this.jsoneditor) return;
+    this.jsoneditor.unregisterEditor(this);
+  },
   init: function(options) {
     var self = this;
     this.container = options.container;
     this.jsoneditor = options.jsoneditor;
 
-    this.theme = this.jsoneditor.data('jsoneditor').theme;
-    this.template_engine = this.jsoneditor.data('jsoneditor').template;
-    this.iconlib = this.jsoneditor.data('jsoneditor').iconlib;
+    this.theme = this.jsoneditor.theme;
+    this.template_engine = this.jsoneditor.template;
+    this.iconlib = this.jsoneditor.iconlib;
 
-    this.options = $.extend(true, {}, (this.options || {}), (options.schema.options || {}), options);
+    this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
     this.schema = this.options.schema;
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
-    if(this.schema.id) this.container.attr('data-schemaid',this.schema.id);
-    if(this.schema.type && typeof this.schema.type === "string") this.container.attr('data-schematype',this.schema.type);
-    this.container.attr('data-schemapath',this.path);
-    this.container.data('editor',this);
+    if(this.schema.id) this.container.setAttribute('data-schemaid',this.schema.id);
+    if(this.schema.type && typeof this.schema.type === "string") this.container.setAttribute('data-schematype',this.schema.type);
+    this.container.setAttribute('data-schemapath',this.path);
+    this.jsoneditor._data(this.container,'editor',this);
 
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
     
+    this.register();
+    
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
-      this.title_links = this.theme.getFloatRightLinkHolder().appendTo(this.container);
+      this.title_links = this.container.appendChild(this.theme.getFloatRightLinkHolder());
 
-      this.addremove = this.theme.getLink('remove '+this.getTitle()).appendTo(this.title_links);
+      this.addremove = this.title_links.appendChild(this.theme.getLink('remove '+this.getTitle()));
 
-      this.addremove.on('click',function() {
+      this.addremove.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if(self.property_removed) {
           self.addProperty();
         }
@@ -38,65 +60,54 @@ $.jsoneditor.AbstractEditor = Class.extend({
           self.removeProperty();
         }
       
-        self.container.trigger('change');
-        return false;
+        if(self.parent) self.parent.onChildEditorChange(self);
+        else self.jsoneditor.onChange();
       });
     }
-    
-    this.container.on('change set',function() {
-      self.watch_listener();
-    });
     
     // Watched fields
     this.watched = {};
     if(this.schema.vars) this.schema.watch = this.schema.vars;
     this.watched_values = {};
-    this.watch_listener_firing = false;
     this.watch_listener = function() {
-      if(self.watch_listener_firing) return;
-      self.watch_listener_firing = true;
-      window.requestAnimationFrame(function() {
-        self.watch_listener_firing = false;
-        if(self.refreshWatchedFieldValues()) {
-          self.onWatchedFieldChange();
-        }
-      });
+      if(self.refreshWatchedFieldValues()) {
+        self.onWatchedFieldChange();
+      }
     };
     if(this.schema.watch) {
-      $.each(this.schema.watch, function(name, path) {
-        var path_parts;
+      var path,path_parts,first,root,adjusted_path;
+
+      for(var name in this.schema.watch) {
+        if(!this.schema.watch.hasOwnProperty(name)) continue;
+        path = this.schema.watch[name];
+
         if(path instanceof Array) {
           path_parts = [path[0]].concat(path[1].split('.'));
         }
         else {
-          path_parts = path.split('.'); 
-          if(!self.container.closest('[data-schemaid="'+path_parts[0]+'"]').length) path_parts.unshift('#');
+          path_parts = path.split('.');
+          if(!self.theme.closest(self.container,'[data-schemaid="'+path_parts[0]+'"]')) path_parts.unshift('#');
         }
-        var first = path_parts.shift();
+        first = path_parts.shift();
 
-        if(first === '#') first = self.jsoneditor.data('jsoneditor').schema.id || 'root';
+        if(first === '#') first = self.jsoneditor.schema.id || 'root';
 
         // Find the root node for this template variable
-        var root = self.container.closest('[data-schemaid="'+first+'"]');
-        if(!root.length) throw "Could not find ancestor node with id "+first;
+        root = self.theme.closest(self.container,'[data-schemaid="'+first+'"]');
+        if(!root) throw "Could not find ancestor node with id "+first;
 
         // Keep track of the root node and path for use when rendering the template
-        var adjusted_path = root.data('editor').path + '.' + path_parts.join('.');
-        self.watched[name] = {
-          root: root,
-          path: path_parts,
-          adjusted_path: adjusted_path
-        };
-
-        // Listen for changes to the variable field
-        root.on('change',self.watch_listener);
-        root.on('set',self.watch_listener);
-      });
+        adjusted_path = root.getAttribute('data-schemapath') + '.' + path_parts.join('.');
+        
+        self.jsoneditor.watch(adjusted_path,self.watch_listener);
+        
+        self.watched[name] = adjusted_path;
+      }
     }
     
     // Dynamic header
     if(this.schema.headerTemplate) {
-      this.header_template = $.jsoneditor.compileTemplate(this.schema.headerTemplate, this.template_engine);
+      this.header_template = this.jsoneditor.compileTemplate(this.schema.headerTemplate, this.template_engine);
     }
 
     this.build();
@@ -134,27 +145,14 @@ $.jsoneditor.AbstractEditor = Class.extend({
     var self = this;
     
     if(this.watched) {
-      $.each(this.watched,function(name,attr) {
-        var obj = attr.root.data('editor').getValue();
-        var current_part = -1;
-        var val = null;
-        // Use "path.to.property" to get root['path']['to']['property']
-        while(1) {
-          current_part++;
-          if(current_part >= attr.path.length) {
-            val = obj;
-            break;
-          }
-
-          if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
-            break;
-          }
-
-          obj = obj[attr.path[current_part]];
-        }
+      var val,editor;
+      for(var name in this.watched) {
+        if(!this.watched.hasOwnProperty(name)) continue;
+        editor = self.jsoneditor.getEditor(this.watched[name]);
+        val = editor? editor.getValue() : null;
         if(self.watched_values[name] !== val) changed = true;
         watched[name] = val;
-      });
+      }
     }
     
     watched.self = this.getValue();
@@ -168,7 +166,10 @@ $.jsoneditor.AbstractEditor = Class.extend({
     return this.watched_values;
   },
   updateHeaderText: function() {
-    if(this.header) this.header.text(this.getHeaderText());
+    if(this.header) {
+      this.header.innerHTML = '';
+      this.header.appendChild(document.createTextNode(this.getHeaderText()));
+    }
   },
   getHeaderText: function(title_only) {
     if(this.header_text) return this.header_text;
@@ -177,7 +178,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
   },
   onWatchedFieldChange: function() {
     if(this.header_template) {
-      var vars = $.extend(true,this.getWatchedFieldValues(),{
+      var vars = $extend(this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,
         title: this.getTitle()
@@ -187,17 +188,21 @@ $.jsoneditor.AbstractEditor = Class.extend({
       if(header_text !== this.header_text) {
         this.header_text = header_text;
         this.updateHeaderText();
-        this.container.trigger('change_header_text');
+        this.fireChangeHeaderEvent();
       }
     }
   },
   addProperty: function() {
     this.property_removed = false;
-    this.addremove.text('remove '+this.getTitle());
+    this.register();
+    this.addremove.innerHTML = '';
+    this.addremove.appendChild(document.createTextNode('remove '+this.getTitle()));
   },
   removeProperty: function() {
     this.property_removed = true;
-    this.addremove.text('add '+this.getTitle());
+    this.unregister();
+    this.addremove.innerHTML = '';
+    this.addremove.appendChild(document.createTextNode('add '+this.getTitle()));
   },
   build: function() {
 
@@ -219,9 +224,9 @@ $.jsoneditor.AbstractEditor = Class.extend({
   },
   destroy: function() {
     var self = this;
-    $.each(this.watched,function(name,attr) {
-      attr.root.off('change',self.watch_listener);
-      attr.root.off('set',self.watch_listener);
+    this.unregister(this);
+    $each(this.watched,function(name,adjusted_path) {
+      self.jsoneditor.unwatch(adjusted_path,self.watch_listener);
     });
     this.watched = null;
     this.watched_values = null;
@@ -229,6 +234,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     this.header_text = null;
     this.header_template = null;
     this.value = null;
+    if(this.container.parentNode) this.container.parentNode.removeChild(this.container);
     this.container = null;
     this.jsoneditor = null;
     this.schema = null;
@@ -243,7 +249,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     else if(typeof this.schema.required === "boolean") {
       return this.schema.required;
     }
-    else if(this.jsoneditor.data('jsoneditor').options.required_by_default) {
+    else if(this.jsoneditor.options.required_by_default) {
       return true
     }
     else {
@@ -282,7 +288,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     
     // Determine how many times each attribute name is used.
     // This helps us pick the most distinct display text for the schemas.
-    $.each(arr,function(i,el) {
+    $each(arr,function(i,el) {
       if(el.title) {
         used[el.title] = used[el.title] || 0;
         used[el.title]++;
@@ -302,7 +308,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     });
     
     // Determine display text for each element of the array
-    $.each(arr,function(i,el)  {
+    $each(arr,function(i,el)  {
       var name;
       
       // If it's a simple string
@@ -324,7 +330,7 @@ $.jsoneditor.AbstractEditor = Class.extend({
     
     // Replace identical display text with "text 1", "text 2", etc.
     var inc = {};
-    $.each(disp,function(i,name) {
+    $each(disp,function(i,name) {
       inc[name] = inc[name] || 0;
       inc[name]++;
       

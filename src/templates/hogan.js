@@ -1,4 +1,4 @@
-$.jsoneditor.templates.hogan = function() {
+JSONEditor.defaults.templates.hogan = function() {
   if(!window.Hogan) return false;
 
   return {

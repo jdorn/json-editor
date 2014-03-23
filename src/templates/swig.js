@@ -1,3 +1,3 @@
-$.jsoneditor.templates.swig = function() {
+JSONEditor.defaults.templates.swig = function() {
   return window.swig;
 };

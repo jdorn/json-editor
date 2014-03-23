@@ -1,96 +1,108 @@
-$.jsoneditor.AbstractTheme = Class.extend({
+JSONEditor.AbstractTheme = Class.extend({
   getContainer: function() {
-    return $("<div>");
+    return document.createElement('div');
   },
   getFloatRightLinkHolder: function() {
-    return $("<div>").css({
-      float: 'right',
-      marginLeft: '10px'
-    });
+    var el = document.createElement('div');
+    el.style = el.style || {};
+    el.style.float = 'right';
+    el.style['margin-left'] = '10px';
+    return el;
   },
   getLink: function(text) {
-    return $("<a href='#'>").text(text);
+    var el = document.createElement('a');
+    el.setAttribute('href','#');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   disableHeader: function(header) {
-    header.css({
-      color: "#ccc"
-    });
+    header.style.color = '#ccc';
   },
   disableLabel: function(label) {
-    label.css({
-      color: "#ccc"
-    });
+    label.style.color = '#ccc';
   },
   enableHeader: function(header) {
-    header.css({
-      color: ''
-    });
+    header.style.color = '';
   },
   enableLabel: function(label) {
-    label.css({
-      color: ''
-    });
+    label.style.color = '';
   },
   getFormInputLabel: function(text) {
-    return $("<label>").text(text);
+    var el = document.createElement('label');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   getCheckboxLabel: function(text) {
     return this.getFormInputLabel(text);
   },
   getHeader: function(text) {
-    return $("<h3>").append(text);
+    var el = document.createElement('h3');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   getCheckbox: function() {
     return this.getFormInputField('checkbox');
   },
   getSelectInput: function(options) {
-    var select = $("<select>");
+    var select = document.createElement('select');
     if(options) this.setSelectOptions(select, options);
     return select;
   },
   setSelectOptions: function(select, options) {
-    select.empty();
-    $.each(options, function(i,val) {
-      select.append($("<option>").attr('value',val).text(val));
-    });
+    select.innerHTML = '';
+    for(var i=0; i<options.length; i++) {
+      var option = document.createElement('option');
+      option.setAttribute('value',options[i]);
+      option.appendChild(document.createTextNode(options[i]));
+      select.appendChild(option);
+    }
   },
   getTextareaInput: function() {
-    return $("<textarea>").css({
-      width: '100%',
-      height: 300,
-      boxSizing: 'border-box'
-    });
+    var el = document.createElement('textarea');
+    el.style = el.style || {};
+    el.style.width = '100%';
+    el.style.height = '300px';
+    el.style.boxSizing = 'border-box';
+    return el;
   },
   getRangeInput: function(min,max,step) {
-    return $("<input type='range'>")
-      .attr('min',min)
-      .attr('max',max)
-      .attr('step',step);
+    var el = this.getFormInputField('range');
+    el.setAttribute('min',min);
+    el.setAttribute('max',max);
+    el.setAttribute('step',step);
+    return el;
   },
   getFormInputField: function(type) {
-    return $("<input type='"+type+"'>");
+    var el = document.createElement('input');
+    el.setAttribute('type',type);
+    return el;
   },
   afterInputReady: function(input) {
     
   },
   getFormControl: function(label, input, description) {
-    return $("<div>").addClass('form-control')
-      .append(label)
-      .append(input)
-      .append(description)
+    var el = document.createElement('div');
+    el.setAttribute('class','form-control');
+    if(label) el.appendChild(label);
+    el.appendChild(input);
+    if(description) el.appendChild(description);
+    return el;
   },
   getIndentedPanel: function() {
-    return $("<div>").css({
-      paddingLeft: 10,
-      marginLeft: 10,
-      borderLeft: '1px solid #ccc'
-    });
+    var el = document.createElement('div');
+    el.style = el.style || {};
+    el.style.paddingLeft = '10px';
+    el.style.marginLeft = '10px';
+    el.style.borderLeft = '1px solid #ccc';
+    return el;
   },
   getChildEditorHolder: function() {
-    return $("<div>");
+    return document.createElement('div');
   },
   getDescription: function(text) {
-    return $("<p>").text(text);
+    var el = document.createElement('p');
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   getCheckboxDescription: function(text) {
     return this.getDescription(text);
@@ -102,40 +114,49 @@ $.jsoneditor.AbstractTheme = Class.extend({
     return this.getButtonHolder();
   },
   getButtonHolder: function() {
-    return $("<div>");
+    return document.createElement('div');
   },
   getButton: function(text, icon, title) {    
-    var button = $("<button>").text(text);
-    if(icon) button.prepend(' ').prepend(icon);
-    if(title) button.attr('title',title);
-    
-    return button;
+    var el = document.createElement('button');
+    this.setButtonText(el,text,icon,title);
+    return el;
   },
   setButtonText: function(button, text, icon, title) {
-    button.text(text);
-    if(icon) button.prepend(' ').prepend(icon);
-    if(title) button.attr('title',title);
+    button.innerHTML = '';
+    if(icon) {
+      button.appendChild(icon);
+      button.innerHTML += ' ';
+    }
+    button.appendChild(document.createTextNode(text));
+    if(title) button.setAttribute('title',title);
   },
   getTable: function() {
-    return $("<table></table>");
+    return document.createElement('table');
   },
   getTableRow: function() {
-    return $("<tr></tr>");
+    return document.createElement('tr');
   },
   getTableHead: function() {
-    return $("<thead></thead>");
+    return document.createElement('thead');
   },
   getTableBody: function() {
-    return $("<tbody></tbody>");
+    return document.createElement('tbody');
   },
-  getTableHeaderCell: function() {
-    return $("<th></th>");
+  getTableHeaderCell: function(text) {
+    var el = document.createElement('th');
+    el.textContent = text;
+    return el;
   },
   getTableCell: function() {
-    return $("<td></td>");
+    var el = document.createElement('td');
+    return el;
   },
   getErrorMessage: function(text) {
-    return $("<p style='color: red;'></p>").text(text);
+    var el = document.createElement('p');
+    el.style = el.style || {};
+    el.style.color = 'red';
+    el.appendChild(document.createTextNode(text));
+    return el;
   },
   addInputError: function(input, text) {
   },
@@ -146,48 +167,71 @@ $.jsoneditor.AbstractTheme = Class.extend({
   removeTableRowError: function(row) {
   },
   getTabHolder: function() {
-    return $("<div><div style='float: left; width: 130px;' class='tabs'></div><div class='content' style='margin-left: 130px;'></div></div>").append($("<div>").css('clear','both'));
+    var el = document.createElement('div');
+    el.innerHTML = "<div style='float: left; width: 130px;' class='tabs'></div><div class='content' style='margin-left: 130px;'></div><div style='clear:both;'></div>";
+    return el;
   },
-  getTab: function(text) {
-    return $("<div></div>")
-      .append(text)
-      .css({
-        border: '1px solid #ccc',
-        borderWidth: '1px 0 1px 1px',
-        textAlign: 'center',
-        lineHeight: '30px',
-        borderRadius: 5,
-        borderBottomRightRadius: 0,
-        borderTopRightRadius: 0,
-        fontWeight: 'bold',
-        cursor: 'pointer'
-      });
+  applyStyles: function(el,styles) {
+    el.style = el.style || {};
+    for(var i in styles) {
+      if(!styles.hasOwnProperty(i)) continue;
+      el.style[i] = styles[i];
+    }
+  },
+  closest: function(elem, selector) {
+    var matchesSelector = elem.matches || elem.webkitMatchesSelector || elem.mozMatchesSelector || elem.msMatchesSelector;
+
+    while (elem && elem !== document) {
+      try {
+        var f = matchesSelector.bind(elem);
+        if (f(selector)) {
+          return elem;
+        } else {
+          elem = elem.parentNode;
+        }
+      }
+      catch(e) {
+        return false;
+      }
+    }
+    return false;
+  },
+  getTab: function(span) {
+    var el = document.createElement('div');
+    el.appendChild(span);
+    el.style = el.style || {};
+    this.applyStyles(el,{
+      border: '1px solid #ccc',
+      borderWidth: '1px 0 1px 1px',
+      textAlign: 'center',
+      lineHeight: '30px',
+      borderRadius: '5px',
+      borderBottomRightRadius: 0,
+      borderTopRightRadius: 0,
+      fontWeight: 'bold',
+      cursor: 'pointer'
+    });
+    return el;
   },
   getTabContentHolder: function(tab_holder) {
-    return $("> .content",tab_holder)
-  },
-  getTabControls: function(holder) {
-    return $("> .controls",holder);
+    return tab_holder.children[1];
   },
   getTabContent: function() {
     return this.getIndentedPanel();
   },
   markTabActive: function(tab) {
-    tab.css({
+    this.applyStyles(tab,{
       opacity: 1,
       background: 'white'
     });
   },
   markTabInactive: function(tab) {
-    tab.css({
+    this.applyStyles(tab,{
       opacity:.5,
       background: ''
     });
   },
   addTab: function(holder, tab) {
-    $("> .tabs",holder).append(tab);
-  },
-  addTabControls: function(tab_holder, controls) {
-    tab_holder.append(controls);
+    holder.children[0].appendChild(tab);
   }
 });

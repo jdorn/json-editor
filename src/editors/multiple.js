@@ -1,11 +1,28 @@
 // Multiple Editor (for when `type` is an array)
-$.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return null;
   },
+  register: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].unregister();
+      }
+      if(this.editors[this.type]) this.editors[this.type].register();
+    }
+    this._super();
+  },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].unregister();
+      }
+    }
+  },
   build: function() {
     var self = this;
-    var container = this.getContainer();
+    var container = this.container;
 
     this.types = [];
     
@@ -25,7 +42,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
             disallow = [this.schema.disallow];
           }
           var allowed_types = [];
-          $.each(this.types,function(i,type) {
+          $each(this.types,function(i,type) {
             if(disallow.indexOf(type) === -1) allowed_types.push(type);
           });
           this.types = allowed_types;
@@ -42,51 +59,53 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     
     this.display_text = this.getDisplayText(this.types);
 
-    this.switcher = this.theme.getSelectInput(this.display_text)
-      .appendTo(container)
-      .on('change',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        self.type = self.display_text.indexOf($(this).val());
+    this.switcher = this.theme.getSelectInput(this.display_text);
+    container.appendChild(this.switcher);
+    this.switcher.addEventListener('change',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      self.type = self.display_text.indexOf(this.value);
 
-        var current_value = self.getValue();
+      self.register();
 
-        $.each(self.editors,function(type,editor) {
-          if(self.type === type) {
-            editor.setValue(current_value,true);
-            editor.container.show();
-          }
-          else editor.container.hide();
-        });
+      var current_value = self.getValue();
 
-        self.container.trigger('change');
-        
-        return false;
-      })
-      .css({
-        marginBottom: 0,
-        float: 'right'
+      $each(self.editors,function(type,editor) {
+        if(self.type === type) {
+          editor.setValue(current_value,true);
+          editor.container.style.display = '';
+        }
+        else editor.container.style.display = 'none';
       });
+      self.refreshValue();
+      
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
+    })
+    this.switcher.style.marginBottom = 0;
+    this.switcher.style.float = 'right';
 
-    this.editor_holder = this.theme.getIndentedPanel().appendTo(container);
+    this.editor_holder = this.theme.getIndentedPanel();
+    container.appendChild(this.editor_holder);
     this.type = 0;
 
     this.editors = [];
     this.validators = [];
-    var options = $("option",this.switcher);
+    var options = this.switcher.getElementsByTagName('option');
     var option = 0;
-    $.each(this.types,function(i,type) {
-      var holder = self.theme.getChildEditorHolder().appendTo(self.editor_holder);
+    $each(this.types,function(i,type) {
+      var holder = self.theme.getChildEditorHolder();
+      self.editor_holder.appendChild(holder);
 
       var schema;
       
       if(typeof type === "string") {
-        schema = $.extend(true,{},self.schema);
+        schema = $extend({},self.schema);
         schema.type = type;
       }
       else {
-        schema = $.extend(true,{},self.schema,type);
+        schema = $extend({},self.schema,type);
 
         // If we need to merge `required` arrays
         if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
@@ -94,48 +113,54 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new $.jsoneditor.Validator(schema,{
-        required_by_default: self.jsoneditor.data('jsoneditor').options.required_by_default,
-        no_additional_properties: self.jsoneditor.data('jsoneditor').options.no_additional_properties
+      self.validators[i] = new JSONEditor.Validator(schema,{
+        required_by_default: self.jsoneditor.options.required_by_default,
+        no_additional_properties: self.jsoneditor.options.no_additional_properties
       });
 
-      var editor = $.jsoneditor.getEditorClass(schema, self.jsoneditor);
+      var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
       self.editors[i] = new editor({
         jsoneditor: self.jsoneditor,
         schema: schema,
         container: holder,
         path: self.path,
-        parent: self.parent,
+        parent: self,
         required: true
       });
       
-      self.editors[i].option = options.eq(option);
+      self.editors[i].option = options[option];
       
-      holder.on('change_header_text',function() {
+      holder.addEventListener('change_header_text',function() {
         self.refreshHeaderText();
       });
 
-      if(i !== self.type) holder.hide();
+      if(i !== self.type) holder.style.display = 'none';
       
       option++;
     });
 
-    this.editor_holder.on('change set',function() {
-      self.refreshValue();
-    });
+    this.refreshValue();
     this.refreshHeaderText();
 
-    this.switcher.val(this.display_text[this.type]);
+    this.register();
+  },
+  onChildEditorChange: function(editor) {
+    if(this.editors[this.type]) this.refreshValue();
+    
+    this._super();
   },
   refreshHeaderText: function() {
     var schemas = [];
-    $.each(this.editors, function(i,editor) {
+    $each(this.editors, function(i,editor) {
       schemas.push(editor.schema);
     });
     var display_text = this.getDisplayText(schemas);
-    $.each(this.editors, function(i,editor) {
-      if(editor.option) editor.option.text(display_text[i]);
+    $each(this.editors, function(i,editor) {
+      if(editor.option) {
+        editor.option.innerHTML = '';
+        editor.option.appendChild(document.createTextNode(display_text[i]));
+      }
     });
   },
   refreshValue: function() {
@@ -144,25 +169,27 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
   setValue: function(val,initial) {
     // Determine type by getting the first one that validates
     var self = this;
-    $.each(this.validators, function(i,validator) {
+    $each(this.validators, function(i,validator) {
       if(!validator.validate(val).length) {
         self.type = i;
-        self.switcher.val(self.display_text[i]).trigger('change');
+        self.switcher.value = self.display_text[i];
         return false;
       }
     });
+    
+    $trigger(self.switcher,'change');
 
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    this.container.trigger('set');
+    this.jsoneditor.notifyWatchers(this.path);
   },
   destroy: function() {
-    $.each(this.editors, function(type,editor) {
+    $each(this.editors, function(type,editor) {
       editor.destroy();
     });
-    this.editor_holder.remove();
-    this.switcher.remove();
+    this.editor_holder.parentNode.removeChild(this.editor_holder);
+    this.switcher.parentNode.removeChild(this.switcher);
     this._super();
   },
   showValidationErrors: function(errors) {
@@ -170,12 +197,12 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
     
     // oneOf error paths need to remove the oneOf[i] part before passing to child editors
     if(this.oneOf) {
-      $.each(this.editors,function(i,editor) {
+      $each(this.editors,function(i,editor) {
         var check = self.path+'.oneOf['+i+']';
         var new_errors = [];
-        $.each(errors, function(j,error) {
+        $each(errors, function(j,error) {
           if(error.path.substr(0,check.length)===check) {
-            var new_error = $.extend({},error);
+            var new_error = $extend({},error);
             new_error.path = self.path+new_error.path.substr(check.length);
             new_errors.push(new_error);
           }
@@ -185,7 +212,7 @@ $.jsoneditor.editors.multiple = $.jsoneditor.AbstractEditor.extend({
       });
     }
     else {
-      $.each(this.editors,function(type,editor) {
+      $each(this.editors,function(type,editor) {
         editor.showValidationErrors(errors);
       });
     }

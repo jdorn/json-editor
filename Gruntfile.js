@@ -7,6 +7,7 @@ module.exports = function(grunt) {
         src: [
           'src/intro.js',
           'src/class.js',
+          'src/utilities.js',
           'src/core.js',
 
           'src/validator.js',
@@ -33,15 +34,17 @@ module.exports = function(grunt) {
 
           'src/defaults.js',
           
+          'src/jquery.js',
+          
           'src/outro.js'
         ],
-        dest: 'dist/jquery.jsoneditor.js'
+        dest: 'dist/jsoneditor.js'
       },
     },
     uglify: {
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/jquery.jsoneditor.min.js'
+        dest: 'dist/jsoneditor.min.js'
       },
       options: {
         preserveComments: 'some'

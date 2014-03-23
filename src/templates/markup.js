@@ -1,4 +1,4 @@
-$.jsoneditor.templates.markup = function() {
+JSONEditor.defaults.templates.markup = function() {
   if(!window.Mark || !window.Mark.up) return false;
 
   return {

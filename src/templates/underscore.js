@@ -1,4 +1,4 @@
-$.jsoneditor.templates.underscore = function() {
+JSONEditor.defaults.templates.underscore = function() {
   if(!window._) return false;
 
   return {

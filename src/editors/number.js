@@ -1,4 +1,4 @@
-$.jsoneditor.editors.number = $.jsoneditor.editors.string.extend({
+JSONEditor.defaults.editors.number = JSONEditor.defaults.editors.string.extend({
   getDefault: function() {
     return this.schema.default || 0;
   },

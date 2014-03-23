@@ -1,8 +1,14 @@
-$.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
+JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   getDefault: function() {    
     return this.schema.default || '';
   },
   setValue: function(value,initial,from_template) {
+    var self = this;
+    
+    if(this.template && !from_template) {
+      return;
+    }
+    
     value = value || '';
     if(typeof value === "object") value = JSON.stringify(value);
     if(typeof value !== "string") value = ""+value;
@@ -16,7 +22,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       sanitized = this.select_options[0];
     }
 
-    this.input.val(sanitized);
+    if(this.input.value === sanitized) {
+      return;
+    }
+
+    this.input.value = sanitized;
     
     // If using SCEditor, update the WYSIWYG
     if(this.sceditor_instance) {
@@ -28,19 +38,23 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
 
     this.refreshValue();
 
-    if(this.getValue() !== value || from_template) this.container.trigger('change');
-    this.container.trigger('set');
+    if(this.getValue() !== value || from_template) {
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
+    }
+    
+    this.jsoneditor.notifyWatchers(this.path);
   },
   removeProperty: function() {
     this._super();
-    this.input.hide(500);
-    if(this.description) this.description.hide(500);
+    this.input.style.display = 'none';
+    if(this.description) this.description.style.display = 'none';
     this.theme.disableLabel(this.label);
   },
   addProperty: function() {
     this._super();
-    this.input.show(500);
-    if(this.description) this.description.show(500);
+    this.input.style.display = '';
+    if(this.description) this.description.style.display = '';
     this.theme.enableLabel(this.label);
   },
   build: function() {
@@ -59,7 +73,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       this.input_type = 'select';
       this.input = this.theme.getSelectInput([]);
       if(this.schema.enumValue) {
-        this.select_template = $.jsoneditor.compileTemplate(this.schema.enumValue, this.template_engine);
+        this.select_template = this.jsoneditor.compileTemplate(this.schema.enumValue, this.template_engine);
       }
     }
     // Specific format
@@ -107,60 +121,63 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     }
     
     // minLength, maxLength, and pattern
-    if(typeof this.schema.maxLength !== "undefined") this.input.attr('maxlength',this.schema.maxLength);
-    if(typeof this.schema.pattern !== "undefined") this.input.attr('pattern',this.schema.pattern);
-    else if(typeof this.schema.minLength !== "undefined") this.input.attr('pattern','.{'+this.schema.minLength+',}');
+    if(typeof this.schema.maxLength !== "undefined") this.input.setAttribute('maxlength',this.schema.maxLength);
+    if(typeof this.schema.pattern !== "undefined") this.input.setAttribute('pattern',this.schema.pattern);
+    else if(typeof this.schema.minLength !== "undefined") this.input.setAttribute('pattern','.{'+this.schema.minLength+',}');
 
-    if(this.getOption('compact')) this.container.addClass('compact');
+    if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.prop('disabled',true);
+    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.disabled = true;
 
     this.input
-      .on('change keyup',function(e) {
+      .addEventListener('change',function(e) {        
         e.preventDefault();
         e.stopPropagation();
         
         // Don't allow changing if this field is a template
         if(self.schema.template) {
-          $(this).val(self.value);
+          this.value = self.value;
           return;
         }
 
-        var val = $(this).val();
+        var val = this.value;
         
         // sanitize value
         var sanitized = self.sanitize(val);
         if(val !== sanitized) {
-          $(this).val(sanitized).trigger('change');
-          return;
+          this.value = sanitized;
         }
 
         self.refreshValue();
         
-        if(e.type === "change") {
-          self.container.trigger('change');
-        }
+        self.jsoneditor.notifyWatchers(self.path);
+        if(self.parent) self.parent.onChildEditorChange(self);
+        else self.jsoneditor.onChange();
       });
 
-    if(this.schema.format) this.input.attr('data-schemaformat',this.schema.format);
+    if(this.schema.format) this.input.setAttribute('data-schemaformat',this.schema.format);
 
-    this.control = this.getTheme().getFormControl(this.label, this.input, this.description).appendTo(this.container);
+    this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
+    this.container.appendChild(this.control);
 
     // If the Select2 library is loaded
-    if(this.input_type === "select" && $.fn.select2) {
-      this.input.select2();
+    if(this.input_type === "select" && window.$ && $.fn && $.fn.select2) {
+      $(this.input).select2();
     }
 
     // Any special formatting that needs to happen after the input is added to the dom
-    window.setTimeout(function() {
+    _raf(function() {
       self.afterInputReady();
     });
 
     // Compile and store the template
     if(this.schema.template) {
-      this.template = $.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
+      this.template = this.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
     }
-    else this.refreshValue();
+    else {
+      this.refreshValue();
+      this.jsoneditor.notifyWatchers(this.path);
+    }
   },
   afterInputReady: function() {
     var self = this;
@@ -169,14 +186,14 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     if(this.input_type === 'html' || this.input_type === 'bbcode') {
       // If SCEditor is loaded
       if($.fn.sceditor) {
-        self.input.sceditor({
+        $(self.input).sceditor({
           plugins: self.input_type==='html'? 'xhtml' : 'bbcode',
           emoticonsEnabled: false,
           width: '100%',
           height: 300
         });
         
-        self.sceditor_instance = self.input.sceditor('instance');
+        self.sceditor_instance = $(self.input).sceditor('instance');
         
         self.sceditor_instance.blur(function() {
           // Get editor's value
@@ -184,8 +201,10 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
           // Remove sceditor spans/divs
           $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
           // Set the value and update
-          self.input.val(val.html());
-          self.container.trigger('change');
+          self.input.value = val.html();
+          if(self.parent) self.parent.onChildEditorChange(self);
+          else self.jsoneditor.onChange();
+          self.jsoneditor.notifyWatchers(self.path);
         });
       }
       // TODO: support other WYSIWYG editors
@@ -193,18 +212,21 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     // Markdown
     else if(this.input_type === 'markdown') {
       if(window.EpicEditor) {
-        this.epiceditor_container = $("<div>").insertBefore(this.input);
-        this.input.hide();
+        this.epiceditor_container = document.createElement('div');
+        this.input.parentNode.insertBefore(this.epiceditor_container,this.input);
+        this.input.style.display = 'none';
         this.epiceditor = new EpicEditor({
-          container: this.epiceditor_container.get(0),
+          container: this.epiceditor_container,
           clientSideStorage: false,
           basePath: '//cdnjs.cloudflare.com/ajax/libs/epiceditor/0.2.0'
         });
         
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
-          self.input.val(val);
-          self.container.trigger('change');
+          self.input.value = val;
+          if(self.parent) self.parent.onChildEditorChange(self);
+          else self.jsoneditor.onChange();
+          self.jsoneditor.notifyWatchers(self.path);
         });
         
         this.epiceditor.load();
@@ -214,11 +236,11 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     self.theme.afterInputReady(self.input);
   },
   refreshValue: function() {
-    this.value = this.input.val();
+    this.value = this.input.value;
     if(typeof this.value !== "string") this.value = '';
     this.serialized = this.value;
   },
-  destroy: function() {    
+  destroy: function() {
     // If using SCEditor, destroy the editor instance
     if(this.sceditor_instance) {
       this.sceditor_instance.destroy();
@@ -228,9 +250,9 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     }
     
     this.template = null;
-    this.input.remove();
-    if(this.label) this.label.remove();
-    if(this.description) this.description.remove();
+    this.input.parentNode.removeChild(this.input);
+    if(this.label) this.label.parentNode.removeChild(this.label);
+    if(this.description) this.description.parentNode.removeChild(this.description);
 
     this._super();
   },
@@ -257,7 +279,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
       var select_options = [];
       
       if(!vars[this.schema.enumSource]) throw "Unknown enumSource "+this.schema.enumSource;
-      $.each(vars[this.schema.enumSource],function(i,el) {
+      $each(vars[this.schema.enumSource],function(i,el) {
         var value;
         if(self.select_template) {
           value = self.select_template({
@@ -289,7 +311,7 @@ $.jsoneditor.editors.string = $.jsoneditor.AbstractEditor.extend({
     var self = this;
 
     var messages = [];
-    $.each(errors,function(i,error) {
+    $each(errors,function(i,error) {
       if(error.path === self.path) {
         messages.push(error.message);
       }

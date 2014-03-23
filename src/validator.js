@@ -1,4 +1,4 @@
-$.jsoneditor.Validator = Class.extend({
+JSONEditor.Validator = Class.extend({
   init: function(schema, options) {
     this.original_schema = schema;
     this.options = options || {};
@@ -25,7 +25,7 @@ $.jsoneditor.Validator = Class.extend({
       self.expanded = self.expandSchema(self.schema);
 
       self.is_ready = true;
-      $.each(self.ready_callbacks,function(i,callback) {
+      $each(self.ready_callbacks,function(i,callback) {
         callback.apply(self,[self.expanded]);
       });
     });
@@ -37,7 +37,7 @@ $.jsoneditor.Validator = Class.extend({
     var waiting, finished, check_if_finished, called;
 
     // Work on a deep copy of the schema
-    schema = $.extend(true,{},schema);
+    schema = $extend({},schema);
 
     // First expand out any definition in the root node
     if(is_root && schema.definitions) {
@@ -53,12 +53,12 @@ $.jsoneditor.Validator = Class.extend({
         }
       };
 
-      $.each(defs,function() {
+      $each(defs,function() {
         waiting++;
       });
 
       if(waiting) {
-        $.each(defs,function(i,definition) {
+        $each(defs,function(i,definition) {
           // Expand the definition recursively
           self._getRefs(definition,function(def_schema) {
             self.refs['#/definitions/'+i] = def_schema;
@@ -79,38 +79,46 @@ $.jsoneditor.Validator = Class.extend({
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
         self.refs[ref].push(function() {
-          schema = $.extend(true,{},schema,self.refs[ref],schema);
+          schema = $extend({},schema,self.refs[ref],schema);
           callback(schema);
         });
       }
       // If this reference has already been loaded
       else if(self.refs[ref]) {
-        schema = $.extend(true,{},schema,self.refs[ref],schema);
+        schema = $extend({},schema,self.refs[ref],schema);
         callback(schema);
       }
       // Otherwise, it needs to be loaded via ajax
       else {
         if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
+      
+        var r = new XMLHttpRequest(); 
+        r.open("GET", ref, true);
+        r.onreadystatechange = function () {
+          if (r.readyState != 4) return; 
+          if(r.status === 200) {
+            var response = JSON.parse(r.responseText);
+            self.refs[ref] = [];
 
-        $.getJSON(ref,function(response) {
-          self.refs[ref] = [];
+            // Recursively expand this schema
+            self._getRefs(response, function(ref_schema) {
+              var list = self.refs[ref];
+              self.refs[ref] = ref_schema;
+              schema = $extend({},schema,self.refs[ref],schema);
+              callback(schema);
 
-          // Recursively expand this schema
-          self._getRefs(response, function(ref_schema) {
-            var list = self.refs[ref];
-            self.refs[ref] = ref_schema;
-            schema = $.extend(true,{},schema,self.refs[ref],schema);
-            callback(schema);
-
-            // If anything is waiting on this to load
-            $.each(list,function(i,v) {
-              v();
+              // If anything is waiting on this to load
+              $each(list,function(i,v) {
+                v();
+              });
             });
-          });
-        })
-          .fail(function() {
-            throw "Failed to fetch ref via ajax- "+ref;
-          })
+            return;
+          }
+          
+          // Request failed
+          throw "Failed to fetch ref via ajax- "+ref;
+        };
+        r.send();
       }
     }
     // Expand out any subschemas
@@ -125,10 +133,10 @@ $.jsoneditor.Validator = Class.extend({
         }
       };
 
-      $.each(schema, function(key, value) {
+      $each(schema, function(key, value) {
         // Arrays that need to be expanded
         if(typeof value === "object" && value && value instanceof Array) {
-          $.each(value,function(j,item) {
+          $each(value,function(j,item) {
             if(typeof item === "object" && item && !(item instanceof Array)) {
               waiting++;
             }
@@ -141,10 +149,10 @@ $.jsoneditor.Validator = Class.extend({
       });
 
       if(waiting) {
-        $.each(schema, function(key, value) {
+        $each(schema, function(key, value) {
           // Arrays that need to be expanded
           if(typeof value === "object" && value && value instanceof Array) {
-            $.each(value,function(j,item) {
+            $each(value,function(j,item) {
               if(typeof item === "object" && item && !(item instanceof Array)) {
                 self._getRefs(item,function(expanded) {
                   schema[key][j] = expanded;
@@ -182,7 +190,7 @@ $.jsoneditor.Validator = Class.extend({
     path = path || 'root';
 
     // Work on a copy of the schema
-    schema = $.extend(true,{},schema);
+    schema = $extend({},schema);
 
     /*
      * Type Agnostic Validation
@@ -675,7 +683,7 @@ $.jsoneditor.Validator = Class.extend({
     }
 
     // Custom type validation
-    $.each($.jsoneditor.custom_validators,function(i,validator) {
+    $each(JSONEditor.defaults.custom_validators,function(i,validator) {
       errors = errors.concat(validator(schema,value,path));
     });
 
@@ -707,7 +715,7 @@ $.jsoneditor.Validator = Class.extend({
     if(typeof schema.type === 'object') {
       // Array of types
       if(schema.type instanceof Array) {
-        $.each(schema.type, function(key,value) {
+        $each(schema.type, function(key,value) {
           // Schema
           if(typeof value === 'object') {
             schema.type[key] = self.expandSchema(value);
@@ -723,7 +731,7 @@ $.jsoneditor.Validator = Class.extend({
     if(typeof schema.disallow === 'object') {
       // Array of types
       if(schema.disallow instanceof Array) {
-        $.each(schema.disallow, function(key,value) {
+        $each(schema.disallow, function(key,value) {
           // Schema
           if(typeof value === 'object') {
             schema.disallow[key] = self.expandSchema(value);
@@ -737,13 +745,13 @@ $.jsoneditor.Validator = Class.extend({
     }
     // Version 4 `anyOf`
     if(schema.anyOf) {
-      $.each(schema.anyOf, function(key,value) {
+      $each(schema.anyOf, function(key,value) {
         schema.anyOf[key] = self.expandSchema(value);
       })
     }
     // Version 4 `dependencies` (schema dependencies)
     if(schema.dependencies) {
-      $.each(schema.dependencies,function(key,value) {
+      $each(schema.dependencies,function(key,value) {
         if(typeof value === "object" && !(value instanceof Array)) {
           schema.dependencies[key] = self.expandSchema(value);
         }
@@ -753,7 +761,7 @@ $.jsoneditor.Validator = Class.extend({
     if(schema.items) {
       // Array of items
       if(schema.items instanceof Array) {
-        $.each(schema.items, function(key,value) {
+        $each(schema.items, function(key,value) {
           // Schema
           if(typeof value === 'object') {
             schema.items[key] = self.expandSchema(value);
@@ -767,7 +775,7 @@ $.jsoneditor.Validator = Class.extend({
     }
     // `properties`
     if(schema.properties) {
-      $.each(schema.properties,function(key,value) {
+      $each(schema.properties,function(key,value) {
         if(typeof value === "object" && !(value instanceof Array)) {
           schema.properties[key] = self.expandSchema(value);
         }
@@ -775,7 +783,7 @@ $.jsoneditor.Validator = Class.extend({
     }
     // `patternProperties`
     if(schema.patternProperties) {
-      $.each(schema.patternProperties,function(key,value) {
+      $each(schema.patternProperties,function(key,value) {
         if(typeof value === "object" && !(value instanceof Array)) {
           schema.patternProperties[key] = self.expandSchema(value);
         }
@@ -817,7 +825,7 @@ $.jsoneditor.Validator = Class.extend({
     }
     // parent should be merged into oneOf schemas
     if(schema.oneOf) {
-      var tmp = $.extend(true,{},extended);
+      var tmp = $extend({},extended);
       delete tmp.oneOf;
       for(i=0; i<schema.oneOf.length; i++) {
         extended.oneOf[i] = this.extend(this.expandSchema(schema.oneOf[i]),tmp);
@@ -827,12 +835,12 @@ $.jsoneditor.Validator = Class.extend({
     return extended;
   },
   extend: function(obj1, obj2) {
-    obj1 = $.extend(true,{},obj1);
-    obj2 = $.extend(true,{},obj2);
+    obj1 = $extend({},obj1);
+    obj2 = $extend({},obj2);
 
     var self = this;
     var extended = {};
-    $.each(obj1, function(prop,val) {
+    $each(obj1, function(prop,val) {
       // If this key is also defined in obj2, merge them
       if(typeof obj2[prop] !== "undefined") {
         // Required arrays should be unioned together
@@ -880,7 +888,7 @@ $.jsoneditor.Validator = Class.extend({
       }
     });
     // Properties in obj2 that aren't in obj1
-    $.each(obj2, function(prop,val) {
+    $each(obj2, function(prop,val) {
       if(typeof obj1[prop] === "undefined") {
         extended[prop] = val;
       }
