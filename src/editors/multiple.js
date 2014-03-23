@@ -62,6 +62,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.switcher = this.theme.getSelectInput(this.display_text);
     container.appendChild(this.switcher);
     this.switcher.addEventListener('change',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
       self.type = self.display_text.indexOf(this.value);
 
       self.register();
@@ -137,13 +140,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       option++;
     });
 
+    this.refreshValue();
     this.refreshHeaderText();
 
-    this.switcher.value = this.display_text[this.type];
-
     this.register();
-    
-    this.jsoneditor.notifyWatchers(this.path);
   },
   onChildEditorChange: function(editor) {
     if(this.editors[this.type]) this.refreshValue();
@@ -176,6 +176,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         return false;
       }
     });
+    
+    $trigger(self.switcher,'change');
 
     this.editors[this.type].setValue(val,initial);
 

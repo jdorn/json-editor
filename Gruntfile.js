@@ -38,13 +38,13 @@ module.exports = function(grunt) {
           
           'src/outro.js'
         ],
-        dest: 'dist/jquery.jsoneditor.js'
+        dest: 'dist/jsoneditor.js'
       },
     },
     uglify: {
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: 'dist/jquery.jsoneditor.min.js'
+        dest: 'dist/jsoneditor.min.js'
       },
       options: {
         preserveComments: 'some'

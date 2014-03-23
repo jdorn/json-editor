@@ -15,6 +15,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.jsoneditor.registerEditor(this);
   },
   unregister: function() {
+    if(!this.jsoneditor) return;
     this.jsoneditor.unregisterEditor(this);
   },
   init: function(options) {

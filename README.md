@@ -10,14 +10,13 @@ Check out an interactive demo: http://rawgithub.com/jdorn/json-editor/master/dem
 
 Download the [production version][min] or the [development version][max].
 
-[min]: https://raw.github.com/jdorn/json-editor/master/dist/jquery.jsoneditor.min.js
-[max]: https://raw.github.com/jdorn/json-editor/master/dist/jquery.jsoneditor.js
+[min]: https://raw.github.com/jdorn/json-editor/master/dist/jsoneditor.min.js
+[max]: https://raw.github.com/jdorn/json-editor/master/dist/jsoneditor.js
 
 Requirements
 -----------------
 
-*  A recent version of jQuery
-*  A modern browser
+JSON Schema has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
 
 ### Optional Requirements
 
@@ -44,7 +43,9 @@ The rest of this README contains detailed documentation about every aspect of JS
 ### Initialize
 
 ```js
-$("#editor_holder").jsoneditor(options);
+var element = document.getElementById('editor_holder');
+
+var editor = new JSONEditor(element, options);
 ```
 
 #### Options
@@ -110,7 +111,7 @@ $("#editor_holder").jsoneditor(options);
 Here's an example using all the options:
 
 ```js
-$("#editor_holder").jsoneditor({
+var editor = new JSONEditor(element, {
   schema: {
     type: "object",
     properties: {
@@ -149,25 +150,37 @@ $("#editor_holder").jsoneditor({
 
 __*Note__ If the `ajax` property is `true` and JSON Editor needs to fetch an external url, the api methods won't be available immediately.
 Listen for the `ready` event before calling them.
+
 ```js
-$("#editor_holder").on('ready',function() {
+editor.on('ready',function() {
   // Now the api methods will be available
-  $("#editor_holder").jsoneditor('validate');
+  editor.validate();
 });
 ```
 
 ### Get/Set Value
 
-Set the editor's value
 ```js
-$("#editor_holder").jsoneditor('value',{name: "John Smith"});
-```
+editor.setValue({name: "John Smith"});
 
-Get the editor's value
-```js
-var value = $("#editor_holder").jsoneditor('value');
+var value = editor.getValue();
 console.log(value.name) // Will log "John Smith"
 ```
+
+Instead of getting/setting the value of the entire editor, you can also work on individual parts of the schema:
+
+```js
+// Get a reference to a node within the editor
+var name = editor.getEditor('root.name');
+
+// name will be null if the path is invalid
+if(name) {
+  name.setValue("John Smith");
+  
+  console.log(name.getValue());
+}
+```
+
 
 ### Validate
 
@@ -178,11 +191,12 @@ You can use the `validate` method to check if the data is valid or not.
 
 ```javascript
 // Validate the editor's current value against the schema
-var errors = $("#editor_holder").jsoneditor('validate');
+var errors = editor.validate();
 
 if(errors.length) {
   // errors is an array of objects, each with a `path`, `property`, and `message` parameter
   // `property` is the schema keyword that triggered the validation error (e.g. "minLength")
+  // `path` is a dot separated path into the JSON object (e.g. "root.path.to.field")
   console.log(errors);
 }
 else {
@@ -191,12 +205,12 @@ else {
 ```
 
 By default, this will do the validation with the editor's current value.
-If you want to use a different value, you can pass it in as a 2nd parameter.
+If you want to use a different value, you can pass it in as a parameter.
 
 
 ```javascript
 // Validate an arbitrary value against the editor's schema
-var errors = $("#editor_holder").jsoneditor('validate',{
+var errors = editor.validate({
   value: {
     to: "test"
   }
@@ -205,10 +219,24 @@ var errors = $("#editor_holder").jsoneditor('validate',{
 
 ### Listen for Changes
 
-The `change` event is fired whenever the editor's value changes.  When using macro templates, multiple `change` events may fire in quick succession.
+The `change` event is fired whenever the editor's value changes.
 
 ```javascript
-$("#editor_holder").on('change',function() {});
+editor.on('change',function() {
+  // Do something
+});
+
+editor.off('change',function_reference);
+```
+
+You can also watch a specific field for changes:
+
+```javascript
+editor.watch('path.to.field',function() {
+  // Do something
+});
+
+editor.unwatch('path.to.field',function_reference);
 ```
 
 ### Destroy
@@ -216,7 +244,7 @@ $("#editor_holder").on('change',function() {});
 This removes the editor HTML from the DOM and frees up memory.
 
 ```javascript
-$("#editor_holder").jsoneditor('destroy');
+editor.destroy();
 ```
 
 CSS Integration
@@ -234,16 +262,16 @@ The currently supported themes are:
 *  jqueryui
 
 The default theme is `html`, which doesn't use any special class names or styling.
-This default can be changed by setting the `$.jsoneditor.theme` variable.
+This default can be changed by setting the `JSONEditor.defaults.theme` variable.
 
 ```javascript
-$.jsoneditor.theme = 'foundation5';
+JSONEditor.defaults.theme = 'foundation5';
 ```
 
 You can override this default on a per-instance basis by passing a `theme` parameter in when initializing:
 
 ```js
-$("#editor_holder").jsoneditor({
+var editor = new JSONEditor(element,{
   schema: schema,
   theme: 'jqueryui'
 });
@@ -267,10 +295,10 @@ By default, no icons are used. Just like the CSS theme, you can set the icon lib
 
 ```js
 // Set the global default
-$.jsoneditor.iconlib = "bootstrap2";
+JSONEditor.defaults.iconlib = "bootstrap2";
 
 // Set the icon lib during initialization
-$("#editor_holder").jsoneditor({
+var editor = new JSONEditor(element,{
   schema: schema,
   iconlib: "fontawesome4"
 });
@@ -365,7 +393,7 @@ The default array editor takes up a lot of screen real estate.  The `table` and 
 
 The `table` format works great when every array element has the same schema and is not too complex.
 
-The `tabs` format can handle any array, but only shows one array element at a time. It has tabs on the left for switching between them.
+The `tabs` format can handle any array, but only shows one array element at a time. It has tabs on the left for switching between items.
 
 
 Here's an example of the `table` format:
@@ -486,16 +514,16 @@ JSON Editor uses a javascript template engine to accomplish this.  A barebones t
 *  swig
 *  underscore
 
-You can change the default by setting `$.jsoneditor.template` to one of the following supported template engines:
+You can change the default by setting `JSONEditor.defaults.template` to one of the supported template engines:
 
 ```javascript
-$.jsoneditor.template = 'handlebars';
+JSONEditor.defaults.template = 'handlebars';
 ```
 
 You can set the template engine on a per-instance basis as well:
 
 ```js
-$("#editor_holder").jsoneditor({
+var editor = new JSONEditor(element,{
   schema: schema,
   template: 'hogan'
 });
@@ -652,10 +680,10 @@ var myengine = {
 };
 
 // Set globally
-$.jsoneditor.template = myengine;
+JSONEditor.defaults.template = myengine;
 
 // Set on a per-instance basis
-$("#editor").jsoneditor({
+var editor = new JSONEditor(element,{
   schema: schema,
   template: myengine
 });
@@ -676,7 +704,7 @@ Let's say you make a custom `location` editor for editing geo data.  You can add
 ```js
 // Add a resolver function to the beginning of the resolver list
 // This will make it run before any other ones
-$.jsoneditor.resolvers.unshift(function(schema) {
+JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === "object" && schema.format === "location") {
     return "location";
   }
@@ -726,7 +754,7 @@ Let's say you want to force all schemas with `format` set to `date` to match the
 
 ```js
 // Custom validators must return an array of errors or an empty array if valid
-$.jsoneditor.custom_validators.push(function(schema, value, path) {
+JSONEditor.defaults.custom_validators.push(function(schema, value, path) {
   var errors = [];
   if(schema.format==="date") {
     if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)) {
@@ -740,4 +768,28 @@ $.jsoneditor.custom_validators.push(function(schema, value, path) {
   }
   return errors;
 });
+```
+
+jQuery Integration
+-------------------
+
+__*WARNING__: This style of usage is deprecated and may not be supported in future versions.
+
+When jQuery (or Zepto) is loaded on the page, you can use JSON Editor like a normal jQuery plugin if you prefer.
+
+```js
+$("#editor_holder")
+  .jsoneditor({
+    schema: {},
+    theme: 'bootstrap3'
+  })
+  .on('ready', function() {
+    // Get the value
+    var value = $(this).jsoneditor('value');
+    
+    value.name = "John Smith";
+    
+    // Set the value
+    $(this).jsoneditor('value',value);
+  });
 ```

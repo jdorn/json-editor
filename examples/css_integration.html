@@ -8,15 +8,12 @@
     <!-- Font Awesome icons (Bootstrap, Foundation, and jQueryUI also supported) -->
     <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css'>
     
-    <!-- jQuery is the only dependency -->
-    <script src="http://code.jquery.com/jquery.js"></script>
-    
-    <script src="../dist/jquery.jsoneditor.js"></script>
+    <script src="../dist/jsoneditor.js"></script>
     
     <script>
     // Set the default CSS theme and icon library globally
-    $.jsoneditor.theme = 'foundation5';
-    $.jsoneditor.iconlib = 'fontawesome4';
+    JSONEditor.defaults.theme = 'foundation5';
+    JSONEditor.defaults.iconlib = 'fontawesome4';
     </script>
   </head>
   <body>
@@ -88,7 +85,7 @@
       };
       
       // Initialize the editor
-      $("#editor_holder").jsoneditor({
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
         // Enable fetching schemas via ajax
         ajax: true,
         
@@ -102,32 +99,33 @@
       });
       
       // Hook up the submit button to log to the console
-      $("#submit").on('click',function() {
+      document.getElementById('submit').addEventListener('click',function() {
         // Get the value from the editor
-        var value = $("#editor_holder").jsoneditor('value');
-        
-        // Console log it
-        console.log(value);
+        console.log(editor.getValue());
       });
       
       // Hook up the Restore to Default button
-      $("#restore").on('click',function() {
-        $("#editor_holder").jsoneditor('value',starting_value);
+      document.getElementById('restore').addEventListener('click',function() {
+        editor.setValue(starting_value);
       });
       
       // Hook up the validation indicator to update its 
       // status whenever the editor changes
-      $("#editor_holder").on('change',function() {
+      editor.on('change',function() {
         // Get an array of errors from the validator
-        var errors = $("#editor_holder").jsoneditor('validate');
+        var errors = editor.validate();
+        
+        var indicator = document.getElementById('valid_indicator');
         
         // Not valid
         if(errors.length) {
-          $("#valid_indicator").removeClass('success').addClass('alert').text("not valid");
+          indicator.className = 'label alert';
+          indicator.textContent = 'not valid';
         }
         // Valid
         else {
-          $("#valid_indicator").removeClass('alert').addClass('success').text("valid");
+          indicator.className = 'label success';
+          indicator.textContent = 'valid';
         }
       });
     </script>

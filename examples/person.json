@@ -20,12 +20,7 @@
             "state": "person.location.state"
           }
         }
-      },
-      "required": [
-        "city",
-        "state",
-        "citystate"
-      ]
+      }
     },
     "pets": {
       "type": "array",
@@ -53,12 +48,7 @@
             "type": "boolean",
             "title": "spayed / neutered"
           }
-        },
-        "required": [
-          "type",
-          "name",
-          "fixed"
-        ]
+        }
       }
     }
   }

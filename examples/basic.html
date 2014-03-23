@@ -2,22 +2,17 @@
 <html>
   <head>
     <title>Basic JSON Editor Example</title>
-    
-    <!-- jQuery is the only dependency -->
-    <script src="http://code.jquery.com/jquery.js"></script>
-    
-    <script src="../dist/jquery.jsoneditor.js"></script>
+    <script src="../dist/jsoneditor.js"></script>
   </head>
   <body>
     <h1>Basic JSON Editor Example</h1>
     
     <div id='editor_holder'></div>
-    
     <button id='submit'>Submit (console.log)</button>
     
     <script>
       // Initialize the editor with a JSON schema
-      $("#editor_holder").jsoneditor({
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
         schema: {
           type: "object",
           title: "Car",
@@ -51,12 +46,9 @@
       });
       
       // Hook up the submit button to log to the console
-      $("#submit").on('click',function() {
+      document.getElementById('submit').addEventListener('click',function() {
         // Get the value from the editor
-        var value = $("#editor_holder").jsoneditor('value');
-        
-        // Console log it
-        console.log(value);
+        console.log(editor.getValue());
       });
     </script>
   </body>
