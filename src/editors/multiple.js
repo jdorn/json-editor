@@ -57,6 +57,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         else editor.container.style.display = 'none';
       });
       self.refreshValue();
+      
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     })
     this.switcher.style.marginBottom = 0;
     this.switcher.style.float = 'right';
@@ -100,7 +103,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         schema: schema,
         container: holder,
         path: self.path,
-        parent: self.parent,
+        parent: self,
         required: true
       });
       
@@ -115,15 +118,19 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       option++;
     });
 
-    this.editor_holder.addEventListener('change',function() {
-      self.refreshValue();
-    });
-    this.editor_holder.addEventListener('set',function() {
-      self.refreshValue();
-    });
+    // Since the child editors all have the same path, make sure this is the one that is registered
+    this.jsoneditor.registerEditor(this);
+
     this.refreshHeaderText();
 
     this.switcher.value = this.display_text[this.type];
+    
+    this.jsoneditor.notifyWatchers(this.path);
+  },
+  onChildEditorChange: function(editor) {
+    if(this.editors[this.type]) this.refreshValue();
+    
+    this._super();
   },
   refreshHeaderText: function() {
     var schemas = [];
@@ -155,7 +162,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    this.fireSetEvent();
+    this.jsoneditor.notifyWatchers(this.path);
   },
   destroy: function() {
     $each(this.editors, function(type,editor) {

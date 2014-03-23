@@ -45,10 +45,13 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
       self.selected = self.select_options.indexOf(this.value);
       self.value = self.enum[self.selected];
       self.refreshValue();
-      self.fireChangeEvent();
+      
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     });
     this.value = this.enum[0];
     this.refreshValue();
+    this.jsoneditor.notifyWatchers(this.path);
 
     if(this.enum.length === 1) this.switcher.style.display = 'none';
   },
@@ -114,9 +117,11 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     }
   },
   setValue: function(val) {
-    this.value = val;
-    this.refreshValue();
-    this.fireSetEvent();
+    if(this.value !== val) {
+      this.value = val;
+      this.refreshValue();
+      this.jsoneditor.notifyWatchers(this.path);
+    }
   },
   destroy: function() {
     this.display_area.parentNode.removeChild(this.display_area);

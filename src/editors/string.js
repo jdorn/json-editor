@@ -5,6 +5,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   setValue: function(value,initial,from_template) {
     var self = this;
     
+    if(this.template && !from_template) {
+      return;
+    }
+    
     value = value || '';
     if(typeof value === "object") value = JSON.stringify(value);
     if(typeof value !== "string") value = ""+value;
@@ -35,9 +39,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.refreshValue();
 
     if(this.getValue() !== value || from_template) {
-      self.fireChangeEvent();
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     }
-    this.fireSetEvent();
+    
+    this.jsoneditor.notifyWatchers(this.path);
   },
   removeProperty: function() {
     this._super();
@@ -125,6 +131,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     this.input
       .addEventListener('change',function(e) {        
+        e.preventDefault();
+        e.stopPropagation();
+        
         // Don't allow changing if this field is a template
         if(self.schema.template) {
           this.value = self.value;
@@ -140,6 +149,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         }
 
         self.refreshValue();
+        
+        self.jsoneditor.notifyWatchers(self.path);
+        if(self.parent) self.parent.onChildEditorChange(self);
+        else self.jsoneditor.onChange();
       });
 
     if(this.schema.format) this.input.setAttribute('data-schemaformat',this.schema.format);
@@ -161,7 +174,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.schema.template) {
       this.template = this.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
     }
-    else this.refreshValue();
+    else {
+      this.refreshValue();
+      this.jsoneditor.notifyWatchers(this.path);
+    }
   },
   afterInputReady: function() {
     var self = this;
@@ -186,7 +202,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
           // Set the value and update
           self.input.value = val.html();
-          self.fireChangeEvent();
+          if(self.parent) self.parent.onChildEditorChange(self);
+          else self.jsoneditor.onChange();
+          self.jsoneditor.notifyWatchers(self.path);
         });
       }
       // TODO: support other WYSIWYG editors
@@ -206,7 +224,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
           self.input.value = val;
-          self.fireChangeEvent();
+          if(self.parent) self.parent.onChildEditorChange(self);
+          else self.jsoneditor.onChange();
+          self.jsoneditor.notifyWatchers(self.path);
         });
         
         this.epiceditor.load();

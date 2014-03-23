@@ -17,8 +17,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     this.value = sanitized;
-
-    this.fireSetEvent();
+    this.jsoneditor.notifyWatchers(this.path);
   },
   typecast: function(value) {
     if(this.schema.type === "boolean") {
@@ -82,6 +81,9 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(this.schema.readOnly || this.schema.readonly) this.input.disabled = true;
 
     this.input.addEventListener('change',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
       var val = this.value;
 
       var sanitized = val;
@@ -90,6 +92,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       }
 
       self.value = self.enum_values[self.enum_options.indexOf(val)];
+      
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
+      self.jsoneditor.notifyWatchers(self.path);
     });
 
     this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
@@ -103,6 +109,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     }
 
     self.theme.afterInputReady(self.input);
+    this.jsoneditor.notifyWatchers(this.path);
   },
   destroy: function() {
     if(this.label) this.label.parentNode.removeChild(this.label);

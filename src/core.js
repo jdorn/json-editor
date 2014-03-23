@@ -25,27 +25,6 @@ JSONEditor.prototype = {
     this.root_container = this.theme.getContainer();
     this.element.appendChild(this.root_container);
 
-    // Stop all change/set events while the editor is initializing
-    var change_blocker = function(e) {
-      if(!self.ready) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    };
-    this.root_container.addEventListener('change',change_blocker);
-    
-    // Re-run and cache validation when anything changes
-    var validate_cache = function() {
-      if(!self.ready) return;
-      
-      // Validate and cache results
-      self.validation_results = self.validator.validate(self.root.getValue());
-      self.root.showValidationErrors(self.validation_results);
-    }
-    this.root_container.addEventListener('change',validate_cache);
-    this.root_container.addEventListener('set',validate_cache);
-
     this.validator = new JSONEditor.Validator(this.schema,{
       ajax: this.options.ajax,
       refs: this.options.refs,
@@ -72,7 +51,6 @@ JSONEditor.prototype = {
 
       self.validation_results = self.validator.validate(self.root.getValue());
       self.root.showValidationErrors(self.validation_results);
-
       self.ready = true;
 
       // Fire ready event asynchronously
@@ -91,6 +69,7 @@ JSONEditor.prototype = {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before setting the value";
 
     this.root.setValue(value);
+    this.validation_results = this.validator.validate(this.root.getValue());
     return this;
   },
   validate: function(value) {
@@ -143,6 +122,25 @@ JSONEditor.prototype = {
 
     return JSONEditor.defaults.editors[classname];
   },
+  onChange: function() {
+    if(!this.ready) return;
+    
+    if(this.firing_change) return;
+    this.firing_change = true;
+    
+    var self = this;
+    
+    _raf(function() {
+      self.firing_change = false;
+      
+      // Validate and cache results
+      self.validation_results = self.validator.validate(self.root.getValue());
+      self.root.showValidationErrors(self.validation_results);
+      
+      // Fire change event
+      $trigger(self.element,'change');
+    });
+  },
   compileTemplate: function(template, name) {
     name = name || JSONEditor.defaults.template;
 
@@ -185,6 +183,49 @@ JSONEditor.prototype = {
       if(!el.hasAttribute('data-jsoneditor-'+key)) return null;
       
       return this.__data[el.getAttribute('data-jsoneditor-'+key)];
+    }
+  },
+  registerEditor: function(editor) {
+    this.editors = this.editors || {};
+    this.editors[editor.path] = editor;
+    return this;
+  },
+  unregisterEditor: function(editor) {
+    this.editors = this.editors || {};
+    this.editors[editor.path] = null;
+    return this;
+  },
+  getEditor: function(path) {
+    if(!this.editors) return;
+    return this.editors[path];
+  },
+  watch: function(path,callback) {    
+    this.watchlist = this.watchlist || {};
+    this.watchlist[path] = this.watchlist[path] || [];
+    this.watchlist[path].push(callback);
+    
+    return this;
+  },
+  unwatch: function(path,callback) {
+    if(!this.watchlist || !this.watchlist[path]) return this;
+    // If removing all callbacks for a path
+    if(!callback) {
+      this.watchlist[path] = null;
+      return this;
+    }
+    
+    var newlist = [];
+    for(var i=0; i<this.watchlist[path].length; i++) {
+      if(this.watchlist[path][i] === callback) continue;
+      else newlist.push(this.watchlist[path][i]);
+    }
+    this.watchlist[path] = newlist.length? newlist : null;
+    return this;
+  },
+  notifyWatchers: function(path) {
+    if(!this.watchlist || !this.watchlist[path]) return this;
+    for(var i=0; i<this.watchlist[path].length; i++) {
+      this.watchlist[path][i]();
     }
   }
 };

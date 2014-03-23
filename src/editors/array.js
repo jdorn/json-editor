@@ -62,15 +62,18 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         this.panel.appendChild(this.row_holder);
     }
 
-    this.row_holder.addEventListener('change',function() {
-      self.refreshValue();
-    });
     this.row_holder.addEventListener('change_header_text',function() {
       self.refreshTabs(true);
     });
     
     // Add controls
     this.addControls();
+    
+    this.jsoneditor.notifyWatchers(this.path);
+  },
+  onChildEditorChange: function(editor) {
+    this.refreshValue();
+    this._super(editor);
   },
   getItemTitle: function() {
     return (this.schema.items && this.schema.items.title) || 'item';
@@ -110,14 +113,6 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(tmp);
     
     // Ignore events on this temporary editor
-    tmp.addEventListener('change',function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    tmp.addEventListener('set',function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    });
     tmp.addEventListener('change_header_text',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -301,7 +296,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     self.refreshValue();
     self.refreshTabs();
     
-    $triggerc(self.container,'set');
+    self.jsoneditor.notifyWatchers(self.path);
     
     // TODO: sortable
   },
@@ -429,7 +424,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.refreshTabs();
       }
       
-      self.fireChangeEvent();
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     });
     self.rows[i].moveup_button = this.getButton('','moveup','Move up');
     self.rows[i].moveup_button.className += ' moveup';
@@ -447,7 +443,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.active_tab = self.rows[i-1].tab;
       self.refreshTabs();
 
-      self.fireChangeEvent();
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     });
     self.rows[i].movedown_button = this.getButton('','movedown','Move down');
     self.rows[i].movedown_button.className += ' movedown';
@@ -464,7 +461,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.setValue(rows);
       self.active_tab = self.rows[i+1].tab;
       self.refreshTabs();
-      self.fireChangeEvent();
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     });
 
     var controls_holder = self.rows[i].title_controls || self.rows[i].array_controls;
@@ -482,13 +480,15 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     
     this.collapsed = false;
     this.toggle_button = this.getButton('','collapse','Collapse');
-    this.title_controls.appendChild(this.toggle_button)
-    this.title_controls.addEventListener('click',function() {
+    this.title_controls.appendChild(this.toggle_button);
+    var row_holder_display = self.row_holder.style.display;
+    var controls_display = self.controls.style.display;
+    this.toggle_button.addEventListener('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
-        self.row_holder.style.display = '';
+        self.row_holder.style.display = row_holder_display;
         if(self.tabs_holder) self.tabs_holder.style.display = '';
-        self.controls.style.display = '';
+        self.controls.style.display = controls_display;
         self.setButtonText(this,'','collapse','Collapse');
       }
       else {
@@ -502,7 +502,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
 
     // If it should start collapsed
     if(this.options.collapsed) {
-      $trigger(this.toggle_button.trigger,'click');
+      $trigger(this.toggle_button,'click');
     }
     
     // Add "new row" and "delete last" buttons below editor
@@ -521,7 +521,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.active_tab = self.rows[i].tab;
       self.refreshTabs();
       self.refreshValue();
-      self.fireChangeEvent();
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
+      self.jsoneditor.notifyWatchers(self.path);
     });
     self.controls.appendChild(this.add_row_button);
 
@@ -538,14 +540,16 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.active_tab = new_active_tab;
         self.refreshTabs();
       }
-      self.fireChangeEvent();
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     })
     self.controls.appendChild(this.delete_last_row_button);
 
     this.remove_all_rows_button = this.getButton('All','delete','Delete All');
     this.remove_all_rows_button.addEventListener('click',function() {
       self.setValue([]);
-      self.fireChangeEvent();
+      if(self.parent) self.parent.onChildEditorChange(self);
+      else self.jsoneditor.onChange();
     })
     self.controls.appendChild(this.remove_all_rows_button);
 

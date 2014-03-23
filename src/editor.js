@@ -2,21 +2,19 @@
  * All editors should extend from this class
  */
 JSONEditor.AbstractEditor = Class.extend({
-  fireChangeEvent: function() {
-    $trigger(this.container,'change');
-  },
-  fireSetEvent: function() {
-    $triggerc(this.container,'set');
-  },
   fireChangeHeaderEvent: function() {
     $triggerc(this.container,'change_header_text');
+  },
+  onChildEditorChange: function(editor) {
+    this.watch_listener();
+    this.jsoneditor.notifyWatchers(this.path);
+    if(this.parent) this.parent.onChildEditorChange(this);
+    else this.jsoneditor.onChange();
   },
   init: function(options) {
     var self = this;
     this.container = options.container;
     this.jsoneditor = options.jsoneditor;
-    
-    //if(this.container.context) this.container = this.container.get(0);
 
     this.theme = this.jsoneditor.theme;
     this.template_engine = this.jsoneditor.template;
@@ -35,6 +33,8 @@ JSONEditor.AbstractEditor = Class.extend({
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
     
+    this.jsoneditor.registerEditor(this);
+    
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
       this.title_links = this.container.appendChild(this.theme.getFloatRightLinkHolder());
@@ -42,6 +42,9 @@ JSONEditor.AbstractEditor = Class.extend({
       this.addremove = this.title_links.appendChild(this.theme.getLink('remove '+this.getTitle()));
 
       this.addremove.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         if(self.property_removed) {
           self.addProperty();
         }
@@ -49,14 +52,10 @@ JSONEditor.AbstractEditor = Class.extend({
           self.removeProperty();
         }
       
-        self.fireChangeEvent();
-        
-        e.preventDefault();
+        if(self.parent) self.parent.onChildEditorChange(self);
+        else self.jsoneditor.onChange();
       });
     }
-    
-    this.container.addEventListener('change',self.watch_listener);
-    this.container.addEventListener('set',self.watch_listener);
     
     // Watched fields
     this.watched = {};
@@ -91,16 +90,10 @@ JSONEditor.AbstractEditor = Class.extend({
 
         // Keep track of the root node and path for use when rendering the template
         adjusted_path = root.getAttribute('data-schemapath') + '.' + path_parts.join('.');
-        self.watched[name] = {
-          root: root,
-          path: path_parts,
-          editor: self.jsoneditor._data(root,'editor'),
-          adjusted_path: adjusted_path
-        };
-
-        // Listen for changes to the variable field
-        root.addEventListener('change',self.watch_listener);
-        root.addEventListener('set',self.watch_listener);
+        
+        self.jsoneditor.watch(adjusted_path,self.watch_listener);
+        
+        self.watched[name] = adjusted_path;
       }
     }
     
@@ -144,27 +137,11 @@ JSONEditor.AbstractEditor = Class.extend({
     var self = this;
     
     if(this.watched) {
-      var obj,current_part,val,attr;
+      var val,editor;
       for(var name in this.watched) {
         if(!this.watched.hasOwnProperty(name)) continue;
-        attr = this.watched[name];
-        obj = attr.editor.getValue();
-        current_part = -1;
-        val = null;
-        // Use "path.to.property" to get root['path']['to']['property']
-        while(1) {
-          current_part++;
-          if(current_part >= attr.path.length) {
-            val = obj;
-            break;
-          }
-
-          if(!obj || typeof obj[attr.path[current_part]] === "undefined") {
-            break;
-          }
-
-          obj = obj[attr.path[current_part]];
-        }
+        editor = self.jsoneditor.getEditor(this.watched[name]);
+        val = editor? editor.getValue() : null;
         if(self.watched_values[name] !== val) changed = true;
         watched[name] = val;
       }
@@ -237,9 +214,9 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   destroy: function() {
     var self = this;
-    $each(this.watched,function(name,attr) {
-      attr.root.removeEventListener('change',self.watch_listener);
-      attr.root.removeEventListener('set',self.watch_listener);
+    this.jsoneditor.unregisterEditor(this);
+    $each(this.watched,function(name,adjusted_path) {
+      self.jsoneditor.unwatch(adjusted_path,self.watch_listener);
     });
     this.watched = null;
     this.watched_values = null;

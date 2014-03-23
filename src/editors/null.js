@@ -3,6 +3,6 @@ JSONEditor.defaults.editors.null = JSONEditor.AbstractEditor.extend({
     return null;
   },
   setValue: function() {
-    this.fireSetEvent();
+    this.jsoneditor.notifyWatchers(this.path);
   }
 });

@@ -154,7 +154,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           
           // Set the value
           self.setValue(value);
-          $trigger(self.editor_holder,'change');
+          
+          if(self.parent) self.parent.onChildEditorChange(self);
+          else self.jsoneditor.onChange();
         }
         // Start Editing
         else {
@@ -226,11 +228,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         });
       }
     }
-      
-    // When a child editor changes, refresh the value
-    self.editor_holder.addEventListener('change',function() {
-      self.refreshValue();
-    });
+    
+    this.jsoneditor.notifyWatchers(this.path);
+  },
+  onChildEditorChange: function(editor) {
+    this.refreshValue();
+    this._super(editor);
   },
   canHaveAdditionalProperties: function() {
     return this.schema.additionalProperties !== false && !this.jsoneditor.options.no_additional_properties;
@@ -275,7 +278,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     });
     self.editors[name].not_core = true;
     
-    $trigger(holder,'change');
+    self.refreshValue();
+    
+    self.jsoneditor.notifyWatchers(self.path);
+    if(self.parent) self.parent.onChildEditorChange(self);
+    else self.jsoneditor.onChange();
   },
   destroy: function() {
     $each(this.editors, function(i,el) {
@@ -313,7 +320,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         else if(editor.not_core) {
           var container = editor.container;
           editor.destroy();
-          container.parentNode.removeChild(container);
+          if(container.parentNode) container.parentNode.removeChild(container);
         }
         return;
       }
@@ -384,7 +391,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     
     this.refreshValue();
-    this.fireSetEvent();
+    this.jsoneditor.notifyWatchers(this.path);
   },
   showValidationErrors: function(errors) {
     var self = this;
