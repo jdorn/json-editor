@@ -53,6 +53,7 @@ var $extend = function(destination) {
 };
 
 var $each = function(obj,callback) {
+  if(!obj) return;
   if(typeof obj.length !== 'undefined') {
     for(var i=0; i<obj.length; i++) {
       if(callback(i,obj[i])===false) return;
@@ -1270,6 +1271,7 @@ JSONEditor.AbstractEditor = Class.extend({
     $triggerc(this.container,'change_header_text');
   },
   onChildEditorChange: function(editor) {
+    if(!this.watch_listener) return;
     this.watch_listener();
     this.jsoneditor.notifyWatchers(this.path);
     if(this.parent) this.parent.onChildEditorChange(this);
@@ -4130,15 +4132,15 @@ JSONEditor.AbstractTheme = Class.extend({
 
     while (elem && elem !== document) {
       try {
-      if (matchesSelector.bind(elem)(selector)) {
-        return elem;
-      } else {
-        elem = elem.parentNode;
-      }
+        var f = matchesSelector.bind(elem);
+        if (f(selector)) {
+          return elem;
+        } else {
+          elem = elem.parentNode;
+        }
       }
       catch(e) {
-        console.log(elem,selector);
-        throw e;
+        return false;
       }
     }
     return false;

@@ -33,6 +33,7 @@ var $extend = function(destination) {
 };
 
 var $each = function(obj,callback) {
+  if(!obj) return;
   if(typeof obj.length !== 'undefined') {
     for(var i=0; i<obj.length; i++) {
       if(callback(i,obj[i])===false) return;

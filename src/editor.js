@@ -6,6 +6,7 @@ JSONEditor.AbstractEditor = Class.extend({
     $triggerc(this.container,'change_header_text');
   },
   onChildEditorChange: function(editor) {
+    if(!this.watch_listener) return;
     this.watch_listener();
     this.jsoneditor.notifyWatchers(this.path);
     if(this.parent) this.parent.onChildEditorChange(this);

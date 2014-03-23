@@ -183,15 +183,15 @@ JSONEditor.AbstractTheme = Class.extend({
 
     while (elem && elem !== document) {
       try {
-      if (matchesSelector.bind(elem)(selector)) {
-        return elem;
-      } else {
-        elem = elem.parentNode;
-      }
+        var f = matchesSelector.bind(elem);
+        if (f(selector)) {
+          return elem;
+        } else {
+          elem = elem.parentNode;
+        }
       }
       catch(e) {
-        console.log(elem,selector);
-        throw e;
+        return false;
       }
     }
     return false;
