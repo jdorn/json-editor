@@ -7,6 +7,22 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     this._super();
     this.table.style.display = 'none';
   },
+  register: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].register();
+      }
+    }
+  },
+  unregister: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].unregister();
+      }
+    }
+  },
   build: function() {
     this.rows = [];
     var self = this;

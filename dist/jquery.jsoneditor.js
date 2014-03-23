@@ -1275,6 +1275,12 @@ JSONEditor.AbstractEditor = Class.extend({
     if(this.parent) this.parent.onChildEditorChange(this);
     else this.jsoneditor.onChange();
   },
+  register: function() {
+    this.jsoneditor.registerEditor(this);
+  },
+  unregister: function() {
+    this.jsoneditor.unregisterEditor(this);
+  },
   init: function(options) {
     var self = this;
     this.container = options.container;
@@ -1297,7 +1303,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
     
-    this.jsoneditor.registerEditor(this);
+    this.register();
     
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
@@ -1450,11 +1456,13 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   addProperty: function() {
     this.property_removed = false;
+    this.register();
     this.addremove.innerHTML = '';
     this.addremove.appendChild(document.createTextNode('remove '+this.getTitle()));
   },
   removeProperty: function() {
     this.property_removed = true;
+    this.unregister();
     this.addremove.innerHTML = '';
     this.addremove.appendChild(document.createTextNode('add '+this.getTitle()));
   },
@@ -1478,7 +1486,7 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   destroy: function() {
     var self = this;
-    this.jsoneditor.unregisterEditor(this);
+    this.unregister(this);
     $each(this.watched,function(name,adjusted_path) {
       self.jsoneditor.unwatch(adjusted_path,self.watch_listener);
     });
@@ -1961,6 +1969,24 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   getChildEditors: function() {
     return this.editors;
   },
+  register: function() {
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].register();
+      }
+    }
+  },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].unregister();
+      }
+    }
+  },
   addProperty: function() {
     this._super();
     this.editor_holder.style.display = 'block';
@@ -2400,6 +2426,22 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || [];
+  },
+  register: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].register();
+      }
+    }
+  },
+  unregister: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].unregister();
+      }
+    }
   },
   addProperty: function() {
     this._super();
@@ -3013,6 +3055,22 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     this._super();
     this.table.style.display = 'none';
   },
+  register: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].register();
+      }
+    }
+  },
+  unregister: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].unregister();
+      }
+    }
+  },
   build: function() {
     this.rows = [];
     var self = this;
@@ -3414,6 +3472,23 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return null;
   },
+  register: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].unregister();
+      }
+      if(this.editors[this.type]) this.editors[this.type].register();
+    }
+    this._super();
+  },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].unregister();
+      }
+    }
+  },
   build: function() {
     var self = this;
     var container = this.container;
@@ -3457,6 +3532,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     container.appendChild(this.switcher);
     this.switcher.addEventListener('change',function(e) {
       self.type = self.display_text.indexOf(this.value);
+
+      self.register();
 
       var current_value = self.getValue();
 
@@ -3529,12 +3606,11 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       option++;
     });
 
-    // Since the child editors all have the same path, make sure this is the one that is registered
-    this.jsoneditor.registerEditor(this);
-
     this.refreshHeaderText();
 
     this.switcher.value = this.display_text[this.type];
+
+    this.register();
     
     this.jsoneditor.notifyWatchers(this.path);
   },

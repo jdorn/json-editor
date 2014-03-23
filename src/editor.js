@@ -11,6 +11,12 @@ JSONEditor.AbstractEditor = Class.extend({
     if(this.parent) this.parent.onChildEditorChange(this);
     else this.jsoneditor.onChange();
   },
+  register: function() {
+    this.jsoneditor.registerEditor(this);
+  },
+  unregister: function() {
+    this.jsoneditor.unregisterEditor(this);
+  },
   init: function(options) {
     var self = this;
     this.container = options.container;
@@ -33,7 +39,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
     
-    this.jsoneditor.registerEditor(this);
+    this.register();
     
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
@@ -186,11 +192,13 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   addProperty: function() {
     this.property_removed = false;
+    this.register();
     this.addremove.innerHTML = '';
     this.addremove.appendChild(document.createTextNode('remove '+this.getTitle()));
   },
   removeProperty: function() {
     this.property_removed = true;
+    this.unregister();
     this.addremove.innerHTML = '';
     this.addremove.appendChild(document.createTextNode('add '+this.getTitle()));
   },
@@ -214,7 +222,7 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   destroy: function() {
     var self = this;
-    this.jsoneditor.unregisterEditor(this);
+    this.unregister(this);
     $each(this.watched,function(name,adjusted_path) {
       self.jsoneditor.unwatch(adjusted_path,self.watch_listener);
     });

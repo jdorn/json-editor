@@ -3,6 +3,23 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return null;
   },
+  register: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].unregister();
+      }
+      if(this.editors[this.type]) this.editors[this.type].register();
+    }
+    this._super();
+  },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].unregister();
+      }
+    }
+  },
   build: function() {
     var self = this;
     var container = this.container;
@@ -46,6 +63,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     container.appendChild(this.switcher);
     this.switcher.addEventListener('change',function(e) {
       self.type = self.display_text.indexOf(this.value);
+
+      self.register();
 
       var current_value = self.getValue();
 
@@ -118,12 +137,11 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       option++;
     });
 
-    // Since the child editors all have the same path, make sure this is the one that is registered
-    this.jsoneditor.registerEditor(this);
-
     this.refreshHeaderText();
 
     this.switcher.value = this.display_text[this.type];
+
+    this.register();
     
     this.jsoneditor.notifyWatchers(this.path);
   },

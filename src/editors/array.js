@@ -2,6 +2,22 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
     return this.schema.default || [];
   },
+  register: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].register();
+      }
+    }
+  },
+  unregister: function() {
+    this._super();
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].unregister();
+      }
+    }
+  },
   addProperty: function() {
     this._super();
     this.row_holder.style.display = '';

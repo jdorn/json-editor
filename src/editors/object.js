@@ -5,6 +5,24 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   getChildEditors: function() {
     return this.editors;
   },
+  register: function() {
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].register();
+      }
+    }
+  },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].unregister();
+      }
+    }
+  },
   addProperty: function() {
     this._super();
     this.editor_holder.style.display = 'block';
