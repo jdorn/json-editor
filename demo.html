@@ -220,7 +220,7 @@ if(errors.length) {
     });
     
     // When the value of the editor changes, update the JSON output
-    $editor.addEventListener('change',function(e) {
+    jsoneditor.on('change',function() {
         var json = jsoneditor.getValue();
         
         $output.value = JSON.stringify(json,null,2);

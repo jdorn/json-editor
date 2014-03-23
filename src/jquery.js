@@ -5,8 +5,8 @@ if(window.jQuery || window.Zepto) {
   window.$ = window.$ || {};
   $.jsoneditor = JSONEditor.defaults;
   
-  
   (window.jQuery || window.Zepto).fn.jsoneditor = function(options) {
+    var self = this;
     var editor = this.data('jsoneditor');
     if(options === 'value') {
       if(!editor) throw "Must initialize jsoneditor before getting/setting the value";
@@ -44,7 +44,17 @@ if(window.jQuery || window.Zepto) {
         editor.destroy();
       }
       
-      this.data('jsoneditor',new JSONEditor(this.get(0),options));
+      // Create editor
+      editor = new JSONEditor(this.get(0),options);
+      this.data('jsoneditor',editor);
+      
+      // Setup event listeners
+      editor.on('change',function() {
+        self.trigger('change');
+      });
+      editor.on('ready',function() {
+        self.trigger('ready');
+      });
     }
     
     return this;

@@ -55,8 +55,8 @@ JSONEditor.prototype = {
 
       // Fire ready event asynchronously
       _raf(function() {
-        $triggerc(self.element,'ready');
-        $trigger(self.element,'change');
+        self.trigger('ready');
+        self.trigger('change');
       });
     });
   },
@@ -104,6 +104,40 @@ JSONEditor.prototype = {
     
     this.destroyed = true;
   },
+  on: function(event, callback) {
+    this.callbacks = this.callbacks || {};
+    this.callbacks[event] = this.callbacks[event] || [];
+    this.callbacks[event].push(callback);
+  },
+  off: function(event, callback) {
+    // Specific callback
+    if(event && callback) {
+      this.callbacks = this.callbacks || {};
+      this.callbacks[event] = this.callbacks[event] || [];
+      var newcallbacks = [];
+      for(var i=0; i<this.callbacks[event].length; i++) {
+        if(this.callbacks[event][i]===callback) continue;
+        newcallbacks.push(this.callbacks[event][i]);
+      }
+      this.callbacks[event] = newcallbacks;
+    }
+    // All callbacks for a specific event
+    else if(event) {
+      this.callbacks = this.callbacks || {};
+      this.callbacks[event] = [];
+    }
+    // All callbacks for all events
+    else {
+      this.callbacks = {};
+    }
+  },
+  trigger: function(event) {
+    if(this.callbacks && this.callbacks[event] && this.callbacks[event].length) {
+      for(var i=0; i<this.callbacks[event].length; i++) {
+        this.callbacks[event][i]();
+      }
+    }
+  },
   getEditorClass: function(schema, editor) {
     var classname;
 
@@ -138,7 +172,7 @@ JSONEditor.prototype = {
       self.root.showValidationErrors(self.validation_results);
       
       // Fire change event
-      $trigger(self.element,'change');
+      self.trigger('change');
     });
   },
   compileTemplate: function(template, name) {
