@@ -5020,10 +5020,13 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 
 /**
- * Turn an element into a schema editor
- * @param options Options (must contain at least a `schema` property)
+ * This is a small wrapper for using JSON Editor like a typical jQuery plugin.
  */
 if(window.jQuery || window.Zepto) {
+  window.$ = window.$ || {};
+  $.jsoneditor = JSONEditor.defaults;
+  
+  
   (window.jQuery || window.Zepto).fn.jsoneditor = function(options) {
     var editor = this.data('jsoneditor');
     if(options === 'value') {
