@@ -8,7 +8,7 @@ It has full support for JSON Schema version 3 and 4 and can integrate with sever
 
 Check out an interactive demo: http://rawgithub.com/jdorn/json-editor/master/demo.html
 
-Download the [production version][min] or the [development version][max].
+Download the [production version][min] (18K when gzipped) or the [development version][max].
 
 [min]: https://raw.github.com/jdorn/json-editor/master/dist/jsoneditor.min.js
 [max]: https://raw.github.com/jdorn/json-editor/master/dist/jsoneditor.js
