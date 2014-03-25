@@ -1319,13 +1319,18 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
-      this.title_links = this.container.appendChild(this.theme.getFloatRightLinkHolder());
+      this.title_links = this.theme.getFloatRightLinkHolder();
+      this.container.appendChild(this.title_links);
 
-      this.addremove = this.title_links.appendChild(this.theme.getLink('remove '+this.getTitle()));
+      this.addremove = this.theme.getLink('remove '+this.getTitle());
+      this.title_links.appendChild(this.addremove);
 
       this.addremove.addEventListener('click',function(e) {
         e.preventDefault();
         e.stopPropagation();
+        
+        // Don't allow changing the properties when disabled
+        if(self.disabled) return;
         
         if(self.property_removed) {
           self.addProperty();
@@ -1553,11 +1558,13 @@ JSONEditor.AbstractEditor = Class.extend({
     return this.parent;
   },
   enable: function() {
-    // TODO: add/remove property links
+    if(this.addremove) this.addremove.style.opacity = '';
+    
     this.disabled = false;
   },
   disable: function() {
-    // TODO: add/remove property links
+    if(this.addremove) this.addremove.style.opacity = '.6';
+    
     this.disabled = true;
   },
   isEnabled: function() {
@@ -2026,7 +2033,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
   },
   enable: function() {
-    // TODO: edit json, add property buttons
+    if(this.editjson_button) this.editjson_button.disabled = false;
+    if(this.addproperty_button) this.addproperty_button.disabled = false;
+    
     this._super();
     if(this.editors) {
       for(var i in this.editors) {
@@ -2036,7 +2045,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
   },
   disable: function() {
-    // TODO: edit json, add property buttons
+    if(this.editjson_button) this.editjson_button.disabled = true;
+    if(this.addproperty_button) this.addproperty_button.disabled = true;
+    
     this._super();
     if(this.editors) {
       for(var i in this.editors) {
@@ -2518,19 +2529,33 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.theme.disableHeader(this.title);
   },
   enable: function() {
-    // TODO: action buttons (global and for each row)
+    if(this.add_row_button) this.add_row_button.disabled = false;
+    if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = false;
+    if(this.delete_last_row_button) this.delete_last_row_button.disabled = false;
+    
     if(this.rows) {
       for(var i=0; i<this.rows.length; i++) {
         this.rows[i].enable();
+        
+        if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = false;
+        if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = false;
+        if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = false;
       }
     }
     this._super();
   },
   disable: function() {
-    // TODO: action buttons (global and for each row)
+    if(this.add_row_button) this.add_row_button.disabled = true;
+    if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = true;
+    if(this.delete_last_row_button) this.delete_last_row_button.disabled = true;
+
     if(this.rows) {
       for(var i=0; i<this.rows.length; i++) {
         this.rows[i].disable();
+        
+        if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = true;
+        if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = true;
+        if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = true;
       }
     }
     this._super();
@@ -3146,24 +3171,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
         this.rows[i].unregister();
       }
     }
-  },
-  enable: function() {
-    // TODO: action buttons (global and for each row)
-    if(this.rows) {
-      for(var i=0; i<this.rows.length; i++) {
-        this.rows[i].enable();
-      }
-    }
-    this._super();
-  },
-  disable: function() {
-    // TODO: action buttons (global and for each row)
-    if(this.rows) {
-      for(var i=0; i<this.rows.length; i++) {
-        this.rows[i].disable();
-      }
-    }
-    this._super();
   },
   build: function() {
     this.rows = [];
@@ -3877,11 +3884,11 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     this.display_area.innerHTML = this.html_values[this.selected];
   },
   enable: function() {
-    if(!this.always_disabled) this.input.disabled = false;
+    if(!this.always_disabled) this.switcher.disabled = false;
     this._super();
   },
   disable: function() {
-    this.input.disabled = true;
+    this.switcher.disabled = true;
     this._super();
   },
   getHTML: function(el) {

@@ -24,7 +24,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
   },
   enable: function() {
-    // TODO: edit json, add property buttons
+    if(this.editjson_button) this.editjson_button.disabled = false;
+    if(this.addproperty_button) this.addproperty_button.disabled = false;
+    
     this._super();
     if(this.editors) {
       for(var i in this.editors) {
@@ -34,7 +36,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
   },
   disable: function() {
-    // TODO: edit json, add property buttons
+    if(this.editjson_button) this.editjson_button.disabled = true;
+    if(this.addproperty_button) this.addproperty_button.disabled = true;
+    
     this._super();
     if(this.editors) {
       for(var i in this.editors) {
