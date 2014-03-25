@@ -23,6 +23,24 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       }
     }
   },
+  enable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].enable();
+      }
+    }
+    this._super();
+  },
+  disable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].disable();
+      }
+    }
+    this._super();
+  },
   build: function() {
     this.rows = [];
     var self = this;

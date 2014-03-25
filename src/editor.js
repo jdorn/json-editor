@@ -278,6 +278,17 @@ JSONEditor.AbstractEditor = Class.extend({
   getParent: function() {
     return this.parent;
   },
+  enable: function() {
+    // TODO: add/remove property links
+    this.disabled = false;
+  },
+  disable: function() {
+    // TODO: add/remove property links
+    this.disabled = true;
+  },
+  isEnabled: function() {
+    return !this.disabled;
+  },
   getOption: function(key, def) {
     if(typeof this.options[key] !== 'undefined') return this.options[key];
     else return def;

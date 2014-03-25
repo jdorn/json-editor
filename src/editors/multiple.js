@@ -12,6 +12,24 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this._super();
   },
+  enable: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].enable();
+      }
+    }
+    this.switcher.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].disable();
+      }
+    }
+    this.switcher.disabled = true;
+    this._super();
+  },
   unregister: function() {
     this._super();
     if(this.editors) {

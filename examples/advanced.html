@@ -11,13 +11,15 @@
     <p>This example demonstrates the following:</p>
     <ul>
       <li>Loading external schemas via ajax (using $ref)</li>
-      <li>Setting the editor's value from javascript</li>
+      <li>Setting the editor's value from javascript (try the Restore to Default button)</li>
       <li>Validating the editor's contents (try setting name to an empty string)</li>
       <li>Macro templates (try changing the city or state fields and watch the citystate field update automatically)</li>
+      <li>Enabling and disabling editor fields</li>
     </ul>
     
     <button id='submit'>Submit (console.log)</button>
     <button id='restore'>Restore to Default</button>
+    <button id='enable_disable'>Disable/Enable Form</button>
     <span id='valid_indicator'></span>
     
     <div id='editor_holder'></div>
@@ -95,6 +97,18 @@
       // Hook up the Restore to Default button
       document.getElementById('restore').addEventListener('click',function() {
         editor.setValue(starting_value);
+      });
+      
+      // Hook up the enable/disable button
+      document.getElementById('enable_disable').addEventListener('click',function() {
+        // Enable form
+        if(!editor.isEnabled()) {
+          editor.enable();
+        }
+        // Disable form
+        else {
+          editor.disable();
+        }
       });
       
       // Hook up the validation indicator to update its 

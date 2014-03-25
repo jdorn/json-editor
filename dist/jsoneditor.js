@@ -227,7 +227,7 @@ JSONEditor.prototype = {
         this.callbacks[event][i]();
       }
     }
-  },
+  },  
   getEditorClass: function(schema, editor) {
     var classname;
 
@@ -351,6 +351,15 @@ JSONEditor.prototype = {
     for(var i=0; i<this.watchlist[path].length; i++) {
       this.watchlist[path][i]();
     }
+  },
+  isEnabled: function() {
+    return !this.root || this.root.isEnabled();
+  },
+  enable: function() {
+    this.root.enable();
+  },
+  disable: function() {
+    this.root.disable();
   }
 };
 
@@ -1543,6 +1552,17 @@ JSONEditor.AbstractEditor = Class.extend({
   getParent: function() {
     return this.parent;
   },
+  enable: function() {
+    // TODO: add/remove property links
+    this.disabled = false;
+  },
+  disable: function() {
+    // TODO: add/remove property links
+    this.disabled = true;
+  },
+  isEnabled: function() {
+    return !this.disabled;
+  },
   getOption: function(key, def) {
     if(typeof this.options[key] !== 'undefined') return this.options[key];
     else return def;
@@ -1747,7 +1767,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.disabled = true;
+    if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
 
     this.input
       .addEventListener('change',function(e) {        
@@ -1798,6 +1821,18 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.refreshValue();
       this.jsoneditor.notifyWatchers(this.path);
     }
+  },
+  enable: function() {
+    if(!this.always_disabled) {
+      this.input.disabled = false;
+      // TODO: WYSIWYG and Markdown editors
+    }
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    // TODO: WYSIWYG and Markdown editors
+    this._super();
   },
   afterInputReady: function() {
     var self = this;
@@ -1987,6 +2022,26 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       for(var i in this.editors) {
         if(!this.editors.hasOwnProperty(i)) continue;
         this.editors[i].unregister();
+      }
+    }
+  },
+  enable: function() {
+    // TODO: edit json, add property buttons
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].enable();
+      }
+    }
+  },
+  disable: function() {
+    // TODO: edit json, add property buttons
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].disable();
       }
     }
   },
@@ -2461,6 +2516,24 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.controls.style.display = 'none';
     this.title_controls.style.display = 'none';
     this.theme.disableHeader(this.title);
+  },
+  enable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].enable();
+      }
+    }
+    this._super();
+  },
+  disable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].disable();
+      }
+    }
+    this._super();
   },
   build: function() {
     this.rows = [];
@@ -3074,6 +3147,24 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       }
     }
   },
+  enable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].enable();
+      }
+    }
+    this._super();
+  },
+  disable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].disable();
+      }
+    }
+    this._super();
+  },
   build: function() {
     this.rows = [];
     var self = this;
@@ -3484,6 +3575,24 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this._super();
   },
+  enable: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].enable();
+      }
+    }
+    this.switcher.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].disable();
+      }
+    }
+    this.switcher.disabled = true;
+    this._super();
+  },
   unregister: function() {
     this._super();
     if(this.editors) {
@@ -3767,6 +3876,14 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     this.switcher.value = this.select_options[this.selected];
     this.display_area.innerHTML = this.html_values[this.selected];
   },
+  enable: function() {
+    if(!this.always_disabled) this.input.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    this._super();
+  },
   getHTML: function(el) {
     var self = this;
 
@@ -3905,7 +4022,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     this.input = this.theme.getSelectInput(this.enum_options);
 
-    if(this.schema.readOnly || this.schema.readonly) this.input.disabled = true;
+    if(this.schema.readOnly || this.schema.readonly) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
 
     this.input.addEventListener('change',function(e) {
       e.preventDefault();
@@ -3937,6 +4057,14 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     self.theme.afterInputReady(self.input);
     this.jsoneditor.notifyWatchers(this.path);
+  },
+  enable: function() {
+    if(!this.always_disabled) this.input.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    this._super();
   },
   destroy: function() {
     if(this.label) this.label.parentNode.removeChild(this.label);

@@ -34,6 +34,24 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.title_controls.style.display = 'none';
     this.theme.disableHeader(this.title);
   },
+  enable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].enable();
+      }
+    }
+    this._super();
+  },
+  disable: function() {
+    // TODO: action buttons (global and for each row)
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].disable();
+      }
+    }
+    this._super();
+  },
   build: function() {
     this.rows = [];
     this.row_cache = [];
