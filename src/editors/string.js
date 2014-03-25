@@ -14,8 +14,6 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(typeof value !== "string") value = ""+value;
     if(value === this.serialized) return;
 
-    if(!from_template && value) this.last_set = value;
-
     // Sanitize value before setting it
     var sanitized = this.sanitize(value);
     if(this.select_options && this.select_options.indexOf(sanitized) < 0) {
@@ -293,30 +291,38 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       var vars = this.getWatchedFieldValues();
       var select_options = [];
       
-      if(!vars[this.schema.enumSource]) throw "Unknown enumSource "+this.schema.enumSource;
-      $each(vars[this.schema.enumSource],function(i,el) {
-        var value;
-        if(self.select_template) {
-          value = self.select_template({
-            i: i,
-            item: el
-          });
-        }
-        else {
-          value = el;
-        }
-        value = ""+value;
-        
-        if(select_options.indexOf(value) === -1) select_options.push(value);
-      });
+      if(vars[this.schema.enumSource]) {
+        $each(vars[this.schema.enumSource],function(i,el) {
+          var value;
+          if(self.select_template) {
+            value = self.select_template({
+              i: i,
+              item: el
+            });
+          }
+          else {
+            value = el;
+          }
+          value = ""+value;
+          
+          if(select_options.indexOf(value) === -1) select_options.push(value);
+        });
+      }
       
       this.theme.setSelectOptions(this.input, select_options);
       this.select_options = select_options;
-      if(this.last_set && select_options.indexOf(this.last_set) !== -1) {
-        this.setValue(this.last_set,false,true);
+      
+      // If the previous value is still in the new select options, stick with it
+      if(select_options.indexOf(this.value) !== -1) {
+        this.input.value = this.value;
       }
-      else if(select_options.indexOf(this.getValue()) === -1) {
-        this.setValue(select_options[0],false,true);
+      // Otherwise, set the value to the first select option
+      else {
+        this.input.value = select_options[0];
+        this.value = select_options[0] || "";  
+        if(this.parent) this.parent.onChildEditorChange(this);
+        else this.jsoneditor.onChange();
+        this.jsoneditor.notifyWatchers(this.path);
       }
     }
     
