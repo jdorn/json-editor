@@ -1,4 +1,4 @@
-/*! JSON Editor v0.5.2 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.3 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -4572,7 +4572,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     var el = document.createElement('a');
     el.className = 'list-group-item';
     el.setAttribute('href','#');
-    el.textContent = text.textContent;
+    el.appendChild(text);
     return el;
   },
   markTabActive: function(tab) {

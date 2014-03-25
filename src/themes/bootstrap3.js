@@ -111,7 +111,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     var el = document.createElement('a');
     el.className = 'list-group-item';
     el.setAttribute('href','#');
-    el.textContent = text.textContent;
+    el.appendChild(text);
     return el;
   },
   markTabActive: function(tab) {
