@@ -34,6 +34,38 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.title_controls.style.display = 'none';
     this.theme.disableHeader(this.title);
   },
+  enable: function() {
+    if(this.add_row_button) this.add_row_button.disabled = false;
+    if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = false;
+    if(this.delete_last_row_button) this.delete_last_row_button.disabled = false;
+    
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].enable();
+        
+        if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = false;
+        if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = false;
+        if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = false;
+      }
+    }
+    this._super();
+  },
+  disable: function() {
+    if(this.add_row_button) this.add_row_button.disabled = true;
+    if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = true;
+    if(this.delete_last_row_button) this.delete_last_row_button.disabled = true;
+
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].disable();
+        
+        if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = true;
+        if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = true;
+        if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = true;
+      }
+    }
+    this._super();
+  },
   build: function() {
     this.rows = [];
     this.row_cache = [];

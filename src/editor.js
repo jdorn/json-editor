@@ -45,13 +45,18 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
-      this.title_links = this.container.appendChild(this.theme.getFloatRightLinkHolder());
+      this.title_links = this.theme.getFloatRightLinkHolder();
+      this.container.appendChild(this.title_links);
 
-      this.addremove = this.title_links.appendChild(this.theme.getLink('remove '+this.getTitle()));
+      this.addremove = this.theme.getLink('remove '+this.getTitle());
+      this.title_links.appendChild(this.addremove);
 
       this.addremove.addEventListener('click',function(e) {
         e.preventDefault();
         e.stopPropagation();
+        
+        // Don't allow changing the properties when disabled
+        if(self.disabled) return;
         
         if(self.property_removed) {
           self.addProperty();
@@ -277,6 +282,19 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   getParent: function() {
     return this.parent;
+  },
+  enable: function() {
+    if(this.addremove) this.addremove.style.opacity = '';
+    
+    this.disabled = false;
+  },
+  disable: function() {
+    if(this.addremove) this.addremove.style.opacity = '.6';
+    
+    this.disabled = true;
+  },
+  isEnabled: function() {
+    return !this.disabled;
   },
   getOption: function(key, def) {
     if(typeof this.options[key] !== 'undefined') return this.options[key];

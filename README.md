@@ -239,6 +239,27 @@ editor.watch('path.to.field',function() {
 editor.unwatch('path.to.field',function_reference);
 ```
 
+### Enable and Disable the Editor
+
+This lets you disable editing for the entire form or part of the form.
+
+```js
+// Disable entire form
+editor.disable();
+
+// Disable part of the form
+editor.getEditor('root.location').disable();
+
+// Enable entire form
+editor.enable();
+
+// Enable part of the form
+editor.getEditor('root.location').enable();
+
+// Check if form is currently enabled
+if(editor.isEnabled()) alert("It's editable!");
+```
+
 ### Destroy
 
 This removes the editor HTML from the DOM and frees up memory.

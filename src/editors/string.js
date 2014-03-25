@@ -127,7 +127,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.disabled = true;
+    if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
 
     this.input
       .addEventListener('change',function(e) {        
@@ -178,6 +181,18 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.refreshValue();
       this.jsoneditor.notifyWatchers(this.path);
     }
+  },
+  enable: function() {
+    if(!this.always_disabled) {
+      this.input.disabled = false;
+      // TODO: WYSIWYG and Markdown editors
+    }
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    // TODO: WYSIWYG and Markdown editors
+    this._super();
   },
   afterInputReady: function() {
     var self = this;

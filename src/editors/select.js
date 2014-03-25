@@ -78,7 +78,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     this.input = this.theme.getSelectInput(this.enum_options);
 
-    if(this.schema.readOnly || this.schema.readonly) this.input.disabled = true;
+    if(this.schema.readOnly || this.schema.readonly) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
 
     this.input.addEventListener('change',function(e) {
       e.preventDefault();
@@ -110,6 +113,14 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     self.theme.afterInputReady(self.input);
     this.jsoneditor.notifyWatchers(this.path);
+  },
+  enable: function() {
+    if(!this.always_disabled) this.input.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    this._super();
   },
   destroy: function() {
     if(this.label) this.label.parentNode.removeChild(this.label);

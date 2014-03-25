@@ -227,7 +227,7 @@ JSONEditor.prototype = {
         this.callbacks[event][i]();
       }
     }
-  },
+  },  
   getEditorClass: function(schema, editor) {
     var classname;
 
@@ -351,6 +351,15 @@ JSONEditor.prototype = {
     for(var i=0; i<this.watchlist[path].length; i++) {
       this.watchlist[path][i]();
     }
+  },
+  isEnabled: function() {
+    return !this.root || this.root.isEnabled();
+  },
+  enable: function() {
+    this.root.enable();
+  },
+  disable: function() {
+    this.root.disable();
   }
 };
 
@@ -1310,13 +1319,18 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // If not required, add an add/remove property link
     if(!this.isRequired() && !this.options.compact) {
-      this.title_links = this.container.appendChild(this.theme.getFloatRightLinkHolder());
+      this.title_links = this.theme.getFloatRightLinkHolder();
+      this.container.appendChild(this.title_links);
 
-      this.addremove = this.title_links.appendChild(this.theme.getLink('remove '+this.getTitle()));
+      this.addremove = this.theme.getLink('remove '+this.getTitle());
+      this.title_links.appendChild(this.addremove);
 
       this.addremove.addEventListener('click',function(e) {
         e.preventDefault();
         e.stopPropagation();
+        
+        // Don't allow changing the properties when disabled
+        if(self.disabled) return;
         
         if(self.property_removed) {
           self.addProperty();
@@ -1543,6 +1557,19 @@ JSONEditor.AbstractEditor = Class.extend({
   getParent: function() {
     return this.parent;
   },
+  enable: function() {
+    if(this.addremove) this.addremove.style.opacity = '';
+    
+    this.disabled = false;
+  },
+  disable: function() {
+    if(this.addremove) this.addremove.style.opacity = '.6';
+    
+    this.disabled = true;
+  },
+  isEnabled: function() {
+    return !this.disabled;
+  },
   getOption: function(key, def) {
     if(typeof this.options[key] !== 'undefined') return this.options[key];
     else return def;
@@ -1747,7 +1774,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    if(this.schema.readOnly || this.schema.readonly || this.schema.template) this.input.disabled = true;
+    if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
 
     this.input
       .addEventListener('change',function(e) {        
@@ -1798,6 +1828,18 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.refreshValue();
       this.jsoneditor.notifyWatchers(this.path);
     }
+  },
+  enable: function() {
+    if(!this.always_disabled) {
+      this.input.disabled = false;
+      // TODO: WYSIWYG and Markdown editors
+    }
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    // TODO: WYSIWYG and Markdown editors
+    this._super();
   },
   afterInputReady: function() {
     var self = this;
@@ -1987,6 +2029,30 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       for(var i in this.editors) {
         if(!this.editors.hasOwnProperty(i)) continue;
         this.editors[i].unregister();
+      }
+    }
+  },
+  enable: function() {
+    if(this.editjson_button) this.editjson_button.disabled = false;
+    if(this.addproperty_button) this.addproperty_button.disabled = false;
+    
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].enable();
+      }
+    }
+  },
+  disable: function() {
+    if(this.editjson_button) this.editjson_button.disabled = true;
+    if(this.addproperty_button) this.addproperty_button.disabled = true;
+    
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].disable();
       }
     }
   },
@@ -2461,6 +2527,38 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.controls.style.display = 'none';
     this.title_controls.style.display = 'none';
     this.theme.disableHeader(this.title);
+  },
+  enable: function() {
+    if(this.add_row_button) this.add_row_button.disabled = false;
+    if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = false;
+    if(this.delete_last_row_button) this.delete_last_row_button.disabled = false;
+    
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].enable();
+        
+        if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = false;
+        if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = false;
+        if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = false;
+      }
+    }
+    this._super();
+  },
+  disable: function() {
+    if(this.add_row_button) this.add_row_button.disabled = true;
+    if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = true;
+    if(this.delete_last_row_button) this.delete_last_row_button.disabled = true;
+
+    if(this.rows) {
+      for(var i=0; i<this.rows.length; i++) {
+        this.rows[i].disable();
+        
+        if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = true;
+        if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = true;
+        if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = true;
+      }
+    }
+    this._super();
   },
   build: function() {
     this.rows = [];
@@ -3484,6 +3582,24 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this._super();
   },
+  enable: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].enable();
+      }
+    }
+    this.switcher.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        this.editors[i].disable();
+      }
+    }
+    this.switcher.disabled = true;
+    this._super();
+  },
   unregister: function() {
     this._super();
     if(this.editors) {
@@ -3767,6 +3883,14 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     this.switcher.value = this.select_options[this.selected];
     this.display_area.innerHTML = this.html_values[this.selected];
   },
+  enable: function() {
+    if(!this.always_disabled) this.switcher.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    this.switcher.disabled = true;
+    this._super();
+  },
   getHTML: function(el) {
     var self = this;
 
@@ -3905,7 +4029,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     this.input = this.theme.getSelectInput(this.enum_options);
 
-    if(this.schema.readOnly || this.schema.readonly) this.input.disabled = true;
+    if(this.schema.readOnly || this.schema.readonly) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
 
     this.input.addEventListener('change',function(e) {
       e.preventDefault();
@@ -3937,6 +4064,14 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     self.theme.afterInputReady(self.input);
     this.jsoneditor.notifyWatchers(this.path);
+  },
+  enable: function() {
+    if(!this.always_disabled) this.input.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    this._super();
   },
   destroy: function() {
     if(this.label) this.label.parentNode.removeChild(this.label);

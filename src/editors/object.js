@@ -23,6 +23,30 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
     }
   },
+  enable: function() {
+    if(this.editjson_button) this.editjson_button.disabled = false;
+    if(this.addproperty_button) this.addproperty_button.disabled = false;
+    
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].enable();
+      }
+    }
+  },
+  disable: function() {
+    if(this.editjson_button) this.editjson_button.disabled = true;
+    if(this.addproperty_button) this.addproperty_button.disabled = true;
+    
+    this._super();
+    if(this.editors) {
+      for(var i in this.editors) {
+        if(!this.editors.hasOwnProperty(i)) continue;
+        this.editors[i].disable();
+      }
+    }
+  },
   addProperty: function() {
     this._super();
     this.editor_holder.style.display = 'block';
