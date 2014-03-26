@@ -54,7 +54,7 @@ JSONEditor.prototype = {
       self.ready = true;
 
       // Fire ready event asynchronously
-      _raf(function() {
+      requestAnimationFrame(function() {
         self.trigger('ready');
         self.trigger('change');
       });
@@ -164,7 +164,7 @@ JSONEditor.prototype = {
     
     var self = this;
     
-    _raf(function() {
+    requestAnimationFrame(function() {
       self.firing_change = false;
       
       // Validate and cache results

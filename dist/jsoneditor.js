@@ -1,4 +1,4 @@
-/*! JSON Editor v0.5.4 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.5 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -17,6 +17,48 @@
 */
 // Inspired by base2 and Prototype
 var Class;!function(){var a=!1,b=/xyz/.test(function(){})?/\b_super\b/:/.*/;Class=function(){},Class.extend=function(c){function g(){!a&&this.init&&this.init.apply(this,arguments)}var d=this.prototype;a=!0;var e=new this;a=!1;for(var f in c)e[f]="function"==typeof c[f]&&"function"==typeof d[f]&&b.test(c[f])?function(a,b){return function(){var c=this._super;this._super=d[a];var e=b.apply(this,arguments);return this._super=c,e}}(f,c[f]):c[f];return g.prototype=e,g.prototype.constructor=g,g.extend=arguments.callee,g}}();
+
+// CustomEvent constructor polyfill
+// From MDN
+(function () {
+  function CustomEvent ( event, params ) {
+    params = params || { bubbles: false, cancelable: false, detail: undefined };
+    var evt = document.createEvent( 'CustomEvent' );
+    evt.initCustomEvent( event, params.bubbles, params.cancelable, params.detail );
+    return evt;
+   };
+
+  CustomEvent.prototype = window.Event.prototype;
+
+  window.CustomEvent = CustomEvent;
+})();
+
+// requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
+// MIT license
+(function() {
+    var lastTime = 0;
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] 
+                                   || window[vendors[x]+'CancelRequestAnimationFrame'];
+    }
+ 
+    if (!window.requestAnimationFrame)
+        window.requestAnimationFrame = function(callback, element) {
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
+              timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
+ 
+    if (!window.cancelAnimationFrame)
+        window.cancelAnimationFrame = function(id) {
+            clearTimeout(id);
+        };
+}());
 
 var $isplainobject = function( obj ) {
   // Not own constructor property must be Object
@@ -66,8 +108,6 @@ var $each = function(obj,callback) {
     }
   }
 };
-
-var _raf = window.requestAnimationFrame || function(callback) { window.setTimeout(callback,16) };
 
 var $trigger = function(el,event) {
   var e = document.createEvent('HTMLEvents');
@@ -144,7 +184,7 @@ JSONEditor.prototype = {
       self.ready = true;
 
       // Fire ready event asynchronously
-      _raf(function() {
+      requestAnimationFrame(function() {
         self.trigger('ready');
         self.trigger('change');
       });
@@ -254,7 +294,7 @@ JSONEditor.prototype = {
     
     var self = this;
     
-    _raf(function() {
+    requestAnimationFrame(function() {
       self.firing_change = false;
       
       // Validate and cache results
@@ -1813,7 +1853,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
 
     // Any special formatting that needs to happen after the input is added to the dom
-    _raf(function() {
+    requestAnimationFrame(function() {
       self.afterInputReady();
     });
 

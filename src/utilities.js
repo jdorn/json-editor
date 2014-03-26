@@ -47,8 +47,6 @@ var $each = function(obj,callback) {
   }
 };
 
-var _raf = window.requestAnimationFrame || function(callback) { window.setTimeout(callback,16) };
-
 var $trigger = function(el,event) {
   var e = document.createEvent('HTMLEvents');
   e.initEvent(event, true, true);

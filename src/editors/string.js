@@ -167,7 +167,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
 
     // Any special formatting that needs to happen after the input is added to the dom
-    _raf(function() {
+    requestAnimationFrame(function() {
       self.afterInputReady();
     });
 
