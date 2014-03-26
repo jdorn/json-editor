@@ -95,7 +95,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     // If the object should be rendered as a div
     else {
-      this.title = this.getTheme().getHeader(this.getTitle());
+      this.header = document.createElement('span');
+      this.header.textContent = this.getTitle();
+      this.title = this.getTheme().getHeader(this.header);
       this.container.appendChild(this.title);
       
       this.editjson_holder = this.theme.getTextareaInput();

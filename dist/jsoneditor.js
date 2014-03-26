@@ -1,8 +1,8 @@
-/*! JSON Editor v0.5.3 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.4 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-03-25
+ * Date: 2014-03-26
  */
 
 /**
@@ -1446,8 +1446,7 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   updateHeaderText: function() {
     if(this.header) {
-      this.header.innerHTML = '';
-      this.header.appendChild(document.createTextNode(this.getHeaderText()));
+      this.header.textContent = this.getHeaderText();
     }
   },
   getHeaderText: function(title_only) {
@@ -2110,7 +2109,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     // If the object should be rendered as a div
     else {
-      this.title = this.getTheme().getHeader(this.getTitle());
+      this.header = document.createElement('span');
+      this.header.textContent = this.getTitle();
+      this.title = this.getTheme().getHeader(this.header);
       this.container.appendChild(this.title);
       
       this.editjson_holder = this.theme.getTextareaInput();
@@ -4127,7 +4128,13 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getHeader: function(text) {
     var el = document.createElement('h3');
-    el.appendChild(document.createTextNode(text));
+    if(typeof text === "string") {
+      el.textContent = text;
+    }
+    else {
+      el.appendChild(text);
+    }
+    
     return el;
   },
   getCheckbox: function() {

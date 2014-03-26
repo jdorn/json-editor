@@ -37,7 +37,13 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getHeader: function(text) {
     var el = document.createElement('h3');
-    el.appendChild(document.createTextNode(text));
+    if(typeof text === "string") {
+      el.textContent = text;
+    }
+    else {
+      el.appendChild(text);
+    }
+    
     return el;
   },
   getCheckbox: function() {

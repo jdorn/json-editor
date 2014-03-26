@@ -172,8 +172,7 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   updateHeaderText: function() {
     if(this.header) {
-      this.header.innerHTML = '';
-      this.header.appendChild(document.createTextNode(this.getHeaderText()));
+      this.header.textContent = this.getHeaderText();
     }
   },
   getHeaderText: function(title_only) {
