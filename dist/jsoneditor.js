@@ -1,8 +1,8 @@
-/*! JSON Editor v0.5.5 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.6 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-03-26
+ * Date: 2014-03-28
  */
 
 /**
@@ -1716,9 +1716,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.sceditor_instance) {
       this.sceditor_instance.val(sanitized);
     }
-    if(this.epiceditor) {
+    else if(this.epiceditor) {
       this.epiceditor.importFile(null,sanitized);
     }
+    else if(this.ace_editor) {
+      this.ace_editor.setValue(sanitized);
+    }
+    
 
     this.refreshValue();
 
@@ -1767,17 +1771,6 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.input_type = 'textarea';
         this.input = this.theme.getTextareaInput();
       }
-      // WYSIWYG html/bbcode
-      else if(this.schema.format === 'html' || this.schema.format === 'bbcode') {
-        this.input_type = this.schema.format;
-        
-        this.input = this.theme.getTextareaInput();
-      }
-      // Markdown
-      else if(this.schema.format === 'markdown') {
-        this.input_type = 'markdown';
-        this.input = this.theme.getTextareaInput();
-      }
       // Range Input
       else if(this.schema.format === 'range') {
         this.input_type = 'range';
@@ -1791,6 +1784,64 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         }
 
         this.input = this.theme.getRangeInput(min,max,step);
+      }
+      // Source Code
+      else if([
+          'actionscript',
+          'batchfile',
+          'bbcode',
+          'c',
+          'c++',
+          'cpp',
+          'coffee',
+          'csharp',
+          'css',
+          'dart',
+          'django',
+          'ejs',
+          'erlang',
+          'golang',
+          'handlebars',
+          'haskell',
+          'haxe',
+          'html',
+          'ini',
+          'jade',
+          'java',
+          'javascript',
+          'json',
+          'less',
+          'lisp',
+          'lua',
+          'makefile',
+          'markdown',
+          'matlab',
+          'mysql',
+          'objectivec',
+          'pascal',
+          'perl',
+          'pgsql',
+          'php',
+          'python',
+          'r',
+          'ruby',
+          'sass',
+          'scala',
+          'scss',
+          'smarty',
+          'sql',
+          'stylus',
+          'svg',
+          'twig',
+          'vbscript',
+          'xml',
+          'yaml'
+        ].indexOf(this.schema.format) >= 0
+      ) {
+        this.input_type = this.schema.format;
+        this.source_code = true;
+        
+        this.input = this.theme.getTextareaInput();
       }
       // HTML5 Input type
       else {
@@ -1881,10 +1932,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   afterInputReady: function() {
     var self = this;
     
-    // Setup WYSIWYG editor
-    if(this.input_type === 'html' || this.input_type === 'bbcode') {
-      // If SCEditor is loaded
-      if($.fn.sceditor) {
+    // Code editor
+    if(this.source_code) {      
+      // WYSIWYG html and bbcode editor
+      if(this.options.wysiwyg
+        && ['html','bbcode'].indexOf(this.input_type) >= 0
+        && window.$ && $.fn && $.fn.sceditor
+      ) {
         $(self.input).sceditor({
           plugins: self.input_type==='html'? 'xhtml' : 'bbcode',
           emoticonsEnabled: false,
@@ -1906,19 +1960,18 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           self.jsoneditor.notifyWatchers(self.path);
         });
       }
-      // TODO: support other WYSIWYG editors
-    }
-    // Markdown
-    else if(this.input_type === 'markdown') {
-      if(window.EpicEditor) {
+      // EpicEditor for markdown (if it's loaded)
+      else if (this.input_type === 'markdown' && window.EpicEditor) {
         this.epiceditor_container = document.createElement('div');
         this.input.parentNode.insertBefore(this.epiceditor_container,this.input);
         this.input.style.display = 'none';
-        this.epiceditor = new EpicEditor({
+        
+        var options = $extend({},JSONEditor.plugins.epiceditor,{
           container: this.epiceditor_container,
-          clientSideStorage: false,
-          basePath: '//cdnjs.cloudflare.com/ajax/libs/epiceditor/0.2.0'
+          clientSideStorage: false
         });
+        
+        this.epiceditor = new EpicEditor(options);
         
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
@@ -1929,6 +1982,38 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         });
         
         this.epiceditor.load();
+      }
+      // ACE editor for everything else
+      else if(window.ace) {
+        var mode = this.input_type;
+        // aliases for c/cpp
+        if(mode === 'cpp' || mode === 'c++' || mode === 'c') {
+          mode = 'c_cpp';
+        }
+        
+        this.ace_container = document.createElement('div');
+        this.ace_container.style.width = '100%';
+        this.ace_container.style.position = 'relative';
+        this.ace_container.style.height = '400px';
+        this.input.parentNode.insertBefore(this.ace_container,this.input);
+        this.input.style.display = 'none';
+        this.ace_editor = ace.edit(this.ace_container);
+        
+        // The theme
+        if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
+        // The mode
+        var mode = ace.require("ace/mode/"+mode);
+        if(mode) this.ace_editor.getSession().setMode(new mode.Mode());
+        
+        // Listen for changes
+        this.ace_editor.on('change',function() {
+          var val = self.ace_editor.getValue();
+          self.input.value = val;
+          self.refreshValue();
+          if(self.parent) self.parent.onChildEditorChange(self);
+          else self.jsoneditor.onChange();
+          self.jsoneditor.notifyWatchers(self.path);
+        });
       }
     }
     
@@ -1944,9 +2029,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.sceditor_instance) {
       this.sceditor_instance.destroy();
     }
-    if(this.epiceditor) {
+    else if(this.epiceditor) {
       this.epiceditor.unload();
     }
+    else if(this.ace_editor) {
+      this.ace_editor.destroy();
+    }
+    
     
     this.template = null;
     this.input.parentNode.removeChild(this.input);
@@ -5275,6 +5364,16 @@ JSONEditor.defaults.theme = 'html';
 
 // Set the default template engine
 JSONEditor.defaults.template = 'default';
+
+// Miscellaneous Plugin Settings
+JSONEditor.plugins = {
+  ace: {
+    theme: ''
+  },
+  epiceditor: {
+    
+  }
+};
 
 // Set the default resolvers
 // Use "multiple" as a fall back for everything

@@ -4,6 +4,16 @@ JSONEditor.defaults.theme = 'html';
 // Set the default template engine
 JSONEditor.defaults.template = 'default';
 
+// Miscellaneous Plugin Settings
+JSONEditor.plugins = {
+  ace: {
+    theme: ''
+  },
+  epiceditor: {
+    
+  }
+};
+
 // Set the default resolvers
 // Use "multiple" as a fall back for everything
 JSONEditor.defaults.resolvers.unshift(function(schema) {

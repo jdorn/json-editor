@@ -20,13 +20,14 @@ JSON Schema has no required dependencies.  It only needs a modern browser (teste
 
 ### Optional Requirements
 
-The following are not required, but will improve the style and usability of JSON Editor when present.
+The following are not required, but can improve the style and usability of JSON Editor when present.
 
 *  A compatible JS template engine (Mustache, Underscore, Hogan, Handlebars, Swig, Markup, or EJS)
 *  A compatible CSS framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
 *  A compatible icon library (bootstrap 2/3 glyphicons, foundation icons 2/3, jqueryui, or font awesome 3/4)
 *  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode content
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
+*  [Ace Editor](http://ace.c9.io/) for editing code
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
 
 Usage
@@ -370,18 +371,17 @@ If your urls don't meet this requirement, you can pass in the references to JSON
 
 ### format
 
-JSON Editor supports the following values for the `format` parameter for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
+JSON Editor supports many different formats for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
 If the `enum` property is specified, `format` will be ignored.
 
-*  bbcode (requires SCEditor)
+JSON Editor uses HTML5 input types, so some of these may render as basic text input in older browsers:
+
 *  color
 *  date
 *  datetime
 *  datetime-local
 *  email
 *  hidden
-*  html (requires SCEditor)
-*  markdown (requires EpicEditor)
 *  month
 *  number
 *  range
@@ -391,8 +391,6 @@ If the `enum` property is specified, `format` will be ignored.
 *  time
 *  url
 *  week
-
-JSON Editor uses HTML5 input types, so some of these may render as basic text input in older browsers.
 
 Here is an example that will show a color picker in browsers that support it:
 
@@ -406,6 +404,101 @@ Here is an example that will show a color picker in browsers that support it:
     }
   }
 }
+```
+
+#### Specialized String Editors
+
+In addition to the standard HTML input formats, JSON Editor can also integrate with several 3rd party specialized editors.  These libraries are not included in JSON Editor and you must load them on the page yourself.
+
+__SCEditor__ provides WYSIWYG editing of HTML and BBCode.  To use it, set the format to `html` or `bbcode` and set the `wysiwyg` option to `true`:
+
+```json
+{
+  "type": "string",
+  "format": "html",
+  "options": {
+    "wysiwyg": true
+  }
+}
+```
+
+__EpicEditor__ is a simple Markdown editor with live preview.  To use it, set the format to `markdown`:
+
+```json
+{
+  "type": "string",
+  "format": "markdown"
+}
+```
+
+You can configure EpicEditor by setting configuration options in `JSONEditor.plugins.epiceditor`.  Here's an example:
+
+```js
+JSONEditor.plugins.epiceditor.basePath = 'epiceditor';
+```
+
+__Ace Editor__ is a syntax highlighting source code editor. You can use it by setting the format to any of the following:
+
+*  actionscript
+*  batchfile
+*  c
+*  c++
+*  cpp (alias for c++)
+*  coffee
+*  csharp
+*  css
+*  dart
+*  django
+*  ejs
+*  erlang
+*  golang
+*  handlebars
+*  haskell
+*  haxe
+*  html
+*  ini
+*  jade
+*  java
+*  javascript
+*  json
+*  less
+*  lisp
+*  lua
+*  makefile
+*  markdown
+*  matlab
+*  mysql
+*  objectivec
+*  pascal
+*  perl
+*  pgsql
+*  php
+*  python
+*  r
+*  ruby
+*  sass
+*  scala
+*  scss
+*  smarty
+*  sql
+*  stylus
+*  svg
+*  twig
+*  vbscript
+*  xml
+*  yaml
+
+```json
+{
+  "type": "string",
+  "format": "yaml"
+}
+```
+
+You can override the default Ace theme by setting the `JSONEditor.plugins.ace.theme` variable.
+
+```js
+JSONEditor.plugins.ace.theme = 'twilight';
 ```
 
 #### Arrays
@@ -758,7 +851,6 @@ If you create a custom editor interface that you think could be helpful to other
 
 The possibilities are endless.  Some ideas:
 
-*  Syntax highlighting code editor (Ace, Markup, etc.)
 *  A compact way to edit objects
 *  Radio button version of the `select` editor
 *  Autosuggest for strings (like enum, but not restricted to those values)
