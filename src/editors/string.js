@@ -287,6 +287,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         
         this.epiceditor = new EpicEditor(options);
         
+        this.epiceditor.importFile(null,this.getValue());
+      
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
           self.input.value = val;
@@ -312,6 +314,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.input.parentNode.insertBefore(this.ace_container,this.input);
         this.input.style.display = 'none';
         this.ace_editor = ace.edit(this.ace_container);
+        
+        this.ace_editor.setValue(this.getValue());
         
         // The theme
         if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
