@@ -1,8 +1,8 @@
-/*! JSON Editor v0.5.7 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.8 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-03-28
+ * Date: 2014-04-02
  */
 
 /**
@@ -1760,8 +1760,44 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     else if(this.schema.enumSource) {
       this.input_type = 'select';
       this.input = this.theme.getSelectInput([]);
-      if(this.schema.enumValue) {
-        this.select_template = this.jsoneditor.compileTemplate(this.schema.enumValue, this.template_engine);
+      // Shortcut declaration for using a single array
+      if(!(this.schema.enumSource instanceof Array)) {
+        if(this.schema.enumValue) {
+          this.schema.enumSource = [
+            {
+              source: this.schema.enumSource,
+              value: this.schema.enumValue
+            }
+          ];
+        }
+        else {
+          this.schema.enumSource = [
+            {
+              source: this.schema.enumSource
+            }
+          ];
+        }
+      }
+      
+      // Now, enumSource is an array of sources
+      // Walk through this array and fix up the values
+      for(var i=0; i<this.schema.enumSource.length; i++) {
+        // Shorthand for watched variable
+        if(typeof this.schema.enumSource[i] === "string") {
+          this.schema.enumSource[i] = {
+            source: this.schema.enumSource[i]
+          };
+        }
+        
+        if(this.schema.enumSource[i].value) {
+          this.schema.enumSource[i].value = this.jsoneditor.compileTemplate(this.schema.enumSource[i].value, this.template_engine);
+        }
+        if(this.schema.enumSource[i].title) {
+          this.schema.enumSource[i].title = this.jsoneditor.compileTemplate(this.schema.enumSource[i].title, this.template_engine);
+        }
+        if(this.schema.enumSource[i].fillter) {
+          this.schema.enumSource[i].filter = this.jsoneditor.compileTemplate(this.schema.enumSource[i].filter, this.template_engine);
+        }
       }
     }
     // Specific format
@@ -2069,26 +2105,69 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.schema.enumSource) {
       var vars = this.getWatchedFieldValues();
       var select_options = [];
+      var select_titles = [];
       
-      if(vars[this.schema.enumSource]) {
-        $each(vars[this.schema.enumSource],function(i,el) {
-          var value;
-          if(self.select_template) {
-            value = self.select_template({
-              i: i,
-              item: el
-            });
-          }
-          else {
-            value = el;
-          }
-          value = ""+value;
+      for(var i=0; i<this.schema.enumSource.length; i++) {
+        // Constant values
+        if(this.schema.enumSource[i] instanceof Array) {
+          select_options = select_options.concat(this.schema.enumSource[i]);
+          select_titles = select_titles.concat(this.schema.enumSource[i]);
+        }
+        // A watched field
+        else if(vars[this.schema.enumSource[i].source]) {
+          var items = vars[this.schema.enumSource[i].source];
           
-          if(select_options.indexOf(value) === -1) select_options.push(value);
-        });
+          // Only use a predefined part of the array
+          if(this.schema.enumSource[i].slice) {
+            items = Array.prototype.slice.apply(items,this.schema.enumSource[i].slice);
+          }
+          // Filter the items
+          if(this.schema.enumSource[i].filter) {
+            var new_items = [];
+            for(var j=0; j<items.length; j++) {
+              if(filter({i:j,item:items[j]})) new_items.push(items[j]);
+            }
+            items = new_items;
+          }
+          
+          var item_titles = [];
+          var item_values = [];
+          for(var j=0; j<items.length; j++) {
+            var item = items[j];
+            
+            // Rendered value
+            if(this.schema.enumSource[i].value) {
+              item_values[j] = this.schema.enumSource[i].value({
+                i: j,
+                item: item
+              });
+            }
+            // Use value directly
+            else {
+              item_values[j] = items[j];
+            }
+            
+            // Rendered title
+            if(this.schema.enumSource[i].title) {
+              item_titles[j] = this.schema.enumSource[i].title({
+                i: j,
+                item: item
+              });
+            }
+            // Use value as the title also
+            else {
+              item_titles[j] = item_values[j];
+            }
+          }
+          
+          // TODO: sort
+          
+          select_options = select_options.concat(item_values);
+          select_titles = select_titles.concat(item_titles);
+        }
       }
       
-      this.theme.setSelectOptions(this.input, select_options);
+      this.theme.setSelectOptions(this.input, select_options, select_titles);
       this.select_options = select_options;
       
       // If the previous value is still in the new select options, stick with it
@@ -4278,12 +4357,13 @@ JSONEditor.AbstractTheme = Class.extend({
     if(options) this.setSelectOptions(select, options);
     return select;
   },
-  setSelectOptions: function(select, options) {
+  setSelectOptions: function(select, options, titles) {
+    titles = titles || [];
     select.innerHTML = '';
     for(var i=0; i<options.length; i++) {
       var option = document.createElement('option');
       option.setAttribute('value',options[i]);
-      option.appendChild(document.createTextNode(options[i]));
+      option.textContent = titles[i] || options[i];
       select.appendChild(option);
     }
   },

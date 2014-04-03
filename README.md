@@ -717,10 +717,36 @@ Then, we use the special keyword `enumSource` to tell JSON Editor that we want t
 
 Now, anytime the `possible_colors` array changes, the dropdown's values will be changed as well.
 
-The colors examples used an array of strings directly.  What if you want to modify the values or are dealing with non-string data?
-The `enumValue` keyword lets you specify a template that's used to render each array element.
+This is the most basic usage of `enumSource`.  The more verbose form of this property supports 
+filtering, pulling from multiple sources, constant values, etc..
+Here's a more complex example (this uses the Swig template engine syntax to show some advanced features)
 
-Here's an example where `possible_colors` is an array of objects instead of strings.
+```js+jinja
+{
+  // An array of sources
+  "enumSource": [
+    // Constant values
+    ["none"],
+    {
+      // A watched field source
+      "source": "colors",
+      // Use a subset of the array
+      "slice": [2,5],
+      // Filter items with a template (if this renders to an empty string, it won't be included)
+      "filter": "{% if item !== 'black' %}1{% endif %}",
+      // Specify the display text for the enum option
+      "title": "{{item|upper}}",
+      // Specify the value property for the enum option
+      "value": "{{item|trim}}"
+    },
+    // Another constant value at the end of the list
+    ["transparent"]
+  ]
+}
+```
+
+The colors examples used an array of strings directly.  Using the verbose form, you can 
+also make it work with an array of objects.  Here's an example:
 
 ```js+jinja
 {
@@ -742,14 +768,16 @@ Here's an example where `possible_colors` is an array of objects instead of stri
       "watch": {
         "colors": "possible_colors"
       },
-      "enumSource": "colors",
-      "enumValue": "{{item.text}}"
+      "enumSource": [{
+        "source": "colors",
+        "value": "{{item.text}}"
+      ]}
     }
   }
 }
 ```
 
-In the `enumValue` template, `item` refers to the array element.  The variable `i` is also available, which is the zero-based index.
+All of the optional templates in the verbose form have the properties `item` and `i` passed into them. `item` refers to the array element.  `i` is the zero-based index.
 
 ### Dynamic Headers
 

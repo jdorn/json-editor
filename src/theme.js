@@ -54,12 +54,13 @@ JSONEditor.AbstractTheme = Class.extend({
     if(options) this.setSelectOptions(select, options);
     return select;
   },
-  setSelectOptions: function(select, options) {
+  setSelectOptions: function(select, options, titles) {
+    titles = titles || [];
     select.innerHTML = '';
     for(var i=0; i<options.length; i++) {
       var option = document.createElement('option');
       option.setAttribute('value',options[i]);
-      option.appendChild(document.createTextNode(options[i]));
+      option.textContent = titles[i] || options[i];
       select.appendChild(option);
     }
   },
