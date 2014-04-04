@@ -1,4 +1,4 @@
-/*! JSON Editor v0.5.9 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.10 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1789,8 +1789,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
             };
           }
           // Make a copy of the schema
-          else {
+          else if(!(this.schema.enumSource[i] instanceof Array)) {
             this.enumSource[i] = $extend({},this.schema.enumSource[i]);
+          }
+          else {
+            this.enumSource[i] = this.schema.enumSource[i];
           }
         }
       }
@@ -1956,6 +1959,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     // Compile and store the template
     if(this.schema.template) {
       this.template = this.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
+      this.refreshValue();
+      this.jsoneditor.notifyWatchers(this.path);
     }
     else {
       this.refreshValue();
