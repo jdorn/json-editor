@@ -1,8 +1,8 @@
-/*! JSON Editor v0.5.8 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.9 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-04-02
+ * Date: 2014-04-04
  */
 
 /**
@@ -1760,10 +1760,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     else if(this.schema.enumSource) {
       this.input_type = 'select';
       this.input = this.theme.getSelectInput([]);
+      this.enumSource = [];
+      
       // Shortcut declaration for using a single array
       if(!(this.schema.enumSource instanceof Array)) {
         if(this.schema.enumValue) {
-          this.schema.enumSource = [
+          this.enumSource = [
             {
               source: this.schema.enumSource,
               value: this.schema.enumValue
@@ -1771,32 +1773,39 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           ];
         }
         else {
-          this.schema.enumSource = [
+          this.enumSource = [
             {
               source: this.schema.enumSource
             }
           ];
         }
       }
+      else {
+        for(var i=0; i<this.schema.enumSource.length; i++) {
+          // Shorthand for watched variable
+          if(typeof this.schema.enumSource[i] === "string") {
+            this.enumSource[i] = {
+              source: this.schema.enumSource[i]
+            };
+          }
+          // Make a copy of the schema
+          else {
+            this.enumSource[i] = $extend({},this.schema.enumSource[i]);
+          }
+        }
+      }
       
       // Now, enumSource is an array of sources
       // Walk through this array and fix up the values
-      for(var i=0; i<this.schema.enumSource.length; i++) {
-        // Shorthand for watched variable
-        if(typeof this.schema.enumSource[i] === "string") {
-          this.schema.enumSource[i] = {
-            source: this.schema.enumSource[i]
-          };
+      for(var i=0; i<this.enumSource.length; i++) {
+        if(this.enumSource[i]) {
+          this.enumSource[i].value = this.jsoneditor.compileTemplate(this.enumSource[i].value, this.template_engine);
         }
-        
-        if(this.schema.enumSource[i].value) {
-          this.schema.enumSource[i].value = this.jsoneditor.compileTemplate(this.schema.enumSource[i].value, this.template_engine);
+        if(this.enumSource[i].title) {
+          this.enumSource[i].title = this.jsoneditor.compileTemplate(this.enumSource[i].title, this.template_engine);
         }
-        if(this.schema.enumSource[i].title) {
-          this.schema.enumSource[i].title = this.jsoneditor.compileTemplate(this.schema.enumSource[i].title, this.template_engine);
-        }
-        if(this.schema.enumSource[i].fillter) {
-          this.schema.enumSource[i].filter = this.jsoneditor.compileTemplate(this.schema.enumSource[i].filter, this.template_engine);
+        if(this.enumSource[i].fillter) {
+          this.enumSource[i].filter = this.jsoneditor.compileTemplate(this.enumSource[i].filter, this.template_engine);
         }
       }
     }
@@ -2102,27 +2111,27 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.setValue(this.template(vars),false,true);
     }
     // If this editor uses a dynamic select box
-    if(this.schema.enumSource) {
+    if(this.enumSource) {
       var vars = this.getWatchedFieldValues();
       var select_options = [];
       var select_titles = [];
       
-      for(var i=0; i<this.schema.enumSource.length; i++) {
+      for(var i=0; i<this.enumSource.length; i++) {
         // Constant values
-        if(this.schema.enumSource[i] instanceof Array) {
-          select_options = select_options.concat(this.schema.enumSource[i]);
-          select_titles = select_titles.concat(this.schema.enumSource[i]);
+        if(this.enumSource[i] instanceof Array) {
+          select_options = select_options.concat(this.enumSource[i]);
+          select_titles = select_titles.concat(this.enumSource[i]);
         }
         // A watched field
-        else if(vars[this.schema.enumSource[i].source]) {
-          var items = vars[this.schema.enumSource[i].source];
+        else if(vars[this.enumSource[i].source]) {
+          var items = vars[this.enumSource[i].source];
           
           // Only use a predefined part of the array
-          if(this.schema.enumSource[i].slice) {
-            items = Array.prototype.slice.apply(items,this.schema.enumSource[i].slice);
+          if(this.enumSource[i].slice) {
+            items = Array.prototype.slice.apply(items,this.enumSource[i].slice);
           }
           // Filter the items
-          if(this.schema.enumSource[i].filter) {
+          if(this.enumSource[i].filter) {
             var new_items = [];
             for(var j=0; j<items.length; j++) {
               if(filter({i:j,item:items[j]})) new_items.push(items[j]);
@@ -2136,8 +2145,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
             var item = items[j];
             
             // Rendered value
-            if(this.schema.enumSource[i].value) {
-              item_values[j] = this.schema.enumSource[i].value({
+            if(this.enumSource[i].value) {
+              item_values[j] = this.enumSource[i].value({
                 i: j,
                 item: item
               });
@@ -2148,8 +2157,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
             }
             
             // Rendered title
-            if(this.schema.enumSource[i].title) {
-              item_titles[j] = this.schema.enumSource[i].title({
+            if(this.enumSource[i].title) {
+              item_titles[j] = this.enumSource[i].title({
                 i: j,
                 item: item
               });
@@ -4628,7 +4637,7 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
     return el;
   },
   addInputError: function(input,text) {
-    if(!input.controlgroup) return;
+    if(!input.controlgroup || !input.controls) return;
     input.controlgroup.className += ' error';
     if(!input.errmsg) {
       input.errmsg = document.createElement('p');
