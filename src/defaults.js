@@ -17,8 +17,7 @@ JSONEditor.plugins = {
 // Set the default resolvers
 // Use "multiple" as a fall back for everything
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  // Unknown or compound type
-  return "multiple";
+  if(typeof schema.type !== "string") return "multiple";
 });
 // If the type is set and it's a basic type, use the primitive editor
 JSONEditor.defaults.resolvers.unshift(function(schema) {

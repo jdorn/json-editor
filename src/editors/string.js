@@ -64,6 +64,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
+    this.format = this.schema.format;
+    if(!this.format && this.schema.media && this.schema.media.type) {
+      this.format = this.schema.media.type.replace(/(^(application|text)\/(x-)?(script\.)?)|(-source$)/g,'');
+    }
+
     // Select box
     if(this.schema.enum) {
       this.input_type = 'select';
@@ -127,14 +132,14 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       }
     }
     // Specific format
-    else if(this.schema.format) {
+    else if(this.format) {
       // Text Area
-      if(this.schema.format === 'textarea') {
+      if(this.format === 'textarea') {
         this.input_type = 'textarea';
         this.input = this.theme.getTextareaInput();
       }
       // Range Input
-      else if(this.schema.format === 'range') {
+      else if(this.format === 'range') {
         this.input_type = 'range';
         var min = this.schema.minimum || 0;
         var max = this.schema.maximum || Math.max(100,min+1);
@@ -198,16 +203,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           'vbscript',
           'xml',
           'yaml'
-        ].indexOf(this.schema.format) >= 0
+        ].indexOf(this.format) >= 0
       ) {
-        this.input_type = this.schema.format;
+        this.input_type = this.format;
         this.source_code = true;
         
         this.input = this.theme.getTextareaInput();
       }
       // HTML5 Input type
       else {
-        this.input_type = this.schema.format;
+        this.input_type = this.format;
         this.input = this.theme.getFormInputField(this.input_type);
       }
     }
@@ -255,7 +260,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         else self.jsoneditor.onChange();
       });
 
-    if(this.schema.format) this.input.setAttribute('data-schemaformat',this.schema.format);
+    if(this.format) this.input.setAttribute('data-schemaformat',this.format);
 
     this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
