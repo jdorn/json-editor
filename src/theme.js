@@ -240,5 +240,27 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
+  },
+  getBlockLink: function() {
+    var link = document.createElement('a');
+    link.style.display = 'block';
+    return link;
+  },
+  getBlockLinkHolder: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  getLinksHolder: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  createMediaLink: function(holder,link,media) {
+    holder.appendChild(link);
+    media.style.width='100%';
+    holder.appendChild(media);
+  },
+  createImageLink: function(holder,link,image) {
+    holder.appendChild(link);
+    link.appendChild(image);
   }
 });

@@ -332,7 +332,8 @@ It's possible to create your own custom themes and/or icon libs as well.  Look a
 JSON Schema Support
 -----------------
 
-JSON Editor fully supports version 3 and 4 of the JSON Schema [core][core] and [validation][validation] specifications.  The [hyper-schema][hyper] specification is not supported.
+JSON Editor fully supports version 3 and 4 of the JSON Schema [core][core] and [validation][validation] specifications.  
+Some of The [hyper-schema][hyper] specification is supported as well.
 
 [core]: http://json-schema.org/latest/json-schema-core.html
 [validation]: http://json-schema.org/latest/json-schema-validation.html
@@ -368,6 +369,47 @@ So, both `#/customkey/name` and `#/definitions/name/first` will throw an excepti
 
 If loading an external url via Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
 If your urls don't meet this requirement, you can pass in the references to JSON Editor during initialization (see Usage section above).
+
+### hyper-schema links
+
+The `links` keyword from the hyper-schema specification can be used to add links to related documents.
+
+JSON Editor will use the `mediaType` property of the links to determine how best to display them.  
+Image, audio, and video links will display the media inline as well as providing a text link.  
+
+Here are a couple examples:
+
+Simple text link
+```js+jinja
+{
+  "title": "Blog Post Id",
+  "type": "integer",
+  "links": [
+    {
+      "rel": "comments",
+      "href": "/posts/{{self}}/comments/"
+    }
+  ]
+}
+```
+
+Show a video preview (using HTML5 video)
+```js+jinja
+{
+  "title": "Video filename",
+  "type": "string",
+  "links": [
+    {
+      "href": "/videos/{{self}}.mp4",
+      "mediaType": "video/mp4"
+    }
+  ]
+}
+```
+
+The `href` property is a template that gets re-evaluated everytime the value changes.
+The variable `self` is always available.  Look at the __Dependencies__ section below for how to include other fields or use a custom template engine.
+
 
 ### format
 
@@ -492,6 +534,17 @@ __Ace Editor__ is a syntax highlighting source code editor. You can use it by se
 {
   "type": "string",
   "format": "yaml"
+}
+```
+
+You can use the hyper-schema keyword `media` instead of `format` too if you prefer for formats with a mime type:
+
+```json
+{
+  "type": "string",
+  "media": {
+    "type": "text/html"
+  }
 }
 ```
 

@@ -1431,6 +1431,16 @@ JSONEditor.AbstractEditor = Class.extend({
 
     this.build();
     
+    // Add links
+    this.link_watchers = [];
+    this.link_holder = this.theme.getLinksHolder();
+    this.container.appendChild(this.link_holder);
+    if(this.schema.links) {
+      for(var i=0; i<this.schema.links.length; i++) {
+        this.addLink(this.getLink(this.schema.links[i]));
+      }
+    }
+    
     this.setValue(this.getDefault(), true);
     this.updateHeaderText();
     this.watch_listener();
@@ -1456,6 +1466,72 @@ JSONEditor.AbstractEditor = Class.extend({
     }
     
     return this.theme.setButtonText(button, text, icon, title);
+  },
+  addLink: function(link) {
+    if(this.link_holder) this.link_holder.appendChild(link);
+  },
+  getLink: function(data) {
+    var holder;
+        
+    // Get mime type of the link
+    var mime = data.mediaType || 'application/javascript';
+    var type = mime.split('/')[0];
+    
+    // Template to generate the link href
+    var href = this.jsoneditor.compileTemplate(data.href,this.template_engine);
+    
+    // Image links
+    if(type === 'image') {
+      holder = this.theme.getBlockLinkHolder();
+      var link = document.createElement('a');
+      link.setAttribute('target','_blank');
+      var image = document.createElement('img');
+      
+      this.theme.createImageLink(holder,link,image);
+    
+      // When a watched field changes, update the url  
+      this.link_watchers.push(function(vars) {
+        var url = href(vars);
+        link.setAttribute('href',url);
+        link.setAttribute('title',data.rel || url);
+        image.setAttribute('src',url);
+      });
+    }
+    // Audio/Video links
+    else if(['audio','video'].indexOf(type) >=0) {
+      holder = this.theme.getBlockLinkHolder();
+      
+      var link = this.theme.getBlockLink();
+      link.setAttribute('target','_blank');
+      
+      var media = document.createElement(type);
+      media.setAttribute('controls','controls');
+      
+      this.theme.createMediaLink(holder,link,media);
+      
+      // When a watched field changes, update the url  
+      this.link_watchers.push(function(vars) {
+        var url = href(vars);
+        link.setAttribute('href',url);
+        link.textContent = data.rel || url;
+        media.setAttribute('src',url);
+      });
+    }
+    // Text links
+    else {
+      holder = this.theme.getBlockLink();
+      holder.setAttribute('target','_blank');
+      holder.textContent = data.rel;
+      
+      // When a watched field changes, update the url  
+      this.link_watchers.push(function(vars) {
+        var url = href(vars);
+        holder.setAttribute('href',url);
+        holder.textContent = data.rel || url;
+      });
+    }
+    
+    return holder;
   },
   refreshWatchedFieldValues: function() {
     if(!this.watched_values) return;
@@ -1507,6 +1583,12 @@ JSONEditor.AbstractEditor = Class.extend({
         this.header_text = header_text;
         this.updateHeaderText();
         this.fireChangeHeaderEvent();
+      }
+    }
+    if(this.link_watchers.length) {
+      var vars = this.getWatchedFieldValues();
+      for(var i=0; i<this.link_watchers.length; i++) {
+        this.link_watchers[i](vars);
       }
     }
   },
@@ -1731,6 +1813,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       else self.jsoneditor.onChange();
     }
     
+    this.watch_listener();
     this.jsoneditor.notifyWatchers(this.path);
   },
   removeProperty: function() {
@@ -1940,7 +2023,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         }
 
         self.refreshValue();
-        
+        self.watch_listener();
         self.jsoneditor.notifyWatchers(self.path);
         if(self.parent) self.parent.onChildEditorChange(self);
         else self.jsoneditor.onChange();
@@ -4562,6 +4645,28 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
+  },
+  getBlockLink: function() {
+    var link = document.createElement('a');
+    link.style.display = 'block';
+    return link;
+  },
+  getBlockLinkHolder: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  getLinksHolder: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  createMediaLink: function(holder,link,media) {
+    holder.appendChild(link);
+    media.style.width='100%';
+    holder.appendChild(media);
+  },
+  createImageLink: function(holder,link,image) {
+    holder.appendChild(link);
+    link.appendChild(image);
   }
 });
 

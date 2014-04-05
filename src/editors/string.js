@@ -45,6 +45,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       else self.jsoneditor.onChange();
     }
     
+    this.watch_listener();
     this.jsoneditor.notifyWatchers(this.path);
   },
   removeProperty: function() {
@@ -254,7 +255,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         }
 
         self.refreshValue();
-        
+        self.watch_listener();
         self.jsoneditor.notifyWatchers(self.path);
         if(self.parent) self.parent.onChildEditorChange(self);
         else self.jsoneditor.onChange();
