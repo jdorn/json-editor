@@ -1,8 +1,8 @@
-/*! JSON Editor v0.5.11 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.5.12 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-04-04
+ * Date: 2014-04-06
  */
 
 /**
@@ -1791,6 +1791,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.input.value === sanitized) {
       return;
     }
+    
 
     this.input.value = sanitized;
     
@@ -1805,10 +1806,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.ace_editor.setValue(sanitized);
     }
     
-
+    var changed = from_template || this.getValue() !== value;
+    
     this.refreshValue();
 
-    if(this.getValue() !== value || from_template) {
+    if(changed) {
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
     }
