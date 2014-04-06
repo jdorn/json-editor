@@ -1,55 +1,44 @@
 JSONEditor.defaults.themes.html = JSONEditor.AbstractTheme.extend({
   getFormInputLabel: function(text) {
     var el = this._super(text);
-    this.applyStyles(el,{
-      display: "block",
-      marginBottom: '3px'
-    });
+    el.style.display = 'block';
+    el.style.marginBottom = '3px';
+    el.style.fontWeight = 'bold';
     return el;
   },
   getFormInputDescription: function(text) {
     var el = this._super(text);
-    this.applyStyles(el,{
-      fontSize: '.8em',
-      margin: 0,
-      display: 'inline-block',
-      fontStyle: 'italic'
-    });
+    el.style.fontSize = '.8em';
+    el.style.margin = 0;
+    el.style.display = 'inline-block';
+    el.style.fontStyle = 'italic';
     return el;
   },
   getIndentedPanel: function() {
     var el = this._super();
-    this.applyStyles(el,{
-      border: '1px solid #ddd',
-      padding: '5px',
-      margin: '5px',
-      borderRadius: '3px'
-    });
+    el.style.border = '1px solid #ddd';
+    el.style.padding = '5px';
+    el.style.margin = '5px';
+    el.style.borderRadius = '3px';
     return el;
   },
   getChildEditorHolder: function() {
     var el = this._super();
-    this.applyStyles(el,{
-      marginBottom: '8px'
-    });
+    el.style.marginBottom = '8px';
     return el;
   },
   getHeaderButtonHolder: function() {
     var el = this.getButtonHolder();
-    this.applyStyles(el,{
-      display: 'inline-block',
-      marginLeft: '10px',
-      fontSize: '.8em',
-      verticalAlign: 'middle'
-    });
+    el.style.display = 'inline-block';
+    el.style.marginLeft = '10px';
+    el.style.fontSize = '.8em';
+    el.style.verticalAlign = 'middle';
     return el;
   },
   getTable: function() {
     var el = this._super();
-    this.applyStyles(el,{
-      borderBottom: '1px solid #ccc',
-      marginBottom: '5px'
-    });
+    el.style.borderBottom = '1px solid #ccc';
+    el.style.marginBottom = '5px';
     return el;
   },
   addInputError: function(input, text) {

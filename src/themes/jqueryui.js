@@ -30,12 +30,15 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
     return el;
   },
   getFormControl: function(label, input, description) {
-    var el = document.createElement('div');
-    el.className = 'form-control';
-    el.style.padding = '8px 0';
-    if(label) el.appendChild(label);
-    el.appendChild(input);
-    if(description) el.appendChild(description);
+    var el = this._super(label,input,description);
+    if(input.type === 'checkbox') {
+      el.style.lineHeight = '25px';
+      
+      el.style.padding = '3px 0';
+    }
+    else {
+      el.style.padding = '4px 0 8px 0';
+    }
     return el;
   },
   getDescription: function(text) {
@@ -53,7 +56,8 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
   },
   getFormInputLabel: function(text) {
     var el = document.createElement('label');
-    el.style.marginRight = '5px';
+    el.style.fontWeight = 'bold';
+    el.style.display = 'block';
     el.textContent = text;
     return el;
   },
@@ -119,6 +123,7 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
     var el = document.createElement('div');
     el.className = 'ui-widget-content ui-corner-all';
     el.style.padding = '1em 1.4em';
+    el.style.marginBottom = '20px';
     return el;
   },
   afterInputReady: function(input) {

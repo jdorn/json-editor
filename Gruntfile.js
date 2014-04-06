@@ -53,7 +53,7 @@ module.exports = function(grunt) {
           'src/outro.js'
         ],
         dest: 'dist/jsoneditor.js'
-      },
+      }
     },
     uglify: {
       dist: {

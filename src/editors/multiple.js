@@ -12,6 +12,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this._super();
   },
+  getNumColumns: function() {
+    return Math.max(this.editors[this.type].getNumColumns(),4);
+  },
   enable: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
@@ -41,6 +44,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   build: function() {
     var self = this;
     var container = this.container;
+
+    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.container.appendChild(this.header);
 
     this.types = [];
     
@@ -77,7 +83,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     
     this.display_text = this.getDisplayText(this.types);
 
-    this.switcher = this.theme.getSelectInput(this.display_text);
+    this.switcher = this.theme.getSwitcher(this.display_text);
     container.appendChild(this.switcher);
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
@@ -102,15 +108,17 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       else self.jsoneditor.onChange();
     })
     this.switcher.style.marginBottom = 0;
-    this.switcher.style.float = 'right';
+    this.switcher.style.width = 'auto';
+    this.switcher.style.display = 'inline-block';
+    this.switcher.style.marginLeft = '5px';
 
-    this.editor_holder = this.theme.getIndentedPanel();
+    this.editor_holder = document.createElement('div');
     container.appendChild(this.editor_holder);
     this.type = 0;
 
     this.editors = [];
     this.validators = [];
-    var options = this.switcher.getElementsByTagName('option');
+    var options = this.theme.getSwitcherOptions(this.switcher);
     var option = 0;
     $each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder();
@@ -138,7 +146,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
       var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
-      self.editors[i] = new editor({
+      self.editors[i] = self.jsoneditor.createEditor(editor,{
         jsoneditor: self.jsoneditor,
         schema: schema,
         container: holder,
@@ -146,6 +154,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         parent: self,
         required: true
       });
+      if(self.editors[i].header) self.editors[i].header.style.display = 'none';
       
       self.editors[i].option = options[option];
       
@@ -164,7 +173,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.register();
   },
   onChildEditorChange: function(editor) {
-    if(this.editors[this.type]) this.refreshValue();
+    if(this.editors[this.type]) {
+      this.refreshHeaderText();
+      this.refreshValue();
+    }
     
     this._super();
   },
@@ -176,8 +188,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     var display_text = this.getDisplayText(schemas);
     $each(this.editors, function(i,editor) {
       if(editor.option) {
-        editor.option.innerHTML = '';
-        editor.option.appendChild(document.createTextNode(display_text[i]));
+        editor.option.textContent = display_text[i];
       }
     });
   },

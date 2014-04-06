@@ -19,6 +19,9 @@ JSONEditor.AbstractEditor = Class.extend({
     if(!this.jsoneditor) return;
     this.jsoneditor.unregisterEditor(this);
   },
+  getNumColumns: function() {
+    return 12;
+  },
   init: function(options) {
     var self = this;
     this.container = options.container;
@@ -45,7 +48,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.register();
     
     // If not required, add an add/remove property link
-    if(!this.isRequired() && !this.options.compact) {
+    if(!this.isRequired() && !this.options.compact && false) {
       this.title_links = this.theme.getFloatRightLinkHolder();
       this.container.appendChild(this.title_links);
 
@@ -119,11 +122,13 @@ JSONEditor.AbstractEditor = Class.extend({
     this.build();
     
     // Add links
-    this.link_holder = this.theme.getLinksHolder();
-    this.container.appendChild(this.link_holder);
-    if(this.schema.links) {
-      for(var i=0; i<this.schema.links.length; i++) {
-        this.addLink(this.getLink(this.schema.links[i]));
+    if(!this.no_link_holder) {
+      this.link_holder = this.theme.getLinksHolder();
+      this.container.appendChild(this.link_holder);
+      if(this.schema.links) {
+        for(var i=0; i<this.schema.links.length; i++) {
+          this.addLink(this.getLink(this.schema.links[i]));
+        }
       }
     }
     
@@ -280,18 +285,6 @@ JSONEditor.AbstractEditor = Class.extend({
         this.link_watchers[i](vars);
       }
     }
-  },
-  addProperty: function() {
-    this.property_removed = false;
-    this.register();
-    this.addremove.innerHTML = '';
-    this.addremove.appendChild(document.createTextNode('remove '+this.getTitle()));
-  },
-  removeProperty: function() {
-    this.property_removed = true;
-    this.unregister();
-    this.addremove.innerHTML = '';
-    this.addremove.appendChild(document.createTextNode('add '+this.getTitle()));
   },
   build: function() {
 

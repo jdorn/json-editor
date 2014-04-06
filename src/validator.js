@@ -79,13 +79,13 @@ JSONEditor.Validator = Class.extend({
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
         self.refs[ref].push(function() {
-          schema = $extend({},schema,self.refs[ref],schema);
+          schema = $extend({},self.refs[ref],schema);
           callback(schema);
         });
       }
       // If this reference has already been loaded
       else if(self.refs[ref]) {
-        schema = $extend({},schema,self.refs[ref],schema);
+        schema = $extend({},self.refs[ref],schema);
         callback(schema);
       }
       // Otherwise, it needs to be loaded via ajax
@@ -104,7 +104,7 @@ JSONEditor.Validator = Class.extend({
             self._getRefs(response, function(ref_schema) {
               var list = self.refs[ref];
               self.refs[ref] = ref_schema;
-              schema = $extend({},schema,self.refs[ref],schema);
+              schema = $extend({},self.refs[ref],schema);
               callback(schema);
 
               // If anything is waiting on this to load

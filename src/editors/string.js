@@ -62,6 +62,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.description) this.description.style.display = '';
     this.theme.enableLabel(this.label);
   },
+  getNumColumns: function() {
+    var min = Math.ceil(this.getTitle().length/5);
+    var num;
+    
+    if(this.input_type === 'textarea') num = 6;
+    else if(['text','email'].indexOf(this.input_type) >= 0) num = 4;
+    else num = 2;
+    
+    return Math.min(12,Math.max(min,num));
+  },
   build: function() {
     var self = this;
     if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
