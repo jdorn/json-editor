@@ -40,6 +40,7 @@ JSONEditor.AbstractEditor = Class.extend({
 
     this.key = this.path.split('.').pop();
     this.parent = options.parent;
+    this.link_watchers = [];
     
     this.register();
     
@@ -118,7 +119,6 @@ JSONEditor.AbstractEditor = Class.extend({
     this.build();
     
     // Add links
-    this.link_watchers = [];
     this.link_holder = this.theme.getLinksHolder();
     this.container.appendChild(this.link_holder);
     if(this.schema.links) {
