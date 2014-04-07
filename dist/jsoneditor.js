@@ -1446,6 +1446,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.watch_listener();
   },
   getButton: function(text, icon, title) {
+    var btnClass = 'json-editor-btn-'+icon
     if(!this.iconlib) icon = null;
     else icon = this.iconlib.getIcon(icon);
     
@@ -1454,7 +1455,9 @@ JSONEditor.AbstractEditor = Class.extend({
       title = null;
     }
     
-    return this.theme.getButton(text, icon, title);
+    var btn = this.theme.getButton(text, icon, title);
+    btn.className += ' ' + btnClass + ' ';
+    return btn;
   },
   setButtonText: function(button, text, icon, title) {
     if(!this.iconlib) icon = null;
