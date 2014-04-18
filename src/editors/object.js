@@ -150,80 +150,85 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.title.appendChild(this.title_controls);
       this.title.appendChild(this.editjson_controls);
       this.title.appendChild(this.addproperty_controls);
+      if (this.canCollapse()) {
+        // Show/Hide button
+        this.collapsed = false;
+        this.toggle_button = this.getButton('','collapse','Collapse');
+        this.title_controls.appendChild(this.toggle_button)
+        this.toggle_button.addEventListener('click',function() {
+          if(self.collapsed) {
+            self.editor_holder.style.display = '';
+            self.collapsed = false;
+            self.setButtonText(self.toggle_button,'','collapse','Collapse');
+          }
+          else {
+            self.editor_holder.style.display = 'none';
+            self.collapsed = true;
+            self.setButtonText(self.toggle_button,'','expand','Expand');
+          }
+        });
 
-      // Show/Hide button
-      this.collapsed = false;
-      this.toggle_button = this.getButton('','collapse','Collapse');
-      this.title_controls.appendChild(this.toggle_button)
-      this.toggle_button.addEventListener('click',function() {
-        if(self.collapsed) {
-          self.editor_holder.style.display = '';
-          self.collapsed = false;
-          self.setButtonText(self.toggle_button,'','collapse','Collapse');
+        // If it should start collapsed
+        if(this.options.collapsed) {
+          $trigger(this.toggle_button,'click');
         }
-        else {
-          self.editor_holder.style.display = 'none';
-          self.collapsed = true;
-          self.setButtonText(self.toggle_button,'','expand','Expand');
-        }
-      });
-
-      // If it should start collapsed
-      if(this.options.collapsed) {
-        $trigger(this.toggle_button,'click');
       }
       
-      // Edit JSON Button
-      this.editing_json = false;
-      this.editjson_button = this.getButton('JSON','edit','Edit JSON');
-      this.editjson_controls.appendChild(this.editjson_button)
-      this.editjson_button.addEventListener('click',function() {
-        // Save Changes
-        if(self.editing_json) {
-          // Get value from form
-          try {
-            var value = JSON.parse(self.editjson_holder.value);
+      if (this.canEditJSON()) {
+        // Edit JSON Button
+        this.editing_json = false;
+        this.editjson_button = this.getButton('JSON', 'edit', 'Edit JSON');
+        this.editjson_controls.appendChild(this.editjson_button)
+        this.editjson_button.addEventListener('click', function() {
+          // Save Changes
+          if (self.editing_json) {
+            // Get value from form
+            try {
+              var value = JSON.parse(self.editjson_holder.value);
+            }
+            catch (e) {
+              // Error parsing the JSON
+              alert('Invalid JSON - ' + e);
+              return false;
+            }
+
+            // Hide the edit form
+            self.cancel_editjson_button.style.display = 'none';
+            self.editjson_holder.style.display = 'none';
+            self.setButtonText(self.editjson_button, 'JSON', 'edito', 'Edit JSON');
+            self.editing_json = false;
+
+            // Set the value
+            self.setValue(value);
+
+            if (self.parent)
+              self.parent.onChildEditorChange(self);
+            else
+              self.jsoneditor.onChange();
           }
-          catch(e) {
-            // Error parsing the JSON
-            alert('Invalid JSON - '+e);
-            return false;
+          // Start Editing
+          else {
+            self.editing_json = true;
+            self.cancel_editjson_button.style.display = '';
+            self.editjson_holder.value = JSON.stringify(self.value, null, 2);
+            self.editjson_holder.style.display = '';
+            self.setButtonText(self.editjson_button, 'JSON', 'save', 'Save JSON');
           }
-          
-          // Hide the edit form
-          self.cancel_editjson_button.style.display = 'none';
-          self.editjson_holder.style.display = 'none';
-          self.setButtonText(self.editjson_button,'JSON','edito','Edit JSON');
-          self.editing_json = false;
-          
-          // Set the value
-          self.setValue(value);
-          
-          if(self.parent) self.parent.onChildEditorChange(self);
-          else self.jsoneditor.onChange();
-        }
-        // Start Editing
-        else {
-          self.editing_json = true;
-          self.cancel_editjson_button.style.display = '';
-          self.editjson_holder.value = JSON.stringify(self.value,null,2);
-          self.editjson_holder.style.display = '';
-          self.setButtonText(self.editjson_button,'JSON','save','Save JSON');
-        }
-        
-        return false;
-      });
-      this.cancel_editjson_button = this.getButton('','cancel','Cancel');
-      this.editjson_controls.appendChild(this.cancel_editjson_button);
-      this.cancel_editjson_button.style.display = 'none';
-      this.cancel_editjson_button.addEventListener('click',function() {
+
+          return false;
+        });
+        this.cancel_editjson_button = this.getButton('', 'cancel', 'Cancel');
+        this.editjson_controls.appendChild(this.cancel_editjson_button);
+        this.cancel_editjson_button.style.display = 'none';
+        this.cancel_editjson_button.addEventListener('click', function() {
           self.cancel_editjson_button.style.display = 'none'
           self.editjson_holder.style.display = 'none';
-          self.setButtonText(self.editjson_button,'JSON','edit','Edit JSON');
+          self.setButtonText(self.editjson_button, 'JSON', 'edit', 'Edit JSON');
           self.editing_json = false;
-          
+
           return false;
-      });
+        });
+      }
       
       if(this.canHaveAdditionalProperties()) {
         this.adding_property = false;
@@ -281,6 +286,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   },
   canHaveAdditionalProperties: function() {
     return this.schema.additionalProperties !== false && !this.jsoneditor.options.no_additional_properties;
+  },
+  canEditJSON: function() {
+    return this.schema.canEditJSON !== false && !this.jsoneditor.options.disable_edit_json;
+  },
+  canCollapse: function() {
+    return this.schema.canCollapse !== false && !this.jsoneditor.options.disable_collapse;
   },
   addObjectProperty: function(name) {
     var self = this;
