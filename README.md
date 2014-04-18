@@ -66,6 +66,21 @@ var editor = new JSONEditor(element, options);
     <td><code>false</code></td>
   </tr>
   <tr>
+    <td>disable_collapse</td>
+    <td>If <code>true</code>, JSON Editor will not present a "Collapse" button.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_edit_json</td>
+    <td>If <code>true</code>, JSON Editor will not present an "Edit JSON" button.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_remove_links</td>
+    <td>If <code>true</code>, JSON Editor will not present a "Remove" link alongside each property.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
     <td>iconlib</td>
     <td>The icon library to use for the editor.  See the <strong>CSS Integration</strong> section below for more info.</td>
     <td><code>null</code></td>
@@ -141,6 +156,9 @@ var editor = new JSONEditor(element, {
       type: "string"
     }
   },
+  disable_collapse: false,
+  disable_edit_json: false,
+  disable_remove_links: false,
   required_by_default: true,
   no_additional_properties: true,
   theme: 'bootstrap3',

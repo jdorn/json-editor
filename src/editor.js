@@ -45,10 +45,9 @@ JSONEditor.AbstractEditor = Class.extend({
     this.register();
     
     // If not required, add an add/remove property link
-    if(!this.isRequired() && !this.options.compact) {
+    if(!this.isRemoveDisabled() && !this.isRequired() && !this.options.compact) {
       this.title_links = this.theme.getFloatRightLinkHolder();
       this.container.appendChild(this.title_links);
-
       this.addremove = this.theme.getLink('remove '+this.getTitle());
       this.title_links.appendChild(this.addremove);
 
@@ -344,6 +343,9 @@ JSONEditor.AbstractEditor = Class.extend({
     else {
       return false;
     }
+  },
+  isRemoveDisabled: function() {
+    return this.jsoneditor.options.disable_remove_links === true;
   },
   getDefault: function() {
     return this.schema.default || null;
