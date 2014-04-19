@@ -130,6 +130,26 @@ JSONEditor.AbstractEditor = Class.extend({
     this.setValue(this.getDefault(), true);
     this.updateHeaderText();
     this.watch_listener();
+
+    // set input and label name
+    if (this.input) {
+      var formName = this.getFormName();
+      if (formName) {
+        this.input.setAttribute('name', formName);
+        if (this.label) {
+          this.label.setAttribute('for', formName);
+        }
+      }
+    }
+  },
+  getFormName: function () {
+    var formName;
+    if (this.path) {
+      formName = this.path.replace(/^root\./, '');
+      var propRegex = /\.([^\.]+)/g;
+      formName = formName.replace(propRegex, '[$1]')
+    }
+    return formName;
   },
   getButton: function(text, icon, title) {
     var btnClass = 'json-editor-btn-'+icon
