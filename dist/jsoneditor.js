@@ -3897,7 +3897,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 // Multiple Editor (for when `type` is an array)
 JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
-    return null;
+    return this.schema.default || null;
   },
   register: function() {
     if(this.editors) {
@@ -3939,7 +3939,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     var container = this.container;
 
     this.types = [];
-    
+
     if(this.schema.oneOf) {
       this.oneOf = true;
       this.types = this.schema.oneOf;
@@ -3948,7 +3948,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     else {
       if(!this.schema.type || this.schema.type === "any") {
         this.types = ['string','number','integer','boolean','object','array','null'];
-        
+
         // If any of these primitive types are disallowed
         if(this.schema.disallow) {
           var disallow = this.schema.disallow;
@@ -3970,7 +3970,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
       delete this.schema.type;
     }
-    
+
     this.display_text = this.getDisplayText(this.types);
 
     this.switcher = this.theme.getSelectInput(this.display_text);
@@ -3978,7 +3978,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       self.type = self.display_text.indexOf(this.value);
 
       self.register();
@@ -3993,7 +3993,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         else editor.container.style.display = 'none';
       });
       self.refreshValue();
-      
+
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
     })
@@ -4013,7 +4013,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       self.editor_holder.appendChild(holder);
 
       var schema;
-      
+
       if(typeof type === "string") {
         schema = $extend({},self.schema);
         schema.type = type;
@@ -4042,15 +4042,15 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         parent: self,
         required: true
       });
-      
+
       self.editors[i].option = options[option];
-      
+
       holder.addEventListener('change_header_text',function() {
         self.refreshHeaderText();
       });
 
       if(i !== self.type) holder.style.display = 'none';
-      
+
       option++;
     });
 
@@ -4061,7 +4061,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   onChildEditorChange: function(editor) {
     if(this.editors[this.type]) this.refreshValue();
-    
+
     this._super();
   },
   refreshHeaderText: function() {
@@ -4090,7 +4090,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         return false;
       }
     });
-    
+
     $trigger(self.switcher,'change');
 
     this.editors[this.type].setValue(val,initial);
@@ -4108,7 +4108,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   showValidationErrors: function(errors) {
     var self = this;
-    
+
     // oneOf error paths need to remove the oneOf[i] part before passing to child editors
     if(this.oneOf) {
       $each(this.editors,function(i,editor) {
@@ -4121,7 +4121,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
             new_errors.push(new_error);
           }
         });
-        
+
         editor.showValidationErrors(new_errors);
       });
     }
