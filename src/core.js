@@ -1,5 +1,5 @@
 var JSONEditor = function(element,options) {
-  options = options || {};
+  options = $extend({},JSONEditor.defaults.options,options||{});
   this.element = element;
   this.options = options;
   this.init();
@@ -39,7 +39,7 @@ JSONEditor.prototype = {
       
       // Create the root editor
       var editor_class = self.getEditorClass(self.schema);
-      self.root = new editor_class({
+      self.root = self.createEditor(editor_class, {
         jsoneditor: self,
         schema: self.schema,
         container: self.root_container,
@@ -155,6 +155,10 @@ JSONEditor.prototype = {
     if(!JSONEditor.defaults.editors[classname]) throw "Unknown editor "+classname;
 
     return JSONEditor.defaults.editors[classname];
+  },
+  createEditor: function(editor_class, options) {
+    options = $extend({},editor_class.options||{},options);
+    return new editor_class(options);
   },
   onChange: function() {
     if(!this.ready) return;

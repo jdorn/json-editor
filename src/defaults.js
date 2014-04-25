@@ -4,6 +4,9 @@ JSONEditor.defaults.theme = 'html';
 // Set the default template engine
 JSONEditor.defaults.template = 'default';
 
+// Default options when initializing JSON Editor
+JSONEditor.defaults.options = {};
+
 // Miscellaneous Plugin Settings
 JSONEditor.plugins = {
   ace: {
@@ -13,6 +16,12 @@ JSONEditor.plugins = {
     
   }
 };
+
+// Default per-editor options
+for(var i in JSONEditor.defaults.editors) {
+  if(!JSONEditor.defaults.editors.hasOwnProperty(i)) continue;
+  JSONEditor.defaults.editors[i].options = JSONEditor.defaults.editors.options || {};
+}
 
 // Set the default resolvers
 // Use "multiple" as a fall back for everything

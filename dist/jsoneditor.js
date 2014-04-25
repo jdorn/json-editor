@@ -1,8 +1,8 @@
-/*! JSON Editor v0.5.12 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.0 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-04-06
+ * Date: 2014-04-21
  */
 
 /**
@@ -129,7 +129,7 @@ var $triggerc = function(el,event) {
 };
 
 var JSONEditor = function(element,options) {
-  options = options || {};
+  options = $extend({},JSONEditor.defaults.options,options||{});
   this.element = element;
   this.options = options;
   this.init();
@@ -169,7 +169,7 @@ JSONEditor.prototype = {
       
       // Create the root editor
       var editor_class = self.getEditorClass(self.schema);
-      self.root = new editor_class({
+      self.root = self.createEditor(editor_class, {
         jsoneditor: self,
         schema: self.schema,
         container: self.root_container,
@@ -285,6 +285,10 @@ JSONEditor.prototype = {
     if(!JSONEditor.defaults.editors[classname]) throw "Unknown editor "+classname;
 
     return JSONEditor.defaults.editors[classname];
+  },
+  createEditor: function(editor_class, options) {
+    options = $extend({},editor_class.options||{},options);
+    return new editor_class(options);
   },
   onChange: function() {
     if(!this.ready) return;
@@ -493,13 +497,13 @@ JSONEditor.Validator = Class.extend({
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
         self.refs[ref].push(function() {
-          schema = $extend({},schema,self.refs[ref],schema);
+          schema = $extend({},self.refs[ref],schema);
           callback(schema);
         });
       }
       // If this reference has already been loaded
       else if(self.refs[ref]) {
-        schema = $extend({},schema,self.refs[ref],schema);
+        schema = $extend({},self.refs[ref],schema);
         callback(schema);
       }
       // Otherwise, it needs to be loaded via ajax
@@ -518,7 +522,7 @@ JSONEditor.Validator = Class.extend({
             self._getRefs(response, function(ref_schema) {
               var list = self.refs[ref];
               self.refs[ref] = ref_schema;
-              schema = $extend({},schema,self.refs[ref],schema);
+              schema = $extend({},self.refs[ref],schema);
               callback(schema);
 
               // If anything is waiting on this to load
@@ -1333,6 +1337,9 @@ JSONEditor.AbstractEditor = Class.extend({
     if(!this.jsoneditor) return;
     this.jsoneditor.unregisterEditor(this);
   },
+  getNumColumns: function() {
+    return 12;
+  },
   init: function(options) {
     var self = this;
     this.container = options.container;
@@ -1359,7 +1366,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.register();
     
     // If not required, add an add/remove property link
-    if(!this.isRequired() && !this.options.compact) {
+    if(!this.isRequired() && !this.options.compact && false) {
       this.title_links = this.theme.getFloatRightLinkHolder();
       this.container.appendChild(this.title_links);
 
@@ -1433,11 +1440,13 @@ JSONEditor.AbstractEditor = Class.extend({
     this.build();
     
     // Add links
-    this.link_holder = this.theme.getLinksHolder();
-    this.container.appendChild(this.link_holder);
-    if(this.schema.links) {
-      for(var i=0; i<this.schema.links.length; i++) {
-        this.addLink(this.getLink(this.schema.links[i]));
+    if(!this.no_link_holder) {
+      this.link_holder = this.theme.getLinksHolder();
+      this.container.appendChild(this.link_holder);
+      if(this.schema.links) {
+        for(var i=0; i<this.schema.links.length; i++) {
+          this.addLink(this.getLink(this.schema.links[i]));
+        }
       }
     }
     
@@ -1594,18 +1603,6 @@ JSONEditor.AbstractEditor = Class.extend({
         this.link_watchers[i](vars);
       }
     }
-  },
-  addProperty: function() {
-    this.property_removed = false;
-    this.register();
-    this.addremove.innerHTML = '';
-    this.addremove.appendChild(document.createTextNode('remove '+this.getTitle()));
-  },
-  removeProperty: function() {
-    this.property_removed = true;
-    this.unregister();
-    this.addremove.innerHTML = '';
-    this.addremove.appendChild(document.createTextNode('add '+this.getTitle()));
   },
   build: function() {
 
@@ -1766,6 +1763,9 @@ JSONEditor.defaults.editors.null = JSONEditor.AbstractEditor.extend({
   },
   setValue: function() {
     this.jsoneditor.notifyWatchers(this.path);
+  },
+  getNumColumns: function() {
+    return 2;
   }
 });
 
@@ -1832,6 +1832,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.input.style.display = '';
     if(this.description) this.description.style.display = '';
     this.theme.enableLabel(this.label);
+  },
+  getNumColumns: function() {
+    var min = Math.ceil(this.getTitle().length/5);
+    var num;
+    
+    if(this.input_type === 'textarea') num = 6;
+    else if(['text','email'].indexOf(this.input_type) >= 0) num = 4;
+    else num = 2;
+    
+    return Math.min(12,Math.max(min,num));
   },
   build: function() {
     var self = this;
@@ -2319,6 +2329,9 @@ JSONEditor.defaults.editors.number = JSONEditor.defaults.editors.string.extend({
   sanitize: function(value) {
     return (value+"").replace(/[^0-9\.\-]/g,'');
   },
+  getNumColumns: function() {
+    return 2;
+  },
   getValue: function() {
     return this.value*1;
   }
@@ -2328,6 +2341,9 @@ JSONEditor.defaults.editors.integer = JSONEditor.defaults.editors.number.extend(
   sanitize: function(value) {
     value = value + "";
     return value.replace(/[^0-9\-]/g,'');
+  },
+  getNumColumns: function() {
+    return 2;
   }
 });
 
@@ -2356,6 +2372,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
     }
   },
+  getNumColumns: function() {
+    return Math.max(Math.min(12,this.maxwidth),3);
+  },
   enable: function() {
     if(this.editjson_button) this.editjson_button.disabled = false;
     if(this.addproperty_button) this.addproperty_button.disabled = false;
@@ -2371,6 +2390,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   disable: function() {
     if(this.editjson_button) this.editjson_button.disabled = true;
     if(this.addproperty_button) this.addproperty_button.disabled = true;
+    this.hideEditJSON();
     
     this._super();
     if(this.editors) {
@@ -2380,29 +2400,114 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
     }
   },
-  addProperty: function() {
-    this._super();
-    this.editor_holder.style.display = 'block';
-    this.title_controls.style.display = 'block';
-    this.editjson_controls.style.display = 'block';
-    if(this.addproperty_controls) this.addproperty_controls.style.display = 'block';
-    this.theme.enableHeader(this.title);
-  },
-  removeProperty: function() {
-    this._super();
-    this.editor_holder.style.display = 'none';
-    this.title_controls.style.display = 'none';
-    this.editjson_controls.style.display = 'none';
-    if(this.addproperty_controls) this.addproperty_controls.style.display = 'none';
-    $trigger(this.cancel_editjson_button,'click');
-    if(this.cancel_addproperty_button) $trigger(this.cancel_addproperty_button,'click');
-    this.theme.disableHeader(this.title);
+  layoutEditors: function() {
+    var self = this;
+    
+    if(!this.row_container) return;
+    
+    var container;
+    
+    if(this.format === 'grid') {
+      var rows = [];
+      $each(this.editors, function(key,editor) {
+        if(editor.property_removed) return;
+        var found = false;
+        var width = editor.getNumColumns();
+        var height = editor.container.offsetHeight;
+        // See if the editor will fit in any of the existing rows first
+        for(var i=0; i<rows.length; i++) {
+          // If the editor will fit in the row horizontally
+          if(rows[i].width + width <= 12) {
+            // If the editor is close to the other elements in height
+            // i.e. Don't put a really tall editor in an otherwise short row or vice versa
+            if(!height || (rows[i].minh*.5 < height && rows[i].maxh*2 > height)) {
+              found = i;
+            }
+          }
+        }
+        
+        // If there isn't a spot in any of the existing rows, start a new row
+        if(found === false) {
+          rows.push({
+            width: 0,
+            minh: 999999,
+            maxh: 0,
+            editors: []
+          });
+          found = rows.length-1;
+        }
+        
+        rows[found].editors.push({
+          key: key,
+          //editor: editor,
+          width: width,
+          height: height
+        });
+        rows[found].width += width;
+        rows[found].minh = Math.min(rows[found].minh,height);
+        rows[found].maxh = Math.max(rows[found].maxh,height);
+      });
+      
+      // Make almost full rows width 12
+      // Do this by increasing all editors' sizes proprotionately
+      // Any left over space goes to the biggest editor
+      // Don't touch rows with a width of 6 or less
+      for(var i=0; i<rows.length; i++) {
+        if(rows[i].width < 12) {
+          var biggest = false;
+          var new_width = 0;
+          for(var j=0; j<rows[i].editors.length; j++) {
+            if(biggest === false) biggest = j;
+            else if(rows[i].editors[j].width > rows[i].editors[biggest].width) biggest = j;
+            rows[i].editors[j].width *= 12/rows[i].width;
+            rows[i].editors[j].width = Math.floor(rows[i].editors[j].width);
+            new_width += rows[i].editors[j].width;
+          }
+          if(new_width < 12) rows[i].editors[biggest].width += 12-new_width;
+          rows[i].width = 12;
+        }
+      }
+      
+      // layout hasn't changed
+      if(this.layout === JSON.stringify(rows)) return false;
+      this.layout = JSON.stringify(rows);
+      
+      // Layout the form
+      container = document.createElement('div');
+      for(var i=0; i<rows.length; i++) {
+        var row = this.theme.getGridRow();
+        container.appendChild(row);
+        for(var j=0; j<rows[i].editors.length; j++) {
+          var editor = this.editors[rows[i].editors[j].key];
+          this.theme.setGridColumnSize(editor.container,rows[i].editors[j].width);
+          row.appendChild(editor.container);
+        }
+      }
+    }
+    // Normal layout
+    else {
+      container = document.createElement('div');
+      $each(this.editors, function(key,editor) {
+        if(editor.property_removed) return;
+        var row = self.theme.getGridRow();
+        container.appendChild(row);
+        self.theme.setGridColumnSize(editor.container,12);
+        row.appendChild(editor.container);
+      });
+    }
+    this.row_container.innerHTML = '';
+    this.row_container.appendChild(container);
   },
   build: function() {
     this.editors = {};
     var self = this;
+    
+    this.format = this.getOption('layout') || this.getOption('object_layout') || this.schema.format || this.jsoneditor.options.object_layout || 'normal';
 
     this.schema.properties = this.schema.properties || {};
+
+    this.minwidth = 0;
+    this.maxwidth = 0;
 
     // If the object should be rendered as a table row
     if(this.getOption('table_row',false)) {
@@ -2411,7 +2516,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
         var holder = self.editor_holder.appendChild(self.getTheme().getTableCell());
 
-        self.editors[key] = new editor({
+        self.editors[key] = self.jsoneditor.createEditor(editor,{
           jsoneditor: self.jsoneditor,
           schema: schema,
           container: holder,
@@ -2419,7 +2524,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           parent: self,
           compact: true
         });
+
+        self.minwidth += self.editors[key].getNumColumns();
+        self.maxwidth += self.editors[key].getNumColumns();
       });
+      this.no_link_holder = true;
     }
     // If the object should be rendered as a table
     else if(this.getOption('table',false)) {
@@ -2432,33 +2541,86 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.header.textContent = this.getTitle();
       this.title = this.getTheme().getHeader(this.header);
       this.container.appendChild(this.title);
+      this.container.style.position = 'relative';
       
-      this.editjson_holder = this.theme.getTextareaInput();
-      this.container.appendChild(this.editjson_holder);
-      this.editjson_holder.style.display = 'none';
-      this.editjson_holder.style.height = '100px';
-      this.editjson_holder.style.width = '100%';
+      // Edit JSON modal
+      this.editjson_holder = this.theme.getModal();
+      this.editjson_textarea = this.theme.getTextareaInput();
+      this.editjson_textarea.style.height = '170px';
+      this.editjson_textarea.style.width = '300px';
+      this.editjson_textarea.style.display = 'block';
+      this.editjson_save = this.getButton('Save','save','Save');
+      this.editjson_save.addEventListener('click',function() {
+        self.saveJSON();
+      });
+      this.editjson_cancel = this.getButton('Cancel','cancel','Cancel');
+      this.editjson_cancel.addEventListener('click',function() {
+        self.hideEditJSON();
+      });
+      this.editjson_holder.appendChild(this.editjson_textarea);
+      this.editjson_holder.appendChild(this.editjson_save);
+      this.editjson_holder.appendChild(this.editjson_cancel);
       
-      this.addproperty_holder = document.createElement('div');
-      this.container.appendChild(this.addproperty_holder);
-      this.addproperty_holder.style.display = 'none';
+      // Manage Properties modal
+      this.addproperty_holder = this.theme.getModal();
+      this.addproperty_list = document.createElement('div');
+      this.addproperty_list.style.width = '295px';
+      this.addproperty_list.style.maxHeight = '160px';
+      this.addproperty_list.style.padding = '5px 0';
+      this.addproperty_list.style.overflowY = 'auto';
+      this.addproperty_list.style.overflowX = 'hidden';
+      this.addproperty_list.style.paddingLeft = '5px';
+      this.addproperty_add = this.getButton('add','add','add');
       this.addproperty_input = this.theme.getFormInputField('text');
-      this.addproperty_holder.appendChild(this.addproperty_input);
       this.addproperty_input.setAttribute('placeholder','Property name...');
+      this.addproperty_input.style.width = '220px';
+      this.addproperty_input.style.marginBottom = '0';
+      this.addproperty_input.style.display = 'inline-block';
+      this.addproperty_add.addEventListener('click',function() {
+        if(self.addproperty_input.value) {
+          if(self.editors[self.addproperty_input.value]) {
+            alert('there is already a property with that name');
+            return;
+          }
+          
+          self.addObjectProperty(self.addproperty_input.value);
+          self.addPropertyCheckbox(self.addproperty_input.value);
+          if(self.editors[self.addproperty_input.value]) {
+            self.editors[self.addproperty_input.value].disable();
+          }
+        }
+      });
+      this.addproperty_holder.appendChild(this.addproperty_list);
+      this.addproperty_holder.appendChild(this.addproperty_input);
+      this.addproperty_holder.appendChild(this.addproperty_add);
+      var spacer = document.createElement('div');
+      spacer.style.clear = 'both';
+      this.addproperty_holder.appendChild(spacer);
       
+      
+      // Description
       if(this.schema.description) {
         this.description = this.getTheme().getDescription(this.schema.description);
         this.container.appendChild(this.description);
       }
+      
+      // Validation error placeholder area
       this.error_holder = document.createElement('div');
       this.container.appendChild(this.error_holder);
+      
+      // Container for child editor area
       this.editor_holder = this.getTheme().getIndentedPanel();
+      this.editor_holder.style.paddingBottom = '0';
       this.container.appendChild(this.editor_holder);
+
+      // Container for rows of child editors
+      this.row_container = this.theme.getGridContainer();
+      this.editor_holder.appendChild(this.row_container);
 
       $each(this.schema.properties, function(key,schema) {
         var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
-        var holder = self.getTheme().getChildEditorHolder();
-        self.editor_holder.appendChild(holder);
+        var holder = self.getTheme().getGridColumn();
+        self.row_container.appendChild(holder);
 
         // If the property is required
         var required;
@@ -2466,7 +2628,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           required = self.schema.required.indexOf(key) >= 0;
         }
 
-        self.editors[key] = new editor({
+        self.editors[key] = self.jsoneditor.createEditor(editor,{
           jsoneditor: self.jsoneditor,
           schema: schema,
           container: holder,
@@ -2474,7 +2636,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           parent: self,
           required: required
         });
+
+        self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
+        self.maxwidth += self.editors[key].getNumColumns();
       });
+
+      // Initial layout
+      this.layoutEditors();
+      // Do it again now that we know the approximate heights of elements
+      this.layoutEditors();
 
       // Control buttons
       this.title_controls = this.getTheme().getHeaderButtonHolder();
@@ -2506,107 +2676,218 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         $trigger(this.toggle_button,'click');
       }
       
-      // Edit JSON Button
-      this.editing_json = false;
-      this.editjson_button = this.getButton('JSON','edit','Edit JSON');
-      this.editjson_controls.appendChild(this.editjson_button)
-      this.editjson_button.addEventListener('click',function() {
-        // Save Changes
-        if(self.editing_json) {
-          // Get value from form
-          try {
-            var value = JSON.parse(self.editjson_holder.value);
-          }
-          catch(e) {
-            // Error parsing the JSON
-            alert('Invalid JSON - '+e);
-            return false;
-          }
-          
-          // Hide the edit form
-          self.cancel_editjson_button.style.display = 'none';
-          self.editjson_holder.style.display = 'none';
-          self.setButtonText(self.editjson_button,'JSON','edito','Edit JSON');
-          self.editing_json = false;
-          
-          // Set the value
-          self.setValue(value);
-          
-          if(self.parent) self.parent.onChildEditorChange(self);
-          else self.jsoneditor.onChange();
-        }
-        // Start Editing
-        else {
-          self.editing_json = true;
-          self.cancel_editjson_button.style.display = '';
-          self.editjson_holder.value = JSON.stringify(self.value,null,2);
-          self.editjson_holder.style.display = '';
-          self.setButtonText(self.editjson_button,'JSON','save','Save JSON');
-        }
-        
-        return false;
-      });
-      this.cancel_editjson_button = this.getButton('','cancel','Cancel');
-      this.editjson_controls.appendChild(this.cancel_editjson_button);
-      this.cancel_editjson_button.style.display = 'none';
-      this.cancel_editjson_button.addEventListener('click',function() {
-          self.cancel_editjson_button.style.display = 'none'
-          self.editjson_holder.style.display = 'none';
-          self.setButtonText(self.editjson_button,'JSON','edit','Edit JSON');
-          self.editing_json = false;
-          
-          return false;
-      });
-      
-      if(this.canHaveAdditionalProperties()) {
-        this.adding_property = false;
-        this.addproperty_button = this.getButton('Property','add','Add Property');
-        this.addproperty_controls.appendChild(this.addproperty_button)
-        this.addproperty_button.addEventListener('click',function() {
-          // Add property
-          if(self.adding_property) {
-            var name = self.addproperty_input.value;
-            
-            // If property with this name already exists
-            if(self.editors[name]) {
-              alert('A property already exists with this name');
-              return false;
-            }
-            
-            // Hide the edit form
-            self.cancel_addproperty_button.style.display = 'none';
-            self.addproperty_holder.style.display = 'none';
-            self.setButtonText(self.addproperty_button,'Property','add','Add Property');
-            self.adding_property = false;
-            self.addObjectProperty(name);
-          }
-          // Start Editing
-          else {
-            self.adding_property = true;
-            self.addproperty_input.value = '';
-            self.cancel_addproperty_button.style.display = '';
-            self.addproperty_holder.style.display = '';
-            self.setButtonText(self.addproperty_button,'Property','save','Save Property');
-          }
-          
-          return false;
-        });
-        
-        this.cancel_addproperty_button = this.getButton('','cancel','Cancel');
-        this.addproperty_controls.appendChild(this.cancel_addproperty_button);
-        this.cancel_addproperty_button.style.display = 'none';
-        this.cancel_addproperty_button.addEventListener('click',function() {
-            self.cancel_addproperty_button.style.display = 'none'
-            self.addproperty_holder.style.display = 'none'
-            self.setButtonText(self.addproperty_button,'Property','add','Add Property');
-            self.adding_property = false;
-            
-            return false;
-        });
+      // Collapse button disabled
+      if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
+        if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
       }
+      else if(this.jsoneditor.options.disable_collapse) {
+        this.toggle_button.style.display = 'none';
+      }
+      
+      // Edit JSON Button
+      this.editjson_button = this.getButton('JSON','edit','Edit JSON');
+      this.editjson_button.addEventListener('click',function() {
+        self.toggleEditJSON();
+      });
+      this.editjson_controls.appendChild(this.editjson_button);
+      this.editjson_controls.appendChild(this.editjson_holder);
+      
+      // Edit JSON Buttton disabled
+      if(this.schema.options && typeof this.schema.options.disable_edit_json !== "undefined") {
+        if(this.schema.options.disable_edit_json) this.editjson_button.style.display = 'none';
+      }
+      else if(this.jsoneditor.options.disable_edit_json) {
+        this.editjson_button.style.display = 'none';
+      }
+      
+      // Object Properties Button
+      this.addproperty_button = this.getButton('Properties','edit','Object Properties');
+      this.addproperty_button.addEventListener('click',function() {
+        self.toggleAddProperty();
+      });
+      this.addproperty_controls.appendChild(this.addproperty_button);
+      this.addproperty_controls.appendChild(this.addproperty_holder);
+      this.refreshAddProperties();
     }
     
     this.jsoneditor.notifyWatchers(this.path);
+  },
+  showEditJSON: function() {
+    if(!this.editjson_holder) return;
+    this.hideAddProperty();
+    
+    // Position the form directly beneath the button
+    // TODO: edge detection
+    this.editjson_holder.style.left = this.editjson_button.offsetLeft+"px";
+    this.editjson_holder.style.top = this.editjson_button.offsetTop + this.editjson_button.offsetHeight+"px";
+    
+    // Start the textarea with the current value
+    this.editjson_textarea.value = JSON.stringify(this.getValue(),null,2);
+    
+    // Disable the rest of the form while editing JSON
+    this.disable();
+    
+    this.editjson_holder.style.display = '';
+    this.editjson_button.disabled = false;
+    this.editing_json = true;
+  },
+  hideEditJSON: function() {
+    if(!this.editjson_holder) return;
+    if(!this.editing_json) return;
+    
+    this.editjson_holder.style.display = 'none';
+    this.enable();
+    this.editing_json = false;
+  },
+  saveJSON: function() {
+    if(!this.editjson_holder) return;
+    
+    try {
+      var json = JSON.parse(this.editjson_textarea.value);
+      this.setValue(json);
+      this.hideEditJSON();
+    }
+    catch(e) {
+      alert('invalid JSON');
+      throw e;
+    }
+  },
+  toggleEditJSON: function() {
+    if(this.editing_json) this.hideEditJSON();
+    else this.showEditJSON();
+  },
+  addPropertyCheckbox: function(key) {
+    var editor = this.editors[key];
+    if(!editor) return;
+    var self = this;
+    var checkbox, label, control;
+    
+    checkbox = self.theme.getCheckbox();
+    checkbox.style.width = 'auto';
+    label = self.theme.getCheckboxLabel(key);
+    control = self.theme.getFormControl(label,checkbox);
+    control.style.paddingBottom = control.style.marginBottom = control.style.paddingTop = control.style.marginTop = 0;
+    control.style.height = 'auto';
+    //control.style.overflowY = 'hidden';
+    self.addproperty_list.appendChild(control);
+    
+    checkbox.checked = !editor.property_removed;
+    if(editor.isRequired()) checkbox.disabled = true;
+    checkbox.addEventListener('change',function() {
+      if(checkbox.checked) {
+        self.addObjectProperty(key);
+      }
+      else {
+        self.removeObjectProperty(key);
+      }
+    });
+    
+    return checkbox;
+  },
+  showAddProperty: function() {
+    if(!this.addproperty_holder) return;
+    this.hideEditJSON();
+    
+    // Position the form directly beneath the button
+    // TODO: edge detection
+    this.addproperty_holder.style.left = this.addproperty_button.offsetLeft+"px";
+    this.addproperty_holder.style.top = this.addproperty_button.offsetTop + this.addproperty_button.offsetHeight+"px";
+    
+    // Build the properties list
+    this.addproperty_list.innerHTML = '';
+    var self = this;
+    this.addproperty_checkboxes = {};
+    $each(this.editors,function(i,editor) {
+      self.addproperty_checkboxes[i] = self.addPropertyCheckbox(i);
+    });
+    
+    // Disable the rest of the form while editing JSON
+    this.disable();
+    
+    this.adding_property = true;
+    this.addproperty_button.disabled = false;
+    this.addproperty_holder.style.display = '';
+    this.refreshAddProperties();
+  },
+  hideAddProperty: function() {
+    if(!this.addproperty_holder) return;
+    if(!this.adding_property) return;
+    
+    this.addproperty_holder.style.display = 'none';
+    this.enable();
+    
+    this.adding_property = false;
+  },
+  toggleAddProperty: function() {
+    if(this.adding_property) this.hideAddProperty();
+    else this.showAddProperty();
+  },
+  removeObjectProperty: function(property) {
+    if(this.editors[property]) {
+      this.editors[property].property_removed = true;
+      this.editors[property].unregister();
+      this.refreshValue();
+      this.layoutEditors();
+      this.jsoneditor.notifyWatchers(this.path);
+      if(this.parent) this.parent.onChildEditorChange(this);
+      else this.jsoneditor.onChange();
+    }
+  },
+  addObjectProperty: function(name) {
+    var self = this;
+    
+    // If property with this name already exists
+    if(this.editors[name]) {
+      // Property  was removed, add it back
+      if(this.editors[name].property_removed) {
+        this.editors[name].property_removed = false;
+        this.editors[name].register();
+        this.jsoneditor.notifyWatchers(this.editors[name].path);
+      }
+      else {
+        return; 
+      }
+    }
+    else {
+      // Determine the schema to use for this new property
+      var schema = {}, matched = false;
+      // Check if it matches any of the pattern properties
+      if(self.schema.patternProperties) {
+        $each(self.schema.patternProperties,function(i,el) {
+          var regex = new RegExp(i);
+          if(regex.test(name)) {
+            matched = true;
+            schema = $extend(schema,el);
+          }
+        });
+      }
+      // Otherwise, check if additionalProperties is a schema
+      if(!matched && typeof self.schema.additionalProperties === "object") {
+        schema = $extend(schema,self.schema.additionalProperties);
+      }
+      
+      // Add the property
+      var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
+      var holder = self.getTheme().getChildEditorHolder();
+      self.editor_holder.appendChild(holder);
+
+      self.editors[name] = self.jsoneditor.createEditor(editor,{
+        jsoneditor: self.jsoneditor,
+        schema: schema,
+        container: holder,
+        path: self.path+'.'+name,
+        parent: self,
+        required: false
+      });
+      self.editors[name].not_core = true;
+    }
+    
+    self.refreshValue();
+    self.jsoneditor.notifyWatchers(self.path);
+    if(self.parent) self.parent.onChildEditorChange(self);
+    else self.jsoneditor.onChange();
+    
+    self.layoutEditors();
   },
   onChildEditorChange: function(editor) {
     this.refreshValue();
@@ -2614,52 +2895,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   },
   canHaveAdditionalProperties: function() {
     return this.schema.additionalProperties !== false && !this.jsoneditor.options.no_additional_properties;
-  },
-  addObjectProperty: function(name) {
-    var self = this;
-    
-    // If property with this name already exists
-    if(self.editors[name]) {
-      return false;
-    }
-    
-    // Determine the schema to use for this new property
-    var schema = {}, matched = false;
-    // Check if it matches any of the pattern properties
-    if(self.schema.patternProperties) {
-      $each(self.schema.patternProperties,function(i,el) {
-        var regex = new RegExp(i);
-        if(regex.test(name)) {
-          matched = true;
-          schema = $extend(schema,el);
-        }
-      });
-    }
-    // Otherwise, check if additionalProperties is a schema
-    if(!matched && typeof self.schema.additionalProperties === "object") {
-      schema = $extend(schema,self.schema.additionalProperties);
-    }
-    
-    // Add the property
-    var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
-    var holder = self.getTheme().getChildEditorHolder();
-    self.editor_holder.appendChild(holder);
-
-    self.editors[name] = new editor({
-      jsoneditor: self.jsoneditor,
-      schema: schema,
-      container: holder,
-      path: self.path+'.'+name,
-      parent: self,
-      required: false
-    });
-    self.editors[name].not_core = true;
-    
-    self.refreshValue();
-    
-    self.jsoneditor.notifyWatchers(self.path);
-    if(self.parent) self.parent.onChildEditorChange(self);
-    else self.jsoneditor.onChange();
   },
   destroy: function() {
     $each(this.editors, function(i,el) {
@@ -2691,7 +2926,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     });
     
     $each(this.editors, function(i,editor) {
-      if(editor.addremove) editor.addremove.style.display = '';
       if(editor.property_removed) {
         if(!editor.not_core && removed) new_editors[i] = editor;
         else if(editor.not_core) {
@@ -2708,27 +2942,96 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     });
     this.editors = new_editors;
     
-    // See if we need to show/hide the add/remove property links
-    if(typeof this.schema.minProperties !== "undefined") {
-      if(props <= this.schema.minProperties) {
-        $each(this.editors, function(i,editor) {
-          if(!editor.property_removed && editor.addremove) {
-            editor.addremove.style.display = 'none';
+    if(this.adding_property) this.refreshAddProperties();
+  },
+  refreshAddProperties: function() {    
+    var can_add = false, can_remove = false, num_props = 0, i, show_modal = false;
+    
+    // Get number of editors
+    for(i in this.editors) {
+      if(!this.editors.hasOwnProperty(i)) continue;
+      if(this.editors[i].property_removed) continue;
+      num_props++;
+    }
+    
+    // Determine if we can add back removed properties
+    can_add = this.canHaveAdditionalProperties() && !(typeof this.schema.maxProperties !== "undefined" && num_props >= this.schema.maxProperties);
+    
+    // Check for which editors can't be removed or added back
+    for(i in this.editors) {
+      if(!this.editors.hasOwnProperty(i)) continue;
+      if(this.editors[i].isRequired()) {
+        if(this.addproperty_checkboxes && this.addproperty_checkboxes[i]) {
+          this.addproperty_checkboxes[i].disabled = true;
+        }
+      }
+      else if(typeof this.schema.minProperties !== "undefined" && num_props <= this.schema.minProperties) {
+        if(this.addproperty_checkboxes && this.addproperty_checkboxes[i]) {
+          this.addproperty_checkboxes[i].disabled = this.addproperty_checkboxes[i].checked;
+          if(!this.addproperty_checkboxes[i].checked) show_modal = true;
+        }
+        else if(this.editors[i].property_removed && can_add) {
+          show_modal = true;
+        }
+      }
+      else if(this.editors[i].property_removed) {
+        if(this.addproperty_checkboxes && this.addproperty_checkboxes[i]) {
+          if(!can_add) {
+            this.addproperty_checkboxes[i].disabled = true;
           }
-        });
+          else {
+            this.addproperty_checkboxes[i].disabled = false;
+            show_modal = true;
+          }
+        }
+        else if(can_add) {
+          show_modal = true;
+        }
+      }
+      else {
+        if(this.addproperty_checkboxes && this.addproperty_checkboxes[i]) {
+          this.addproperty_checkboxes[i].disabled = false;
+        }
+        show_modal = true;
+        can_remove = true;
       }
     }
-    if(typeof this.schema.maxProperties !== "undefined") {
-      if(props >= this.schema.maxProperties) {
-        $each(this.editors, function(i,editor) {
-          if(editor.property_removed && editor.addremove) {
-            editor.addremove.style.display = 'none';
-          }
-        });
+    
+    if(this.canHaveAdditionalProperties()) {
+      show_modal = true;
+    }
+    
+    // Additional addproperty checkboxes not tied to a current editor
+    if(this.addproperty_checkboxes) {
+      for(var i in this.addproperty_checkboxes) {
+        if(!this.addproperty_checkboxes.hasOwnProperty(i)) continue;
+        if(this.editors[i]) continue;
+        show_modal = true;
+        this.addproperty_checkboxes[i].disabled = !can_add && !can_remove;
       }
+    }
+    
+    // If no editors can be added or removed, hide the modal button
+    if(!show_modal) {
+      this.hideAddProperty();
+      this.addproperty_controls.style.display = 'none';
+    }
+    // If additional properties are disabled
+    else if(!this.canHaveAdditionalProperties()) {
+      this.addproperty_add.style.display = 'none';
+      this.addproperty_input.style.display = 'none';
+    }
+    // If no new properties can be added
+    else if(!can_add) {
+      this.addproperty_add.disabled = true;
+    }
+    // If new properties can be added
+    else {
+      this.addproperty_add.disabled = false;
     }
   },
   setValue: function(value, initial) {
+    var self = this;
     value = value || {};
     
     if(typeof value !== "object" || value instanceof Array) value = {};
@@ -2737,16 +3040,16 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     $each(this.editors, function(i,editor) {      
       if(typeof value[i] !== "undefined") {
         // If property is removed, add property
-        if(editor.property_removed && editor.addremove) {
-          $trigger(editor.addremove,'click');
+        if(editor.property_removed) {
+          self.addObjectProperty(i);
         }
         
         editor.setValue(value[i],initial);
       }
       else {
         // If property isn't required, remove property
-        if(!initial && !editor.property_removed && !editor.isRequired() && editor.addremove) {
-          $trigger(editor.addremove,'click');
+        if(!initial && !editor.property_removed && !editor.isRequired()) {
+          self.removeObjectProperty(i);
           return;
         }
         
@@ -2756,7 +3059,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     
     // If additional properties are allowed, create the editors for any of those
     if(this.canHaveAdditionalProperties()) {
-      var self = this;
       $each(value, function(i,val) {
         if(!self.editors[i]) {
           self.addObjectProperty(i);
@@ -2836,6 +3138,16 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       for(var i=0; i<this.rows.length; i++) {
         this.rows[i].unregister();
       }
+    }
+  },
+  getNumColumns: function() {
+    var info = this.getItemInfo(0);
+    // Tabs require extra horizontal space
+    if(this.tabs_holder) {
+      return Math.max(Math.min(12,info.width+2),4);
+    }
+    else {
+      return info.width;
     }
   },
   addProperty: function() {
@@ -2987,7 +3299,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     });
     
     var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
-    editor = new editor({
+    editor = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema,
       container: tmp,
@@ -2998,6 +3310,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.item_info[stringified] = {
       child_editors: editor.getChildEditors()? true : false,
       title: schema.title || 'item',
+      width: editor.getNumColumns(),
       default: editor.getDefault()
     };
     editor.destroy();
@@ -3025,7 +3338,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
 
     this.row_holder.appendChild(holder);
 
-    var ret = new editor({
+    var ret = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema,
       container: holder,
@@ -3373,6 +3686,14 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       $trigger(this.toggle_button,'click');
     }
     
+    // Collapse button disabled
+    if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
+      if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+    }
+    else if(this.jsoneditor.options.disable_collapse) {
+      this.toggle_button.style.display = 'none';
+    }
+    
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
     
@@ -3498,6 +3819,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       }
     }
   },
+  getNumColumns: function() {
+    return Math.max(Math.min(12,this.width),3);
+  },
   build: function() {
     this.rows = [];
     var self = this;
@@ -3517,6 +3841,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
     this.item_title = this.schema.items.title || 'row';
+    this.width = tmp.getNumColumns();
 
     // Build header row for table
     if(tmp.getChildEditors()) {
@@ -3593,7 +3918,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       });
     }
 
-    var ret = new editor({
+    var ret = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema_copy,
       container: holder,
@@ -3713,12 +4038,10 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     if(!this.value.length) {
       this.delete_last_row_button.style.display = 'none';
       this.remove_all_rows_button.style.display = 'none';
-      this.toggle_button.style.display = 'none';
       this.table.style.display = 'none';
     }
     else if(this.value.length === 1) {
       this.table.style.display = '';
-      this.toggle_button.style.display = '';
       this.remove_all_rows_button.style.display = 'none';
 
       // If there are minItems items in the array, hide the delete button beneath the rows
@@ -3731,7 +4054,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
     else {
       this.table.style.display = '';
-      this.toggle_button.style.display = '';
       // If there are minItems items in the array, hide the delete button beneath the rows
       if(minItems) {
         this.delete_last_row_button.style.display = 'none';
@@ -3853,6 +4175,14 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     if(this.options.collapsed) {
       $trigger(this.toggle_button,'click');
     }
+    
+    // Collapse button disabled
+    if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
+      if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+    }
+    else if(this.jsoneditor.options.disable_collapse) {
+      this.toggle_button.style.display = 'none';
+    }
 
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
@@ -3908,6 +4238,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this._super();
   },
+  getNumColumns: function() {
+    return Math.max(this.editors[this.type].getNumColumns(),4);
+  },
   enable: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
@@ -3937,6 +4270,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   build: function() {
     var self = this;
     var container = this.container;
+
+    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.container.appendChild(this.header);
 
     this.types = [];
     
@@ -3973,7 +4309,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     
     this.display_text = this.getDisplayText(this.types);
 
-    this.switcher = this.theme.getSelectInput(this.display_text);
+    this.switcher = this.theme.getSwitcher(this.display_text);
     container.appendChild(this.switcher);
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
@@ -3998,15 +4334,17 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       else self.jsoneditor.onChange();
     })
     this.switcher.style.marginBottom = 0;
-    this.switcher.style.float = 'right';
+    this.switcher.style.width = 'auto';
+    this.switcher.style.display = 'inline-block';
+    this.switcher.style.marginLeft = '5px';
 
-    this.editor_holder = this.theme.getIndentedPanel();
+    this.editor_holder = document.createElement('div');
     container.appendChild(this.editor_holder);
     this.type = 0;
 
     this.editors = [];
     this.validators = [];
-    var options = this.switcher.getElementsByTagName('option');
+    var options = this.theme.getSwitcherOptions(this.switcher);
     var option = 0;
     $each(this.types,function(i,type) {
       var holder = self.theme.getChildEditorHolder();
@@ -4034,7 +4372,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
       var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
 
-      self.editors[i] = new editor({
+      self.editors[i] = self.jsoneditor.createEditor(editor,{
         jsoneditor: self.jsoneditor,
         schema: schema,
         container: holder,
@@ -4042,6 +4380,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         parent: self,
         required: true
       });
+      if(self.editors[i].header) self.editors[i].header.style.display = 'none';
       
       self.editors[i].option = options[option];
       
@@ -4060,7 +4399,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.register();
   },
   onChildEditorChange: function(editor) {
-    if(this.editors[this.type]) this.refreshValue();
+    if(this.editors[this.type]) {
+      this.refreshHeaderText();
+      this.refreshValue();
+    }
     
     this._super();
   },
@@ -4072,8 +4414,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     var display_text = this.getDisplayText(schemas);
     $each(this.editors, function(i,editor) {
       if(editor.option) {
-        editor.option.innerHTML = '';
-        editor.option.appendChild(document.createTextNode(display_text[i]));
+        editor.option.textContent = display_text[i];
       }
     });
   },
@@ -4148,9 +4489,12 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     this.display_area.style.display = 'none';
     this.theme.disableHeader(this.title);
   },
+  getNumColumns: function() {
+    return 4;
+  },
   build: function() {
     var container = this.getContainer();
-    this.title = this.getTheme().getHeader(this.getTitle());
+    this.title = this.header = this.label = this.getTheme().getFormInputLabel(this.getTitle());
     this.container.appendChild(this.title);
 
     this.options.enum_titles = this.options.enum_titles || [];
@@ -4167,13 +4511,17 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     }
 
     // Switcher
-    this.switcher = this.theme.getSelectInput(this.select_options);
+    this.switcher = this.theme.getSwitcher(this.select_options);
     this.container.appendChild(this.switcher);
-    this.switcher.style.float = 'right';
+    this.switcher.style.width = 'auto';
+    this.switcher.style.display = 'inline-block';
+    this.switcher.style.marginLeft = '5px';
     this.switcher.style.marginBottom = 0;
 
     // Display area
     this.display_area = this.theme.getIndentedPanel();
+    this.display_area.style.paddingTop = 0;
+    this.display_area.style.paddingBottom = 0;
     this.container.appendChild(this.display_area);
 
     this.switcher.addEventListener('change',function() {
@@ -4234,7 +4582,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
         // Add the keys to object children
         if(!(el instanceof Array)) {
           // TODO: use theme
-          html = '<div><strong>'+i+'</strong>: '+html+'</div>';
+          html = '<div><em>'+i+'</em>: '+html+'</div>';
         }
 
         // TODO: use theme
@@ -4242,7 +4590,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
       });
       
       if(el instanceof Array) ret = '<ol>'+ret+'</ol>';
-      else ret = "<ul>"+ret+'</ul>';
+      else ret = "<ul style='margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;'>"+ret+'</ul>';
 
       return ret;
     }
@@ -4295,6 +4643,13 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     this.value = sanitized;
     this.jsoneditor.notifyWatchers(this.path);
+  },
+  getNumColumns: function() {
+    var longest_text = this.getTitle().length;
+    for(var i=0; i<this.enum_options.length; i++) {
+      longest_text = Math.max(longest_text,this.enum_options[i].length+4);
+    }
+    return Math.min(12,Math.max(longest_text/7,2));
   },
   typecast: function(value) {
     if(this.schema.type === "boolean") {
@@ -4419,6 +4774,32 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style['margin-left'] = '10px';
     return el;
   },
+  getModal: function() {
+    var el = document.createElement('div');
+    el.style.backgroundColor = 'white';
+    el.style.border = '1px solid black';
+    el.style.boxShadow = '3px 3px black';
+    el.style.position = 'absolute';
+    el.style.zIndex = '10';
+    el.style.display = 'none';
+    return el;
+  },
+  getGridContainer: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  getGridRow: function() {
+    var el = document.createElement('div');
+    el.className = 'row';
+    return el;
+  },
+  getGridColumn: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  setGridColumnSize: function(el,size) {
+    
+  },
   getLink: function(text) {
     var el = document.createElement('a');
     el.setAttribute('href','#');
@@ -4457,12 +4838,29 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   getCheckbox: function() {
-    return this.getFormInputField('checkbox');
+    var el = this.getFormInputField('checkbox');
+    el.style.marginRight = '5px';
+    return el;
   },
   getSelectInput: function(options) {
     var select = document.createElement('select');
     if(options) this.setSelectOptions(select, options);
     return select;
+  },
+  getSwitcher: function(options) {
+    var switcher = this.getSelectInput(options);
+    switcher.style.backgroundColor = 'transparent';
+    switcher.style.height = 'auto';
+    switcher.style.fontStyle = 'italic';
+    switcher.style.fontWeight = 'normal';
+    switcher.style.padding = '0 0 0 3px';
+    return switcher;
+  },
+  getSwitcherOptions: function(switcher) {
+    return switcher.getElementsByTagName('option');
+  },
+  setSwitcherOptions: function(switcher, options, titles) {
+    this.setSelectOptions(switcher, options, titles);
   },
   setSelectOptions: function(select, options, titles) {
     titles = titles || [];
@@ -4499,9 +4897,14 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
-    el.setAttribute('class','form-control');
     if(label) el.appendChild(label);
-    el.appendChild(input);
+    if(input.type === 'checkbox') {
+      label.insertBefore(input,label.firstChild);
+    }
+    else {
+      el.appendChild(input);
+    }
+    
     if(description) el.appendChild(description);
     return el;
   },
@@ -4680,10 +5083,35 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
     // TODO: use bootstrap slider
     return this._super(min, max, step);
   },
+  getGridContainer: function() {
+    var el = document.createElement('div');
+    el.className = 'container-fluid';
+    return el;
+  },
+  getGridRow: function() {
+    var el = document.createElement('div');
+    el.className = 'row-fluid';
+    return el;
+  },
+  getFormInputLabel: function(text) {
+    var el = this._super(text);
+    el.style.display = 'inline-block';
+    el.style.fontWeight = 'bold';
+    return el;
+  },
+  setGridColumnSize: function(el,size) {
+    el.className = 'span'+size;
+  },
   getSelectInput: function(options) {
     var input = this._super(options);
     input.style.width = 'auto';
+    input.style.maxWidth = '98%';
     return input;
+  },
+  getFormInputField: function(type) {
+    var el = this._super(type);
+    el.style.width = '98%';
+    return el;
   },
   afterInputReady: function(input) {
     if(input.controlgroup) return;
@@ -4720,6 +5148,7 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
       label.className += ' checkbox';
       label.appendChild(input);
       controls.appendChild(label);
+      controls.style.height = '30px';
     }
     else {
       if(label) {
@@ -4778,7 +5207,7 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   getTabHolder: function() {
     var el = document.createElement('div');
     el.className = 'tabbable tabs-left';
-    el.innerHTML = "<ul class='nav nav-tabs'></ul><div class='tab-content'></div>";
+    el.innerHTML = "<ul class='nav nav-tabs span2' style='margin-right: 0;'></ul><div class='tab-content span10' style='overflow:visible;'></div>";
     return el;
   },
   getTab: function(text) {
@@ -4812,8 +5241,11 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   getSelectInput: function(options) {
     var el = this._super(options);
     el.className += 'form-control';
-    el.style.width = 'auto';
+    //el.style.width = 'auto';
     return el;
+  },
+  setGridColumnSize: function(el,size) {
+    el.className = 'col-md-'+size;
   },
   afterInputReady: function(input) {
     if(input.controlgroup) return;
@@ -4835,15 +5267,21 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   },
   getFormInputField: function(type) {
     var el = this._super(type);
-    el.className += 'form-control';
+    if(type !== 'checkbox') {
+      el.className += 'form-control';
+    }
+    else {
+      el.style.marginTop = '10px';
+    }
     return el;
   },
   getFormControl: function(label, input, description) {
     var group = document.createElement('div');
 
-    if(label && input.getAttribute('type') === 'checkbox') {
+    if(label && input.type === 'checkbox') {
       group.className += ' checkbox';
-      label.appendChild(input)
+      label.appendChild(input);
+      label.style.fontSize = '14px';
       group.appendChild(label);
     } 
     else {
@@ -4913,8 +5351,9 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     input.controlgroup.className = input.controlgroup.className.replace(/\s?has-error/g,'');
   },
   getTabHolder: function() {
-    var el = this._super();
-    el.children[0].className += ' list-group';
+    var el = document.createElement('div');
+    el.innerHTML = "<div class='tabs list-group col-md-2'></div><div class='col-md-10'></div>";
+    el.className = 'rows';
     return el;
   },
   getTab: function(text) {
@@ -4941,10 +5380,14 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
   }, 
   getSelectInput: function(options) {
     var el = this._super(options);
-    el.style.width = 'auto';
     el.style.minWidth = 'none';
     el.style.padding = '5px';
     el.style.marginTop = '3px';
+    return el;
+  },
+  getSwitcher: function(options) {
+    var el = this._super(options);
+    el.style.paddingRight = '8px';
     return el;
   },
   afterInputReady: function(input) {
@@ -4952,6 +5395,17 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
       input.style.marginBottom = 0;
     }
     input.group = this.closest(input,'.form-control');
+  },
+  getFormInputLabel: function(text) {
+    var el = this._super(text);
+    el.style.display = 'inline-block';
+    return el;
+  },
+  getFormInputField: function(type) {
+    var el = this._super(type);
+    el.style.width = '100%';
+    el.style.marginBottom = type==='checkbox'? '0' : '12px';
+    return el;
   },
   getFormInputDescription: function(text) {
     var el = document.createElement('p');
@@ -5009,11 +5463,20 @@ JSONEditor.defaults.themes.foundation3 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.6em';
     return el;
   },
+  getFormInputLabel: function(text) {
+    var el = this._super(text);
+    el.style.fontWeight = 'bold';
+    return el;
+  },
   getTabHolder: function() {
     var el = document.createElement('div');
     el.className = 'row';
     el.innerHTML = "<dl class='tabs vertical two columns'></dl><div class='tabs-content ten columns'></div>";
     return el;
+  },
+  setGridColumnSize: function(el,size) {
+    var sizes = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+    el.className = 'columns '+sizes[size];
   },
   getTab: function(text) {
     var el = document.createElement('dd');
@@ -5050,9 +5513,17 @@ JSONEditor.defaults.themes.foundation4 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.6em';
     return el;
   },
+  setGridColumnSize: function(el,size) {
+    el.className = 'columns large-'+size;
+  },
   getFormInputDescription: function(text) {
     var el = this._super(text);
     el.style.fontSize = '.8rem';
+    return el;
+  },
+  getFormInputLabel: function(text) {
+    var el = this._super(text);
+    el.style.fontWeight = 'bold';
     return el;
   }
 });
@@ -5063,6 +5534,9 @@ JSONEditor.defaults.themes.foundation5 = JSONEditor.defaults.themes.foundation.e
     var el = this._super(text);
     el.style.fontSize = '.8rem';
     return el;
+  },
+  setGridColumnSize: function(el,size) {
+    el.className = 'columns medium-'+size;
   },
   getButton: function(text, icon, title) {
     var el = this._super(text,icon,title);
@@ -5105,55 +5579,44 @@ JSONEditor.defaults.themes.foundation5 = JSONEditor.defaults.themes.foundation.e
 JSONEditor.defaults.themes.html = JSONEditor.AbstractTheme.extend({
   getFormInputLabel: function(text) {
     var el = this._super(text);
-    this.applyStyles(el,{
-      display: "block",
-      marginBottom: '3px'
-    });
+    el.style.display = 'block';
+    el.style.marginBottom = '3px';
+    el.style.fontWeight = 'bold';
     return el;
   },
   getFormInputDescription: function(text) {
     var el = this._super(text);
-    this.applyStyles(el,{
-      fontSize: '.8em',
-      margin: 0,
-      display: 'inline-block',
-      fontStyle: 'italic'
-    });
+    el.style.fontSize = '.8em';
+    el.style.margin = 0;
+    el.style.display = 'inline-block';
+    el.style.fontStyle = 'italic';
     return el;
   },
   getIndentedPanel: function() {
     var el = this._super();
-    this.applyStyles(el,{
-      border: '1px solid #ddd',
-      padding: '5px',
-      margin: '5px',
-      borderRadius: '3px'
-    });
+    el.style.border = '1px solid #ddd';
+    el.style.padding = '5px';
+    el.style.margin = '5px';
+    el.style.borderRadius = '3px';
     return el;
   },
   getChildEditorHolder: function() {
     var el = this._super();
-    this.applyStyles(el,{
-      marginBottom: '8px'
-    });
+    el.style.marginBottom = '8px';
     return el;
   },
   getHeaderButtonHolder: function() {
     var el = this.getButtonHolder();
-    this.applyStyles(el,{
-      display: 'inline-block',
-      marginLeft: '10px',
-      fontSize: '.8em',
-      verticalAlign: 'middle'
-    });
+    el.style.display = 'inline-block';
+    el.style.marginLeft = '10px';
+    el.style.fontSize = '.8em';
+    el.style.verticalAlign = 'middle';
     return el;
   },
   getTable: function() {
     var el = this._super();
-    this.applyStyles(el,{
-      borderBottom: '1px solid #ccc',
-      marginBottom: '5px'
-    });
+    el.style.borderBottom = '1px solid #ccc';
+    el.style.marginBottom = '5px';
     return el;
   },
   addInputError: function(input, text) {
@@ -5212,12 +5675,15 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
     return el;
   },
   getFormControl: function(label, input, description) {
-    var el = document.createElement('div');
-    el.className = 'form-control';
-    el.style.padding = '8px 0';
-    if(label) el.appendChild(label);
-    el.appendChild(input);
-    if(description) el.appendChild(description);
+    var el = this._super(label,input,description);
+    if(input.type === 'checkbox') {
+      el.style.lineHeight = '25px';
+      
+      el.style.padding = '3px 0';
+    }
+    else {
+      el.style.padding = '4px 0 8px 0';
+    }
     return el;
   },
   getDescription: function(text) {
@@ -5235,7 +5701,8 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
   },
   getFormInputLabel: function(text) {
     var el = document.createElement('label');
-    el.style.marginRight = '5px';
+    el.style.fontWeight = 'bold';
+    el.style.display = 'block';
     el.textContent = text;
     return el;
   },
@@ -5301,6 +5768,7 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
     var el = document.createElement('div');
     el.className = 'ui-widget-content ui-corner-all';
     el.style.padding = '1em 1.4em';
+    el.style.marginBottom = '20px';
     return el;
   },
   afterInputReady: function(input) {
@@ -5578,6 +6046,9 @@ JSONEditor.defaults.theme = 'html';
 // Set the default template engine
 JSONEditor.defaults.template = 'default';
 
+// Default options when initializing JSON Editor
+JSONEditor.defaults.options = {};
+
 // Miscellaneous Plugin Settings
 JSONEditor.plugins = {
   ace: {
@@ -5587,6 +6058,12 @@ JSONEditor.plugins = {
     
   }
 };
+
+// Default per-editor options
+for(var i in JSONEditor.defaults.editors) {
+  if(!JSONEditor.defaults.editors.hasOwnProperty(i)) continue;
+  JSONEditor.defaults.editors[i].options = JSONEditor.defaults.editors.options || {};
+}
 
 // Set the default resolvers
 // Use "multiple" as a fall back for everything

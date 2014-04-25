@@ -9,6 +9,32 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style['margin-left'] = '10px';
     return el;
   },
+  getModal: function() {
+    var el = document.createElement('div');
+    el.style.backgroundColor = 'white';
+    el.style.border = '1px solid black';
+    el.style.boxShadow = '3px 3px black';
+    el.style.position = 'absolute';
+    el.style.zIndex = '10';
+    el.style.display = 'none';
+    return el;
+  },
+  getGridContainer: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  getGridRow: function() {
+    var el = document.createElement('div');
+    el.className = 'row';
+    return el;
+  },
+  getGridColumn: function() {
+    var el = document.createElement('div');
+    return el;
+  },
+  setGridColumnSize: function(el,size) {
+    
+  },
   getLink: function(text) {
     var el = document.createElement('a');
     el.setAttribute('href','#');
@@ -47,12 +73,29 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   getCheckbox: function() {
-    return this.getFormInputField('checkbox');
+    var el = this.getFormInputField('checkbox');
+    el.style.marginRight = '5px';
+    return el;
   },
   getSelectInput: function(options) {
     var select = document.createElement('select');
     if(options) this.setSelectOptions(select, options);
     return select;
+  },
+  getSwitcher: function(options) {
+    var switcher = this.getSelectInput(options);
+    switcher.style.backgroundColor = 'transparent';
+    switcher.style.height = 'auto';
+    switcher.style.fontStyle = 'italic';
+    switcher.style.fontWeight = 'normal';
+    switcher.style.padding = '0 0 0 3px';
+    return switcher;
+  },
+  getSwitcherOptions: function(switcher) {
+    return switcher.getElementsByTagName('option');
+  },
+  setSwitcherOptions: function(switcher, options, titles) {
+    this.setSelectOptions(switcher, options, titles);
   },
   setSelectOptions: function(select, options, titles) {
     titles = titles || [];
@@ -89,9 +132,14 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
-    el.setAttribute('class','form-control');
     if(label) el.appendChild(label);
-    el.appendChild(input);
+    if(input.type === 'checkbox') {
+      label.insertBefore(input,label.firstChild);
+    }
+    else {
+      el.appendChild(input);
+    }
+    
     if(description) el.appendChild(description);
     return el;
   },

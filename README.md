@@ -8,7 +8,7 @@ It has full support for JSON Schema version 3 and 4 and can integrate with sever
 
 Check out an interactive demo: http://rawgithub.com/jdorn/json-editor/master/demo.html
 
-Download the [production version][min] (18K when gzipped) or the [development version][max].
+Download the [production version][min] (22K when gzipped) or the [development version][max].
 
 [min]: https://raw.github.com/jdorn/json-editor/master/dist/jsoneditor.min.js
 [max]: https://raw.github.com/jdorn/json-editor/master/dist/jsoneditor.js
@@ -51,6 +51,21 @@ var editor = new JSONEditor(element, options);
 
 #### Options
 
+Options can be set globally or on a per-instance basis during instantiation.
+
+```js
+// Set an option globally
+JSONEditor.defaults.options.theme = 'bootstrap2';
+
+// Set an option during instantiation
+var editor = new JSONEditor(element, {
+  //...
+  theme: 'bootstrap2'
+});
+```
+
+Here are all the available options:
+
 <table>
   <thead>
   <tr>
@@ -63,6 +78,16 @@ var editor = new JSONEditor(element, options);
   <tr>
     <td>ajax</td>
     <td>If <code>true</code>, JSON Editor will load external urls in <code>$ref</code> via ajax.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_collapse</td>
+    <td>If <code>true</code>, remove all collapse buttons from objects and arrays.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_edit_json</td>
+    <td>If <code>true</code>, remove all Edit JSON buttons from objects.</td>
     <td><code>false</code></td>
   </tr>
   <tr>
@@ -107,47 +132,6 @@ var editor = new JSONEditor(element, options);
   </tr>
   </tbody>
 </table>
-
-
-Here's an example using all the options:
-
-```js
-var editor = new JSONEditor(element, {
-  schema: {
-    type: "object",
-    properties: {
-      name: {
-        description: "Will load from the pre-defined schema passed in during initialization",
-        $ref: "http://example.com/name.json"
-      },
-      age: {
-        description: "Will load via ajax.  If the ajax option was false, this would throw an exception",
-        $ref: "http://example.com/age.json"
-      },
-      bio: {
-        type: "string",
-        format: "markdown"
-      }
-    }
-  },
-  startval: {
-    name: "John Smith",
-    age: 21,
-    bio: ""
-  },
-  ajax: true,
-  refs: {
-    "http://example.com/name.json": {
-      type: "string"
-    }
-  },
-  required_by_default: true,
-  no_additional_properties: true,
-  theme: 'bootstrap3',
-  template: 'underscore',
-  iconlib: 'fontawesome4'
-});
-```
 
 __*Note__ If the `ajax` property is `true` and JSON Editor needs to fetch an external url, the api methods won't be available immediately.
 Listen for the `ready` event before calling them.
@@ -284,10 +268,10 @@ The currently supported themes are:
 *  jqueryui
 
 The default theme is `html`, which doesn't use any special class names or styling.
-This default can be changed by setting the `JSONEditor.defaults.theme` variable.
+This default can be changed by setting the `JSONEditor.defaults.options.theme` variable.
 
 ```javascript
-JSONEditor.defaults.theme = 'foundation5';
+JSONEditor.defaults.options.theme = 'foundation5';
 ```
 
 You can override this default on a per-instance basis by passing a `theme` parameter in when initializing:
@@ -317,7 +301,7 @@ By default, no icons are used. Just like the CSS theme, you can set the icon lib
 
 ```js
 // Set the global default
-JSONEditor.defaults.iconlib = "bootstrap2";
+JSONEditor.defaults.options.iconlib = "bootstrap2";
 
 // Set the icon lib during initialization
 var editor = new JSONEditor(element,{
@@ -580,14 +564,30 @@ Here's an example of the `table` format:
 }
 ```
 
+#### Objects
+
+The default object layout is one child editor per row.  The `grid` format will instead put multiple child editors per row.
+This can make the editor much more compact, but at a cost of not guaranteeing child editor order.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" }
+  },
+  "format": "grid"
+}
+```
+
+
 Editor Options
 ----------------
 
 Editors can accept options which alter the behavior in some way.
 
-Right now, there is only 1 supported option
-
-*  `collapsed` - If set to true for the `object`, `array`, or `table` editor, child editors will be collapsed by default.
+*  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
+*  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
+*  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)
 
 ```json
 {
@@ -602,6 +602,13 @@ Right now, there is only 1 supported option
   }
 }
 ```
+
+You can globally set the defaults instead if you want:
+
+```js
+JSONEditor.defaults.editors.object.options.collapsed = true;
+```
+
 
 Dependencies
 ------------------
@@ -681,10 +688,10 @@ JSON Editor uses a javascript template engine to accomplish this.  A barebones t
 *  swig
 *  underscore
 
-You can change the default by setting `JSONEditor.defaults.template` to one of the supported template engines:
+You can change the default by setting `JSONEditor.defaults.options.template` to one of the supported template engines:
 
 ```javascript
-JSONEditor.defaults.template = 'handlebars';
+JSONEditor.defaults.options.template = 'handlebars';
 ```
 
 You can set the template engine on a per-instance basis as well:
@@ -875,7 +882,7 @@ var myengine = {
 };
 
 // Set globally
-JSONEditor.defaults.template = myengine;
+JSONEditor.defaults.options.template = myengine;
 
 // Set on a per-instance basis
 var editor = new JSONEditor(element,{

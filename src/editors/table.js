@@ -23,6 +23,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       }
     }
   },
+  getNumColumns: function() {
+    return Math.max(Math.min(12,this.width),3);
+  },
   build: function() {
     this.rows = [];
     var self = this;
@@ -42,6 +45,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
     this.item_title = this.schema.items.title || 'row';
+    this.width = tmp.getNumColumns();
 
     // Build header row for table
     if(tmp.getChildEditors()) {
@@ -118,7 +122,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       });
     }
 
-    var ret = new editor({
+    var ret = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema_copy,
       container: holder,
@@ -238,12 +242,10 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     if(!this.value.length) {
       this.delete_last_row_button.style.display = 'none';
       this.remove_all_rows_button.style.display = 'none';
-      this.toggle_button.style.display = 'none';
       this.table.style.display = 'none';
     }
     else if(this.value.length === 1) {
       this.table.style.display = '';
-      this.toggle_button.style.display = '';
       this.remove_all_rows_button.style.display = 'none';
 
       // If there are minItems items in the array, hide the delete button beneath the rows
@@ -256,7 +258,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
     else {
       this.table.style.display = '';
-      this.toggle_button.style.display = '';
       // If there are minItems items in the array, hide the delete button beneath the rows
       if(minItems) {
         this.delete_last_row_button.style.display = 'none';
@@ -377,6 +378,14 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     // If it should start collapsed
     if(this.options.collapsed) {
       $trigger(this.toggle_button,'click');
+    }
+    
+    // Collapse button disabled
+    if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
+      if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+    }
+    else if(this.jsoneditor.options.disable_collapse) {
+      this.toggle_button.style.display = 'none';
     }
 
     // Add "new row" and "delete last" buttons below editor

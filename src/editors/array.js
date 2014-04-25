@@ -18,6 +18,16 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       }
     }
   },
+  getNumColumns: function() {
+    var info = this.getItemInfo(0);
+    // Tabs require extra horizontal space
+    if(this.tabs_holder) {
+      return Math.max(Math.min(12,info.width+2),4);
+    }
+    else {
+      return info.width;
+    }
+  },
   addProperty: function() {
     this._super();
     this.row_holder.style.display = '';
@@ -167,7 +177,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     });
     
     var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
-    editor = new editor({
+    editor = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema,
       container: tmp,
@@ -178,6 +188,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.item_info[stringified] = {
       child_editors: editor.getChildEditors()? true : false,
       title: schema.title || 'item',
+      width: editor.getNumColumns(),
       default: editor.getDefault()
     };
     editor.destroy();
@@ -205,7 +216,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
 
     this.row_holder.appendChild(holder);
 
-    var ret = new editor({
+    var ret = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema,
       container: holder,
@@ -551,6 +562,14 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     // If it should start collapsed
     if(this.options.collapsed) {
       $trigger(this.toggle_button,'click');
+    }
+    
+    // Collapse button disabled
+    if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
+      if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+    }
+    else if(this.jsoneditor.options.disable_collapse) {
+      this.toggle_button.style.display = 'none';
     }
     
     // Add "new row" and "delete last" buttons below editor
