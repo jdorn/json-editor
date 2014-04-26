@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.0 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.1 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-04-21
+ * Date: 2014-04-26
  */
 
 /**
@@ -3204,7 +3204,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     var self = this;
 
     if(!this.getOption('compact',false)) {
-      this.title = this.theme.getHeader(this.getTitle())
+      this.header = document.createElement('span');
+      this.header.textContent = this.getTitle();
+      this.title = this.theme.getHeader(this.header);
       this.container.appendChild(this.title);
       this.title_controls = this.theme.getHeaderButtonHolder();
       this.title.appendChild(this.title_controls);
@@ -4232,6 +4234,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   register: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
+        if(!this.editors[i]) continue;
         this.editors[i].unregister();
       }
       if(this.editors[this.type]) this.editors[this.type].register();
@@ -4244,6 +4247,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   enable: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
+        if(!this.editors[i]) continue;
         this.editors[i].enable();
       }
     }
@@ -4253,6 +4257,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   disable: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
+        if(!this.editors[i]) continue;
         this.editors[i].disable();
       }
     }
@@ -4263,9 +4268,77 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this._super();
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
+        if(!this.editors[i]) continue;
         this.editors[i].unregister();
       }
     }
+  },
+  switchEditor: function(i) {
+    var self = this;
+    
+    if(!this.editors[i]) {
+      this.buildChildEditor(i);
+    }
+    
+    self.type = i;
+
+    self.register();
+
+    var current_value = self.getValue();
+
+    $each(self.editors,function(type,editor) {
+      if(!editor) return;
+      if(self.type === type) {
+        editor.setValue(current_value,true);
+        editor.container.style.display = '';
+      }
+      else editor.container.style.display = 'none';
+    });
+    self.refreshValue();
+    
+    if(self.parent) self.parent.onChildEditorChange(self);
+    else self.jsoneditor.onChange();
+  },
+  buildChildEditor: function(i) {
+    var self = this;
+    var type = this.types[i];
+    var holder = self.theme.getChildEditorHolder();
+    self.editor_holder.appendChild(holder);
+
+    var schema;
+    
+    if(typeof type === "string") {
+      schema = $extend({},self.schema);
+      schema.type = type;
+    }
+    else {
+      schema = $extend({},self.schema,type);
+
+      // If we need to merge `required` arrays
+      if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
+        schema.required = self.schema.required.concat(type.required);
+      }
+    }
+
+    var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
+
+    self.editors[i] = self.jsoneditor.createEditor(editor,{
+      jsoneditor: self.jsoneditor,
+      schema: schema,
+      container: holder,
+      path: self.path,
+      parent: self,
+      required: true
+    });
+    if(self.editors[i].header) self.editors[i].header.style.display = 'none';
+    
+    self.editors[i].option = self.switcher_options[i];
+    
+    holder.addEventListener('change_header_text',function() {
+      self.refreshHeaderText();
+    });
+
+    if(i !== self.type) holder.style.display = 'none';
   },
   build: function() {
     var self = this;
@@ -4315,23 +4388,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       e.preventDefault();
       e.stopPropagation();
       
-      self.type = self.display_text.indexOf(this.value);
-
-      self.register();
-
-      var current_value = self.getValue();
-
-      $each(self.editors,function(type,editor) {
-        if(self.type === type) {
-          editor.setValue(current_value,true);
-          editor.container.style.display = '';
-        }
-        else editor.container.style.display = 'none';
-      });
-      self.refreshValue();
-      
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+      self.switchEditor(self.display_text.indexOf(this.value));
     })
     this.switcher.style.marginBottom = 0;
     this.switcher.style.width = 'auto';
@@ -4344,12 +4401,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
     this.editors = [];
     this.validators = [];
-    var options = this.theme.getSwitcherOptions(this.switcher);
-    var option = 0;
+    this.switcher_options = this.theme.getSwitcherOptions(this.switcher);
     $each(this.types,function(i,type) {
-      var holder = self.theme.getChildEditorHolder();
-      self.editor_holder.appendChild(holder);
-
+      self.editors[i] = false;
+      
       var schema;
       
       if(typeof type === "string") {
@@ -4369,29 +4424,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         required_by_default: self.jsoneditor.options.required_by_default,
         no_additional_properties: self.jsoneditor.options.no_additional_properties
       });
-
-      var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
-
-      self.editors[i] = self.jsoneditor.createEditor(editor,{
-        jsoneditor: self.jsoneditor,
-        schema: schema,
-        container: holder,
-        path: self.path,
-        parent: self,
-        required: true
-      });
-      if(self.editors[i].header) self.editors[i].header.style.display = 'none';
-      
-      self.editors[i].option = options[option];
-      
-      holder.addEventListener('change_header_text',function() {
-        self.refreshHeaderText();
-      });
-
-      if(i !== self.type) holder.style.display = 'none';
-      
-      option++;
     });
+    
+    this.switchEditor(0);
 
     this.refreshValue();
     this.refreshHeaderText();
@@ -4408,14 +4443,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   refreshHeaderText: function() {
     var schemas = [];
-    $each(this.editors, function(i,editor) {
-      schemas.push(editor.schema);
+    $each(this.validators, function(i,validator) {
+      schemas.push(validator.schema);
     });
     var display_text = this.getDisplayText(schemas);
-    $each(this.editors, function(i,editor) {
-      if(editor.option) {
-        editor.option.textContent = display_text[i];
-      }
+    $each(this.switcher_options, function(i,option) {
+      option.textContent = display_text[i];
     });
   },
   refreshValue: function() {
@@ -4432,7 +4465,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
     });
     
-    $trigger(self.switcher,'change');
+    this.switchEditor(this.type);
 
     this.editors[this.type].setValue(val,initial);
 
@@ -4441,7 +4474,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   destroy: function() {
     $each(this.editors, function(type,editor) {
-      editor.destroy();
+      if(editor) editor.destroy();
     });
     this.editor_holder.parentNode.removeChild(this.editor_holder);
     this.switcher.parentNode.removeChild(this.switcher);
@@ -4453,6 +4486,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     // oneOf error paths need to remove the oneOf[i] part before passing to child editors
     if(this.oneOf) {
       $each(this.editors,function(i,editor) {
+        if(!editor) return;
         var check = self.path+'.oneOf['+i+']';
         var new_errors = [];
         $each(errors, function(j,error) {
@@ -4468,6 +4502,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     else {
       $each(this.editors,function(type,editor) {
+        if(!editor) return;
         editor.showValidationErrors(errors);
       });
     }
