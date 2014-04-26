@@ -194,7 +194,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       default: editor.getDefault()
     };
     editor.destroy();
-    tmp.remove();
+    if(tmp.parentNode) tmp.parentNode.removeChild(tmp);
     
     return this.item_info[stringified];
   },
