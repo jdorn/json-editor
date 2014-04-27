@@ -4229,7 +4229,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 // Multiple Editor (for when `type` is an array)
 JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
-    return null;
+    return this.schema.default || null;
   },
   register: function() {
     if(this.editors) {
