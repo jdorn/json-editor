@@ -353,19 +353,18 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           clientSideStorage: false
         });
         
-        this.epiceditor = new EpicEditor(options);
+        this.epiceditor = new EpicEditor(options).load();
         
         this.epiceditor.importFile(null,this.getValue());
       
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
           self.input.value = val;
+          self.value = val;
           if(self.parent) self.parent.onChildEditorChange(self);
           else self.jsoneditor.onChange();
           self.jsoneditor.notifyWatchers(self.path);
         });
-        
-        this.epiceditor.load();
       }
       // ACE editor for everything else
       else if(window.ace) {
