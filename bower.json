@@ -1,0 +1,27 @@
+{
+  "name": "json-editor",
+  "version": "0.6.5",
+  "authors": [
+    "Jeremy Dorn <jeremy@jeremydorn.com>"
+  ],
+  "description": "JSON Schema based editor",
+  "main": "dist/jsoneditor.js",
+  "keywords": [
+    "json",
+    "schema",
+    "jsonschema",
+    "editor"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "*.md",
+    "tests",
+    "examples",
+    "demo.html",
+    "*.png",
+    "package.json",
+    "Gruntfile.js",
+    "src"
+  ]
+}
