@@ -2,6 +2,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   getDefault: function() {    
     return this.schema.default || '';
   },
+  register: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.setAttribute('name',this.formname);
+  },
+  unregister: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.removeAttribute('name');
+  },
   setValue: function(value,initial,from_template) {
     var self = this;
     
@@ -287,6 +297,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     requestAnimationFrame(function() {
       self.afterInputReady();
     });
+    
+    this.register();
 
     // Compile and store the template
     if(this.schema.template) {

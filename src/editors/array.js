@@ -270,6 +270,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     else {
       if(row.tab) row.tab.style.display = 'none';
       holder.style.display = 'none';
+      row.unregister();
     }
   },
   getMax: function() {
@@ -330,6 +331,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.rows[i].setValue(val);
         self.rows[i].container.style.display = '';
         if(self.rows[i].tab) self.rows[i].tab.style.display = '';
+        self.rows[i].register();
       }
       else {
         self.addRow(val);
@@ -583,6 +585,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.rows[i] = self.row_cache[i];
         self.rows[i].container.style.display = '';
         if(self.rows[i].tab) self.rows[i].tab.style.display = '';
+        self.rows[i].register();
       }
       else {
         self.addRow();

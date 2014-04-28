@@ -9,6 +9,8 @@
 
     <style>[class*="foundicon-"] {font-family: GeneralFoundicons;font-style: normal;}</style>
     <script src='dist/jsoneditor.js'></script>
+    <!-- This library is used to provide direct links to the demo.  It is not required for JSON Editor -->
+    <script src='https://rawgit.com/pieroxy/lz-string/master/libs/lz-string-1.3.3-min.js'></script>
 </head>
 <body>
 <div class='container'>
@@ -130,7 +132,7 @@ editor.on("change",  function() {
     var schema;
     if(window.location.href.match('[?&]schema=([^&]+)')) {
         try {
-            schema = JSON.parse(atob(window.location.href.match('[?&]schema=([^&]+)')[1]));
+            schema = JSON.parse(LZString.decompressFromBase64(window.location.href.match('[?&]schema=([^&]+)')[1]));
         }
         catch(e) {
             console.log('invalid starting schema');
@@ -233,8 +235,8 @@ editor.on("change",  function() {
     var updateDirectLink = function() {
         var url = window.location.href.replace(/\?.*/,'');
 
-        url += '?schema='+btoa(JSON.stringify(schema));
-        url += '&value='+btoa(JSON.stringify(jsoneditor.getValue()));
+        url += '?schema='+LZString.compressToBase64(JSON.stringify(schema));
+        url += '&value='+LZString.compressToBase64(JSON.stringify(jsoneditor.getValue()));
 
         for(var i in JSONEditor.defaults.options) {
             if(!JSONEditor.defaults.options.hasOwnProperty(i)) continue;
@@ -382,7 +384,7 @@ editor.on("change",  function() {
     refreshBooleanOptions(true);
     reload();
     if(window.location.href.match('[?&]value=([^&]+)')) {
-        jsoneditor.setValue(JSON.parse(atob(window.location.href.match('[?&]value=([^&]+)')[1])));
+        jsoneditor.setValue(JSON.parse(LZString.decompressFromBase64(window.location.href.match('[?&]value=([^&]+)')[1])));
     }
 })();
 </script>

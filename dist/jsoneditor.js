@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.4 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.5 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-04-26
+ * Date: 2014-04-27
  */
 
 /**
@@ -1354,6 +1354,8 @@ JSONEditor.AbstractEditor = Class.extend({
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
+    this.formname = options.formname || this.path.replace(/\.([^.]+)/g,'[$1]');
+    if(this.jsoneditor.options.form_name_root) this.formname = this.formname.replace(/^root\[/,this.jsoneditor.options.form_name_root+'[');
     if(this.schema.id) this.container.setAttribute('data-schemaid',this.schema.id);
     if(this.schema.type && typeof this.schema.type === "string") this.container.setAttribute('data-schematype',this.schema.type);
     this.container.setAttribute('data-schemapath',this.path);
@@ -1773,6 +1775,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   getDefault: function() {    
     return this.schema.default || '';
   },
+  register: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.setAttribute('name',this.formname);
+  },
+  unregister: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.removeAttribute('name');
+  },
   setValue: function(value,initial,from_template) {
     var self = this;
     
@@ -2058,6 +2070,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     requestAnimationFrame(function() {
       self.afterInputReady();
     });
+    
+    this.register();
 
     // Compile and store the template
     if(this.schema.template) {
@@ -3391,6 +3405,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     else {
       if(row.tab) row.tab.style.display = 'none';
       holder.style.display = 'none';
+      row.unregister();
     }
   },
   getMax: function() {
@@ -3451,6 +3466,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.rows[i].setValue(val);
         self.rows[i].container.style.display = '';
         if(self.rows[i].tab) self.rows[i].tab.style.display = '';
+        self.rows[i].register();
       }
       else {
         self.addRow(val);
@@ -3704,6 +3720,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.rows[i] = self.row_cache[i];
         self.rows[i].container.style.display = '';
         if(self.rows[i].tab) self.rows[i].tab.style.display = '';
+        self.rows[i].register();
       }
       else {
         self.addRow();
@@ -4678,6 +4695,16 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.value = sanitized;
     this.jsoneditor.notifyWatchers(this.path);
   },
+  register: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.setAttribute('name',this.formname);
+  },
+  unregister: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.removeAttribute('name');
+  },
   getNumColumns: function() {
     var longest_text = this.getTitle().length;
     for(var i=0; i<this.enum_options.length; i++) {
@@ -4722,17 +4749,20 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.input_type = 'select';
     this.enum_options = [];
     this.enum_values = [];
+    this.enum_display = [];
 
     // Enum options enumerated
     if(this.schema.enum) {
       $each(this.schema.enum,function(i,option) {
         self.enum_options[i] = ""+option;
+        self.enum_display[i] = ""+option;
         self.enum_values[i] = self.typecast(option);
       });
     }
     // Boolean
     else if(this.schema.type === "boolean") {
-      self.enum_options = ['true','false'];
+      self.enum_display = ['true','false'];
+      self.enum_options = ['1',''];
       self.enum_values = [true,false];
     }
     // Other, not supported
@@ -4743,6 +4773,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
     this.input = this.theme.getSelectInput(this.enum_options);
+    this.theme.setSelectOptions(this.input,this.enum_options,this.enum_display);
 
     if(this.schema.readOnly || this.schema.readonly) {
       this.always_disabled = true;
@@ -4776,6 +4807,8 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(window.$ && $.fn && $.fn.select2 && this.enum_options.length > 2) {
       $(this.input).select2();
     }
+    
+    this.register();
 
     self.theme.afterInputReady(self.input);
     this.jsoneditor.notifyWatchers(this.path);
