@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.5 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.6 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-04-27
+ * Date: 2014-04-30
  */
 
 /**
@@ -2208,9 +2208,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     
     this.template = null;
-    this.input.parentNode.removeChild(this.input);
-    if(this.label) this.label.parentNode.removeChild(this.label);
-    if(this.description) this.description.parentNode.removeChild(this.description);
+    if(this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
 
     this._super();
   },

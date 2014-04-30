@@ -435,9 +435,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     
     this.template = null;
-    this.input.parentNode.removeChild(this.input);
-    if(this.label) this.label.parentNode.removeChild(this.label);
-    if(this.description) this.description.parentNode.removeChild(this.description);
+    if(this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
 
     this._super();
   },
