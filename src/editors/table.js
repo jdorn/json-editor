@@ -77,7 +77,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     if(this.item_has_child_editors) {
       $each(tmp.getChildEditors(), function(i,editor) {
-        self.header_row.appendChild(self.theme.getTableHeaderCell(editor.getTitle()));
+        var th = self.theme.getTableHeaderCell(editor.getTitle());
+        if(editor.options.hidden) th.style.display = 'none';
+        self.header_row.appendChild(th);
       });
     }
     else {

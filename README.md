@@ -593,6 +593,7 @@ Editors can accept options which alter the behavior in some way.
 *  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
 *  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
 *  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)
+*  `hidden` - If set to true, the editor will not appear in the UI (works for all types)
 
 ```json
 {
@@ -608,7 +609,7 @@ Editors can accept options which alter the behavior in some way.
 }
 ```
 
-You can globally set the defaults instead if you want:
+You can globally set the default options too if you want:
 
 ```js
 JSONEditor.defaults.editors.object.options.collapsed = true;

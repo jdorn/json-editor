@@ -63,8 +63,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       $each(this.editors, function(key,editor) {
         if(editor.property_removed) return;
         var found = false;
-        var width = editor.getNumColumns();
-        var height = editor.container.offsetHeight;
+        var width = editor.options.hidden? 0 : editor.getNumColumns();
+        var height = editor.options.hidden? 0 : editor.container.offsetHeight;
         // See if the editor will fit in any of the existing rows first
         for(var i=0; i<rows.length; i++) {
           // If the editor will fit in the row horizontally
@@ -130,7 +130,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         container.appendChild(row);
         for(var j=0; j<rows[i].editors.length; j++) {
           var editor = this.editors[rows[i].editors[j].key];
-          this.theme.setGridColumnSize(editor.container,rows[i].editors[j].width);
+          
+          if(editor.options.hidden) editor.container.style.display = 'none';
+          else this.theme.setGridColumnSize(editor.container,rows[i].editors[j].width);
+          
           row.appendChild(editor.container);
         }
       }
@@ -142,7 +145,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(editor.property_removed) return;
         var row = self.theme.getGridRow();
         container.appendChild(row);
-        self.theme.setGridColumnSize(editor.container,12);
+        
+        if(editor.options.hidden) editor.container.style.display = 'none';
+        else self.theme.setGridColumnSize(editor.container,12);
+        
         row.appendChild(editor.container);
       });
     }
@@ -175,9 +181,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           parent: self,
           compact: true
         });
+        
+        var width = self.editors[key].options.hidden? 0 : self.editors[key].getNumColumns();
 
-        self.minwidth += self.editors[key].getNumColumns();
-        self.maxwidth += self.editors[key].getNumColumns();
+        self.minwidth += width;
+        self.maxwidth += width;
+        
+        if(self.editors[key].options.hidden) {
+          holder.style.display = 'none';
+        }
       });
       this.no_link_holder = true;
     }
