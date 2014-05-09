@@ -62,6 +62,12 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
     }
   }
 });
+// Use the 'multiselect' editor for arrays of enumerated strings/numbers/integers
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  if(schema.type === "array" && schema.items && !(schema.items instanceof Array) && schema.uniqueItems && schema.items.enum && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
+    return 'multiselect';
+  }
+});
 // Use the multiple editor for schemas with `oneOf` set
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If this schema uses `oneOf`
