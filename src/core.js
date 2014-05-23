@@ -49,12 +49,12 @@ JSONEditor.prototype = {
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);
 
-      self.validation_results = self.validator.validate(self.root.getValue());
-      self.root.showValidationErrors(self.validation_results);
       self.ready = true;
 
       // Fire ready event asynchronously
       requestAnimationFrame(function() {
+        self.validation_results = self.validator.validate(self.root.getValue());
+        self.root.showValidationErrors(self.validation_results);
         self.trigger('ready');
         self.trigger('change');
       });
@@ -69,7 +69,6 @@ JSONEditor.prototype = {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before setting the value";
 
     this.root.setValue(value);
-    this.validation_results = this.validator.validate(this.root.getValue());
     return this;
   },
   validate: function(value) {
@@ -137,7 +136,7 @@ JSONEditor.prototype = {
         this.callbacks[event][i]();
       }
     }
-  },  
+  },
   getEditorClass: function(schema, editor) {
     var classname;
 
@@ -212,7 +211,7 @@ JSONEditor.prototype = {
         uuid = this.uuid++;
         el.setAttribute('data-jsoneditor-'+key,uuid);
       }
-    
+
       this.__data[uuid] = value;
     }
     // Getting data
@@ -237,7 +236,7 @@ JSONEditor.prototype = {
     if(!this.editors) return;
     return this.editors[path];
   },
-  watch: function(path,callback) {    
+  watch: function(path,callback) {
     this.watchlist = this.watchlist || {};
     this.watchlist[path] = this.watchlist[path] || [];
     this.watchlist[path].push(callback);

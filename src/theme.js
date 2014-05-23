@@ -132,6 +132,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
+    el.className = 'form-control';
     if(label) el.appendChild(label);
     if(input.type === 'checkbox') {
       label.insertBefore(input,label.firstChild);
@@ -171,7 +172,7 @@ JSONEditor.AbstractTheme = Class.extend({
   getButtonHolder: function() {
     return document.createElement('div');
   },
-  getButton: function(text, icon, title) {    
+  getButton: function(text, icon, title) {
     var el = document.createElement('button');
     this.setButtonText(el,text,icon,title);
     return el;

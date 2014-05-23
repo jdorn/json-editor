@@ -36,7 +36,7 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   afterInputReady: function(input) {
     if(input.controlgroup) return;
     input.controlgroup = this.closest(input,'.control-group');
-    input.controls = this.closest(input,'controls');
+    input.controls = this.closest(input,'.controls');
     if(this.closest(input,'.compact')) {
       input.controlgroup.className = input.controlgroup.className.replace(/control-group/g,'').replace(/[ ]{2,}/g,' ');
       input.controls.className = input.controlgroup.className.replace(/controls/g,'').replace(/[ ]{2,}/g,' ');

@@ -4,7 +4,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     var el = document.createElement('div');
     el.style.marginBottom = '15px';
     return el;
-  }, 
+  },
   getSelectInput: function(options) {
     var el = this._super(options);
     el.style.minWidth = 'none';
@@ -79,6 +79,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
   },
   removeInputError: function(input) {
     if(!input.errmsg) return;
+    input.group.className = input.group.className.replace(/ error/g,'');
     input.errmsg.style.display = 'none';
   }
 });

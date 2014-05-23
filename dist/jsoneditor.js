@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.8 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.9 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-05-09
+ * Date: 2014-05-23
  */
 
 /**
@@ -179,12 +179,12 @@ JSONEditor.prototype = {
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);
 
-      self.validation_results = self.validator.validate(self.root.getValue());
-      self.root.showValidationErrors(self.validation_results);
       self.ready = true;
 
       // Fire ready event asynchronously
       requestAnimationFrame(function() {
+        self.validation_results = self.validator.validate(self.root.getValue());
+        self.root.showValidationErrors(self.validation_results);
         self.trigger('ready');
         self.trigger('change');
       });
@@ -199,7 +199,6 @@ JSONEditor.prototype = {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before setting the value";
 
     this.root.setValue(value);
-    this.validation_results = this.validator.validate(this.root.getValue());
     return this;
   },
   validate: function(value) {
@@ -267,7 +266,7 @@ JSONEditor.prototype = {
         this.callbacks[event][i]();
       }
     }
-  },  
+  },
   getEditorClass: function(schema, editor) {
     var classname;
 
@@ -342,7 +341,7 @@ JSONEditor.prototype = {
         uuid = this.uuid++;
         el.setAttribute('data-jsoneditor-'+key,uuid);
       }
-    
+
       this.__data[uuid] = value;
     }
     // Getting data
@@ -367,7 +366,7 @@ JSONEditor.prototype = {
     if(!this.editors) return;
     return this.editors[path];
   },
-  watch: function(path,callback) {    
+  watch: function(path,callback) {
     this.watchlist = this.watchlist || {};
     this.watchlist[path] = this.watchlist[path] || [];
     this.watchlist[path].push(callback);
@@ -5110,6 +5109,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
+    el.className = 'form-control';
     if(label) el.appendChild(label);
     if(input.type === 'checkbox') {
       label.insertBefore(input,label.firstChild);
@@ -5149,7 +5149,7 @@ JSONEditor.AbstractTheme = Class.extend({
   getButtonHolder: function() {
     return document.createElement('div');
   },
-  getButton: function(text, icon, title) {    
+  getButton: function(text, icon, title) {
     var el = document.createElement('button');
     this.setButtonText(el,text,icon,title);
     return el;
@@ -5329,7 +5329,7 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   afterInputReady: function(input) {
     if(input.controlgroup) return;
     input.controlgroup = this.closest(input,'.control-group');
-    input.controls = this.closest(input,'controls');
+    input.controls = this.closest(input,'.controls');
     if(this.closest(input,'.compact')) {
       input.controlgroup.className = input.controlgroup.className.replace(/control-group/g,'').replace(/[ ]{2,}/g,' ');
       input.controls.className = input.controlgroup.className.replace(/controls/g,'').replace(/[ ]{2,}/g,' ');
@@ -5590,7 +5590,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     var el = document.createElement('div');
     el.style.marginBottom = '15px';
     return el;
-  }, 
+  },
   getSelectInput: function(options) {
     var el = this._super(options);
     el.style.minWidth = 'none';
@@ -5665,6 +5665,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
   },
   removeInputError: function(input) {
     if(!input.errmsg) return;
+    input.group.className = input.group.className.replace(/ error/g,'');
     input.errmsg.style.display = 'none';
   }
 });
