@@ -1,5 +1,5 @@
 /*globals $extend, $each, requestAnimationFrame*/
-/*jslint vars:true*/
+/*jslint vars:true, nomen: true, plusplus: true, white: true*/
 
 var JSONEditor = (function () {'use strict';
 
