@@ -76,7 +76,7 @@ JSONEditor.prototype = {
     
     // Custom value
     if(arguments.length === 1) {
-      return this.validator.validate(arguments[1]);
+      return this.validator.validate(value);
     }
     // Current value (use cached result)
     else {
