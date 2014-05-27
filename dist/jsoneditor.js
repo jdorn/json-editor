@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.9 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.10 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-05-23
+ * Date: 2014-05-27
  */
 
 /**
@@ -206,7 +206,7 @@ JSONEditor.prototype = {
     
     // Custom value
     if(arguments.length === 1) {
-      return this.validator.validate(arguments[1]);
+      return this.validator.validate(value);
     }
     // Current value (use cached result)
     else {
