@@ -77,7 +77,7 @@ Here are all the available options:
   <tbody>
   <tr>
     <td>ajax</td>
-    <td>If <code>true</code>, JSON Editor will load external urls in <code>$ref</code> via ajax.</td>
+    <td>If <code>true</code>, JSON Editor will load external URLs in <code>$ref</code> via ajax.</td>
     <td><code>false</code></td>
   </tr>
   <tr>
@@ -330,7 +330,7 @@ Some of The [hyper-schema][hyper] specification is supported as well.
 
 ### $ref and definitions
 
-JSON Editor supports schema references to external urls and local definitions.  Here's an example showing both:
+JSON Editor supports schema references to external URLs and local definitions.  Here's an example showing both:
 
 ```json
 {
@@ -357,7 +357,7 @@ Local references must point to the `definitions` object of the root node of the 
 So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
 
 If loading an external url via Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
-If your urls don't meet this requirement, you can pass in the references to JSON Editor during initialization (see Usage section above).
+If your URLs don't meet this requirement, you can pass in the references to JSON Editor during initialization (see Usage section above).
 
 ### hyper-schema links
 
@@ -618,7 +618,7 @@ JSONEditor.defaults.editors.object.options.collapsed = true;
 
 Dependencies
 ------------------
-Sometimes, it's necessary to have one field's value depend on anothers.  
+Sometimes, it's necessary to have one field's value depend on another's.  
 
 The `dependencies` keyword from the JSON Schema specification is not nearly flexible enough to handle most use cases, 
 so JSON Editor introduces a couple custom keywords that help in this regard.
@@ -949,7 +949,7 @@ The possibilities are endless.  Some ideas:
 *  Radio button version of the `select` editor
 *  Autosuggest for strings (like enum, but not restricted to those values)
 *  Better editor for arrays of strings (tag editor)
-*  Canvas based image editor that produces Base64 data urls
+*  Canvas based image editor that produces Base64 data URLs
 
 
 Custom Validation
@@ -965,7 +965,7 @@ JSONEditor.defaults.custom_validators.push(function(schema, value, path) {
   var errors = [];
   if(schema.format==="date") {
     if(!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value)) {
-      // Errors must be an object with `path`, `property`, and `mesage`
+      // Errors must be an object with `path`, `property`, and `message`
       errors.push({
         path: path,
         property: 'format',
