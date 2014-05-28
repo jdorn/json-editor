@@ -585,15 +585,15 @@ This can make the editor much more compact, but at a cost of not guaranteeing ch
 ```
 
 
-Editor Options
+Schema/Editor Options
 ----------------
 
-Editors can accept options which alter the behavior in some way.
+Schemas can accept options which alter the behavior in some way.
 
-*  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
+*  `collapsed` - If set to true, the item will start collapsed (works for objects and arrays)
 *  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
 *  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)
-*  `hidden` - If set to true, the editor will not appear in the UI (works for all types)
+*  `hidden` - If set to true, the item will not appear in the UI (works for all types)
 
 ```json
 {
@@ -615,6 +615,16 @@ You can globally set the default options too if you want:
 JSONEditor.defaults.editors.object.options.collapsed = true;
 ```
 
+The options `disable_collapse` and `disable_edit_json` are also available
+when creating an editor instance:
+
+```js
+var editor = new JSONEditor(element, {
+  //...
+  disable_collapse: true,
+  disable_edit_json: true
+});
+```
 
 Dependencies
 ------------------
