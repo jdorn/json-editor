@@ -59,7 +59,9 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   getCheckboxLabel: function(text) {
-    return this.getFormInputLabel(text);
+    var el = this.getFormInputLabel(text);
+    el.style.fontWeight = 'normal';
+    return el;
   },
   getHeader: function(text) {
     var el = document.createElement('h3');
@@ -74,7 +76,26 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getCheckbox: function() {
     var el = this.getFormInputField('checkbox');
-    el.style.marginRight = '5px';
+    el.style.display = 'inline-block';
+    el.style.width = 'auto';
+    return el;
+  },
+  getMultiCheckboxHolder: function(controls,label,description) {
+    var el = document.createElement('div');
+
+    label.style.display = 'block';
+
+    el.appendChild(label);
+
+    for(var i in controls) {
+      if(!controls.hasOwnProperty(i)) continue;
+      controls[i].style.display = 'inline-block';
+      controls[i].style.marginRight = '20px';
+      el.appendChild(controls[i]);
+    }
+
+    if(description) el.appendChild(description);
+
     return el;
   },
   getSelectInput: function(options) {

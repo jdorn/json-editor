@@ -91,6 +91,11 @@ Here are all the available options:
     <td><code>false</code></td>
   </tr>
   <tr>
+    <td>disable_properties</td>
+    <td>If <code>true</code>, remove all Edit Properties buttons from objects.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
     <td>form_name_root</td>
     <td>The first part of the `name` attribute of form inputs in the editor.  An full example name is `root[person][name]` where "root" is the form_name_root.</td>
     <td>root</td>
@@ -569,6 +574,35 @@ Here's an example of the `table` format:
 }
 ```
 
+For arrays of enumerated strings, you can also use the `select` or `checkbox` format.  These formats require a very specific schema to work:
+
+```json
+{
+  "type": "array",
+  "uniqueItems": true,
+  "items": {
+    "type": "string",
+    "enum": ["value1","value2"]
+  }
+}
+```
+
+By default, the `checkbox` editor (multiple checkboxes) will be used if there are fewer than 8 enum options.  Otherwise, the `select` editor (a multiselect box) will be used.
+
+You can override this default by passing in a format:
+
+```json
+{
+  "type": "array",
+  "format": "select",
+  "uniqueItems": true,
+  "items": {
+    "type": "string",
+    "enum": ["value1","value2"]
+  }
+}
+```
+
 #### Objects
 
 The default object layout is one child editor per row.  The `grid` format will instead put multiple child editors per row.
@@ -593,6 +627,7 @@ Editors can accept options which alter the behavior in some way.
 *  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
 *  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
 *  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)
+*  `disable_properties` - If set to true, the Edit Properties button will be hidden (works for objects)
 *  `hidden` - If set to true, the editor will not appear in the UI (works for all types)
 
 ```json

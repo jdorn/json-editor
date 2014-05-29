@@ -31,9 +31,6 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     if(type !== 'checkbox') {
       el.className += 'form-control';
     }
-    else {
-      el.style.marginTop = '10px';
-    }
     return el;
   },
   getFormControl: function(label, input, description) {
@@ -43,6 +40,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
       group.className += ' checkbox';
       label.appendChild(input);
       label.style.fontSize = '14px';
+      group.style.marginTop = '0';
       group.appendChild(label);
     } 
     else {

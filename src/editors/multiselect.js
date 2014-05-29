@@ -7,7 +7,6 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
-    this.input_type = 'select';
     this.select_options = {};
     this.select_values = {};
 
@@ -20,30 +19,47 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       options.push(e[i]+"");
       this.select_values[e[i]+""] = e[i];
     }
-    this.input = this.theme.getSelectInput(options);
-    this.input.multiple = true;
-    this.input.size = Math.min(10,options.length);
 
-    for(var i=0; i<options.length; i++) {
-      this.select_options[options[i]] = this.input.children[i];
+    if((!this.schema.format && options.length < 8) || this.schema.format === "checkbox") {
+      this.input_type = 'checkboxes';
+
+      this.inputs = {};
+      this.controls = {};
+      for(var i=0; i<options.length; i++) {
+        this.inputs[options[i]] = this.theme.getCheckbox();
+        this.select_options[options[i]] = this.inputs[options[i]];
+        var label = this.theme.getCheckboxLabel(options[i]);
+        this.controls[options[i]] = this.theme.getFormControl(label, this.inputs[options[i]]);
+      }
+
+      this.control = this.theme.getMultiCheckboxHolder(this.controls,this.label,this.description);
+    }
+    else {
+      this.input_type = 'select';
+      this.input = this.theme.getSelectInput(options);
+      this.input.multiple = true;
+      this.input.size = Math.min(10,options.length);
+
+      for(var i=0; i<options.length; i++) {
+        this.select_options[options[i]] = this.input.children[i];
+      }
+
+      if(this.schema.readOnly || this.schema.readonly) {
+        this.always_disabled = true;
+        this.input.disabled = true;
+      }
+
+      this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
     }
 
-    if(this.schema.readOnly || this.schema.readonly) {
-      this.always_disabled = true;
-      this.input.disabled = true;
-    }
-
-    this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
-
-
-    this.input.addEventListener('change',function(e) {
+    this.control.addEventListener('change',function(e) {
       e.preventDefault();
       e.stopPropagation();
 
       var new_value = [];
       for(var i = 0; i<options.length; i++) {
-        if(self.select_options[options[i]].selected) new_value.push(self.select_values[options[i]]);
+        if(self.select_options[options[i]].selected || self.select_options[options[i]].checked) new_value.push(self.select_values[options[i]]);
       }
 
       self.updateValue(new_value);
@@ -66,7 +82,8 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     // Update selected status of options
     for(var i in this.select_options) {
       if(!this.select_options.hasOwnProperty(i)) continue;
-      this.select_options[i].selected = (value.indexOf(i) !== -1);
+
+      this.select_options[i][this.input_type === "select"? "selected" : "checked"] = (value.indexOf(i) !== -1);
     }
 
     if(this.updateValue(value)) {

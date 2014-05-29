@@ -607,7 +607,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     
     if(this.adding_property) this.refreshAddProperties();
   },
-  refreshAddProperties: function() {    
+  refreshAddProperties: function() {
+    if(this.options.disable_properties || this.jsoneditor.options.disable_properties) {
+      this.addproperty_controls.style.display = 'none';
+      return;
+    }
+
     var can_add = false, can_remove = false, num_props = 0, i, show_modal = false;
     
     // Get number of editors
