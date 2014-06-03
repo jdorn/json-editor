@@ -4,14 +4,14 @@ JSONEditor.Validator = Class.extend({
     this.options = options || {};
     this.refs = this.options.refs || {};
 
-    // Store any $ref and definitions
     this.ready_callbacks = [];
-
     if(this.options.ready) this.ready(this.options.ready);
+
+    // Store any $ref and definitions
     this.getRefs();
   },
   ready: function(callback) {
-    if(this.is_ready) callback.apply(self,[this.expanded]);
+    if(this.is_ready) callback.apply(this,[this.expanded]);
     else {
       this.ready_callbacks.push(callback);
     }
@@ -72,9 +72,9 @@ JSONEditor.Validator = Class.extend({
       }
     }
     // Expand out any references
-    else if(schema['$ref']) {
-      var ref = schema['$ref'];
-      delete schema['$ref'];
+    else if(schema.$ref) {
+      var ref = schema.$ref;
+      delete schema.$ref;
 
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
@@ -226,10 +226,10 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `enum`
-    if(schema.enum) {
+    if(schema['enum']) {
       valid = false;
-      for(i=0; i<schema.enum.length; i++) {
-        if(stringified === JSON.stringify(schema.enum[i])) valid = true;
+      for(i=0; i<schema['enum'].length; i++) {
+        if(stringified === JSON.stringify(schema['enum'][i])) valid = true;
       }
       if(!valid) {
         errors.push({
@@ -241,9 +241,9 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `extends` (version 3)
-    if(schema.extends) {
-      for(i=0; i<schema.extends.length; i++) {
-        errors = errors.concat(this._validateSchema(schema.extends[i],value,path));
+    if(schema['extends']) {
+      for(i=0; i<schema['extends'].length; i++) {
+        errors = errors.concat(this._validateSchema(schema['extends'][i],value,path));
       }
     }
 
@@ -283,7 +283,7 @@ JSONEditor.Validator = Class.extend({
           valid++;
         }
 
-        for(var j=0; j<tmp.length; j++) {
+        for(j=0; j<tmp.length; j++) {
           tmp[j].path = path+'.oneOf['+i+']'+tmp[j].path.substr(path.length);
         }
         oneof_errors = oneof_errors.concat(tmp);
@@ -747,7 +747,7 @@ JSONEditor.Validator = Class.extend({
     if(schema.anyOf) {
       $each(schema.anyOf, function(key,value) {
         schema.anyOf[key] = self.expandSchema(value);
-      })
+      });
     }
     // Version 4 `dependencies` (schema dependencies)
     if(schema.dependencies) {
@@ -810,18 +810,18 @@ JSONEditor.Validator = Class.extend({
       delete extended.allOf;
     }
     // extends schemas should be merged into parent
-    if(schema.extends) {
+    if(schema['extends']) {
       // If extends is a schema
-      if(!(schema.extends instanceof Array)) {
-        extended = this.extend(extended,this.expandSchema(schema.extends));
+      if(!(schema['extends'] instanceof Array)) {
+        extended = this.extend(extended,this.expandSchema(schema['extends']));
       }
       // If extends is an array of schemas
       else {
-        for(i=0; i<schema.extends.length; i++) {
-          extended = this.extend(extended,this.expandSchema(schema.extends[i]));
+        for(i=0; i<schema['extends'].length; i++) {
+          extended = this.extend(extended,this.expandSchema(schema['extends'][i]));
         }
       }
-      delete extended.extends;
+      delete extended['extends'];
     }
     // parent should be merged into oneOf schemas
     if(schema.oneOf) {
@@ -859,7 +859,7 @@ JSONEditor.Validator = Class.extend({
 
 
           extended.type = val.filter(function(n) {
-            return obj2.type.indexOf(n) !== -1
+            return obj2.type.indexOf(n) !== -1;
           });
 
           // If there's only 1 type and it's a primitive, use a string instead of array
@@ -870,7 +870,7 @@ JSONEditor.Validator = Class.extend({
         // All other arrays should be intersected (enum, etc.)
         else if(typeof val === "object" && val instanceof Array){
           extended[prop] = val.filter(function(n) {
-            return obj2[prop].indexOf(n) !== -1
+            return obj2[prop].indexOf(n) !== -1;
           });
         }
         // Objects should be recursively merged
