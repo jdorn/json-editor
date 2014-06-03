@@ -34,13 +34,14 @@ var $extend = function(destination) {
 
 var $each = function(obj,callback) {
   if(!obj) return;
+  var i;
   if(typeof obj.length !== 'undefined') {
-    for(var i=0; i<obj.length; i++) {
+    for(i=0; i<obj.length; i++) {
       if(callback(i,obj[i])===false) return;
     }
   }
   else {
-    for(var i in obj) {
+    for(i in obj) {
       if(!obj.hasOwnProperty(i)) continue;
       if(callback(i,obj[i])===false) return;
     }
