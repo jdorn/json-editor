@@ -53,15 +53,10 @@ var $trigger = function(el,event) {
   el.dispatchEvent(e);
 };
 var $triggerc = function(el,event) {
-  if (window.CustomEvent) {
-    var e = new CustomEvent(event,{
-      bubbles: true,
-      cancelable: true
-    });
-  } else {
-    var e = document.createEvent('CustomEvent');
-    e.initCustomEvent(event, true, true);
-  }
+  var e = new CustomEvent(event,{
+    bubbles: true,
+    cancelable: true
+  });
 
   el.dispatchEvent(e);
 };
