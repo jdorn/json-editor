@@ -14,6 +14,9 @@ JSONEditor.plugins = {
   },
   epiceditor: {
     
+  },
+  sceditor: {
+    
   }
 };
 

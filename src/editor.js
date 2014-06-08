@@ -139,7 +139,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.watch_listener();
   },
   getButton: function(text, icon, title) {
-    var btnClass = 'json-editor-btn-'+icon
+    var btnClass = 'json-editor-btn-'+icon;
     if(!this.iconlib) icon = null;
     else icon = this.iconlib.getIcon(icon);
     
@@ -167,7 +167,7 @@ JSONEditor.AbstractEditor = Class.extend({
     if(this.link_holder) this.link_holder.appendChild(link);
   },
   getLink: function(data) {
-    var holder;
+    var holder, link;
         
     // Get mime type of the link
     var mime = data.mediaType || 'application/javascript';
@@ -179,7 +179,7 @@ JSONEditor.AbstractEditor = Class.extend({
     // Image links
     if(type === 'image') {
       holder = this.theme.getBlockLinkHolder();
-      var link = document.createElement('a');
+      link = document.createElement('a');
       link.setAttribute('target','_blank');
       var image = document.createElement('img');
       
@@ -197,7 +197,7 @@ JSONEditor.AbstractEditor = Class.extend({
     else if(['audio','video'].indexOf(type) >=0) {
       holder = this.theme.getBlockLinkHolder();
       
-      var link = this.theme.getBlockLink();
+      link = this.theme.getBlockLink();
       link.setAttribute('target','_blank');
       
       var media = document.createElement(type);
@@ -267,8 +267,9 @@ JSONEditor.AbstractEditor = Class.extend({
     else return this.getTitle();
   },
   onWatchedFieldChange: function() {
+    var vars;
     if(this.header_template) {
-      var vars = $extend(this.getWatchedFieldValues(),{
+      vars = $extend(this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,
         title: this.getTitle()
@@ -282,7 +283,7 @@ JSONEditor.AbstractEditor = Class.extend({
       }
     }
     if(this.link_watchers.length) {
-      var vars = this.getWatchedFieldValues();
+      vars = this.getWatchedFieldValues();
       for(var i=0; i<this.link_watchers.length; i++) {
         this.link_watchers[i](vars);
       }
@@ -334,7 +335,7 @@ JSONEditor.AbstractEditor = Class.extend({
       return this.schema.required;
     }
     else if(this.jsoneditor.options.required_by_default) {
-      return true
+      return true;
     }
     else {
       return false;

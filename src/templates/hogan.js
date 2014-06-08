@@ -6,7 +6,7 @@ JSONEditor.defaults.templates.hogan = function() {
       var compiled = Hogan.compile(template);
       return function(context) {
         return compiled.render(context);
-      }
+      };
     }
   };
 };

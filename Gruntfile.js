@@ -70,6 +70,43 @@ module.exports = function(grunt) {
         files: ["src/**/*.js"],
         tasks: ["concat"]
       }
+    },
+    jshint: {
+      beforeconcat: [
+        'src/class.js',
+        'src/ie9.js',
+        
+        // Utils like extend, each, and trigger
+        'src/utilities.js',
+        
+        // The main JSONEditor class
+        'src/core.js',
+
+        // JSON Schema validator
+        'src/validator.js',
+        
+        // All the editors
+        'src/editor.js',
+        'src/editors/*.js',
+        
+        // All the themes and iconlibs
+        'src/theme.js',
+        'src/themes/*.js',
+        'src/iconlib.js',
+        'src/iconlibs/*.js',
+
+        // The JS templating engines
+        'src/templates/*.js',
+
+        // Set the defaults
+        'src/defaults.js',
+        
+        // Wrapper for $.fn style initialization
+        'src/jquery.js'
+      ],
+      afterconcat: [
+        'dist/jsoneditor.js'
+      ]
     }
   });
 
@@ -77,8 +114,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
 
   // Default task.
-  grunt.registerTask('default', ['concat', 'uglify']);
+  grunt.registerTask('default', ['jshint:beforeconcat','concat','jshint:afterconcat','uglify']);
 
 };

@@ -89,7 +89,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       this.title_controls = this.theme.getHeaderButtonHolder();
       this.title.appendChild(this.title_controls);
       if(this.schema.description) {
-        this.description = this.theme.getDescription(this.schema.description)
+        this.description = this.theme.getDescription(this.schema.description);
         this.container.appendChild(this.description);
       }
       this.error_holder = document.createElement('div');
@@ -274,7 +274,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
   },
   getMax: function() {
-    if((this.schema.items instanceof Array) && this.schema.additionalItems == false) {
+    if((this.schema.items instanceof Array) && this.schema.additionalItems === false) {
       return Math.min(this.schema.items.length,this.schema.maxItems || Infinity);
     }
     else {
@@ -614,7 +614,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       }
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
-    })
+    });
     self.controls.appendChild(this.delete_last_row_button);
 
     this.remove_all_rows_button = this.getButton('All','delete','Delete All');
@@ -622,7 +622,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.setValue([]);
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
-    })
+    });
     self.controls.appendChild(this.remove_all_rows_button);
 
     if(self.tabs) {

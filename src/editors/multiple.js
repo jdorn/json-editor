@@ -161,7 +161,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       e.stopPropagation();
       
       self.switchEditor(self.display_text.indexOf(this.value));
-    })
+    });
     this.switcher.style.marginBottom = 0;
     this.switcher.style.width = 'auto';
     this.switcher.style.display = 'inline-block';

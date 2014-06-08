@@ -3,7 +3,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     return [];
   },
   build: function() {
-    var self = this;
+    var self = this, i;
     if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
@@ -12,7 +12,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 
     var e = this.schema.items.enum || [];
     var options = [];
-    for(var i=0; i<e.length; i++) {
+    for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
       if(this.sanitize(e[i]) !== e[i]) continue;
 
@@ -25,7 +25,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 
       this.inputs = {};
       this.controls = {};
-      for(var i=0; i<options.length; i++) {
+      for(i=0; i<options.length; i++) {
         this.inputs[options[i]] = this.theme.getCheckbox();
         this.select_options[options[i]] = this.inputs[options[i]];
         var label = this.theme.getCheckboxLabel(options[i]);
@@ -40,7 +40,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       this.input.multiple = true;
       this.input.size = Math.min(10,options.length);
 
-      for(var i=0; i<options.length; i++) {
+      for(i=0; i<options.length; i++) {
         this.select_options[options[i]] = this.input.children[i];
       }
 
@@ -58,7 +58,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       e.stopPropagation();
 
       var new_value = [];
-      for(var i = 0; i<options.length; i++) {
+      for(i = 0; i<options.length; i++) {
         if(self.select_options[options[i]].selected || self.select_options[options[i]].checked) new_value.push(self.select_values[options[i]]);
       }
 
@@ -70,17 +70,18 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     });
   },
   setValue: function(value, initial) {
+    var i;
     value = value || [];
     if(typeof value !== "object") value = [value];
     else if(!(value instanceof Array)) value = [];
 
     // Make sure we are dealing with an array of strings so we can check for strict equality
-    for(var i=0; i<value.length; i++) {
+    for(i=0; i<value.length; i++) {
       if(typeof value[i] !== "string") value[i] += "";
     }
 
     // Update selected status of options
-    for(var i in this.select_options) {
+    for(i in this.select_options) {
       if(!this.select_options.hasOwnProperty(i)) continue;
 
       this.select_options[i][this.input_type === "select"? "selected" : "checked"] = (value.indexOf(i) !== -1);

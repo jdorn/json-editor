@@ -83,7 +83,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     return Math.min(12,Math.max(min,num));
   },
   build: function() {
-    var self = this;
+    var self = this, i;
     if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
@@ -123,7 +123,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         }
       }
       else {
-        for(var i=0; i<this.schema.enumSource.length; i++) {
+        for(i=0; i<this.schema.enumSource.length; i++) {
           // Shorthand for watched variable
           if(typeof this.schema.enumSource[i] === "string") {
             this.enumSource[i] = {
@@ -142,7 +142,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       
       // Now, enumSource is an array of sources
       // Walk through this array and fix up the values
-      for(var i=0; i<this.enumSource.length; i++) {
+      for(i=0; i<this.enumSource.length; i++) {
         if(this.enumSource[i]) {
           this.enumSource[i].value = this.jsoneditor.compileTemplate(this.enumSource[i].value, this.template_engine);
         }
@@ -324,21 +324,23 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   afterInputReady: function() {
-    var self = this;
+    var self = this, options;
     
     // Code editor
     if(this.source_code) {      
       // WYSIWYG html and bbcode editor
-      if(this.options.wysiwyg
-        && ['html','bbcode'].indexOf(this.input_type) >= 0
-        && window.$ && $.fn && $.fn.sceditor
+      if(this.options.wysiwyg && 
+        ['html','bbcode'].indexOf(this.input_type) >= 0 && 
+        window.$ && $.fn && $.fn.sceditor
       ) {
-        $(self.input).sceditor({
+        options = $extend({},{
           plugins: self.input_type==='html'? 'xhtml' : 'bbcode',
           emoticonsEnabled: false,
           width: '100%',
           height: 300
-        });
+        },JSONEditor.plugins.sceditor);
+        
+        $(self.input).sceditor(options);
         
         self.sceditor_instance = $(self.input).sceditor('instance');
         
@@ -360,7 +362,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.input.parentNode.insertBefore(this.epiceditor_container,this.input);
         this.input.style.display = 'none';
         
-        var options = $extend({},JSONEditor.plugins.epiceditor,{
+        options = $extend({},JSONEditor.plugins.epiceditor,{
           container: this.epiceditor_container,
           clientSideStorage: false
         });
@@ -399,7 +401,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         // The theme
         if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
         // The mode
-        var mode = ace.require("ace/mode/"+mode);
+        mode = ace.require("ace/mode/"+mode);
         if(mode) this.ace_editor.getSession().setMode(new mode.Mode());
         
         // Listen for changes
@@ -451,16 +453,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
    * Re-calculates the value if needed
    */
   onWatchedFieldChange: function() {    
-    var self = this;
+    var self = this, vars, j;
     
     // If this editor needs to be rendered by a macro template
     if(this.template) {
-      var vars = this.getWatchedFieldValues();
+      vars = this.getWatchedFieldValues();
       this.setValue(this.template(vars),false,true);
     }
     // If this editor uses a dynamic select box
     if(this.enumSource) {
-      var vars = this.getWatchedFieldValues();
+      vars = this.getWatchedFieldValues();
       var select_options = [];
       var select_titles = [];
       
@@ -481,7 +483,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           // Filter the items
           if(this.enumSource[i].filter) {
             var new_items = [];
-            for(var j=0; j<items.length; j++) {
+            for(j=0; j<items.length; j++) {
               if(filter({i:j,item:items[j]})) new_items.push(items[j]);
             }
             items = new_items;
@@ -489,7 +491,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           
           var item_titles = [];
           var item_values = [];
-          for(var j=0; j<items.length; j++) {
+          for(j=0; j<items.length; j++) {
             var item = items[j];
             
             // Rendered value

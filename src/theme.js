@@ -304,7 +304,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   markTabInactive: function(tab) {
     this.applyStyles(tab,{
-      opacity:.5,
+      opacity:0.5,
       background: ''
     });
   },

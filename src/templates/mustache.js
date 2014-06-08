@@ -5,7 +5,7 @@ JSONEditor.defaults.templates.mustache = function() {
     compile: function(template) {
       return function(view) {
         return Mustache.render(template, view);
-      }
+      };
     }
   };
 };

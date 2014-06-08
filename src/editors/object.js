@@ -52,7 +52,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
   },
   layoutEditors: function() {
-    var self = this;
+    var self = this, i, j;
     
     if(!this.row_container) return;
     
@@ -71,7 +71,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           if(rows[i].width + width <= 12) {
             // If the editor is close to the other elements in height
             // i.e. Don't put a really tall editor in an otherwise short row or vice versa
-            if(!height || (rows[i].minh*.5 < height && rows[i].maxh*2 > height)) {
+            if(!height || (rows[i].minh*0.5 < height && rows[i].maxh*2 > height)) {
               found = i;
             }
           }
@@ -103,11 +103,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       // Do this by increasing all editors' sizes proprotionately
       // Any left over space goes to the biggest editor
       // Don't touch rows with a width of 6 or less
-      for(var i=0; i<rows.length; i++) {
+      for(i=0; i<rows.length; i++) {
         if(rows[i].width < 12) {
           var biggest = false;
           var new_width = 0;
-          for(var j=0; j<rows[i].editors.length; j++) {
+          for(j=0; j<rows[i].editors.length; j++) {
             if(biggest === false) biggest = j;
             else if(rows[i].editors[j].width > rows[i].editors[biggest].width) biggest = j;
             rows[i].editors[j].width *= 12/rows[i].width;
@@ -125,10 +125,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Layout the form
       container = document.createElement('div');
-      for(var i=0; i<rows.length; i++) {
+      for(i=0; i<rows.length; i++) {
         var row = this.theme.getGridRow();
         container.appendChild(row);
-        for(var j=0; j<rows[i].editors.length; j++) {
+        for(j=0; j<rows[i].editors.length; j++) {
           var editor = this.editors[rows[i].editors[j].key];
           
           if(editor.options.hidden) editor.container.style.display = 'none';
@@ -320,7 +320,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       // Show/Hide button
       this.collapsed = false;
       this.toggle_button = this.getButton('','collapse','Collapse');
-      this.title_controls.appendChild(this.toggle_button)
+      this.title_controls.appendChild(this.toggle_button);
       this.toggle_button.addEventListener('click',function() {
         if(self.collapsed) {
           self.editor_holder.style.display = '';
@@ -671,7 +671,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     
     // Additional addproperty checkboxes not tied to a current editor
     if(this.addproperty_checkboxes) {
-      for(var i in this.addproperty_checkboxes) {
+      for(i in this.addproperty_checkboxes) {
         if(!this.addproperty_checkboxes.hasOwnProperty(i)) continue;
         if(this.editors[i]) continue;
         show_modal = true;

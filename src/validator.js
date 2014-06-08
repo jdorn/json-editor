@@ -72,9 +72,9 @@ JSONEditor.Validator = Class.extend({
       }
     }
     // Expand out any references
-    else if(schema['$ref']) {
-      var ref = schema['$ref'];
-      delete schema['$ref'];
+    else if(schema.$ref) {
+      var ref = schema.$ref;
+      delete schema.$ref;
 
       // If we're currently loading this external reference, wait for it to be done
       if(self.refs[ref] && self.refs[ref] instanceof Array) {
@@ -283,7 +283,7 @@ JSONEditor.Validator = Class.extend({
           valid++;
         }
 
-        for(var j=0; j<tmp.length; j++) {
+        for(j=0; j<tmp.length; j++) {
           tmp[j].path = path+'.oneOf['+i+']'+tmp[j].path.substr(path.length);
         }
         oneof_errors = oneof_errors.concat(tmp);
@@ -747,7 +747,7 @@ JSONEditor.Validator = Class.extend({
     if(schema.anyOf) {
       $each(schema.anyOf, function(key,value) {
         schema.anyOf[key] = self.expandSchema(value);
-      })
+      });
     }
     // Version 4 `dependencies` (schema dependencies)
     if(schema.dependencies) {
@@ -859,7 +859,7 @@ JSONEditor.Validator = Class.extend({
 
 
           extended.type = val.filter(function(n) {
-            return obj2.type.indexOf(n) !== -1
+            return obj2.type.indexOf(n) !== -1;
           });
 
           // If there's only 1 type and it's a primitive, use a string instead of array
@@ -870,7 +870,7 @@ JSONEditor.Validator = Class.extend({
         // All other arrays should be intersected (enum, etc.)
         else if(typeof val === "object" && val instanceof Array){
           extended[prop] = val.filter(function(n) {
-            return obj2[prop].indexOf(n) !== -1
+            return obj2[prop].indexOf(n) !== -1;
           });
         }
         // Objects should be recursively merged

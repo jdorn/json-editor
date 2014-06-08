@@ -141,8 +141,8 @@ JSONEditor.prototype = {
     var classname;
 
     $each(JSONEditor.defaults.resolvers,function(i,resolver) {
-      var tmp;
-      if(tmp = resolver(schema)) {
+      var tmp = resolver(schema);
+      if(tmp) {
         if(JSONEditor.defaults.editors[tmp]) {
           classname = tmp;
           return false;

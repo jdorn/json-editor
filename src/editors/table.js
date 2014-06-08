@@ -401,7 +401,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.refreshRowButtons();
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
-    })
+    });
     self.controls.appendChild(this.add_row_button);
 
     this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
@@ -414,7 +414,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.setValue(rows);
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
-    })
+    });
     self.controls.appendChild(this.delete_last_row_button);
 
     this.remove_all_rows_button = this.getButton('All','delete','Delete All');
@@ -425,7 +425,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.setValue([]);
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
-    })
+    });
     self.controls.appendChild(this.remove_all_rows_button);
   }
 });

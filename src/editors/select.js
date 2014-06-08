@@ -91,7 +91,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     }
     // Other, not supported
     else {
-      throw "'select' editor requires the enum property to be set."
+      throw "'select' editor requires the enum property to be set.";
     }
 
     if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');

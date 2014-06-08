@@ -24,7 +24,7 @@ JSONEditor.defaults.templates.default = function() {
         var ret = template+"";
         // Only supports basic {{var}} macro replacement
         $each(expanded,function(key,value) {
-          ret = ret.replace(new RegExp('\{\{\\s*'+key+'\\s*\}\}','g'),value);
+          ret = ret.replace(new RegExp('{{\\s*'+key+'\\s*}}','g'),value);
         });
         return ret;
       };
