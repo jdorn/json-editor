@@ -404,6 +404,42 @@ Show a video preview (using HTML5 video)
 The `href` property is a template that gets re-evaluated everytime the value changes.
 The variable `self` is always available.  Look at the __Dependencies__ section below for how to include other fields or use a custom template engine.
 
+### Property Ordering
+
+There is no way to specify property ordering in JSON Schema (although this may change in v5 of the spec).
+
+JSON Editor introduces a new keyword `propertyOrder` for this purpose.  The default property order if unspecified is 1000.  Properties with the same order will use normal JSON key ordering.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "prop1": {
+      "type": "string"
+    },
+    "prop2": {
+      "type": "string",
+      "propertyOrder": 10
+    },
+    "prop3": {
+      "type": "string",
+      "propertyOrder": 1001
+    },
+    "prop4": {
+      "type": "string",
+      "propertyOrder": 1
+    }
+  }
+}
+```
+
+In the above example schema, `prop1` does not have an order specified, so it will default to 1000.
+So, the final order of properties in the form (and in returned JSON data) will be:
+
+1.  prop4 (order 1)
+2.  prop2 (order 10)
+3.  prop1 (order 1000)
+4.  prop3 (order 1001)
 
 ### format
 

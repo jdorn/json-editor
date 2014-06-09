@@ -304,11 +304,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         self.maxwidth += self.editors[key].getNumColumns();
       });
 
-      // Initial layout
-      this.layoutEditors();
-      // Do it again now that we know the approximate heights of elements
-      this.layoutEditors();
-
       // Control buttons
       this.title_controls = this.getTheme().getHeaderButtonHolder();
       this.editjson_controls = this.getTheme().getHeaderButtonHolder();
@@ -372,6 +367,27 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_controls.appendChild(this.addproperty_holder);
       this.refreshAddProperties();
     }
+    
+    // Sort editors by propertyOrder
+    var sorted = {};
+    var keys = Object.keys(this.editors);
+    keys = keys.sort(function(a,b) {
+      var ordera = self.editors[a].schema.propertyOrder;
+      var orderb = self.editors[b].schema.propertyOrder;
+      if(typeof ordera !== "number") ordera = 1000;
+      if(typeof orderb !== "number") orderb = 1000;
+      
+      return ordera - orderb;
+    });
+    for(var i=0; i<keys.length; i++) {
+      sorted[keys[i]] = this.editors[keys[i]];
+    }
+    this.editors = sorted;
+
+    // Initial layout
+    this.layoutEditors();
+    // Do it again now that we know the approximate heights of elements
+    this.layoutEditors();
     
     this.jsoneditor.notifyWatchers(this.path);
   },

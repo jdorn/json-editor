@@ -351,6 +351,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
           // Set the value and update
           self.input.value = val.html();
+          self.value = self.input.value;
           if(self.parent) self.parent.onChildEditorChange(self);
           else self.jsoneditor.onChange();
           self.jsoneditor.notifyWatchers(self.path);

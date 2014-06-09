@@ -49,6 +49,8 @@ JSONEditor.prototype = {
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);
 
+      self.validation_results = self.validator.validate(self.root.getValue());
+      self.root.showValidationErrors(self.validation_results);
       self.ready = true;
 
       // Fire ready event asynchronously
