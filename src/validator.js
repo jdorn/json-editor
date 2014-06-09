@@ -4,14 +4,14 @@ JSONEditor.Validator = Class.extend({
     this.options = options || {};
     this.refs = this.options.refs || {};
 
-    // Store any $ref and definitions
     this.ready_callbacks = [];
 
     if(this.options.ready) this.ready(this.options.ready);
+    // Store any $ref and definitions
     this.getRefs();
   },
   ready: function(callback) {
-    if(this.is_ready) callback.apply(self,[this.expanded]);
+    if(this.is_ready) callback.apply(this,[this.expanded]);
     else {
       this.ready_callbacks.push(callback);
     }
