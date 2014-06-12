@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.13 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.14 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-06-08
+ * Date: 2014-06-11
  */
 
 /**
@@ -478,14 +478,14 @@ JSONEditor.Validator = Class.extend({
     this.options = options || {};
     this.refs = this.options.refs || {};
 
-    // Store any $ref and definitions
     this.ready_callbacks = [];
 
     if(this.options.ready) this.ready(this.options.ready);
+    // Store any $ref and definitions
     this.getRefs();
   },
   ready: function(callback) {
-    if(this.is_ready) callback.apply(self,[this.expanded]);
+    if(this.is_ready) callback.apply(this,[this.expanded]);
     else {
       this.ready_callbacks.push(callback);
     }
