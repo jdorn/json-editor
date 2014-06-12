@@ -47,6 +47,13 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema can be of any type
   if(schema.type === "any") return "multiple";
 });
+// Editor for base64 encoded files
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  // If the schema can be of any type
+  if(schema.type === "string" && schema.media && schema.media.binaryEncoding==="base64") {
+    return "base64";
+  }
+});
 // Use the table editor for arrays with the format set to `table`
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // Type `array` with format set to `table`

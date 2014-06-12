@@ -34,6 +34,7 @@ module.exports = function(grunt) {
           'src/editors/enum.js',
           'src/editors/select.js',
           'src/editors/multiselect.js',
+          'src/editors/base64.js',
           
           // All the themes and iconlibs
           'src/theme.js',
