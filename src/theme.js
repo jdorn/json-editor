@@ -83,9 +83,10 @@ JSONEditor.AbstractTheme = Class.extend({
   getMultiCheckboxHolder: function(controls,label,description) {
     var el = document.createElement('div');
 
-    label.style.display = 'block';
-
-    el.appendChild(label);
+    if(label) {
+      label.style.display = 'block';
+      el.appendChild(label);
+    }
 
     for(var i in controls) {
       if(!controls.hasOwnProperty(i)) continue;
