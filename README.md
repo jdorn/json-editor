@@ -81,6 +81,21 @@ Here are all the available options:
     <td><code>false</code></td>
   </tr>
   <tr>
+    <td>disable_array_add</td>
+    <td>If <code>true</code>, remove all "add row" buttons from arrays.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_array_delete</td>
+    <td>If <code>true</code>, remove all "delete row" buttons from arrays.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_array_reorder</td>
+    <td>If <code>true</code>, remove all "move up" and "move down" buttons from arrays.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
     <td>disable_collapse</td>
     <td>If <code>true</code>, remove all collapse buttons from objects and arrays.</td>
     <td><code>false</code></td>
@@ -661,6 +676,9 @@ Editor Options
 Editors can accept options which alter the behavior in some way.
 
 *  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
+*  `disable_array_add` - If set to true, the "add row" button will be hidden (works for arrays)
+*  `disable_array_delete` - If set to true, the "delete row" buttons will be hidden (works for arrays)
+*  `disable_array_reorder` - If set to true, the "move up/down" buttons will be hidden (works for arrays)
 *  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
 *  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)
 *  `disable_properties` - If set to true, the Edit Properties button will be hidden (works for objects)

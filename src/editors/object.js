@@ -179,7 +179,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           container: holder,
           path: self.path+'.'+key,
           parent: self,
-          compact: true
+          compact: true,
+          required: true
         });
         
         var width = self.editors[key].options.hidden? 0 : self.editors[key].getNumColumns();
