@@ -383,12 +383,23 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       sorted[keys[i]] = this.editors[keys[i]];
     }
     this.editors = sorted;
-
-    // Initial layout
-    this.layoutEditors();
-    // Do it again now that we know the approximate heights of elements
-    this.layoutEditors();
     
+    
+    // Fix table cell ordering
+    if(this.getOption('table_row',false)) {
+      this.editor_holder = this.container;
+      $each(this.editors, function(key,editor) {
+        self.editor_holder.appendChild(editor.container);
+      });
+    }
+    // Layout object editors in grid if needed
+    else {
+      // Initial layout
+      this.layoutEditors();
+      // Do it again now that we know the approximate heights of elements
+      this.layoutEditors();
+    }
+
     this.jsoneditor.notifyWatchers(this.path);
   },
   showEditJSON: function() {
