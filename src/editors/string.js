@@ -295,7 +295,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     // Any special formatting that needs to happen after the input is added to the dom
     requestAnimationFrame(function() {
-      self.afterInputReady();
+      // Skip in case the input is only a temporary editor,
+      // otherwise, in the case of an ace_editor creation,
+      // it will generate an error trying to append it to the missing parentNode
+      if(self.input.parentNode) self.afterInputReady();
     });
     
     this.register();
