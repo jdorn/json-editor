@@ -140,11 +140,29 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     }
   },
   enable: function() {
-    if(!this.always_disabled) this.input.disabled = false;
+    if(!this.always_disabled) {
+      if(this.input) {
+        this.input.disabled = false;
+      }
+      else if(this.inputs) {
+        for(var i in this.inputs) {
+          if(!this.inputs.hasOwnProperty(i)) continue;
+          this.inputs[i].disabled = false;
+        }
+      }
+    }
     this._super();
   },
   disable: function() {
-    this.input.disabled = true;
+    if(this.input) {
+      this.input.disabled = true;
+    }
+    else if(this.inputs) {
+      for(var i in this.inputs) {
+        if(!this.inputs.hasOwnProperty(i)) continue;
+        this.inputs[i].disabled = true;
+      }
+    }
     this._super();
   }
 });
