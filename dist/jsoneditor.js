@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.15 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.16 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-06-17
+ * Date: 2014-06-18
  */
 
 /**
@@ -2125,7 +2125,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     // Any special formatting that needs to happen after the input is added to the dom
     requestAnimationFrame(function() {
-      self.afterInputReady();
+      // Skip in case the input is only a temporary editor,
+      // otherwise, in the case of an ace_editor creation,
+      // it will generate an error trying to append it to the missing parentNode
+      if(self.input.parentNode) self.afterInputReady();
     });
     
     this.register();
@@ -3805,7 +3808,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       });
       
       if(controls_holder) {
-        controls_holder.appendChild(self.rows[i].moveup_button);
+        controls_holder.appendChild(self.rows[i].movedown_button);
       }
     }
 
@@ -5166,11 +5169,29 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     }
   },
   enable: function() {
-    if(!this.always_disabled) this.input.disabled = false;
+    if(!this.always_disabled) {
+      if(this.input) {
+        this.input.disabled = false;
+      }
+      else if(this.inputs) {
+        for(var i in this.inputs) {
+          if(!this.inputs.hasOwnProperty(i)) continue;
+          this.inputs[i].disabled = false;
+        }
+      }
+    }
     this._super();
   },
   disable: function() {
-    this.input.disabled = true;
+    if(this.input) {
+      this.input.disabled = true;
+    }
+    else if(this.inputs) {
+      for(var i in this.inputs) {
+        if(!this.inputs.hasOwnProperty(i)) continue;
+        this.inputs[i].disabled = true;
+      }
+    }
     this._super();
   }
 });
