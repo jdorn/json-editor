@@ -565,7 +565,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       });
       
       if(controls_holder) {
-        controls_holder.appendChild(self.rows[i].moveup_button);
+        controls_holder.appendChild(self.rows[i].movedown_button);
       }
     }
 
