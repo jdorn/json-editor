@@ -5433,7 +5433,7 @@ JSONEditor.defaults.editors.radio = JSONEditor.AbstractEditor.extend({
     this.inputs = {};
     this.controls = {};
     for(i=0; i<options.length; i++) {
-      this.inputs[options[i]] = this.theme.getFormInputField('radio');
+      this.inputs[options[i]] = this.theme.getRadio();
       this.inputs[options[i]].setAttribute('value', options[i]);
       this.inputs[options[i]].setAttribute('name', this.formname);
       var label = this.theme.getRadioLabel(options[i]);
@@ -5582,6 +5582,12 @@ JSONEditor.AbstractTheme = Class.extend({
 
     if(description) el.appendChild(description);
 
+    return el;
+  },
+  getRadio: function() {
+    var el = this.getFormInputField('radio');
+    el.style.display = 'inline-block';
+    el.style.width = 'auto';
     return el;
   },
   getRadioGroupHolder: function(controls,label,description) {
