@@ -459,7 +459,7 @@ So, the final order of properties in the form (and in returned JSON data) will b
 ### format
 
 JSON Editor supports many different formats for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
-If the `enum` property is specified, `format` will be ignored.
+If the `enum` property is specified, `format` will be limited to "radio" or "select" (default).
 
 JSON Editor uses HTML5 input types, so some of these may render as basic text input in older browsers:
 
@@ -1032,10 +1032,9 @@ The following schema will now use this custom editor for each of the array eleme
 
 If you create a custom editor interface that you think could be helpful to others, submit a pull request!
 
-The possibilities are endless.  Some ideas:
+The possibilities are endless. Some ideas:
 
 *  A compact way to edit objects
-*  Radio button version of the `select` editor
 *  Autosuggest for strings (like enum, but not restricted to those values)
 *  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data URLs
