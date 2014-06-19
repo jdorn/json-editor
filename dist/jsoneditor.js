@@ -5669,7 +5669,7 @@ JSONEditor.AbstractTheme = Class.extend({
     var el = document.createElement('div');
     el.className = 'form-control';
     if(label) el.appendChild(label);
-    if(input.type === 'checkbox') {
+    if((input.type === 'checkbox') || (input.type === 'radio')) {
       label.insertBefore(input,label.firstChild);
     }
     else {
