@@ -217,7 +217,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
       return "enum";
     }
     else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
-      return "select";
+      return schema.format || "select";
     }
   }
 });
@@ -231,4 +231,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If this schema uses `oneOf`
   if(schema.oneOf) return "multiple";
+});
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+	if(typeof schema.type !== "string") return "multiple";
 });
