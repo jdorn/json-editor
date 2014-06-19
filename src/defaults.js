@@ -83,6 +83,3 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If this schema uses `oneOf`
   if(schema.oneOf) return "multiple";
 });
-JSONEditor.defaults.resolvers.unshift(function(schema) {
-	if(typeof schema.type !== "string") return "multiple";
-});
