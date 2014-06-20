@@ -94,9 +94,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     // Select box
     if(this.schema.enum) {
-      this.input_type = 'select';
-      this.select_options = this.schema.enum;
-      this.input = this.theme.getSelectInput(this.select_options);
+      if(this.schema.enum.length === 1) {
+        this.input_type = 'text';
+        this.input = this.theme.getFormInputField(this.input_type);
+        this.input.disabled = true;
+        this.schema.default = this.schema.enum[0];
+      } else {
+        this.input_type = 'select';
+        this.select_options = this.schema.enum;
+        this.input = this.theme.getSelectInput(this.select_options);
+      }
     }
     // Dynamic Select box
     else if(this.schema.enumSource) {

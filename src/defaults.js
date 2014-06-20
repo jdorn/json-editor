@@ -67,7 +67,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
     if(schema.type === "array" || schema.type === "object") {
       return "enum";
     }
-    else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
+    else if(schema.type === "number" || schema.type === "integer" || (schema.type === "string" && schema.enum.lenght !== 1)) {
       return "select";
     }
   }
