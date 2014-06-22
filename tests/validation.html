@@ -7,6 +7,7 @@
     <script src='../dist/jsoneditor.js'></script>
 </head>
 <body>
+  <div id='output'></div>
 <script>
     var tests = {
         required3: {
@@ -566,6 +567,56 @@
                 }
             ]
         },
+        definitions_nested: {
+            schema: {
+                type: "object",
+                properties: {
+                  id: {
+                    $ref: "#/definitions/app/definitions/id"
+                  },
+                  definitions: {
+                    type: "number"
+                  },
+                  test: {
+                    $ref: "#/definitions/test"
+                  }
+                },
+                definitions: {
+                    app: {
+                        definitions: {
+                          id: {
+                            type: "string"
+                          }
+                        }
+                    },
+                    test: {
+                      properties: {
+                        definitions: {
+                          type: "number"
+                        }
+                      }
+                    }
+                }
+            },
+            valid: [
+                {
+                    id: "test",
+                    definitions: 3,
+                    test: {definitions: 3}
+                }
+            ],
+            invalid: [
+                {
+                    id: 1
+                },
+                {
+                    definitions: "string"
+                },
+                {
+                  test: {definitions: "string"}
+                }
+            ]
+        },
         $ref: {
             schema: {
                 type: "object",
@@ -698,6 +749,7 @@
                         var result = self.validate(value);
                         if(result.length) {
                             console.error(num,'valid',j,JSON.stringify(result,null,2));
+                            $("#output").append("<div><strong>"+i+" test "+j+"</strong>:: Expected: [], Actual: "+JSON.stringify(result)+"</div>");
                         }
                         else {
                             console.log(num,'valid',j);
@@ -708,6 +760,8 @@
                         var result = self.validate(value);
                         if(!result.length) {
                             console.error(num,'invalid',j,JSON.stringify(result,null,2));
+                            $("#output").append("<div><strong>"+i+" test "+j+"</strong>:: Expected: errors, Actual: []</div>");
+
                         }
                         else {
                             var errors = [];
