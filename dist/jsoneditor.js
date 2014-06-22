@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.16 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.17 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-06-18
+ * Date: 2014-06-22
  */
 
 /**
@@ -504,9 +504,10 @@ JSONEditor.Validator = Class.extend({
       });
     });
   },
-  _getRefs: function(schema,callback) {
+  _getRefs: function(schema,callback,path,in_definitions) {
     var self = this;
     var is_root = schema === this.original_schema;
+    path = path || "#";
 
     var waiting, finished, check_if_finished, called;
 
@@ -514,7 +515,7 @@ JSONEditor.Validator = Class.extend({
     schema = $extend({},schema);
 
     // First expand out any definition in the root node
-    if(is_root && schema.definitions) {
+    if(schema.definitions && (is_root || in_definitions)) {
       var defs = schema.definitions;
       delete schema.definitions;
 
@@ -523,7 +524,7 @@ JSONEditor.Validator = Class.extend({
         if(finished >= waiting) {
           if(called) return;
           called = true;
-          self._getRefs(schema,callback);
+          self._getRefs(schema,callback,path);
         }
       };
 
@@ -535,10 +536,10 @@ JSONEditor.Validator = Class.extend({
         $each(defs,function(i,definition) {
           // Expand the definition recursively
           self._getRefs(definition,function(def_schema) {
-            self.refs['#/definitions/'+i] = def_schema;
+            self.refs[path+'/definitions/'+i] = def_schema;
             finished++;
             check_if_finished(schema);
-          });
+          },path+'/definitions/'+i,true);
         });
       }
       else {
@@ -585,7 +586,7 @@ JSONEditor.Validator = Class.extend({
               $each(list,function(i,v) {
                 v();
               });
-            });
+            },path);
             return;
           }
           
@@ -633,7 +634,7 @@ JSONEditor.Validator = Class.extend({
 
                   finished++;
                   check_if_finished(schema);
-                });
+                },path+'/'+key+'/'+j);
               }
             });
           }
@@ -644,7 +645,7 @@ JSONEditor.Validator = Class.extend({
 
               finished++;
               check_if_finished(schema);
-            });
+            },path+'/'+key);
           }
         });
       }
@@ -3275,7 +3276,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this._super();
     this.row_holder.style.display = '';
     if(this.tabs_holder) this.tabs_holder.style.display = '';
-    this.controls.style.display = '';
+    if(!this.collapsed) this.controls.style.display = '';
     this.title_controls.style.display = '';
     this.theme.enableHeader(this.title);
   },
@@ -3689,7 +3690,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         controls_needed = true;
       } 
       
-      if(controls_needed) {
+      if(!this.collapsed && controls_needed) {
         this.controls.style.display = '';
       }
       else {
@@ -3826,6 +3827,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.toggle_button.addEventListener('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
+        if(self.panel) self.panel.style.display = '';
         self.row_holder.style.display = row_holder_display;
         if(self.tabs_holder) self.tabs_holder.style.display = '';
         self.controls.style.display = controls_display;
@@ -3836,6 +3838,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.row_holder.style.display = 'none';
         if(self.tabs_holder) self.tabs_holder.style.display = 'none';
         self.controls.style.display = 'none';
+        if(self.panel) self.panel.style.display = 'none';
         self.setButtonText(this,'','expand','Expand');
       }
     });
