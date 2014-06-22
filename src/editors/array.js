@@ -32,7 +32,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this._super();
     this.row_holder.style.display = '';
     if(this.tabs_holder) this.tabs_holder.style.display = '';
-    this.controls.style.display = '';
+    if(!this.collapsed) this.controls.style.display = '';
     this.title_controls.style.display = '';
     this.theme.enableHeader(this.title);
   },
@@ -446,7 +446,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         controls_needed = true;
       } 
       
-      if(controls_needed) {
+      if(!this.collapsed && controls_needed) {
         this.controls.style.display = '';
       }
       else {
@@ -583,6 +583,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.toggle_button.addEventListener('click',function() {
       if(self.collapsed) {
         self.collapsed = false;
+        if(self.panel) self.panel.style.display = '';
         self.row_holder.style.display = row_holder_display;
         if(self.tabs_holder) self.tabs_holder.style.display = '';
         self.controls.style.display = controls_display;
@@ -593,6 +594,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.row_holder.style.display = 'none';
         if(self.tabs_holder) self.tabs_holder.style.display = 'none';
         self.controls.style.display = 'none';
+        if(self.panel) self.panel.style.display = 'none';
         self.setButtonText(this,'','expand','Expand');
       }
     });
