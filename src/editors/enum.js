@@ -104,7 +104,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
         var html = self.getHTML(child);
 
         // Add the keys to object children
-        if(!(el instanceof Array)) {
+        if(!(Array.isArray(el))) {
           // TODO: use theme
           html = '<div><em>'+i+'</em>: '+html+'</div>';
         }
@@ -113,7 +113,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
         ret += '<li>'+html+'</li>';
       });
       
-      if(el instanceof Array) ret = '<ol>'+ret+'</ol>';
+      if(Array.isArray(el)) ret = '<ol>'+ret+'</ol>';
       else ret = "<ul style='margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;'>"+ret+'</ul>';
 
       return ret;

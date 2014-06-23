@@ -73,7 +73,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     var i;
     value = value || [];
     if(typeof value !== "object") value = [value];
-    else if(!(value instanceof Array)) value = [];
+    else if(!(Array.isArray(value))) value = [];
 
     // Make sure we are dealing with an array of strings so we can check for strict equality
     for(i=0; i<value.length; i++) {
