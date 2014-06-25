@@ -203,7 +203,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'required',
-          message: 'Property must be set'
+          key: "error_empty"
         });
 
         // Can't do any more validation at this point
@@ -217,7 +217,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'required',
-          message: 'Property must be set'
+            key: 'error_empty'
         });
       }
       // Not required, no further validation needed
@@ -236,7 +236,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'enum',
-          message: 'Value must be one of the enumerated values'
+          key: 'error_enum'
         });
       }
     }
@@ -268,7 +268,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'anyOf',
-          message: 'Value must validate against at least one of the provided schemas'
+          key: 'error_anyOf'
         });
       }
     }
@@ -294,8 +294,8 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'oneOf',
-          message: 'Value must validate against exactly one of the provided schemas. '+
-            'It currently validates against '+valid+' of the schemas.'
+          key: 'error_oneOf',
+          variables: [valid]
         });
         errors = errors.concat(oneof_errors);
       }
@@ -307,7 +307,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'not',
-          message: 'Value must not validate against the provided schema'
+          key: "error_not"
         });
       }
     }
@@ -327,7 +327,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'type',
-            message: 'Value must be one of the provided types'
+            key: 'error_type_union'
           });
         }
       }
@@ -337,7 +337,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'type',
-            message: 'Value must be of type '+schema.type
+            variables: [schema.type],
+            key: 'error_type'
           });
         }
       }
@@ -359,7 +360,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'disallow',
-            message: 'Value must not be one of the provided disallowed types'
+            key: 'error_disallow_union'
           });
         }
       }
@@ -369,7 +370,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'disallow',
-            message: 'Value must not be of type '+schema.disallow
+            key: "error_disallow",
+            variables: [schema.disallow]
           });
         }
       }
@@ -388,7 +390,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-            message: 'Value must be a multiple of '+(schema.multipleOf || schema.divisibleBy)
+            key: 'error_multipleOf',
+            variables: [(schema.multipleOf || schema.divisibleBy)]
           });
         }
       }
@@ -399,14 +402,16 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maximum',
-            message: 'Value must be less than '+schema.maximum
+            key: 'error_maximum_excl',
+            variables: [schema.maximum]
           });
         }
         else if(!schema.exclusiveMaximum && value > schema.maximum) {
           errors.push({
             path: path,
             property: 'maximum',
-            message: 'Value must be at most '+schema.maximum
+            key: 'error_maximum_incl',
+            variables: [schema.maximum]
           });
         }
       }
@@ -417,14 +422,16 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minimum',
-            message: 'Value must be greater than '+schema.minimum
+            key: 'error_minimum_excl',
+            variables: [schema.minimum]
           });
         }
         else if(!schema.exclusiveMinimum && value < schema.minimum) {
           errors.push({
             path: path,
             property: 'minimum',
-            message: 'Value must be at least '+schema.minimum
+            key: 'error_minimum_incl',
+            variables: [schema.minimum]
           });
         }
       }
@@ -437,7 +444,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxLength',
-            message: 'Value must be at most '+schema.maxLength+' characters long'
+            key: 'error_maxLength',
+            variables: [schema.maxLength]
           });
         }
       }
@@ -448,7 +456,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minLength',
-            message: 'Value must be at least '+schema.minLength+' characters long'
+            key: 'error_minLength',
+            variables: [schema.minLength]
           });
         }
       }
@@ -459,7 +468,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'pattern',
-            message: 'Value must match the provided pattern'
+            key: 'error_pattern'
           });
         }
       }
@@ -490,7 +499,7 @@ JSONEditor.Validator = Class.extend({
               errors.push({
                 path: path,
                 property: 'additionalItems',
-                message: 'No additional items allowed in this array'
+                key: 'error_additionalItems'
               });
               break;
             }
@@ -515,7 +524,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxItems',
-            message: 'Value must have at most '+schema.maxItems+' items'
+            key: 'error_maxItems',
+            variables: [schema.maxItems]
           });
         }
       }
@@ -526,7 +536,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minItems',
-            message: 'Value must have at least '+schema.minItems+' items'
+            key: 'error_minItems',
+            variables: [schema.minItems]
           });
         }
       }
@@ -540,7 +551,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'uniqueItems',
-              message: 'Array must have unique items'
+              key: 'error_uniqueItems'
             });
             break;
           }
@@ -561,7 +572,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxProperties',
-            message: 'Object must have at most '+schema.maxProperties+' properties'
+            key: 'error_maxProperties',
+            variables: [schema.maxProperties]
           });
         }
       }
@@ -577,7 +589,8 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minProperties',
-            message: 'Object must have at least '+schema.minProperties+' properties'
+            key: 'error_minProperties',
+            variables: [schema.minProperties]
           });
         }
       }
@@ -589,7 +602,8 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'required',
-              message: 'Object is missing the required property '+schema.required[i]
+              key: 'error_required',
+              variables: [schema.required[i]]
             });
           }
         }
@@ -638,7 +652,8 @@ JSONEditor.Validator = Class.extend({
               errors.push({
                 path: path,
                 property: 'additionalProperties',
-                message: 'No additional properties allowed, but property '+i+' is set'
+                key: 'error_additional_properties',
+                variables: [i]
               });
               break;
             }
@@ -670,7 +685,8 @@ JSONEditor.Validator = Class.extend({
                 errors.push({
                   path: path,
                   property: 'dependencies',
-                  message: 'Must have property '+schema.dependencies[i][j]
+                  key: 'error_dependency',
+                  variables: [schema.dependencies[i][j]]
                 });
               }
             }
