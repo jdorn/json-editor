@@ -29,7 +29,8 @@ JSONEditor.prototype = {
       ajax: this.options.ajax,
       refs: this.options.refs,
       no_additional_properties: this.options.no_additional_properties,
-      required_by_default: this.options.required_by_default
+      required_by_default: this.options.required_by_default,
+      textCallback: this.options.textCallback
     });
     
     this.validator.ready(function(expanded) {
