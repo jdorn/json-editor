@@ -78,7 +78,7 @@ JSONEditor.Validator = Class.extend({
       delete schema.$ref;
 
       // If we're currently loading this external reference, wait for it to be done
-      if(self.refs[ref] && self.refs[ref] instanceof Array) {
+      if(self.refs[ref] && Array.isArray(self.refs[ref])) {
         self.refs[ref].push(function() {
           schema = $extend({},self.refs[ref],schema);
           callback(schema);
@@ -136,9 +136,9 @@ JSONEditor.Validator = Class.extend({
 
       $each(schema, function(key, value) {
         // Arrays that need to be expanded
-        if(typeof value === "object" && value && value instanceof Array) {
+        if(typeof value === "object" && value && Array.isArray(value)) {
           $each(value,function(j,item) {
-            if(typeof item === "object" && item && !(item instanceof Array)) {
+            if(typeof item === "object" && item && !(Array.isArray(item))) {
               waiting++;
             }
           });
@@ -152,9 +152,9 @@ JSONEditor.Validator = Class.extend({
       if(waiting) {
         $each(schema, function(key, value) {
           // Arrays that need to be expanded
-          if(typeof value === "object" && value && value instanceof Array) {
+          if(typeof value === "object" && value && Array.isArray(value)) {
             $each(value,function(j,item) {
-              if(typeof item === "object" && item && !(item instanceof Array)) {
+              if(typeof item === "object" && item && !(Array.isArray(item))) {
                 self._getRefs(item,function(expanded) {
                   schema[key][j] = expanded;
 
@@ -315,7 +315,7 @@ JSONEditor.Validator = Class.extend({
     // `type` (both Version 3 and Version 4 support)
     if(schema.type) {
       // Union type
-      if(schema.type instanceof Array) {
+      if(Array.isArray(schema.type)) {
         valid = false;
         for(i=0;i<schema.type.length;i++) {
           if(this._checkType(schema.type[i], value)) {
@@ -347,7 +347,7 @@ JSONEditor.Validator = Class.extend({
     // `disallow` (version 3)
     if(schema.disallow) {
       // Union type
-      if(schema.disallow instanceof Array) {
+      if(Array.isArray(schema.disallow)) {
         valid = true;
         for(i=0;i<schema.disallow.length;i++) {
           if(this._checkType(schema.disallow[i], value)) {
@@ -465,11 +465,11 @@ JSONEditor.Validator = Class.extend({
       }
     }
     // Array specific validation
-    else if(typeof value === "object" && value !== null && value instanceof Array) {
+    else if(typeof value === "object" && value !== null && Array.isArray(value)) {
       // `items` and `additionalItems`
       if(schema.items) {
         // `items` is an array
-        if(schema.items instanceof Array) {
+        if(Array.isArray(schema.items)) {
           for(i=0; i<value.length; i++) {
             // If this item has a specific schema tied to it
             // Validate against it
@@ -583,7 +583,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // Version 4 `required`
-      if(schema.required && schema.required instanceof Array) {
+      if(schema.required && Array.isArray(schema.required)) {
         for(i=0; i<schema.required.length; i++) {
           if(typeof value[schema.required[i]] === "undefined") {
             errors.push({
@@ -664,7 +664,7 @@ JSONEditor.Validator = Class.extend({
           if(typeof value[i] === "undefined") continue;
 
           // Property dependency
-          if(schema.dependencies[i] instanceof Array) {
+          if(Array.isArray(schema.dependencies[i])) {
             for(j=0; j<schema.dependencies[i].length; j++) {
               if(typeof value[schema.dependencies[i][j]] === "undefined") {
                 errors.push({
@@ -697,8 +697,8 @@ JSONEditor.Validator = Class.extend({
       else if(type==="number") return typeof value === "number";
       else if(type==="integer") return typeof value === "number" && value === Math.floor(value);
       else if(type==="boolean") return typeof value === "boolean";
-      else if(type==="array") return value instanceof Array;
-      else if(type === "object") return value !== null && !(value instanceof Array) && typeof value === "object";
+      else if(type==="array") return Array.isArray(value);
+      else if(type === "object") return value !== null && !(Array.isArray(value)) && typeof value === "object";
       else if(type === "null") return value === null;
       else return true;
     }
@@ -715,7 +715,7 @@ JSONEditor.Validator = Class.extend({
     // Version 3 `type`
     if(typeof schema.type === 'object') {
       // Array of types
-      if(schema.type instanceof Array) {
+      if(Array.isArray(schema.type)) {
         $each(schema.type, function(key,value) {
           // Schema
           if(typeof value === 'object') {
@@ -731,7 +731,7 @@ JSONEditor.Validator = Class.extend({
     // Version 3 `disallow`
     if(typeof schema.disallow === 'object') {
       // Array of types
-      if(schema.disallow instanceof Array) {
+      if(Array.isArray(schema.disallow)) {
         $each(schema.disallow, function(key,value) {
           // Schema
           if(typeof value === 'object') {
@@ -753,7 +753,7 @@ JSONEditor.Validator = Class.extend({
     // Version 4 `dependencies` (schema dependencies)
     if(schema.dependencies) {
       $each(schema.dependencies,function(key,value) {
-        if(typeof value === "object" && !(value instanceof Array)) {
+        if(typeof value === "object" && !(Array.isArray(value))) {
           schema.dependencies[key] = self.expandSchema(value);
         }
       });
@@ -761,7 +761,7 @@ JSONEditor.Validator = Class.extend({
     // `items`
     if(schema.items) {
       // Array of items
-      if(schema.items instanceof Array) {
+      if(Array.isArray(schema.items)) {
         $each(schema.items, function(key,value) {
           // Schema
           if(typeof value === 'object') {
@@ -777,7 +777,7 @@ JSONEditor.Validator = Class.extend({
     // `properties`
     if(schema.properties) {
       $each(schema.properties,function(key,value) {
-        if(typeof value === "object" && !(value instanceof Array)) {
+        if(typeof value === "object" && !(Array.isArray(value))) {
           schema.properties[key] = self.expandSchema(value);
         }
       });
@@ -785,7 +785,7 @@ JSONEditor.Validator = Class.extend({
     // `patternProperties`
     if(schema.patternProperties) {
       $each(schema.patternProperties,function(key,value) {
-        if(typeof value === "object" && !(value instanceof Array)) {
+        if(typeof value === "object" && !(Array.isArray(value))) {
           schema.patternProperties[key] = self.expandSchema(value);
         }
       });
@@ -813,7 +813,7 @@ JSONEditor.Validator = Class.extend({
     // extends schemas should be merged into parent
     if(schema.extends) {
       // If extends is a schema
-      if(!(schema.extends instanceof Array)) {
+      if(!(Array.isArray(schema.extends))) {
         extended = this.extend(extended,this.expandSchema(schema.extends));
       }
       // If extends is an array of schemas
@@ -845,7 +845,7 @@ JSONEditor.Validator = Class.extend({
       // If this key is also defined in obj2, merge them
       if(typeof obj2[prop] !== "undefined") {
         // Required arrays should be unioned together
-        if(prop === 'required' && typeof val === "object" && val instanceof Array) {
+        if(prop === 'required' && typeof val === "object" && Array.isArray(val)) {
           // Union arrays and unique
           extended.required = val.concat(obj2[prop]).reduce(function(p, c) {
             if (p.indexOf(c) < 0) p.push(c);
@@ -869,7 +869,7 @@ JSONEditor.Validator = Class.extend({
           }
         }
         // All other arrays should be intersected (enum, etc.)
-        else if(typeof val === "object" && val instanceof Array){
+        else if(typeof val === "object" && Array.isArray(val)){
           extended[prop] = val.filter(function(n) {
             return obj2[prop].indexOf(n) !== -1;
           });

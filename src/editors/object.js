@@ -288,7 +288,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
         // If the property is required
         var required;
-        if(self.schema.required && self.schema.required instanceof Array) {
+        if(self.schema.required && Array.isArray(self.schema.required)) {
           required = self.schema.required.indexOf(key) >= 0;
         }
 
@@ -730,7 +730,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     var self = this;
     value = value || {};
     
-    if(typeof value !== "object" || value instanceof Array) value = {};
+    if(typeof value !== "object" || Array.isArray(value)) value = {};
     
     // First, set the values for all of the defined properties
     $each(this.editors, function(i,editor) {      

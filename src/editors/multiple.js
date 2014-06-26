@@ -87,7 +87,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       schema = $extend({},self.schema,type);
 
       // If we need to merge `required` arrays
-      if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
+      if(type.required && Array.isArray(type.required) && self.schema.required && Array.isArray(self.schema.required)) {
         schema.required = self.schema.required.concat(type.required);
       }
     }
@@ -133,7 +133,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         // If any of these primitive types are disallowed
         if(this.schema.disallow) {
           var disallow = this.schema.disallow;
-          if(typeof schema.disallow !== 'object' || !(schema.disallow instanceof Array)) {
+          if(typeof schema.disallow !== 'object' || !(Array.isArray(schema.disallow))) {
             disallow = [this.schema.disallow];
           }
           var allowed_types = [];
@@ -143,7 +143,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
           this.types = allowed_types;
         }
       }
-      else if(this.schema.type instanceof Array) {
+      else if(Array.isArray(this.schema.type)) {
         this.types = this.schema.type;
       }
       else {
@@ -187,7 +187,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         schema = $extend({},self.schema,type);
 
         // If we need to merge `required` arrays
-        if(type.required && type.required instanceof Array && self.schema.required && self.schema.required instanceof Array) {
+        if(type.required && Array.isArray(type.required) && self.schema.required && Array.isArray(self.schema.required)) {
           schema.required = self.schema.required.concat(type.required);
         }
       }

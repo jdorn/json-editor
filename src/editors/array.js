@@ -143,7 +143,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     return (this.schema.items && this.schema.items.title) || 'item';
   },
   getItemSchema: function(i) {
-    if(this.schema.items instanceof Array) {
+    if(Array.isArray(this.schema.items)) {
       if(i >= this.schema.items.length) {
         if(this.schema.additionalItems===true) {
           return {};
@@ -278,7 +278,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
   },
   getMax: function() {
-    if((this.schema.items instanceof Array) && this.schema.additionalItems === false) {
+    if((Array.isArray(this.schema.items)) && this.schema.additionalItems === false) {
       return Math.min(this.schema.items.length,this.schema.maxItems || Infinity);
     }
     else {
@@ -309,7 +309,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     // Update the array's value, adding/removing rows when necessary
     value = value || [];
     
-    if(!(value instanceof Array)) value = [value];
+    if(!(Array.isArray(value))) value = [value];
     
     var serialized = JSON.stringify(value);
     if(serialized === this.serialized) return;

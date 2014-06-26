@@ -92,7 +92,7 @@ JSONEditor.AbstractEditor = Class.extend({
         if(!this.schema.watch.hasOwnProperty(name)) continue;
         path = this.schema.watch[name];
 
-        if(path instanceof Array) {
+        if(Array.isArray(path)) {
           path_parts = [path[0]].concat(path[1].split('.'));
         }
         else {

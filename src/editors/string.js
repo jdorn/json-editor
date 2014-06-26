@@ -105,7 +105,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.enumSource = [];
       
       // Shortcut declaration for using a single array
-      if(!(this.schema.enumSource instanceof Array)) {
+      if(!(Array.isArray(this.schema.enumSource))) {
         if(this.schema.enumValue) {
           this.enumSource = [
             {
@@ -131,7 +131,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
             };
           }
           // Make a copy of the schema
-          else if(!(this.schema.enumSource[i] instanceof Array)) {
+          else if(!(Array.isArray(this.schema.enumSource[i]))) {
             this.enumSource[i] = $extend({},this.schema.enumSource[i]);
           }
           else {
@@ -472,7 +472,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       
       for(var i=0; i<this.enumSource.length; i++) {
         // Constant values
-        if(this.enumSource[i] instanceof Array) {
+        if(Array.isArray(this.enumSource[i])) {
           select_options = select_options.concat(this.enumSource[i]);
           select_titles = select_titles.concat(this.enumSource[i]);
         }
