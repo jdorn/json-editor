@@ -8,7 +8,7 @@ JSONEditor.defaults.template = 'default';
 JSONEditor.defaults.options = {};
 
 // Default texts displayed
-JSONEditor.defaults.text = {
+JSONEditor.defaults.strings = {
     /**
      * When a property is not set
      */

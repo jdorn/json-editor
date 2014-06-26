@@ -5,7 +5,7 @@ JSONEditor.Validator = Class.extend({
     this.refs = this.options.refs || {};
 
     this.ready_callbacks = [];
-    this.textCallback = this.options.textCallback;
+    this.formatter = this.options.formatter;
 
     if(this.options.ready) this.ready(this.options.ready);
     // Store any $ref and definitions
@@ -204,7 +204,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'required',
-          message: this.getMessage("error_empty")
+          message: this.formatter.format("error_empty")
         });
 
         // Can't do any more validation at this point
@@ -218,7 +218,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'required',
-          message: this.getMessage("error_empty")
+          message: this.formatter.format("error_empty")
         });
       }
       // Not required, no further validation needed
@@ -237,7 +237,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'enum',
-          message: this.getMessage("error_enum")
+          message: this.formatter.format("error_enum")
         });
       }
     }
@@ -269,7 +269,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'anyOf',
-          message: this.getMessage('error_anyOf')
+          message: this.formatter.format('error_anyOf')
         });
       }
     }
@@ -295,7 +295,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'oneOf',
-          message: this.getMessage('error_oneOf', [valid])
+          message: this.formatter.format('error_oneOf', [valid])
         });
         errors = errors.concat(oneof_errors);
       }
@@ -327,7 +327,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'type',
-            message: this.getMessage('error_type_union')
+            message: this.formatter.format('error_type_union')
           });
         }
       }
@@ -337,7 +337,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'type',
-            message: this.getMessage('error_type', [schema.type])
+            message: this.formatter.format('error_type', [schema.type])
           });
         }
       }
@@ -359,7 +359,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'disallow',
-            message: this.getMessage('error_disallow_union')
+            message: this.formatter.format('error_disallow_union')
           });
         }
       }
@@ -369,7 +369,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'disallow',
-            message: this.getMessage('error_disallow', [schema.disallow])
+            message: this.formatter.format('error_disallow', [schema.disallow])
           });
         }
       }
@@ -388,7 +388,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-            message: this.getMessage('error_multipleOf', (schema.multipleOf || schema.divisibleBy))
+            message: this.formatter.format('error_multipleOf', (schema.multipleOf || schema.divisibleBy))
           });
         }
       }
@@ -399,14 +399,14 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maximum',
-            message: this.getMessage('error_maximum_excl', [schema.maximum])
+            message: this.formatter.format('error_maximum_excl', [schema.maximum])
           });
         }
         else if(!schema.exclusiveMaximum && value > schema.maximum) {
           errors.push({
             path: path,
             property: 'maximum',
-            message: this.getMessage('error_maximum_incl', [schema.maximum])
+            message: this.formatter.format('error_maximum_incl', [schema.maximum])
           });
         }
       }
@@ -417,14 +417,14 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minimum',
-            message: this.getMessage('error_minimum_excl', [schema.minimum])
+            message: this.formatter.format('error_minimum_excl', [schema.minimum])
           });
         }
         else if(!schema.exclusiveMinimum && value < schema.minimum) {
           errors.push({
             path: path,
             property: 'minimum',
-            message: this.getMessage('error_minimum_incl', [schema.minimum])
+            message: this.formatter.format('error_minimum_incl', [schema.minimum])
           });
         }
       }
@@ -437,7 +437,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxLength',
-            message: this.getMessage('error_maxLength', [schema.maxLength])
+            message: this.formatter.format('error_maxLength', [schema.maxLength])
           });
         }
       }
@@ -448,7 +448,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minLength',
-            message: this.getMessage('error_minLength', [schema.minLength])
+            message: this.formatter.format('error_minLength', [schema.minLength])
           });
         }
       }
@@ -459,7 +459,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'pattern',
-            message: this.getMessage('error_pattern')
+            message: this.formatter.format('error_pattern')
           });
         }
       }
@@ -490,7 +490,7 @@ JSONEditor.Validator = Class.extend({
               errors.push({
                 path: path,
                 property: 'additionalItems',
-                message: this.getMessage('error_additionalItems')
+                message: this.formatter.format('error_additionalItems')
               });
               break;
             }
@@ -515,7 +515,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxItems',
-            message: this.getMessage('error_maxItems', [schema.maxItems])
+            message: this.formatter.format('error_maxItems', [schema.maxItems])
           });
         }
       }
@@ -526,7 +526,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minItems',
-            message: this.getMessage('error_minItems', [schema.minItems])
+            message: this.formatter.format('error_minItems', [schema.minItems])
           });
         }
       }
@@ -540,7 +540,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'uniqueItems',
-              message: this.getMessage('error_uniqueItems')
+              message: this.formatter.format('error_uniqueItems')
             });
             break;
           }
@@ -561,7 +561,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxProperties',
-            message: this.getMessage('error_maxProperties', [schema.maxProperties])
+            message: this.formatter.format('error_maxProperties', [schema.maxProperties])
           });
         }
       }
@@ -577,7 +577,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minProperties',
-            message: this.getMessage('error_minProperties', [schema.minProperties])
+            message: this.formatter.format('error_minProperties', [schema.minProperties])
           });
         }
       }
@@ -589,7 +589,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'required',
-              message: this.getMessage('error_required', [schema.required[i]])
+              message: this.formatter.format('error_required', [schema.required[i]])
             });
           }
         }
@@ -638,7 +638,7 @@ JSONEditor.Validator = Class.extend({
               errors.push({
                 path: path,
                 property: 'additionalProperties',
-                message: this.getMessage('error_additional_properties', [i])
+                message: this.formatter.format('error_additional_properties', [i])
               });
               break;
             }
@@ -670,7 +670,7 @@ JSONEditor.Validator = Class.extend({
                 errors.push({
                   path: path,
                   property: 'dependencies',
-                  message: this.getMessage('error_dependency', [schema.dependencies[i][j]])
+                  message: this.formatter.format('error_dependency', [schema.dependencies[i][j]])
                 });
               }
             }
@@ -896,25 +896,5 @@ JSONEditor.Validator = Class.extend({
     });
 
     return extended;
-  },
-  
-  getMessage: function(key, variables) {
-    var str = "";
-
-    // Retrieve the text given by the user
-    if(typeof this.textCallback === "function") str = this.textCallback(key, variables);
-
-    // Get default text if no textCallback is provided or it didn't return text
-    if(!str) {
-      // Get text
-      str = JSONEditor.defaults.text[key];
-  
-      // Use variables if specified
-      if(variables instanceof Array) {
-        for(var i=0; i < variables.length; i++) str = str.replace("{{" + i + "}}", variables[i]);
-      }
-    }
-
-    return str;
   }
 });

@@ -25,12 +25,17 @@ JSONEditor.prototype = {
     this.root_container = this.theme.getContainer();
     this.element.appendChild(this.root_container);
 
+    this.formatter = new JSONEditor.Formatter({
+      format: this.options.format,
+      defaultString: JSONEditor.defaults.strings
+    });
+
     this.validator = new JSONEditor.Validator(this.schema,{
       ajax: this.options.ajax,
       refs: this.options.refs,
       no_additional_properties: this.options.no_additional_properties,
       required_by_default: this.options.required_by_default,
-      textCallback: this.options.textCallback
+      formatter: this.formatter
     });
     
     this.validator.ready(function(expanded) {
@@ -44,7 +49,8 @@ JSONEditor.prototype = {
         jsoneditor: self,
         schema: self.schema,
         container: self.root_container,
-        required: true
+        required: true,
+        formatter: this.formatter
       });
 
       // Starting data
