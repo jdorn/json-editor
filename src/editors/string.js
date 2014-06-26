@@ -91,6 +91,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(!this.format && this.schema.media && this.schema.media.type) {
       this.format = this.schema.media.type.replace(/(^(application|text)\/(x-)?(script\.)?)|(-source$)/g,'');
     }
+    if(!this.format && this.options.default_format) {
+      this.format = this.options.default_format;
+    }
+    if(this.options.format) {
+      this.format = this.options.format;
+    }
 
     // Select box
     if(this.schema.enum) {

@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.17 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.18 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-06-22
+ * Date: 2014-06-26
  */
 
 /**
@@ -1930,6 +1930,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.format = this.schema.format;
     if(!this.format && this.schema.media && this.schema.media.type) {
       this.format = this.schema.media.type.replace(/(^(application|text)\/(x-)?(script\.)?)|(-source$)/g,'');
+    }
+    if(!this.format && this.options.default_format) {
+      this.format = this.options.default_format;
+    }
+    if(this.options.format) {
+      this.format = this.options.format;
     }
 
     // Select box
