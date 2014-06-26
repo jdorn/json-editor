@@ -119,6 +119,15 @@
         };
 }());
 
+// Array.isArray polyfill
+// From MDN
+(function() {
+	if(!Array.isArray) {
+	  Array.isArray = function(arg) {
+		return Object.prototype.toString.call(arg) === '[object Array]';
+	  };
+	}
+}());
 var $isplainobject = function( obj ) {
   // Not own constructor property must be Object
   if ( obj.constructor &&
