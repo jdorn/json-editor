@@ -986,6 +986,31 @@ var editor = new JSONEditor(element,{
 });
 ```
 
+Language and String Customization
+-----------------
+
+JSON Editor uses a translate function to generate strings in the UI.  A default `en` language mapping is provided.
+
+You can easily override individual translations in the default language or create your own language mapping entirely.
+
+```js+jinja
+// Override a specific translation
+JSONEditor.defaults.languages.en.error_minLength = 
+  "This better be at least {{0}} characters long or else!";
+  
+  
+// Create your own language mapping
+// Any keys not defined here will fall back to the "en" language
+JSONEditor.defaults.languages.es = {
+  error_notset: "propiedad debe existir"
+};
+```
+
+By default, all instances of JSON Editor will use the `en` language.  To override this default, set the `JSONEditor.defaults.language` property.
+
+```js
+JSONEditor.defaults.language = "es";
+```
 
 Custom Editor Interfaces
 -----------------

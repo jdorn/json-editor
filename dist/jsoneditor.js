@@ -218,12 +218,15 @@ JSONEditor.prototype = {
 
     this.root_container = this.theme.getContainer();
     this.element.appendChild(this.root_container);
+    
+    this.translate = this.options.translate || JSONEditor.defaults.translate;
 
     this.validator = new JSONEditor.Validator(this.schema,{
       ajax: this.options.ajax,
       refs: this.options.refs,
       no_additional_properties: this.options.no_additional_properties,
-      required_by_default: this.options.required_by_default
+      required_by_default: this.options.required_by_default,
+      translate: this.translate
     });
     
     this.validator.ready(function(expanded) {
@@ -477,6 +480,7 @@ JSONEditor.defaults = {
   templates: {},
   iconlibs: {},
   editors: {},
+  languages: {},
   resolvers: [],
   custom_validators: []
 };
@@ -488,6 +492,7 @@ JSONEditor.Validator = Class.extend({
     this.refs = this.options.refs || {};
 
     this.ready_callbacks = [];
+    this.translate = this.options.translate || JSONEditor.defaults.translate;
 
     if(this.options.ready) this.ready(this.options.ready);
     // Store any $ref and definitions
@@ -686,7 +691,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'required',
-          message: 'Property must be set'
+          message: this.translate("error_notset")
         });
 
         // Can't do any more validation at this point
@@ -700,7 +705,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'required',
-          message: 'Property must be set'
+          message: this.translate("error_notset")
         });
       }
       // Not required, no further validation needed
@@ -719,7 +724,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'enum',
-          message: 'Value must be one of the enumerated values'
+          message: this.translate("error_enum")
         });
       }
     }
@@ -751,7 +756,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'anyOf',
-          message: 'Value must validate against at least one of the provided schemas'
+          message: this.translate('error_anyOf')
         });
       }
     }
@@ -777,8 +782,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'oneOf',
-          message: 'Value must validate against exactly one of the provided schemas. '+
-            'It currently validates against '+valid+' of the schemas.'
+          message: this.translate('error_oneOf', [valid])
         });
         errors = errors.concat(oneof_errors);
       }
@@ -790,7 +794,7 @@ JSONEditor.Validator = Class.extend({
         errors.push({
           path: path,
           property: 'not',
-          message: 'Value must not validate against the provided schema'
+          message: this.translate('error_not')
         });
       }
     }
@@ -810,7 +814,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'type',
-            message: 'Value must be one of the provided types'
+            message: this.translate('error_type_union')
           });
         }
       }
@@ -820,7 +824,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'type',
-            message: 'Value must be of type '+schema.type
+            message: this.translate('error_type', [schema.type])
           });
         }
       }
@@ -842,7 +846,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'disallow',
-            message: 'Value must not be one of the provided disallowed types'
+            message: this.translate('error_disallow_union')
           });
         }
       }
@@ -852,7 +856,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'disallow',
-            message: 'Value must not be of type '+schema.disallow
+            message: this.translate('error_disallow', [schema.disallow])
           });
         }
       }
@@ -871,7 +875,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-            message: 'Value must be a multiple of '+(schema.multipleOf || schema.divisibleBy)
+            message: this.translate('error_multipleOf', [schema.multipleOf || schema.divisibleBy])
           });
         }
       }
@@ -882,14 +886,14 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maximum',
-            message: 'Value must be less than '+schema.maximum
+            message: this.translate('error_maximum_excl', [schema.maximum])
           });
         }
         else if(!schema.exclusiveMaximum && value > schema.maximum) {
           errors.push({
             path: path,
             property: 'maximum',
-            message: 'Value must be at most '+schema.maximum
+            message: this.translate('error_maximum_incl', [schema.maximum])
           });
         }
       }
@@ -900,14 +904,14 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minimum',
-            message: 'Value must be greater than '+schema.minimum
+            message: this.translate('error_minimum_excl', [schema.minimum])
           });
         }
         else if(!schema.exclusiveMinimum && value < schema.minimum) {
           errors.push({
             path: path,
             property: 'minimum',
-            message: 'Value must be at least '+schema.minimum
+            message: this.translate('error_minimum_incl', [schema.minimum])
           });
         }
       }
@@ -920,7 +924,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxLength',
-            message: 'Value must be at most '+schema.maxLength+' characters long'
+            message: this.translate('error_maxLength', [schema.maxLength])
           });
         }
       }
@@ -931,7 +935,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minLength',
-            message: 'Value must be at least '+schema.minLength+' characters long'
+            message: this.translate('error_minLength', [schema.minLength])
           });
         }
       }
@@ -942,7 +946,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'pattern',
-            message: 'Value must match the provided pattern'
+            message: this.translate('error_pattern')
           });
         }
       }
@@ -973,7 +977,7 @@ JSONEditor.Validator = Class.extend({
               errors.push({
                 path: path,
                 property: 'additionalItems',
-                message: 'No additional items allowed in this array'
+                message: this.translate('error_additionalItems')
               });
               break;
             }
@@ -998,7 +1002,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxItems',
-            message: 'Value must have at most '+schema.maxItems+' items'
+            message: this.translate('error_maxItems', [schema.maxItems])
           });
         }
       }
@@ -1009,7 +1013,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minItems',
-            message: 'Value must have at least '+schema.minItems+' items'
+            message: this.translate('error_minItems', [schema.minItems])
           });
         }
       }
@@ -1023,7 +1027,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'uniqueItems',
-              message: 'Array must have unique items'
+              message: this.translate('error_uniqueItems')
             });
             break;
           }
@@ -1044,7 +1048,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'maxProperties',
-            message: 'Object must have at most '+schema.maxProperties+' properties'
+            message: this.translate('error_maxProperties', [schema.maxProperties])
           });
         }
       }
@@ -1060,7 +1064,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'minProperties',
-            message: 'Object must have at least '+schema.minProperties+' properties'
+            message: this.translate('error_minProperties', [schema.minProperties])
           });
         }
       }
@@ -1072,7 +1076,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'required',
-              message: 'Object is missing the required property '+schema.required[i]
+              message: this.translate('error_required', [schema.required[i]])
             });
           }
         }
@@ -1121,7 +1125,7 @@ JSONEditor.Validator = Class.extend({
               errors.push({
                 path: path,
                 property: 'additionalProperties',
-                message: 'No additional properties allowed, but property '+i+' is set'
+                message: this.translate('error_additional_properties', [i])
               });
               break;
             }
@@ -1153,7 +1157,7 @@ JSONEditor.Validator = Class.extend({
                 errors.push({
                   path: path,
                   property: 'dependencies',
-                  message: 'Must have property '+schema.dependencies[i][j]
+                  message: this.translate('error_dependency', [schema.dependencies[i][j]])
                 });
               }
             }
@@ -4653,7 +4657,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
       self.validators[i] = new JSONEditor.Validator(schema,{
         required_by_default: self.jsoneditor.options.required_by_default,
-        no_additional_properties: self.jsoneditor.options.no_additional_properties
+        no_additional_properties: self.jsoneditor.options.no_additional_properties,
+        translate: self.jsoneditor.translate
       });
     });
     
@@ -6625,16 +6630,161 @@ JSONEditor.defaults.template = 'default';
 // Default options when initializing JSON Editor
 JSONEditor.defaults.options = {};
 
+// String translate function
+JSONEditor.defaults.translate = function(key, variables) {
+  var lang = JSONEditor.defaults.languages[JSONEditor.defaults.language];
+  if(!lang) throw "Unknown language "+JSONEditor.defaults.language;
+  
+  var string = lang[key] || JSONEditor.defaults.languages[JSONEditor.defaults.default_language][key];
+  
+  if(typeof string === "undefined") throw "Unknown translate string "+key;
+  
+  if(variables) {
+    for(var i=0; i<variables.length; i++) {
+      string = string.replace(new RegExp('\\{\\{'+i+'}}','g'),variables[i]);
+    }
+  }
+  
+  return string;
+};
+
+// Translation strings and default languages
+JSONEditor.defaults.default_language = 'en';
+JSONEditor.defaults.language = JSONEditor.defaults.default_language;
+JSONEditor.defaults.languages.en = {
+  /**
+   * When a property is not set
+   */
+  error_notset: "Property must be set",
+  /**
+   * When a value is not one of the enumerated values
+   */
+  error_enum: "Value must be one of the enumerated values",
+  /**
+   * When a value doesn't validate any schema of a 'anyOf' combination
+   */
+  error_anyOf: "Value must validate against at least one of the provided schemas",
+  /**
+   * When a value doesn't validate
+   * @variables This key takes one variable: The number of schemas the value does not validate
+   */
+  error_oneOf: 'Value must validate against exactly one of the provided schemas. It currently validates against {{0}} of the schemas.',
+  /**
+   * When a value does not validate a 'not' schema
+   */
+  error_not: "Value must not validate against the provided schema",
+  /**
+   * When a value does not match any of the provided types
+   */
+  error_type_union: "Value must be one of the provided types",
+  /**
+   * When a value does not match the given type
+   * @variables This key takes one variable: The type the value should be of
+   */
+  error_type: "Value must be of type {{0}}",
+  /**
+   *  When the value validates one of the disallowed types
+   */
+  error_disallow_union: "Value must not be one of the provided disallowed types",
+  /**
+   *  When the value validates a disallowed type
+   * @variables This key takes one variable: The type the value should not be of
+   */
+  error_disallow: "Value must not be of type {{0}}",
+  /**
+   * When a value is not a multiple of or divisible by a given number
+   * @variables This key takes one variable: The number mentioned above
+   */
+  error_multipleOf: "Value must be a multiple of {{0}}",
+  /**
+   * When a value is greater than it's supposed to be (exclusive)
+   * @variables This key takes one variable: The maximum
+   */
+  error_maximum_excl: "Value must be less than {{0}}",
+  /**
+   * When a value is greater than it's supposed to be (inclusive
+   * @variables This key takes one variable: The maximum
+   */
+  error_maximum_incl: "Value must at most {{0}}",
+  /**
+   * When a value is lesser than it's supposed to be (exclusive)
+   * @variables This key takes one variable: The minimum
+   */
+  error_minimum_excl: "Value must be greater than {{0}}",
+  /**
+   * When a value is lesser than it's supposed to be (inclusive)
+   * @variables This key takes one variable: The minimum
+   */
+  error_minimum_incl: "Value must be at least {{0}}",
+  /**
+   * When a value have too many characters
+   * @variables This key takes one variable: The maximum character count
+   */
+  error_maxLength: "Value must be at most {{0}} characters long",
+  /**
+   * When a value does not have enough characters
+   * @variables This key takes one variable: The minimum character count
+   */
+  error_minLength: "Value must be at least {{0}} characters long",
+  /**
+   * When a value does not match a given pattern
+   */
+  error_pattern: "Value must match the provided pattern",
+  /**
+   * When an array has additional items whereas it is not supposed to
+   */
+  error_additionalItems: "No additional items allowed in this array",
+  /**
+   * When there are to many items in an array
+   * @variables This key takes one variable: The maximum item count
+   */
+  error_maxItems: "Value must have at most {{0}} items",
+  /**
+   * When there are not enough items in an array
+   * @variables This key takes one variable: The minimum item count
+   */
+  error_minItems: "Value must have at least {{0}} items",
+  /**
+   * When an array is supposed to have unique items but has duplicates
+   */
+  error_uniqueItems: "Array must have unique items",
+  /**
+   * When there are too many properties in an object
+   * @variables This key takes one variable: The maximum property count
+   */
+  error_maxProperties: "Object must have at most {{0}} properties",
+  /**
+   * When there are not enough properties in an object
+   * @variables This key takes one variable: The minimum property count
+   */
+  error_minProperties: "Object must have at least {{0}} properties",
+  /**
+   * When a required property is not defined
+   * @variables This key takes one variable: The name of the missing property
+   */
+  error_required: "Object is missing the required property '{{0}}'",
+  /**
+   * When there is an additional property is set whereas there should be none
+   * @variables This key takes one variable: The name of the additional property
+   */
+  error_additional_properties: "No additional properties allowed, but property {{0}} is set",
+  /**
+   * When a dependency is not resolved
+   * @variables This key takes one variable: The name of the missing property for the dependency
+   */
+  error_dependency: "Must have property {{0}}"
+};
+
 // Miscellaneous Plugin Settings
 JSONEditor.plugins = {
   ace: {
     theme: ''
   },
   epiceditor: {
-    
+
   },
   sceditor: {
-    
+
   }
 };
 
