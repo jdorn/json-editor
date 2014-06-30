@@ -18,6 +18,9 @@ module.exports = function(grunt) {
           // The main JSONEditor class
           'src/core.js',
 
+          // String formatting
+          'src/formatter.js',
+
           // JSON Schema validator
           'src/validator.js',
           
@@ -82,6 +85,9 @@ module.exports = function(grunt) {
         
         // The main JSONEditor class
         'src/core.js',
+
+        // String formatting
+        'src/formatter.js',
 
         // JSON Schema validator
         'src/validator.js',
