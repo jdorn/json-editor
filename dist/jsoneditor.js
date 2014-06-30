@@ -1,8 +1,8 @@
-/*! JSON Editor v0.6.18 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.6.19 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-06-26
+ * Date: 2014-06-29
  */
 
 /**
@@ -931,11 +931,11 @@ JSONEditor.Validator = Class.extend({
 
       // `minLength`
       if(schema.minLength) {
-        if((value+"").length < schema.minLength) {
+        if((value+"").length < schema.minLength) {          
           errors.push({
             path: path,
             property: 'minLength',
-            message: this.translate('error_minLength', [schema.minLength])
+            message: this.translate((schema.minLength===1?'error_notempty':'error_minLength'), [schema.minLength])
           });
         }
       }
@@ -5863,6 +5863,8 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
       label.style.fontSize = '14px';
       group.style.marginTop = '0';
       group.appendChild(label);
+      input.style.position = 'relative';
+      input.style.float = 'left';
     } 
     else {
       group.className += ' form-group';
@@ -6656,6 +6658,10 @@ JSONEditor.defaults.languages.en = {
    * When a property is not set
    */
   error_notset: "Property must be set",
+  /**
+   * When a string must not be empty
+   */
+  error_notempty: "Value required",
   /**
    * When a value is not one of the enumerated values
    */

@@ -34,6 +34,10 @@ JSONEditor.defaults.languages.en = {
    */
   error_notset: "Property must be set",
   /**
+   * When a string must not be empty
+   */
+  error_notempty: "Value required",
+  /**
    * When a value is not one of the enumerated values
    */
   error_enum: "Value must be one of the enumerated values",

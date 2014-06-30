@@ -444,11 +444,11 @@ JSONEditor.Validator = Class.extend({
 
       // `minLength`
       if(schema.minLength) {
-        if((value+"").length < schema.minLength) {
+        if((value+"").length < schema.minLength) {          
           errors.push({
             path: path,
             property: 'minLength',
-            message: this.translate('error_minLength', [schema.minLength])
+            message: this.translate((schema.minLength===1?'error_notempty':'error_minLength'), [schema.minLength])
           });
         }
       }
