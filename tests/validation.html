@@ -739,42 +739,61 @@
     $.each(tests,function(i,test) {
         animel.queue(function(next) {
             console.log(i);
-
-            var validator = new JSONEditor.Validator(test.schema,{
-                ajax: true,
-                ready: function() {
-                    var self = this;
-                    $.each(test.valid,function(j,value) {
-                        num++;
-                        var result = self.validate(value);
-                        if(result.length) {
-                            console.error(num,'valid',j,JSON.stringify(result,null,2));
-                            $("#output").append("<div><strong>"+i+" test "+j+"</strong>:: Expected: [], Actual: "+JSON.stringify(result)+"</div>");
-                        }
-                        else {
-                            console.log(num,'valid',j);
-                        }
-                    });
-                    $.each(test.invalid,function(j,value) {
-                        num++;
-                        var result = self.validate(value);
-                        if(!result.length) {
-                            console.error(num,'invalid',j,JSON.stringify(result,null,2));
-                            $("#output").append("<div><strong>"+i+" test "+j+"</strong>:: Expected: errors, Actual: []</div>");
-
-                        }
-                        else {
-                            var errors = [];
-                            $.each(result,function(k,error) {
-                                errors.push(error.path+": "+error.message);
-                            });
-                            if(errors.length === 1) errors = errors[0];
-
-                            console.log(num,'invalid',j,JSON.stringify(errors,null,2));
-                        }
-                    });
-                    next();
+            
+            try {
+              var editor = new JSONEditor(document.createElement('div'),{
+                schema: test.schema,
+                ajax: true
+              });
+            }
+            catch(e) {
+              console.log(test.schema);
+              throw e;
+            }
+            
+            editor.on('ready',function() {
+              $.each(test.valid,function(j,value) {
+                try {
+                  num++;
+                  var result = editor.validate(value);
+                  if(result.length) {
+                      console.error(num,'valid',j,JSON.stringify(result,null,2));
+                      $("#output").append("<div><strong>"+i+" test "+j+"</strong>:: Expected: [], Actual: "+JSON.stringify(result)+"</div>");
+                  }
+                  else {
+                      console.log(num,'valid',j);
+                  }
                 }
+                catch(e) {
+                  console.log(test.schema,value);
+                  throw e;
+                }
+              });
+              $.each(test.invalid,function(j,value) {
+                try {
+                  num++;
+                  var result = editor.validate(value);
+                  if(!result.length) {
+                      console.error(num,'invalid',j,JSON.stringify(result,null,2));
+                      $("#output").append("<div><strong>"+i+" test "+j+"</strong>:: Expected: errors, Actual: []</div>");
+
+                  }
+                  else {
+                      var errors = [];
+                      $.each(result,function(k,error) {
+                          errors.push(error.path+": "+error.message);
+                      });
+                      if(errors.length === 1) errors = errors[0];
+
+                      console.log(num,'invalid',j,JSON.stringify(errors,null,2));
+                  }
+                }
+                catch(e) {
+                  console.log(test.schema,value);
+                  throw e;
+                }
+              });
+              next();
             });
         });
     });

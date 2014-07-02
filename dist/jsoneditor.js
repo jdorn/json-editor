@@ -210,6 +210,7 @@ JSONEditor.prototype = {
     this.schema = this.options.schema;
     this.theme = new theme_class();
     this.template = this.options.template;
+    this.refs = this.options.refs || {};
     this.uuid = 0;
     this.__data = {};
     
@@ -221,18 +222,10 @@ JSONEditor.prototype = {
     
     this.translate = this.options.translate || JSONEditor.defaults.translate;
 
-    this.validator = new JSONEditor.Validator(this.schema,{
-      ajax: this.options.ajax,
-      refs: this.options.refs,
-      no_additional_properties: this.options.no_additional_properties,
-      required_by_default: this.options.required_by_default,
-      translate: this.translate
-    });
-    
-    this.validator.ready(function(expanded) {
-      if(self.ready) return;
-      
-      self.schema = expanded;
+    // Fetch all external refs via ajax
+    this._loadExternalRefs(this.schema, function() {
+      self._getDefinitions(self.schema);
+      self.validator = new JSONEditor.Validator(self);
       
       // Create the root editor
       var editor_class = self.getEditorClass(self.schema);
@@ -472,6 +465,294 @@ JSONEditor.prototype = {
   },
   disable: function() {
     this.root.disable();
+  },
+  _getDefinitions: function(schema,path) {
+    path = path || '#/definitions/';
+    if(schema.definitions) {
+      for(var i in schema.definitions) {
+        if(!schema.definitions.hasOwnProperty(i)) continue;
+        this.refs[path+i] = schema.definitions[i];
+        if(schema.definitions[i].definitions) {
+          this._getDefinitions(schema.definitions[i],path+i+'/definitions/');
+        }
+      }
+    }
+  },
+  _getExternalRefs: function(schema) {
+    var refs = {};
+    var merge_refs = function(newrefs) {
+      for(var i in newrefs) {
+        if(newrefs.hasOwnProperty(i)) {
+          refs[i] = true;
+        }
+      }
+    };
+    
+    if(schema.$ref && schema.$ref.substr(0,1) !== "#" && !this.refs[schema.$ref]) {
+      refs[schema.$ref] = true;
+    }
+    
+    for(var i in schema) {
+      if(!schema.hasOwnProperty(i)) continue;
+      if(schema[i] && typeof schema[i] === "object" && Array.isArray(schema[i])) {
+        for(var j=0; j<schema[i].length; j++) {
+          if(typeof schema[i][j]==="object") {
+            merge_refs(this._getExternalRefs(schema[i][j]));
+          }
+        }
+      }
+      else if(schema[i] && typeof schema[i] === "object") {
+        merge_refs(this._getExternalRefs(schema[i]));
+      }
+    }
+    
+    return refs;
+  },
+  _loadExternalRefs: function(schema, callback) {
+    var self = this;
+    var refs = this._getExternalRefs(schema);
+    
+    var done = 0, waiting = 0, callback_fired = false;
+    
+    $each(refs,function(url) {
+      if(self.refs[url]) return;
+      if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
+      self.refs[url] = 'loading';
+      waiting++;
+
+      var r = new XMLHttpRequest(); 
+      r.open("GET", url, true);
+      r.onreadystatechange = function () {
+        if (r.readyState != 4) return; 
+        // Request succeeded
+        if(r.status === 200) {
+          var response;
+          try {
+            response = JSON.parse(r.responseText);
+          }
+          catch(e) {
+            console.log(e);
+            throw "Failed to parse external ref "+url;
+          }
+          if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+url;
+          
+          self.refs[url] = response;
+          self._loadExternalRefs(response,function() {
+            done++;
+            if(done >= waiting && !callback_fired) {
+              callback_fired = true;
+              callback();
+            }
+          });
+        }
+        // Request failed
+        else {
+          console.log(r);
+          throw "Failed to fetch ref via ajax- "+url;
+        }
+      };
+      r.send();
+    });
+    
+    if(!waiting) {
+      callback();
+    }
+  },
+  expandRefs: function(schema) {
+    if(schema.$ref) {
+      schema = this.extendSchemas(schema,this.refs[schema.$ref]);
+    }
+    return schema;
+  },
+  expandSchema: function(schema) {
+    var self = this;
+    var extended = schema;
+    var i;
+
+    // Version 3 `type`
+    if(typeof schema.type === 'object') {
+      // Array of types
+      if(Array.isArray(schema.type)) {
+        $each(schema.type, function(key,value) {
+          // Schema
+          if(typeof value === 'object') {
+            schema.type[key] = self.expandSchema(value);
+          }
+        });
+      }
+      // Schema
+      else {
+        schema.type = self.expandSchema(schema.type);
+      }
+    }
+    // Version 3 `disallow`
+    if(typeof schema.disallow === 'object') {
+      // Array of types
+      if(Array.isArray(schema.disallow)) {
+        $each(schema.disallow, function(key,value) {
+          // Schema
+          if(typeof value === 'object') {
+            schema.disallow[key] = self.expandSchema(value);
+          }
+        });
+      }
+      // Schema
+      else {
+        schema.disallow = self.expandSchema(schema.disallow);
+      }
+    }
+    // Version 4 `anyOf`
+    if(schema.anyOf) {
+      $each(schema.anyOf, function(key,value) {
+        schema.anyOf[key] = self.expandSchema(value);
+      });
+    }
+    // Version 4 `dependencies` (schema dependencies)
+    if(schema.dependencies) {
+      $each(schema.dependencies,function(key,value) {
+        if(typeof value === "object" && !(Array.isArray(value))) {
+          schema.dependencies[key] = self.expandSchema(value);
+        }
+      });
+    }
+    // `items`
+    if(schema.items) {
+      // Array of items
+      if(Array.isArray(schema.items)) {
+        $each(schema.items, function(key,value) {
+          // Schema
+          if(typeof value === 'object') {
+            schema.items[key] = self.expandSchema(value);
+          }
+        });
+      }
+      // Schema
+      else {
+        schema.items = self.expandSchema(schema.items);
+      }
+    }
+    // `properties`
+    if(schema.properties) {
+      $each(schema.properties,function(key,value) {
+        if(typeof value === "object" && !(Array.isArray(value))) {
+          schema.properties[key] = self.expandSchema(value);
+        }
+      });
+    }
+    // `patternProperties`
+    if(schema.patternProperties) {
+      $each(schema.patternProperties,function(key,value) {
+        if(typeof value === "object" && !(Array.isArray(value))) {
+          schema.patternProperties[key] = self.expandSchema(value);
+        }
+      });
+    }
+    // Version 4 `not`
+    if(schema.not) {
+      schema.not = this.expandSchema(schema.not);
+    }
+    // `additionalProperties`
+    if(schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      schema.additionalProperties = self.expandSchema(schema.additionalProperties);
+    }
+    // `additionalItems`
+    if(schema.additionalItems && typeof schema.additionalItems === "object") {
+      schema.additionalItems = self.expandSchema(schema.additionalItems);
+    }
+
+    // allOf schemas should be merged into the parent
+    if(schema.allOf) {
+      for(i=0; i<schema.allOf.length; i++) {
+        extended = this.extendSchemas(extended,this.expandSchema(schema.allOf[i]));
+      }
+      delete extended.allOf;
+    }
+    // extends schemas should be merged into parent
+    if(schema.extends) {
+      // If extends is a schema
+      if(!(Array.isArray(schema.extends))) {
+        extended = this.extendSchemas(extended,this.expandSchema(schema.extends));
+      }
+      // If extends is an array of schemas
+      else {
+        for(i=0; i<schema.extends.length; i++) {
+          extended = this.extendSchemas(extended,this.expandSchema(schema.extends[i]));
+        }
+      }
+      delete extended.extends;
+    }
+    // parent should be merged into oneOf schemas
+    if(schema.oneOf) {
+      var tmp = $extend({},extended);
+      delete tmp.oneOf;
+      for(i=0; i<schema.oneOf.length; i++) {
+        extended.oneOf[i] = this.extendSchemas(this.expandSchema(schema.oneOf[i]),tmp);
+      }
+    }
+    
+    return this.expandRefs(extended);
+  },
+  extendSchemas: function(obj1, obj2) {
+    obj1 = $extend({},obj1);
+    obj2 = $extend({},obj2);
+
+    var self = this;
+    var extended = {};
+    $each(obj1, function(prop,val) {
+      // If this key is also defined in obj2, merge them
+      if(typeof obj2[prop] !== "undefined") {
+        // Required arrays should be unioned together
+        if(prop === 'required' && typeof val === "object" && Array.isArray(val)) {
+          // Union arrays and unique
+          extended.required = val.concat(obj2[prop]).reduce(function(p, c) {
+            if (p.indexOf(c) < 0) p.push(c);
+            return p;
+          }, []);
+        }
+        // Type should be intersected and is either an array or string
+        else if(prop === 'type') {
+          // Make sure we're dealing with arrays
+          if(typeof val !== "object") val = [val];
+          if(typeof obj2.type !== "object") obj2.type = [obj2.type];
+
+
+          extended.type = val.filter(function(n) {
+            return obj2.type.indexOf(n) !== -1;
+          });
+
+          // If there's only 1 type and it's a primitive, use a string instead of array
+          if(extended.type.length === 1 && typeof extended.type[0] === "string") {
+            extended.type = extended.type[0];
+          }
+        }
+        // All other arrays should be intersected (enum, etc.)
+        else if(typeof val === "object" && Array.isArray(val)){
+          extended[prop] = val.filter(function(n) {
+            return obj2[prop].indexOf(n) !== -1;
+          });
+        }
+        // Objects should be recursively merged
+        else if(typeof val === "object" && val !== null) {
+          extended[prop] = self.extendSchemas(val,obj2[prop]);
+        }
+        // Otherwise, use the first value
+        else {
+          extended[prop] = val;
+        }
+      }
+      // Otherwise, just use the one in obj1
+      else {
+        extended[prop] = val;
+      }
+    });
+    // Properties in obj2 that aren't in obj1
+    $each(obj2, function(prop,val) {
+      if(typeof obj1[prop] === "undefined") {
+        extended[prop] = val;
+      }
+    });
+
+    return extended;
   }
 };
 
@@ -486,187 +767,11 @@ JSONEditor.defaults = {
 };
 
 JSONEditor.Validator = Class.extend({
-  init: function(schema, options) {
-    this.original_schema = schema;
-    this.options = options || {};
-    this.refs = this.options.refs || {};
-
-    this.ready_callbacks = [];
-    this.translate = this.options.translate || JSONEditor.defaults.translate;
-
-    if(this.options.ready) this.ready(this.options.ready);
-    // Store any $ref and definitions
-    this.getRefs();
-  },
-  ready: function(callback) {
-    if(this.is_ready) callback.apply(this,[this.expanded]);
-    else {
-      this.ready_callbacks.push(callback);
-    }
-
-    return this;
-  },
-  getRefs: function() {
-    var self = this;
-    this._getRefs(this.original_schema, function(schema) {
-      self.schema = schema;
-      self.expanded = self.expandSchema(self.schema);
-
-      self.is_ready = true;
-      $each(self.ready_callbacks,function(i,callback) {
-        callback.apply(self,[self.expanded]);
-      });
-    });
-  },
-  _getRefs: function(schema,callback,path,in_definitions) {
-    var self = this;
-    var is_root = schema === this.original_schema;
-    path = path || "#";
-
-    var waiting, finished, check_if_finished, called;
-
-    // Work on a deep copy of the schema
-    schema = $extend({},schema);
-
-    // First expand out any definition in the root node
-    if(schema.definitions && (is_root || in_definitions)) {
-      var defs = schema.definitions;
-      delete schema.definitions;
-
-      waiting = finished = 0;
-      check_if_finished = function(schema) {
-        if(finished >= waiting) {
-          if(called) return;
-          called = true;
-          self._getRefs(schema,callback,path);
-        }
-      };
-
-      $each(defs,function() {
-        waiting++;
-      });
-
-      if(waiting) {
-        $each(defs,function(i,definition) {
-          // Expand the definition recursively
-          self._getRefs(definition,function(def_schema) {
-            self.refs[path+'/definitions/'+i] = def_schema;
-            finished++;
-            check_if_finished(schema);
-          },path+'/definitions/'+i,true);
-        });
-      }
-      else {
-        check_if_finished(schema);
-      }
-    }
-    // Expand out any references
-    else if(schema.$ref) {
-      var ref = schema.$ref;
-      delete schema.$ref;
-
-      // If we're currently loading this external reference, wait for it to be done
-      if(self.refs[ref] && Array.isArray(self.refs[ref])) {
-        self.refs[ref].push(function() {
-          schema = $extend({},self.refs[ref],schema);
-          callback(schema);
-        });
-      }
-      // If this reference has already been loaded
-      else if(self.refs[ref]) {
-        schema = $extend({},self.refs[ref],schema);
-        callback(schema);
-      }
-      // Otherwise, it needs to be loaded via ajax
-      else {
-        if(!self.options.ajax) throw "Must set ajax option to true to load external url "+ref;
-      
-        var r = new XMLHttpRequest(); 
-        r.open("GET", ref, true);
-        r.onreadystatechange = function () {
-          if (r.readyState != 4) return; 
-          if(r.status === 200) {
-            var response = JSON.parse(r.responseText);
-            self.refs[ref] = [];
-
-            // Recursively expand this schema
-            self._getRefs(response, function(ref_schema) {
-              var list = self.refs[ref];
-              self.refs[ref] = ref_schema;
-              schema = $extend({},self.refs[ref],schema);
-              callback(schema);
-
-              // If anything is waiting on this to load
-              $each(list,function(i,v) {
-                v();
-              });
-            },path);
-            return;
-          }
-          
-          // Request failed
-          throw "Failed to fetch ref via ajax- "+ref;
-        };
-        r.send();
-      }
-    }
-    // Expand out any subschemas
-    else {
-      waiting = finished = 0;
-      check_if_finished = function(schema) {
-        if(finished >= waiting) {
-          if(called) return;
-          called = true;
-
-          callback(schema);
-        }
-      };
-
-      $each(schema, function(key, value) {
-        // Arrays that need to be expanded
-        if(typeof value === "object" && value && Array.isArray(value)) {
-          $each(value,function(j,item) {
-            if(typeof item === "object" && item && !(Array.isArray(item))) {
-              waiting++;
-            }
-          });
-        }
-        // Objects that need to be expanded
-        else if(typeof value === "object" && value) {
-          waiting++;
-        }
-      });
-
-      if(waiting) {
-        $each(schema, function(key, value) {
-          // Arrays that need to be expanded
-          if(typeof value === "object" && value && Array.isArray(value)) {
-            $each(value,function(j,item) {
-              if(typeof item === "object" && item && !(Array.isArray(item))) {
-                self._getRefs(item,function(expanded) {
-                  schema[key][j] = expanded;
-
-                  finished++;
-                  check_if_finished(schema);
-                },path+'/'+key+'/'+j);
-              }
-            });
-          }
-          // Objects that need to be expanded
-          else if(typeof value === "object" && value) {
-            self._getRefs(value,function(expanded) {
-              schema[key] = expanded;
-
-              finished++;
-              check_if_finished(schema);
-            },path+'/'+key);
-          }
-        });
-      }
-      else {
-        check_if_finished(schema);
-      }
-    }
+  init: function(jsoneditor,schema) {
+    this.jsoneditor = jsoneditor;
+    this.schema = schema || this.jsoneditor.schema;
+    this.options = {};
+    this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
   },
   validate: function(value) {
     return this._validateSchema(this.schema, value);
@@ -701,7 +806,7 @@ JSONEditor.Validator = Class.extend({
     // Value not defined
     else if(typeof value === "undefined") {
       // If required_by_default is set, all fields are required
-      if(this.options.required_by_default) {
+      if(this.jsoneditor.options.required_by_default) {
         errors.push({
           path: path,
           property: 'required',
@@ -1111,7 +1216,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // The no_additional_properties option currently doesn't work with extended schemas that use oneOf or anyOf
-      if(typeof schema.additionalProperties === "undefined" && this.options.no_additional_properties && !schema.oneOf && !schema.anyOf) {
+      if(typeof schema.additionalProperties === "undefined" && this.jsoneditor.options.no_additional_properties && !schema.oneOf && !schema.anyOf) {
         schema.additionalProperties = false;
       }
 
@@ -1193,196 +1298,6 @@ JSONEditor.Validator = Class.extend({
     else {
       return !this._validateSchema(type,value).length;
     }
-  },
-  expandSchema: function(schema) {
-    var self = this;
-    var extended = schema;
-    var i;
-
-    // Version 3 `type`
-    if(typeof schema.type === 'object') {
-      // Array of types
-      if(Array.isArray(schema.type)) {
-        $each(schema.type, function(key,value) {
-          // Schema
-          if(typeof value === 'object') {
-            schema.type[key] = self.expandSchema(value);
-          }
-        });
-      }
-      // Schema
-      else {
-        schema.type = self.expandSchema(schema.type);
-      }
-    }
-    // Version 3 `disallow`
-    if(typeof schema.disallow === 'object') {
-      // Array of types
-      if(Array.isArray(schema.disallow)) {
-        $each(schema.disallow, function(key,value) {
-          // Schema
-          if(typeof value === 'object') {
-            schema.disallow[key] = self.expandSchema(value);
-          }
-        });
-      }
-      // Schema
-      else {
-        schema.disallow = self.expandSchema(schema.disallow);
-      }
-    }
-    // Version 4 `anyOf`
-    if(schema.anyOf) {
-      $each(schema.anyOf, function(key,value) {
-        schema.anyOf[key] = self.expandSchema(value);
-      });
-    }
-    // Version 4 `dependencies` (schema dependencies)
-    if(schema.dependencies) {
-      $each(schema.dependencies,function(key,value) {
-        if(typeof value === "object" && !(Array.isArray(value))) {
-          schema.dependencies[key] = self.expandSchema(value);
-        }
-      });
-    }
-    // `items`
-    if(schema.items) {
-      // Array of items
-      if(Array.isArray(schema.items)) {
-        $each(schema.items, function(key,value) {
-          // Schema
-          if(typeof value === 'object') {
-            schema.items[key] = self.expandSchema(value);
-          }
-        });
-      }
-      // Schema
-      else {
-        schema.items = self.expandSchema(schema.items);
-      }
-    }
-    // `properties`
-    if(schema.properties) {
-      $each(schema.properties,function(key,value) {
-        if(typeof value === "object" && !(Array.isArray(value))) {
-          schema.properties[key] = self.expandSchema(value);
-        }
-      });
-    }
-    // `patternProperties`
-    if(schema.patternProperties) {
-      $each(schema.patternProperties,function(key,value) {
-        if(typeof value === "object" && !(Array.isArray(value))) {
-          schema.patternProperties[key] = self.expandSchema(value);
-        }
-      });
-    }
-    // Version 4 `not`
-    if(schema.not) {
-      schema.not = this.expandSchema(schema.not);
-    }
-    // `additionalProperties`
-    if(schema.additionalProperties && typeof schema.additionalProperties === "object") {
-      schema.additionalProperties = self.expandSchema(schema.additionalProperties);
-    }
-    // `additionalItems`
-    if(schema.additionalItems && typeof schema.additionalItems === "object") {
-      schema.additionalItems = self.expandSchema(schema.additionalItems);
-    }
-
-    // allOf schemas should be merged into the parent
-    if(schema.allOf) {
-      for(i=0; i<schema.allOf.length; i++) {
-        extended = this.extend(extended,this.expandSchema(schema.allOf[i]));
-      }
-      delete extended.allOf;
-    }
-    // extends schemas should be merged into parent
-    if(schema.extends) {
-      // If extends is a schema
-      if(!(Array.isArray(schema.extends))) {
-        extended = this.extend(extended,this.expandSchema(schema.extends));
-      }
-      // If extends is an array of schemas
-      else {
-        for(i=0; i<schema.extends.length; i++) {
-          extended = this.extend(extended,this.expandSchema(schema.extends[i]));
-        }
-      }
-      delete extended.extends;
-    }
-    // parent should be merged into oneOf schemas
-    if(schema.oneOf) {
-      var tmp = $extend({},extended);
-      delete tmp.oneOf;
-      for(i=0; i<schema.oneOf.length; i++) {
-        extended.oneOf[i] = this.extend(this.expandSchema(schema.oneOf[i]),tmp);
-      }
-    }
-
-    return extended;
-  },
-  extend: function(obj1, obj2) {
-    obj1 = $extend({},obj1);
-    obj2 = $extend({},obj2);
-
-    var self = this;
-    var extended = {};
-    $each(obj1, function(prop,val) {
-      // If this key is also defined in obj2, merge them
-      if(typeof obj2[prop] !== "undefined") {
-        // Required arrays should be unioned together
-        if(prop === 'required' && typeof val === "object" && Array.isArray(val)) {
-          // Union arrays and unique
-          extended.required = val.concat(obj2[prop]).reduce(function(p, c) {
-            if (p.indexOf(c) < 0) p.push(c);
-            return p;
-          }, []);
-        }
-        // Type should be intersected and is either an array or string
-        else if(prop === 'type') {
-          // Make sure we're dealing with arrays
-          if(typeof val !== "object") val = [val];
-          if(typeof obj2.type !== "object") obj2.type = [obj2.type];
-
-
-          extended.type = val.filter(function(n) {
-            return obj2.type.indexOf(n) !== -1;
-          });
-
-          // If there's only 1 type and it's a primitive, use a string instead of array
-          if(extended.type.length === 1 && typeof extended.type[0] === "string") {
-            extended.type = extended.type[0];
-          }
-        }
-        // All other arrays should be intersected (enum, etc.)
-        else if(typeof val === "object" && Array.isArray(val)){
-          extended[prop] = val.filter(function(n) {
-            return obj2[prop].indexOf(n) !== -1;
-          });
-        }
-        // Objects should be recursively merged
-        else if(typeof val === "object" && val !== null) {
-          extended[prop] = self.extend(val,obj2[prop]);
-        }
-        // Otherwise, use the first value
-        else {
-          extended[prop] = val;
-        }
-      }
-      // Otherwise, just use the one in obj1
-      else {
-        extended[prop] = val;
-      }
-    });
-    // Properties in obj2 that aren't in obj1
-    $each(obj2, function(prop,val) {
-      if(typeof obj1[prop] === "undefined") {
-        extended[prop] = val;
-      }
-    });
-
-    return extended;
   }
 });
 
@@ -1420,7 +1335,9 @@ JSONEditor.AbstractEditor = Class.extend({
     this.iconlib = this.jsoneditor.iconlib;
 
     this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
-    this.schema = this.options.schema;
+    this.schema = this.jsoneditor.expandSchema(this.options.schema);
+    
+    console.log(JSON.stringify(this.schema));
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
@@ -4587,6 +4504,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(this.schema.oneOf) {
       this.oneOf = true;
       this.types = this.schema.oneOf;
+      $each(this.types,function(i,oneof) {
+        //self.types[i] = self.jsoneditor.expandSchema(oneof);
+      });
       delete this.schema.oneOf;
     }
     else {
@@ -4655,11 +4575,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new JSONEditor.Validator(schema,{
-        required_by_default: self.jsoneditor.options.required_by_default,
-        no_additional_properties: self.jsoneditor.options.no_additional_properties,
-        translate: self.jsoneditor.translate
-      });
+      self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema);
     });
     
     this.switchEditor(0);
@@ -4678,11 +4594,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   refreshHeaderText: function() {
-    var schemas = [];
-    $each(this.validators, function(i,validator) {
-      schemas.push(validator.schema);
-    });
-    var display_text = this.getDisplayText(schemas);
+    var display_text = this.getDisplayText(this.types);
     $each(this.switcher_options, function(i,option) {
       option.textContent = display_text[i];
     });

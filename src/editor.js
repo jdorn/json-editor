@@ -32,7 +32,9 @@ JSONEditor.AbstractEditor = Class.extend({
     this.iconlib = this.jsoneditor.iconlib;
 
     this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
-    this.schema = this.options.schema;
+    this.schema = this.jsoneditor.expandSchema(this.options.schema);
+    
+    console.log(JSON.stringify(this.schema));
 
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';

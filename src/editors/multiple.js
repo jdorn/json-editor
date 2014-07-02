@@ -124,6 +124,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(this.schema.oneOf) {
       this.oneOf = true;
       this.types = this.schema.oneOf;
+      $each(this.types,function(i,oneof) {
+        //self.types[i] = self.jsoneditor.expandSchema(oneof);
+      });
       delete this.schema.oneOf;
     }
     else {
@@ -192,11 +195,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new JSONEditor.Validator(schema,{
-        required_by_default: self.jsoneditor.options.required_by_default,
-        no_additional_properties: self.jsoneditor.options.no_additional_properties,
-        translate: self.jsoneditor.translate
-      });
+      self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema);
     });
     
     this.switchEditor(0);
@@ -215,11 +214,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   refreshHeaderText: function() {
-    var schemas = [];
-    $each(this.validators, function(i,validator) {
-      schemas.push(validator.schema);
-    });
-    var display_text = this.getDisplayText(schemas);
+    var display_text = this.getDisplayText(this.types);
     $each(this.switcher_options, function(i,option) {
       option.textContent = display_text[i];
     });
