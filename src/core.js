@@ -365,14 +365,18 @@ JSONEditor.prototype = {
     }
   },
   expandRefs: function(schema) {
-    if(schema.$ref) {
-      schema = this.extendSchemas(schema,this.refs[schema.$ref]);
+    schema = $extend({},schema);
+    
+    while (schema.$ref) {
+      var ref = schema.$ref;
+      delete schema.$ref;
+      schema = this.extendSchemas(schema,this.refs[ref]);
     }
     return schema;
   },
   expandSchema: function(schema) {
     var self = this;
-    var extended = schema;
+    var extended = $extend({},schema);
     var i;
 
     // Version 3 `type`
@@ -428,13 +432,13 @@ JSONEditor.prototype = {
         $each(schema.items, function(key,value) {
           // Schema
           if(typeof value === 'object') {
-            schema.items[key] = self.expandSchema(value);
+            //schema.items[key] = self.expandSchema(value);
           }
         });
       }
       // Schema
       else {
-        schema.items = self.expandSchema(schema.items);
+        //schema.items = self.expandSchema(schema.items);
       }
     }
     // `properties`
@@ -492,7 +496,7 @@ JSONEditor.prototype = {
       var tmp = $extend({},extended);
       delete tmp.oneOf;
       for(i=0; i<schema.oneOf.length; i++) {
-        extended.oneOf[i] = this.extendSchemas(this.expandSchema(schema.oneOf[i]),tmp);
+        //extended.oneOf[i] = this.extendSchemas(this.expandSchema(schema.oneOf[i]),tmp);
       }
     }
     

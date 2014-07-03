@@ -85,6 +85,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     else {
       schema = $extend({},self.schema,type);
+      schema = self.jsoneditor.expandRefs(schema);
 
       // If we need to merge `required` arrays
       if(type.required && Array.isArray(type.required) && self.schema.required && Array.isArray(self.schema.required)) {

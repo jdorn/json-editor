@@ -140,7 +140,16 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this._super(editor);
   },
   getItemTitle: function() {
-    return (this.schema.items && this.schema.items.title) || 'item';
+    if(!this.item_title) {
+      if(this.schema.items && !Array.isArray(this.schema.items)) {
+        var tmp = this.jsoneditor.expandRefs(this.schema.items);
+        this.item_title = tmp.title || 'item';
+      }
+      else {
+        this.item_title = 'item';
+      }
+    }
+    return this.item_title;
   },
   getItemSchema: function(i) {
     if(Array.isArray(this.schema.items)) {
@@ -164,7 +173,6 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
   },
   getItemInfo: function(i) {
-    // Get the schema for this item
     var schema = this.getItemSchema(i);
     
     // Check if it's cached
@@ -172,39 +180,22 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     var stringified = JSON.stringify(schema);
     if(typeof this.item_info[stringified] !== "undefined") return this.item_info[stringified];
     
-    // Create a temporary editor with this schema and get info
-    var tmp = document.createElement('div');
-    this.container.appendChild(tmp);
-    
-    // Ignore events on this temporary editor
-    tmp.addEventListener('change_header_text',function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    
-    var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
-    editor = this.jsoneditor.createEditor(editor,{
-      jsoneditor: this.jsoneditor,
-      schema: schema,
-      container: tmp,
-      path: this.path+'.'+i,
-      parent: this,
-      required: true
-    });
+    // Get the schema for this item
+    schema = this.jsoneditor.expandRefs(schema);
+      
     this.item_info[stringified] = {
-      child_editors: editor.getChildEditors()? true : false,
-      title: schema.title || 'item',
-      width: editor.getNumColumns(),
-      default: editor.getDefault()
+      title: schema.title || "item",
+      'default': schema.default,
+      width: 12,
+      child_editors: schema.properties || schema.items
     };
-    editor.destroy();
-    if(tmp.parentNode) tmp.parentNode.removeChild(tmp);
     
     return this.item_info[stringified];
   },
   getElementEditor: function(i) {
     var item_info = this.getItemInfo(i);
     var schema = this.getItemSchema(i);
+    schema = this.jsoneditor.expandRefs(schema);
     schema.title = item_info.title+' '+i;
 
     var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
