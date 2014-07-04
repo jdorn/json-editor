@@ -122,6 +122,18 @@ JSONEditor.AbstractEditor = Class.extend({
     }
 
     this.build();
+    if (this.input) {
+
+      var inputId = this.input.getAttribute('id');
+      if (!inputId) {
+        inputId = 'input-' + this.input.getAttribute('name');
+        this.input.setAttribute('id', inputId);
+      }
+
+      if (this.label) {
+        this.label.setAttribute('for', inputId);
+      }
+    }
     
     // Add links
     if(!this.no_link_holder) {
