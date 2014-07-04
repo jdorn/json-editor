@@ -142,14 +142,20 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     // Normal layout
     else {
       container = document.createElement('div');
+
+      var getClassNameCompatible = function (string) {
+        return string.replace(/[^_a-zA-Z0-9]/g, '-');
+      }
+
+      container.className = getClassNameCompatible('container-' + this.path);
       $each(this.editors, function(key,editor) {
         if(editor.property_removed) return;
         var row = self.theme.getGridRow();
+        row.className += ' ' + getClassNameCompatible('row-' + self.path + '.' + key);
         container.appendChild(row);
         
         if(editor.options.hidden) editor.container.style.display = 'none';
         else self.theme.setGridColumnSize(editor.container,12);
-        editor.container.className += ' container-' + key;
         row.appendChild(editor.container);
       });
     }
