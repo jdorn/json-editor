@@ -115,7 +115,6 @@ JSONEditor.defaults.editors.radio = JSONEditor.AbstractEditor.extend({
       var label = this.theme.getRadioLabel((this.schema.enumTitles && this.schema.enumTitles[options[i]]) ?
           this.schema.enumTitles[options[i]]
           : options[i]);
-      label.setAttribute('for', this.formname);
       this.controls[options[i]] = this.theme.getFormControl(label, this.inputs[options[i]]);
     }
 
