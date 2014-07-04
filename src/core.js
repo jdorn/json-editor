@@ -14,6 +14,35 @@ JSONEditor.prototype = {
     if(!theme_class) throw "Unknown theme " + (this.options.theme || JSONEditor.defaults.theme);
     
     this.schema = this.options.schema;
+
+    //An option named "form" would contain styling instructions for specific elements in the form
+    //@todo maybe we should "clone / dereference" the schema before changing it?
+    if (this.options.form) {
+      var getSchemaNode = function (key, container) {
+        if (!key) {
+          //use container!
+          return container;
+        }
+
+        var keyNibbles = key.split('.');
+        var keyNibble = keyNibbles.shift();
+        if (container && container.properties && container.properties[keyNibble]) {
+          return getSchemaNode(keyNibbles.join('.'), container.properties[keyNibble]);
+        }
+        return null;
+      };
+
+      $each(this.options.form, function (key, vaue) {
+        //find "key" in schema
+        var schemaNode = getSchemaNode(key, self.options.schema);
+        if (schemaNode) {
+          $extend(schemaNode, vaue);
+        }
+      });
+
+      this.options.form = null; //to prevent later misunderstandings
+    }
+
     this.theme = new theme_class();
     this.template = this.options.template;
     this.uuid = 0;
