@@ -163,7 +163,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     // Specific format
     else if(this.format) {
       // Text Area
-      if(this.format === 'textarea') {
+      if((this.format === 'textarea') || (this.schema.inputType === 'textarea')) {
         this.input_type = 'textarea';
         this.input = this.theme.getTextareaInput();
       }
@@ -247,8 +247,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
     // Normal text input
     else {
-      this.input_type = 'text';
-      this.input = this.theme.getFormInputField(this.input_type);
+      if (this.schema.inputType && this.schema.inputType === 'textarea') {
+        this.input_type = 'textarea';
+        this.input = this.theme.getTextareaInput();
+      } else {
+        this.input_type = 'text';
+        this.input = this.theme.getFormInputField(this.input_type);
+      }
     }
     
     // minLength, maxLength, and pattern
