@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>JSON Editor with separate schema and format configuration</title>
+    <link rel="stylesheet" id="theme_stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    <link rel="stylesheet" id="icon_stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css">
+    <script src="../dist/jsoneditor.js"></script>
+
+    <style>
+        /* custom style for some input */
+        .row-root-user, .row-root-address {
+            width: 50%;
+            float: left;
+        }
+        .row-root-address {
+            margin-left: 0;
+        }
+
+        .row-root-user-firstName, .row-root-user-lastName {
+            width: 50%;
+            float: left;
+            padding-left: 0;
+        }
+
+        .row-root-user-firstName {
+            margin-left: -15px;
+            margin-right: 0;
+        }
+
+        .row-root-user-lastName {
+            margin-left: 30px;
+            margin-right: -15px;
+        }
+
+        button {
+            margin-left: 15px;
+        }
+    </style>
+</head>
+<body>
+<h1>JSON Editor with separate schema and form configuration</h1>
+
+<div id='editor_holder'></div>
+<button id='submit'>Submit (console.log)</button>
+
+<script>
+    // Initialize the editor with a JSON schema
+    JSONEditor.defaults.options.theme = 'bootstrap3';
+    var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        schema: {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "type": "object",
+                    "title": "User details",
+                    "properties": {
+                        "gender": {
+                            "type": "string",
+                            "title": "Gender:",
+                            "enum": ["M", "F"]
+                        },
+                        "firstName": {
+                            "type": "string"
+                        },
+                        "lastName": {
+                            "type": "string"
+                        },
+                        "birthDate": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "email": {
+                            "type": "string",
+                            "format": "email"
+                        },
+                        "password": {
+                            "type": "string",
+                            "format": "password"
+                        },
+                        "available": {
+                            "title": "Availability?",
+                            "type": "string",
+                            "enum": ["allDay", "morning", "afternoon", "evening"]
+                        }
+                    }
+                },
+                "address": {
+                    "type": "object",
+                    "title": "Address details",
+                    "properties": {
+                        "addressLine1": {
+                            "title": "Address line 1",
+                            "type": "string"
+                        },
+                        "addressLine2": {
+                            "title": "Address line 2",
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        form: {
+            "user.name": {
+                placeholder: "Please enter your name here"
+            },
+            "user.gender": {
+                "inputType": "radio",
+                "enumTitles": {
+                    "M": "Male",
+                    "F": "Female"
+                }
+            },
+            "user.available": {
+                "enumTitles": {
+                    "allDay": "All day!"
+                }
+            }
+        }
+    });
+
+    // Hook up the submit button to log to the console
+    document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+    });
+</script>
+</body>
+</html>

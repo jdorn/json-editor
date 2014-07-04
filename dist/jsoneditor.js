@@ -199,6 +199,35 @@ JSONEditor.prototype = {
     if(!theme_class) throw "Unknown theme " + (this.options.theme || JSONEditor.defaults.theme);
     
     this.schema = this.options.schema;
+
+    //An option named "form" would contain styling instructions for specific elements in the form
+    //@todo maybe we should "clone / dereference" the schema before changing it?
+    if (this.options.form) {
+      var getSchemaNode = function (key, container) {
+        if (!key) {
+          //use container!
+          return container;
+        }
+
+        var keyNibbles = key.split('.');
+        var keyNibble = keyNibbles.shift();
+        if (container && container.properties && container.properties[keyNibble]) {
+          return getSchemaNode(keyNibbles.join('.'), container.properties[keyNibble]);
+        }
+        return null;
+      };
+
+      $each(this.options.form, function (key, vaue) {
+        //find "key" in schema
+        var schemaNode = getSchemaNode(key, self.options.schema);
+        if (schemaNode) {
+          $extend(schemaNode, vaue);
+        }
+      });
+
+      this.options.form = null; //to prevent later misunderstandings
+    }
+
     this.theme = new theme_class();
     this.template = this.options.template;
     this.uuid = 0;
@@ -1496,6 +1525,18 @@ JSONEditor.AbstractEditor = Class.extend({
     }
 
     this.build();
+    if (this.input) {
+
+      var inputId = this.input.getAttribute('id');
+      if (!inputId) {
+        inputId = 'input-' + this.input.getAttribute('name');
+        this.input.setAttribute('id', inputId);
+      }
+
+      if (this.label) {
+        this.label.setAttribute('for', inputId);
+      }
+    }
     
     // Add links
     if(!this.no_link_holder) {
@@ -1926,7 +1967,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.schema.enum) {
       this.input_type = 'select';
       this.select_options = this.schema.enum;
-      this.input = this.theme.getSelectInput(this.select_options);
+      this.input = this.theme.getSelectInput(this.select_options, this.schema.enumTitles);
     }
     // Dynamic Select box
     else if(this.schema.enumSource) {
@@ -1987,7 +2028,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     // Specific format
     else if(this.format) {
       // Text Area
-      if(this.format === 'textarea') {
+      if((this.format === 'textarea') || (this.schema.inputType === 'textarea')) {
         this.input_type = 'textarea';
         this.input = this.theme.getTextareaInput();
       }
@@ -2071,8 +2112,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
     // Normal text input
     else {
-      this.input_type = 'text';
-      this.input = this.theme.getFormInputField(this.input_type);
+      if (this.schema.inputType && this.schema.inputType === 'textarea') {
+        this.input_type = 'textarea';
+        this.input = this.theme.getTextareaInput();
+      } else {
+        this.input_type = 'text';
+        this.input = this.theme.getFormInputField(this.input_type);
+      }
     }
     
     // minLength, maxLength, and pattern
@@ -2551,11 +2597,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         var row = this.theme.getGridRow();
         container.appendChild(row);
         for(j=0; j<rows[i].editors.length; j++) {
-          var editor = this.editors[rows[i].editors[j].key];
+          var key = rows[i].editors[j].key;
+          var editor = this.editors[key];
           
           if(editor.options.hidden) editor.container.style.display = 'none';
           else this.theme.setGridColumnSize(editor.container,rows[i].editors[j].width);
-          
+          editor.container.className += ' container-' + key;
           row.appendChild(editor.container);
         }
       }
@@ -2563,14 +2610,20 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     // Normal layout
     else {
       container = document.createElement('div');
+
+      var getClassNameCompatible = function (string) {
+        return string.replace(/[^_a-zA-Z0-9]/g, '-');
+      };
+
+      container.className = getClassNameCompatible('container-' + this.path);
       $each(this.editors, function(key,editor) {
         if(editor.property_removed) return;
         var row = self.theme.getGridRow();
+        row.className += ' ' + getClassNameCompatible('row-' + self.path + '.' + key);
         container.appendChild(row);
         
         if(editor.options.hidden) editor.container.style.display = 'none';
         else self.theme.setGridColumnSize(editor.container,12);
-        
         row.appendChild(editor.container);
       });
     }
@@ -4948,8 +5001,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     // Enum options enumerated
     if(this.schema.enum) {
       $each(this.schema.enum,function(i,option) {
-        self.enum_options[i] = ""+option;
-        self.enum_display[i] = ""+option;
+        self.enum_options[i] = "" + option;
+        self.enum_display[i] = "" + ((self.schema.enumTitles && self.schema.enumTitles[option]) ?
+            self.schema.enumTitles[option] :
+            option);
         self.enum_values[i] = self.typecast(option);
       });
     }
@@ -4966,7 +5021,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    this.input = this.theme.getSelectInput(this.enum_options);
+    this.input = this.theme.getSelectInput(this.enum_options, this.schema.enumTitles);
     this.theme.setSelectOptions(this.input,this.enum_options,this.enum_display);
 
     if(this.schema.readOnly || this.schema.readonly) {
@@ -5062,7 +5117,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     }
     else {
       this.input_type = 'select';
-      this.input = this.theme.getSelectInput(options);
+      this.input = this.theme.getSelectInput(options, this.schema.enumTitles);
       this.input.multiple = true;
       this.input.size = Math.min(10,options.length);
 
@@ -5392,7 +5447,9 @@ JSONEditor.defaults.editors.radio = JSONEditor.AbstractEditor.extend({
       this.inputs[options[i]] = this.theme.getRadio();
       this.inputs[options[i]].setAttribute('value', options[i]);
       this.inputs[options[i]].setAttribute('name', this.formname);
-      var label = this.theme.getRadioLabel(options[i]);
+      var label = this.theme.getRadioLabel((this.schema.enumTitles && this.schema.enumTitles[options[i]]) ?
+          this.schema.enumTitles[options[i]]
+          : options[i]);
       this.controls[options[i]] = this.theme.getFormControl(label, this.inputs[options[i]]);
     }
 
@@ -5568,9 +5625,9 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style.fontWeight = 'normal';
     return el;
   },
-  getSelectInput: function(options) {
+  getSelectInput: function(options, titles) {
     var select = document.createElement('select');
-    if(options) this.setSelectOptions(select, options);
+    if(options) this.setSelectOptions(select, options, titles);
     return select;
   },
   getSwitcher: function(options) {
@@ -5594,7 +5651,7 @@ JSONEditor.AbstractTheme = Class.extend({
     for(var i=0; i<options.length; i++) {
       var option = document.createElement('option');
       option.setAttribute('value',options[i]);
-      option.textContent = titles[i] || options[i];
+      option.textContent = titles[i] || titles[options[i]] || options[i];
       select.appendChild(option);
     }
   },
@@ -5627,6 +5684,15 @@ JSONEditor.AbstractTheme = Class.extend({
     if(label) el.appendChild(label);
     if((input.type === 'checkbox') || (input.type === 'radio')) {
       label.insertBefore(input,label.firstChild);
+      var inputId = input.getAttribute('id');
+      if (!inputId) {
+        inputId = 'input-' + input.getAttribute('name');
+        if (input.type === 'radio') {
+          inputId += '-' + input.getAttribute('value');
+        }
+        input.setAttribute('id', inputId);
+      }
+      label.setAttribute('for', inputId);
     }
     else {
       el.appendChild(input);
@@ -5829,8 +5895,8 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   setGridColumnSize: function(el,size) {
     el.className = 'span'+size;
   },
-  getSelectInput: function(options) {
-    var input = this._super(options);
+  getSelectInput: function(options, titles) {
+    var input = this._super(options, titles);
     input.style.width = 'auto';
     input.style.maxWidth = '98%';
     return input;
@@ -5965,8 +6031,8 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
 });
 
 JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
-  getSelectInput: function(options) {
-    var el = this._super(options);
+  getSelectInput: function(options, titles) {
+    var el = this._super(options, titles);
     el.className += 'form-control';
     //el.style.width = 'auto';
     return el;
@@ -5994,7 +6060,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   },
   getFormInputField: function(type) {
     var el = this._super(type);
-    if(type !== 'checkbox') {
+    if(type !== 'checkbox' && type !== 'radio') {
       el.className += 'form-control';
     }
     return el;
@@ -6002,8 +6068,17 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   getFormControl: function(label, input, description) {
     var group = document.createElement('div');
 
-    if(label && input.type === 'checkbox') {
-      group.className += ' checkbox';
+    if(label && (input.type === 'checkbox' || (input.type === 'radio'))) {
+      group.className += ' ' + input.type;
+      var inputId = input.getAttribute('id');
+      if (!inputId) {
+        inputId = 'input-' + input.getAttribute('name');
+        if (input.type === 'radio') {
+          inputId += '-' + input.getAttribute('value');
+        }
+        input.setAttribute('id', inputId);
+      }
+      label.setAttribute('for', inputId);
       label.appendChild(input);
       label.style.fontSize = '14px';
       group.style.marginTop = '0';
@@ -6016,6 +6091,11 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
         group.appendChild(label);
       }
       group.appendChild(input);
+    }
+
+    if (label) {
+
+
     }
 
     if(description) group.appendChild(description);
@@ -6103,8 +6183,8 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     el.style.marginBottom = '15px';
     return el;
   },
-  getSelectInput: function(options) {
-    var el = this._super(options);
+  getSelectInput: function(options, titles) {
+    var el = this._super(options, titles);
     el.style.minWidth = 'none';
     el.style.padding = '5px';
     el.style.marginTop = '3px';
@@ -6836,7 +6916,8 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
       return "enum";
     }
     else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
-      return schema.format || "select";
+      //may be e.g. "radio"
+      return schema.inputType || "select";
     }
   }
 });
