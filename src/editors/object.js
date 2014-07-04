@@ -145,7 +145,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
       var getClassNameCompatible = function (string) {
         return string.replace(/[^_a-zA-Z0-9]/g, '-');
-      }
+      };
 
       container.className = getClassNameCompatible('container-' + this.path);
       $each(this.editors, function(key,editor) {
