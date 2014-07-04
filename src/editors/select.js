@@ -78,8 +78,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     // Enum options enumerated
     if(this.schema.enum) {
       $each(this.schema.enum,function(i,option) {
-        self.enum_options[i] = ""+option;
-        self.enum_display[i] = ""+option;
+        self.enum_options[i] = "" + option;
+        self.enum_display[i] = "" + ((self.schema.enumTitles && self.schema.enumTitles[option]) ?
+            self.schema.enumTitles[option] :
+            option);
         self.enum_values[i] = self.typecast(option);
       });
     }
@@ -96,7 +98,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
     if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    this.input = this.theme.getSelectInput(this.enum_options);
+    this.input = this.theme.getSelectInput(this.enum_options, this.schema.enumTitles);
     this.theme.setSelectOptions(this.input,this.enum_options,this.enum_display);
 
     if(this.schema.readOnly || this.schema.readonly) {

@@ -102,7 +102,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.schema.enum) {
       this.input_type = 'select';
       this.select_options = this.schema.enum;
-      this.input = this.theme.getSelectInput(this.select_options);
+      this.input = this.theme.getSelectInput(this.select_options, this.schema.enumTitles);
     }
     // Dynamic Select box
     else if(this.schema.enumSource) {
