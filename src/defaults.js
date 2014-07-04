@@ -68,7 +68,8 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
       return "enum";
     }
     else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
-      return schema.format || "select";
+      //may be e.g. "radio"
+      return schema.inputType || "select";
     }
   }
 });
