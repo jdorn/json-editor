@@ -459,7 +459,7 @@ So, the final order of properties in the form (and in returned JSON data) will b
 ### format
 
 JSON Editor supports many different formats for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
-If the `enum` property is specified, `format` will be limited to "radio" or "select" (default).
+If the `enum` property is specified, `format` will be ignored.
 
 JSON Editor uses HTML5 input types, so some of these may render as basic text input in older browsers:
 
