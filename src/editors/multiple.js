@@ -103,6 +103,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       parent: self,
       required: true
     });
+    self.editors[i].preBuild();
+    self.editors[i].build();
+    self.editors[i].postBuild();
+    
     if(self.editors[i].header) self.editors[i].header.style.display = 'none';
     
     self.editors[i].option = self.switcher_options[i];

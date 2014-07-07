@@ -30,6 +30,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.input.removeAttribute('name');
   },
   getNumColumns: function() {
+    if(!this.enum_options) return 3;
     var longest_text = this.getTitle().length;
     for(var i=0; i<this.enum_options.length; i++) {
       longest_text = Math.max(longest_text,this.enum_options[i].length+4);
@@ -122,7 +123,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       self.jsoneditor.notifyWatchers(self.path);
     });
 
-    this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
+    this.control = this.theme.getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
 
     this.value = this.enum_values[0];

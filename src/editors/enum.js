@@ -18,7 +18,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
   },
   build: function() {
     var container = this.getContainer();
-    this.title = this.header = this.label = this.getTheme().getFormInputLabel(this.getTitle());
+    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     this.container.appendChild(this.title);
 
     this.options.enum_titles = this.options.enum_titles || [];

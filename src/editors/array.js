@@ -221,6 +221,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       parent: this,
       required: true
     });
+    ret.preBuild();
+    ret.build();
+    ret.postBuild();
 
     if(!ret.title_controls) {
       ret.array_controls = this.theme.getButtonHolder();

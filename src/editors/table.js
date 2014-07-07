@@ -122,13 +122,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       row.appendChild(holder);
     }
 
-    if(ignore) {
-      holder.addEventListener('change_header_text',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-    }
-
     var ret = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema_copy,
@@ -138,7 +131,11 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       compact: true,
       table_row: true
     });
-
+    
+    ret.preBuild();
+    ret.build();
+    ret.postBuild();
+    
     ret.controls_cell = row.appendChild(this.theme.getTableCell());
     ret.row = row;
     ret.table_controls = this.theme.getButtonHolder();

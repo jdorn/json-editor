@@ -38,9 +38,13 @@ JSONEditor.prototype = {
       self.root = self.createEditor(editor_class, {
         jsoneditor: self,
         schema: self.schema,
-        container: self.root_container,
-        required: true
+        required: true,
+        container: self.root_container
       });
+      
+      self.root.preBuild();
+      self.root.build();
+      self.root.postBuild();
 
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);

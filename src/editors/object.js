@@ -159,7 +159,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this.editors = {};
     var self = this;
     
-    this.format = this.getOption('layout') || this.getOption('object_layout') || this.schema.format || this.jsoneditor.options.object_layout || 'normal';
+    this.format = this.options.layout || this.options.object_layout || this.schema.format || this.jsoneditor.options.object_layout || 'normal';
 
     this.schema.properties = this.schema.properties || {};
 
@@ -167,11 +167,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this.maxwidth = 0;
 
     // If the object should be rendered as a table row
-    if(this.getOption('table_row',false)) {
+    if(this.options.table_row) {
       this.editor_holder = this.container;
       $each(this.schema.properties, function(key,schema) {
         var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
-        var holder = self.editor_holder.appendChild(self.getTheme().getTableCell());
+        var holder = self.editor_holder.appendChild(self.theme.getTableCell());
 
         self.editors[key] = self.jsoneditor.createEditor(editor,{
           jsoneditor: self.jsoneditor,
@@ -182,6 +182,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           compact: true,
           required: true
         });
+        self.editors[key].preBuild();
+        self.editors[key].build();
+        self.editors[key].postBuild();
         
         var width = self.editors[key].options.hidden? 0 : self.editors[key].getNumColumns();
 
@@ -195,7 +198,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.no_link_holder = true;
     }
     // If the object should be rendered as a table
-    else if(this.getOption('table',false)) {
+    else if(this.options.table) {
       // TODO: table display format
       throw "Not supported yet";
     }
@@ -203,7 +206,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     else {
       this.header = document.createElement('span');
       this.header.textContent = this.getTitle();
-      this.title = this.getTheme().getHeader(this.header);
+      this.title = this.theme.getHeader(this.header);
       this.container.appendChild(this.title);
       this.container.style.position = 'relative';
       
@@ -264,7 +267,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Description
       if(this.schema.description) {
-        this.description = this.getTheme().getDescription(this.schema.description);
+        this.description = this.theme.getDescription(this.schema.description);
         this.container.appendChild(this.description);
       }
       
@@ -273,7 +276,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.container.appendChild(this.error_holder);
       
       // Container for child editor area
-      this.editor_holder = this.getTheme().getIndentedPanel();
+      this.editor_holder = this.theme.getIndentedPanel();
       this.editor_holder.style.paddingBottom = '0';
       this.container.appendChild(this.editor_holder);
 
@@ -283,7 +286,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
       $each(this.schema.properties, function(key,schema) {
         var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
-        var holder = self.getTheme().getGridColumn();
+        var holder = self.theme.getGridColumn();
         self.row_container.appendChild(holder);
 
         // If the property is required
@@ -300,15 +303,18 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           parent: self,
           required: required
         });
+        self.editors[key].preBuild();
+        self.editors[key].build();
+        self.editors[key].postBuild();
 
         self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
         self.maxwidth += self.editors[key].getNumColumns();
       });
 
       // Control buttons
-      this.title_controls = this.getTheme().getHeaderButtonHolder();
-      this.editjson_controls = this.getTheme().getHeaderButtonHolder();
-      this.addproperty_controls = this.getTheme().getHeaderButtonHolder();
+      this.title_controls = this.theme.getHeaderButtonHolder();
+      this.editjson_controls = this.theme.getHeaderButtonHolder();
+      this.addproperty_controls = this.theme.getHeaderButtonHolder();
       this.title.appendChild(this.title_controls);
       this.title.appendChild(this.editjson_controls);
       this.title.appendChild(this.addproperty_controls);
@@ -387,7 +393,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     
     
     // Fix table cell ordering
-    if(this.getOption('table_row',false)) {
+    if(this.options.table_row) {
       this.editor_holder = this.container;
       $each(this.editors, function(key,editor) {
         self.editor_holder.appendChild(editor.container);
@@ -463,7 +469,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     self.addproperty_list.appendChild(control);
     
     checkbox.checked = !editor.property_removed;
-    if(editor.isRequired()) checkbox.disabled = true;
+    if(self.isRequired(editor)) checkbox.disabled = true;
     checkbox.addEventListener('change',function() {
       if(checkbox.checked) {
         self.addObjectProperty(key);
@@ -559,7 +565,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Add the property
       var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
-      var holder = self.getTheme().getChildEditorHolder();
+      var holder = self.theme.getChildEditorHolder();
       self.editor_holder.appendChild(holder);
 
       self.editors[name] = self.jsoneditor.createEditor(editor,{
@@ -571,6 +577,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         required: false
       });
       self.editors[name].not_core = true;
+      self.editors[name].preBuild();
+      self.editors[name].build();
+      self.editors[name].postBuild();
     }
     
     self.refreshValue();
@@ -591,12 +600,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     $each(this.editors, function(i,el) {
       el.destroy();
     });
-    this.editor_holder.innerHTML = '';
+    if(this.editor_holder) this.editor_holder.innerHTML = '';
     if(this.title) this.title.parentNode.removeChild(this.title);
     if(this.error_holder) this.error_holder.parentNode.removeChild(this.error_holder);
 
     this.editors = null;
-    this.editor_holder.parentNode.removeChild(this.editor_holder);
+    if(this.editor_holder && this.editor_holder.parentNode) this.editor_holder.parentNode.removeChild(this.editor_holder);
     this.editor_holder = null;
 
     this._super();
@@ -656,7 +665,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     // Check for which editors can't be removed or added back
     for(i in this.editors) {
       if(!this.editors.hasOwnProperty(i)) continue;
-      if(this.editors[i].isRequired()) {
+      if(this.isRequired(this.editors[i])) {
         if(this.addproperty_checkboxes && this.addproperty_checkboxes[i]) {
           this.addproperty_checkboxes[i].disabled = true;
         }
@@ -726,6 +735,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_add.disabled = false;
     }
   },
+  isRequired: function(editor) {
+    if(typeof editor.schema.required === "boolean") return editor.schema.required;
+    else if(Array.isArray(this.schema.required)) return this.schema.required.indexOf(editor.key) > -1;
+    else if(this.jsoneditor.options.required_by_default) return true;
+    else return false;
+  },
   setValue: function(value, initial) {
     var self = this;
     value = value || {};
@@ -744,7 +759,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
       else {
         // If property isn't required, remove property
-        if(!initial && !editor.property_removed && !editor.isRequired()) {
+        if(!initial && !editor.property_removed && !self.isRequired(editor)) {
           self.removeObjectProperty(i);
           return;
         }
@@ -800,7 +815,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
 
     // Show error for the table row if this is inside a table
-    if(this.getOption('table_row')) {
+    if(this.options.table_row) {
       if(my_errors.length) {
         this.theme.addTableRowError(this.container);
       }

@@ -49,7 +49,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
         this.input.disabled = true;
       }
 
-      this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
+      this.control = this.theme.getFormControl(this.label, this.input, this.description);
     }
 
     this.container.appendChild(this.control);
