@@ -39,7 +39,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     if(label && (input.type === 'checkbox' || (input.type === 'radio'))) {
       group.className += ' ' + input.type;
       var inputId = input.getAttribute('id');
-      if (!inputId) {
+      if (!inputId && input.getAttribute('name')) {
         inputId = 'input-' + input.getAttribute('name');
         if (input.type === 'radio') {
           inputId += '-' + input.getAttribute('value');

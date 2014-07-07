@@ -187,7 +187,7 @@ JSONEditor.AbstractTheme = Class.extend({
     if((input.type === 'checkbox') || (input.type === 'radio')) {
       label.insertBefore(input,label.firstChild);
       var inputId = input.getAttribute('id');
-      if (!inputId) {
+      if (!inputId && input.getAttribute('name')) {
         inputId = 'input-' + input.getAttribute('name');
         if (input.type === 'radio') {
           inputId += '-' + input.getAttribute('value');
