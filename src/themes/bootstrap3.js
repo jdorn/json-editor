@@ -63,11 +63,6 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
       group.appendChild(input);
     }
 
-    if (label) {
-
-
-    }
-
     if(description) group.appendChild(description);
 
     return group;
