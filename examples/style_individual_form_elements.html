@@ -9,6 +9,8 @@
 
     <style>
         /* custom style for some input */
+        #editor_holder > div > h3 { display: none; }
+
         .row-root-user, .row-root-address {
             width: 50%;
             float: left;
@@ -96,6 +98,10 @@
                         "addressLine2": {
                             "title": "Address line 2",
                             "type": "string"
+                        },
+                        "sendMail": {
+                            "title": "Send mail here?",
+                            "type": "boolean"
                         }
                     }
                 }
@@ -116,8 +122,14 @@
                 "enumTitles": {
                     "allDay": "All day!"
                 }
+            },
+            "address.sendMail": {
+                "inputType": "checkbox"
             }
-        }
+        },
+        disable_collapse: true,
+        disable_edit_json: true,
+        disable_properties: true
     });
 
     // Hook up the submit button to log to the console

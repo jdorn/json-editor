@@ -36,12 +36,6 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema is a simple type
   if(typeof schema.type === "string") return schema.type;
 });
-// Use the select editor for all boolean values
-JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.type === 'boolean') {
-    return "select";
-  }
-});
 // Use the multiple editor for schemas where the `type` is set to "any"
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema can be of any type
