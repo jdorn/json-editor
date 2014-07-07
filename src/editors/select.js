@@ -1,7 +1,4 @@
 JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || '';
-  },
   setValue: function(value,initial) {
     value = this.typecast(value||'');
 
@@ -54,21 +51,9 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   getValue: function() {
     return this.value;
   },
-  removeProperty: function() {
-    this._super();
-    this.input.style.display = 'none';
-    if(this.description) this.description.style.display = 'none';
-    this.theme.disableLabel(this.label);
-  },
-  addProperty: function() {
-    this._super();
-    this.input.style.display = '';
-    if(this.description) this.description.style.display = '';
-    this.theme.enableLabel(this.label);
-  },
   build: function() {
     var self = this;
-    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.input_type = 'select';
@@ -95,7 +80,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       throw "'select' editor requires the enum property to be set.";
     }
 
-    if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
     this.input = this.theme.getSelectInput(this.enum_options);
     this.theme.setSelectOptions(this.input,this.enum_options,this.enum_display);
@@ -147,9 +132,9 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   destroy: function() {
-    if(this.label) this.label.parentNode.removeChild(this.label);
-    if(this.description) this.description.parentNode.removeChild(this.description);
-    this.input.parentNode.removeChild(this.input);
+    if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
 
     this._super();
   }

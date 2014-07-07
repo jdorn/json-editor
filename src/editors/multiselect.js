@@ -1,10 +1,7 @@
 JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return [];
-  },
   build: function() {
     var self = this, i;
-    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.select_options = {};

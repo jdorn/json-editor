@@ -56,12 +56,12 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   
   preBuild: function() {
-    this.setupWatchListeners();
   },
   build: function() {
     
   },
   postBuild: function() {
+    this.setupWatchListeners();
     this.addLinks();
     this.setValue(this.getDefault(), true);
     this.updateHeaderText();
@@ -309,7 +309,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.header_text = null;
     this.header_template = null;
     this.value = null;
-    if(this.container.parentNode) this.container.parentNode.removeChild(this.container);
+    if(this.container && this.container.parentNode) this.container.parentNode.removeChild(this.container);
     this.container = null;
     this.jsoneditor = null;
     this.schema = null;

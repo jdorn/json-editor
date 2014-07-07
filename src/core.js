@@ -139,8 +139,10 @@ JSONEditor.prototype = {
       }
     }
   },
-  getEditorClass: function(schema, editor) {
+  getEditorClass: function(schema) {
     var classname;
+
+    schema = this.expandRefs(schema);
 
     $each(JSONEditor.defaults.resolvers,function(i,resolver) {
       var tmp = resolver(schema);

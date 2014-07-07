@@ -1,8 +1,5 @@
 // Multiple Editor (for when `type` is an array)
 JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || null;
-  },
   register: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
@@ -12,6 +9,15 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       if(this.editors[this.type]) this.editors[this.type].register();
     }
     this._super();
+  },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        if(!this.editors[i]) continue;
+        this.editors[i].unregister();
+      }
+    }
   },
   getNumColumns: function() {
     return Math.max(this.editors[this.type].getNumColumns(),4);
@@ -35,15 +41,6 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this.switcher.disabled = true;
     this._super();
-  },
-  unregister: function() {
-    this._super();
-    if(this.editors) {
-      for(var i=0; i<this.editors.length; i++) {
-        if(!this.editors[i]) continue;
-        this.editors[i].unregister();
-      }
-    }
   },
   switchEditor: function(i) {
     var self = this;
@@ -93,7 +90,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
     }
 
-    var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
+    var editor = self.jsoneditor.getEditorClass(schema);
 
     self.editors[i] = self.jsoneditor.createEditor(editor,{
       jsoneditor: self.jsoneditor,
@@ -249,8 +246,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     $each(this.editors, function(type,editor) {
       if(editor) editor.destroy();
     });
-    this.editor_holder.parentNode.removeChild(this.editor_holder);
-    this.switcher.parentNode.removeChild(this.switcher);
+    if(this.editor_holder && this.editor_holder.parentNode) this.editor_holder.parentNode.removeChild(this.editor_holder);
+    if(this.switcher && this.switcher.parentNode) this.switcher.parentNode.removeChild(this.switcher);
     this._super();
   },
   showValidationErrors: function(errors) {

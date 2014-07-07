@@ -1,7 +1,4 @@
 JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || '';
-  },
   getNumColumns: function() {
     return 4;
   },
@@ -92,10 +89,10 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
     }
   },
   destroy: function() {
-    this.preview.parentNode.removeChild(this.preview);
-    this.title.parentNode.removeChild(this.title);
-    this.input.parentNode.removeChild(this.input);
-    if(this.uploader) this.uploader.parentNode.removeChild(this.uploader);
+    if(this.preview && this.preview.parentNode) this.preview.parentNode.removeChild(this.preview);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.uploader && this.uploader.parentNode) this.uploader.parentNode.removeChild(this.uploader);
 
     this._super();
   }

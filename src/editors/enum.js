@@ -1,18 +1,5 @@
 // Enum Editor (used for objects and arrays with enumerated values)
 JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.enum[0];
-  },
-  addProperty: function() {
-    this._super();
-    this.display_area.style.display = '';
-    this.theme.enableHeader(this.title);
-  },
-  removeProperty: function() {
-    this._super();
-    this.display_area.style.display = 'none';
-    this.theme.disableHeader(this.title);
-  },
   getNumColumns: function() {
     return 4;
   },
@@ -139,9 +126,9 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     }
   },
   destroy: function() {
-    this.display_area.parentNode.removeChild(this.display_area);
-    this.title.parentNode.removeChild(this.title);
-    this.switcher.parentNode.removeChild(this.switcher);
+    if(this.display_area && this.display_area.parentNode) this.display_area.parentNode.removeChild(this.display_area);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.switcher && this.switcher.parentNode) this.switcher.parentNode.removeChild(this.switcher);
 
     this._super();
   }

@@ -333,8 +333,10 @@ JSONEditor.prototype = {
       }
     }
   },
-  getEditorClass: function(schema, editor) {
+  getEditorClass: function(schema) {
     var classname;
+
+    schema = this.expandRefs(schema);
 
     $each(JSONEditor.defaults.resolvers,function(i,resolver) {
       var tmp = resolver(schema);
@@ -1367,12 +1369,12 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   
   preBuild: function() {
-    this.setupWatchListeners();
   },
   build: function() {
     
   },
   postBuild: function() {
+    this.setupWatchListeners();
     this.addLinks();
     this.setValue(this.getDefault(), true);
     this.updateHeaderText();
@@ -1620,7 +1622,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.header_text = null;
     this.header_template = null;
     this.value = null;
-    if(this.container.parentNode) this.container.parentNode.removeChild(this.container);
+    if(this.container && this.container.parentNode) this.container.parentNode.removeChild(this.container);
     this.container = null;
     this.jsoneditor = null;
     this.schema = null;
@@ -1745,9 +1747,6 @@ JSONEditor.defaults.editors.null = JSONEditor.AbstractEditor.extend({
 });
 
 JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {    
-    return this.schema.default || '';
-  },
   register: function() {
     this._super();
     if(!this.input) return;
@@ -1806,18 +1805,6 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.watch_listener();
     this.jsoneditor.notifyWatchers(this.path);
   },
-  removeProperty: function() {
-    this._super();
-    this.input.style.display = 'none';
-    if(this.description) this.description.style.display = 'none';
-    this.theme.disableLabel(this.label);
-  },
-  addProperty: function() {
-    this._super();
-    this.input.style.display = '';
-    if(this.description) this.description.style.display = '';
-    this.theme.enableLabel(this.label);
-  },
   getNumColumns: function() {
     var min = Math.ceil(this.getTitle().length/5);
     var num;
@@ -1830,7 +1817,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this, i;
-    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.format = this.schema.format;
@@ -2002,7 +1989,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(typeof this.schema.pattern !== "undefined") this.input.setAttribute('pattern',this.schema.pattern);
     else if(typeof this.schema.minLength !== "undefined") this.input.setAttribute('pattern','.{'+this.schema.minLength+',}');
 
-    if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
     if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
       this.always_disabled = true;
@@ -2193,7 +2180,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     
     this.template = null;
-    if(this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
     if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
     if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
 
@@ -2321,9 +2308,6 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 });
 
 JSONEditor.defaults.editors.number = JSONEditor.defaults.editors.string.extend({
-  getDefault: function() {
-    return this.schema.default || 0;
-  },
   sanitize: function(value) {
     return (value+"").replace(/[^0-9\.\-]/g,'');
   },
@@ -2502,10 +2486,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this.row_container.innerHTML = '';
     this.row_container.appendChild(container);
   },
-  build: function() {
+  preBuild: function() {
+    this._super();
+
     this.editors = {};
     var self = this;
-    
+
     this.format = this.options.layout || this.options.object_layout || this.schema.format || this.jsoneditor.options.object_layout || 'normal';
 
     this.schema.properties = this.schema.properties || {};
@@ -2515,34 +2501,84 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
     // If the object should be rendered as a table row
     if(this.options.table_row) {
-      this.editor_holder = this.container;
       $each(this.schema.properties, function(key,schema) {
-        var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
-        var holder = self.editor_holder.appendChild(self.theme.getTableCell());
-
+        var editor = self.jsoneditor.getEditorClass(schema);
         self.editors[key] = self.jsoneditor.createEditor(editor,{
           jsoneditor: self.jsoneditor,
           schema: schema,
-          container: holder,
           path: self.path+'.'+key,
           parent: self,
           compact: true,
           required: true
         });
         self.editors[key].preBuild();
-        self.editors[key].build();
-        self.editors[key].postBuild();
-        
+
         var width = self.editors[key].options.hidden? 0 : self.editors[key].getNumColumns();
 
         self.minwidth += width;
         self.maxwidth += width;
-        
+      });
+      this.no_link_holder = true;
+    }
+    // If the object should be rendered as a table
+    else if(this.options.table) {
+      // TODO: table display format
+      throw "Not supported yet";
+    }
+    // If the object should be rendered as a div
+    else {
+      $each(this.schema.properties, function(key,schema) {
+        var editor = self.jsoneditor.getEditorClass(schema);
+
+        // If the property is required
+        var required;
+        if(self.schema.required && Array.isArray(self.schema.required)) {
+          required = self.schema.required.indexOf(key) >= 0;
+        }
+
+        self.editors[key] = self.jsoneditor.createEditor(editor,{
+          jsoneditor: self.jsoneditor,
+          schema: schema,
+          path: self.path+'.'+key,
+          parent: self,
+          required: required
+        });
+        self.editors[key].preBuild();
+
+        self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
+        self.maxwidth += self.editors[key].getNumColumns();
+      });
+    }
+
+    // Sort editors by propertyOrder
+    this.property_order = Object.keys(this.editors);
+    this.property_order = this.property_order.sort(function(a,b) {
+      var ordera = self.editors[a].schema.propertyOrder;
+      var orderb = self.editors[b].schema.propertyOrder;
+      if(typeof ordera !== "number") ordera = 1000;
+      if(typeof orderb !== "number") orderb = 1000;
+
+      return ordera - orderb;
+    });
+  },
+  build: function() {
+    var self = this;
+
+    // If the object should be rendered as a table row
+    if(this.options.table_row) {
+      this.editor_holder = this.container;
+      $each(this.editors, function(key,editor) {
+        var holder = self.theme.getTableCell();
+        self.editor_holder.appendChild(holder);
+
+        editor.setContainer(holder);
+        editor.build();
+        editor.postBuild();
+
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
       });
-      this.no_link_holder = true;
     }
     // If the object should be rendered as a table
     else if(this.options.table) {
@@ -2631,31 +2667,13 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.row_container = this.theme.getGridContainer();
       this.editor_holder.appendChild(this.row_container);
 
-      $each(this.schema.properties, function(key,schema) {
-        var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
+      $each(this.editors, function(key,editor) {
         var holder = self.theme.getGridColumn();
         self.row_container.appendChild(holder);
 
-        // If the property is required
-        var required;
-        if(self.schema.required && Array.isArray(self.schema.required)) {
-          required = self.schema.required.indexOf(key) >= 0;
-        }
-
-        self.editors[key] = self.jsoneditor.createEditor(editor,{
-          jsoneditor: self.jsoneditor,
-          schema: schema,
-          container: holder,
-          path: self.path+'.'+key,
-          parent: self,
-          required: required
-        });
-        self.editors[key].preBuild();
-        self.editors[key].build();
-        self.editors[key].postBuild();
-
-        self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
-        self.maxwidth += self.editors[key].getNumColumns();
+        editor.setContainer(holder);
+        editor.build();
+        editor.postBuild();
       });
 
       // Control buttons
@@ -2722,28 +2740,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.refreshAddProperties();
     }
     
-    // Sort editors by propertyOrder
-    var sorted = {};
-    var keys = Object.keys(this.editors);
-    keys = keys.sort(function(a,b) {
-      var ordera = self.editors[a].schema.propertyOrder;
-      var orderb = self.editors[b].schema.propertyOrder;
-      if(typeof ordera !== "number") ordera = 1000;
-      if(typeof orderb !== "number") orderb = 1000;
-      
-      return ordera - orderb;
-    });
-    for(var i=0; i<keys.length; i++) {
-      sorted[keys[i]] = this.editors[keys[i]];
-    }
-    this.editors = sorted;
-    
-    
     // Fix table cell ordering
     if(this.options.table_row) {
       this.editor_holder = this.container;
-      $each(this.editors, function(key,editor) {
-        self.editor_holder.appendChild(editor.container);
+      $each(this.property_order,function(i,key) {
+        self.editor_holder.appendChild(self.editors[key].container);
       });
     }
     // Layout object editors in grid if needed
@@ -2911,7 +2912,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
       
       // Add the property
-      var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
+      var editor = self.jsoneditor.getEditorClass(schema);
       var holder = self.theme.getChildEditorHolder();
       self.editor_holder.appendChild(holder);
 
@@ -2948,8 +2949,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       el.destroy();
     });
     if(this.editor_holder) this.editor_holder.innerHTML = '';
-    if(this.title) this.title.parentNode.removeChild(this.title);
-    if(this.error_holder) this.error_holder.parentNode.removeChild(this.error_holder);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.error_holder && this.error_holder.parentNode) this.error_holder.parentNode.removeChild(this.error_holder);
 
     this.editors = null;
     if(this.editor_holder && this.editor_holder.parentNode) this.editor_holder.parentNode.removeChild(this.editor_holder);
@@ -3208,22 +3209,6 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       return info.width;
     }
   },
-  addProperty: function() {
-    this._super();
-    this.row_holder.style.display = '';
-    if(this.tabs_holder) this.tabs_holder.style.display = '';
-    if(!this.collapsed) this.controls.style.display = '';
-    this.title_controls.style.display = '';
-    this.theme.enableHeader(this.title);
-  },
-  removeProperty: function() {
-    this._super();
-    this.row_holder.style.display = 'none';
-    if(this.tabs_holder) this.tabs_holder.style.display = 'none';
-    this.controls.style.display = 'none';
-    this.title_controls.style.display = 'none';
-    this.theme.disableHeader(this.title);
-  },
   enable: function() {
     if(this.add_row_button) this.add_row_button.disabled = false;
     if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = false;
@@ -3265,7 +3250,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.hide_move_buttons = this.options.disable_array_reorder || this.jsoneditor.options.disable_array_reorder;
     this.hide_add_button = this.options.disable_array_add || this.jsoneditor.options.disable_array_add;
 
-    if(!this.getOption('compact',false)) {
+    if(!this.options.compact) {
       this.header = document.createElement('span');
       this.header.textContent = this.getTitle();
       this.title = this.theme.getHeader(this.header);
@@ -3378,7 +3363,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     schema = this.jsoneditor.expandRefs(schema);
     schema.title = item_info.title+' '+i;
 
-    var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
+    var editor = this.jsoneditor.getEditorClass(schema);
 
     var holder;
     if(this.tabs_holder) {
@@ -3414,11 +3399,11 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
   },
   destroy: function() {
     this.empty(true);
-    if(this.title) this.title.parentNode.removeChild(this.title);
-    if(this.description) this.description.parentNode.removeChild(this.description);
-    if(this.row_holder) this.row_holder.parentNode.removeChild(this.row_holder);
-    if(this.controls) this.controls.parentNode.removeChild(this.controls);
-    if(this.panel) this.panel.parentNode.removeChild(this.panel);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
+    if(this.row_holder && this.row_holder.parentNode) this.row_holder.parentNode.removeChild(this.row_holder);
+    if(this.controls && this.controls.parentNode) this.controls.parentNode.removeChild(this.controls);
+    if(this.panel && this.panel.parentNode) this.panel.parentNode.removeChild(this.panel);
     
     this.rows = this.row_cache = this.title = this.description = this.row_holder = this.panel = this.controls = null;
 
@@ -3888,14 +3873,6 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
 });
 
 JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
-  addProperty: function() {
-    this._super();
-    if(this.value.length) this.table.style.display = '';
-  },
-  removeProperty: function() {
-    this._super();
-    this.table.style.display = 'none';
-  },
   register: function() {
     this._super();
     if(this.rows) {
@@ -3945,7 +3922,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       this.item_has_child_editors = true;      
     }
     
-    if(!this.getOption('compact',false)) {
+    if(!this.options.compact) {
       this.title = this.theme.getHeader(this.getTitle());
       this.container.appendChild(this.title);
       this.title_controls = this.theme.getHeaderButtonHolder();
@@ -4022,25 +3999,27 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     });
     
     ret.preBuild();
-    ret.build();
-    ret.postBuild();
-    
-    ret.controls_cell = row.appendChild(this.theme.getTableCell());
-    ret.row = row;
-    ret.table_controls = this.theme.getButtonHolder();
-    ret.controls_cell.appendChild(ret.table_controls);
-    ret.table_controls.style.margin = 0;
-    ret.table_controls.style.padding = 0;
+    if(!ignore) {
+      ret.build();
+      ret.postBuild();
+
+      ret.controls_cell = row.appendChild(this.theme.getTableCell());
+      ret.row = row;
+      ret.table_controls = this.theme.getButtonHolder();
+      ret.controls_cell.appendChild(ret.table_controls);
+      ret.table_controls.style.margin = 0;
+      ret.table_controls.style.padding = 0;
+    }
     
     return ret;
   },
   destroy: function() {
     this.innerHTML = '';
-    if(this.title) this.title.parentNode.removeChild(this.title);
-    if(this.description) this.description.parentNode.removeChild(this.description);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
     if(this.row_holder && this.row_holder.parentNode) this.row_holder.parentNode.removeChild(this.row_holder);
-    this.table.parentNode.removeChild(this.table);
-    if(this.panel) this.panel.parentNode.removeChild(this.panel);
+    if(this.table && this.table.parentNode) this.table.parentNode.removeChild(this.table);
+    if(this.panel && this.panel.parentNode) this.panel.parentNode.removeChild(this.panel);
 
     this.rows = this.title = this.description = this.row_holder = this.table = this.panel = null;
 
@@ -4299,34 +4278,36 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     this.collapsed = false;
     this.toggle_button = this.getButton('','collapse','Collapse');
-    this.title_controls.appendChild(this.toggle_button);
-    this.toggle_button.addEventListener('click',function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      if(self.collapsed) {
-        self.collapsed = false;
-        self.panel.style.display = '';
-        self.setButtonText(this,'','collapse','Collapse');
-      }
-      else {
-        self.collapsed = true;
-        self.panel.style.display = 'none';
-        self.setButtonText(this,'','expand','Expand');
-      }
-    });
+    if(this.title_controls) {
+      this.title_controls.appendChild(this.toggle_button);
+      this.toggle_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-    // If it should start collapsed
-    if(this.options.collapsed) {
-      $trigger(this.toggle_button,'click');
-    }
-    
-    // Collapse button disabled
-    if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
-      if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
-    }
-    else if(this.jsoneditor.options.disable_collapse) {
-      this.toggle_button.style.display = 'none';
+        if(self.collapsed) {
+          self.collapsed = false;
+          self.panel.style.display = '';
+          self.setButtonText(this,'','collapse','Collapse');
+        }
+        else {
+          self.collapsed = true;
+          self.panel.style.display = 'none';
+          self.setButtonText(this,'','expand','Expand');
+        }
+      });
+
+      // If it should start collapsed
+      if(this.options.collapsed) {
+        $trigger(this.toggle_button,'click');
+      }
+
+      // Collapse button disabled
+      if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
+        if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+      }
+      else if(this.jsoneditor.options.disable_collapse) {
+        this.toggle_button.style.display = 'none';
+      }
     }
 
     // Add "new row" and "delete last" buttons below editor
@@ -4371,9 +4352,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
 // Multiple Editor (for when `type` is an array)
 JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || null;
-  },
   register: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
@@ -4383,6 +4361,15 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       if(this.editors[this.type]) this.editors[this.type].register();
     }
     this._super();
+  },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        if(!this.editors[i]) continue;
+        this.editors[i].unregister();
+      }
+    }
   },
   getNumColumns: function() {
     return Math.max(this.editors[this.type].getNumColumns(),4);
@@ -4406,15 +4393,6 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this.switcher.disabled = true;
     this._super();
-  },
-  unregister: function() {
-    this._super();
-    if(this.editors) {
-      for(var i=0; i<this.editors.length; i++) {
-        if(!this.editors[i]) continue;
-        this.editors[i].unregister();
-      }
-    }
   },
   switchEditor: function(i) {
     var self = this;
@@ -4464,7 +4442,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
     }
 
-    var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
+    var editor = self.jsoneditor.getEditorClass(schema);
 
     self.editors[i] = self.jsoneditor.createEditor(editor,{
       jsoneditor: self.jsoneditor,
@@ -4620,8 +4598,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     $each(this.editors, function(type,editor) {
       if(editor) editor.destroy();
     });
-    this.editor_holder.parentNode.removeChild(this.editor_holder);
-    this.switcher.parentNode.removeChild(this.switcher);
+    if(this.editor_holder && this.editor_holder.parentNode) this.editor_holder.parentNode.removeChild(this.editor_holder);
+    if(this.switcher && this.switcher.parentNode) this.switcher.parentNode.removeChild(this.switcher);
     this._super();
   },
   showValidationErrors: function(errors) {
@@ -4655,19 +4633,6 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
 // Enum Editor (used for objects and arrays with enumerated values)
 JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.enum[0];
-  },
-  addProperty: function() {
-    this._super();
-    this.display_area.style.display = '';
-    this.theme.enableHeader(this.title);
-  },
-  removeProperty: function() {
-    this._super();
-    this.display_area.style.display = 'none';
-    this.theme.disableHeader(this.title);
-  },
   getNumColumns: function() {
     return 4;
   },
@@ -4794,18 +4759,15 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     }
   },
   destroy: function() {
-    this.display_area.parentNode.removeChild(this.display_area);
-    this.title.parentNode.removeChild(this.title);
-    this.switcher.parentNode.removeChild(this.switcher);
+    if(this.display_area && this.display_area.parentNode) this.display_area.parentNode.removeChild(this.display_area);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.switcher && this.switcher.parentNode) this.switcher.parentNode.removeChild(this.switcher);
 
     this._super();
   }
 });
 
 JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || '';
-  },
   setValue: function(value,initial) {
     value = this.typecast(value||'');
 
@@ -4858,21 +4820,9 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   getValue: function() {
     return this.value;
   },
-  removeProperty: function() {
-    this._super();
-    this.input.style.display = 'none';
-    if(this.description) this.description.style.display = 'none';
-    this.theme.disableLabel(this.label);
-  },
-  addProperty: function() {
-    this._super();
-    this.input.style.display = '';
-    if(this.description) this.description.style.display = '';
-    this.theme.enableLabel(this.label);
-  },
   build: function() {
     var self = this;
-    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.input_type = 'select';
@@ -4899,7 +4849,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       throw "'select' editor requires the enum property to be set.";
     }
 
-    if(this.getOption('compact')) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
     this.input = this.theme.getSelectInput(this.enum_options);
     this.theme.setSelectOptions(this.input,this.enum_options,this.enum_display);
@@ -4951,21 +4901,18 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   destroy: function() {
-    if(this.label) this.label.parentNode.removeChild(this.label);
-    if(this.description) this.description.parentNode.removeChild(this.description);
-    this.input.parentNode.removeChild(this.input);
+    if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
 
     this._super();
   }
 });
 
 JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return [];
-  },
   build: function() {
     var self = this, i;
-    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.select_options = {};
@@ -5129,9 +5076,6 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 });
 
 JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || '';
-  },
   getNumColumns: function() {
     return 4;
   },
@@ -5222,10 +5166,10 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
     }
   },
   destroy: function() {
-    this.preview.parentNode.removeChild(this.preview);
-    this.title.parentNode.removeChild(this.title);
-    this.input.parentNode.removeChild(this.input);
-    if(this.uploader) this.uploader.parentNode.removeChild(this.uploader);
+    if(this.preview && this.preview.parentNode) this.preview.parentNode.removeChild(this.preview);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.uploader && this.uploader.parentNode) this.uploader.parentNode.removeChild(this.uploader);
 
     this._super();
   }

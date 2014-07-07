@@ -28,22 +28,6 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       return info.width;
     }
   },
-  addProperty: function() {
-    this._super();
-    this.row_holder.style.display = '';
-    if(this.tabs_holder) this.tabs_holder.style.display = '';
-    if(!this.collapsed) this.controls.style.display = '';
-    this.title_controls.style.display = '';
-    this.theme.enableHeader(this.title);
-  },
-  removeProperty: function() {
-    this._super();
-    this.row_holder.style.display = 'none';
-    if(this.tabs_holder) this.tabs_holder.style.display = 'none';
-    this.controls.style.display = 'none';
-    this.title_controls.style.display = 'none';
-    this.theme.disableHeader(this.title);
-  },
   enable: function() {
     if(this.add_row_button) this.add_row_button.disabled = false;
     if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = false;
@@ -85,7 +69,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.hide_move_buttons = this.options.disable_array_reorder || this.jsoneditor.options.disable_array_reorder;
     this.hide_add_button = this.options.disable_array_add || this.jsoneditor.options.disable_array_add;
 
-    if(!this.getOption('compact',false)) {
+    if(!this.options.compact) {
       this.header = document.createElement('span');
       this.header.textContent = this.getTitle();
       this.title = this.theme.getHeader(this.header);
@@ -198,7 +182,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     schema = this.jsoneditor.expandRefs(schema);
     schema.title = item_info.title+' '+i;
 
-    var editor = this.jsoneditor.getEditorClass(schema, this.jsoneditor);
+    var editor = this.jsoneditor.getEditorClass(schema);
 
     var holder;
     if(this.tabs_holder) {
@@ -234,11 +218,11 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
   },
   destroy: function() {
     this.empty(true);
-    if(this.title) this.title.parentNode.removeChild(this.title);
-    if(this.description) this.description.parentNode.removeChild(this.description);
-    if(this.row_holder) this.row_holder.parentNode.removeChild(this.row_holder);
-    if(this.controls) this.controls.parentNode.removeChild(this.controls);
-    if(this.panel) this.panel.parentNode.removeChild(this.panel);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
+    if(this.row_holder && this.row_holder.parentNode) this.row_holder.parentNode.removeChild(this.row_holder);
+    if(this.controls && this.controls.parentNode) this.controls.parentNode.removeChild(this.controls);
+    if(this.panel && this.panel.parentNode) this.panel.parentNode.removeChild(this.panel);
     
     this.rows = this.row_cache = this.title = this.description = this.row_holder = this.panel = this.controls = null;
 
