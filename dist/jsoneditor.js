@@ -5807,11 +5807,12 @@ JSONEditor.AbstractTheme = Class.extend({
     
   },
   getFormControl: function(label, input, description) {
-    var el = document.createElement('div');
+    var el = document.createElement('div'), inputFirst = ((input.type === 'checkbox') || (input.type === 'radio'));
     el.className = 'form-control';
+    if (inputFirst) { el.appendChild(input); }
     if(label) el.appendChild(label);
-    if((input.type === 'checkbox') || (input.type === 'radio')) {
-      label.insertBefore(input,label.firstChild);
+    if (!inputFirst) { el.appendChild(input); }
+    if(input.type === 'radio') {
       var inputId = input.getAttribute('id');
       if (!inputId && input.getAttribute('name')) {
         inputId = 'input-' + input.getAttribute('name');
@@ -5822,10 +5823,7 @@ JSONEditor.AbstractTheme = Class.extend({
       }
       label.setAttribute('for', inputId);
     }
-    else {
-      el.appendChild(input);
-    }
-    
+
     if(description) el.appendChild(description);
     return el;
   },
