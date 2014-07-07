@@ -68,6 +68,7 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
       label.className += ' checkbox';
       label.appendChild(input);
       controls.appendChild(label);
+      controls.appendChild(input);
       controls.style.height = '30px';
     }
     else {

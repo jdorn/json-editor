@@ -47,12 +47,10 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
         input.setAttribute('id', inputId);
       }
       label.setAttribute('for', inputId);
-      label.appendChild(input);
       label.style.fontSize = '14px';
       group.style.marginTop = '0';
       group.appendChild(label);
-      input.style.position = 'relative';
-      input.style.float = 'left';
+      group.appendChild(input);
     } 
     else {
       group.className += ' form-group';
