@@ -42,8 +42,6 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
 
     this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview);
     this.container.appendChild(this.control);
-    
-    this.register();
   },
   refreshPreview: function() {
     if(this.last_preview === this.value) return;

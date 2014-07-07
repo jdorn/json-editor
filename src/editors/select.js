@@ -51,11 +51,8 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   getValue: function() {
     return this.value;
   },
-  build: function() {
+  preBuild: function() {
     var self = this;
-    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
-    if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
-
     this.input_type = 'select';
     this.enum_options = [];
     this.enum_values = [];
@@ -79,6 +76,11 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     else {
       throw "'select' editor requires the enum property to be set.";
     }
+  },
+  build: function() {
+    var self = this;
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
@@ -117,11 +119,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(window.$ && $.fn && $.fn.select2 && this.enum_options.length > 2) {
       $(this.input).select2();
     }
-    
-    this.register();
-
-    self.theme.afterInputReady(self.input);
-    this.jsoneditor.notifyWatchers(this.path);
+  },
+  postBuild: function() {
+    this._super();
+    this.theme.afterInputReady(this.input);
   },
   enable: function() {
     if(!this.always_disabled) this.input.disabled = false;

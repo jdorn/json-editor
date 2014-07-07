@@ -291,18 +291,14 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       // it will generate an error trying to append it to the missing parentNode
       if(self.input.parentNode) self.afterInputReady();
     });
-    
-    this.register();
 
     // Compile and store the template
     if(this.schema.template) {
       this.template = this.jsoneditor.compileTemplate(this.schema.template, this.template_engine);
       this.refreshValue();
-      this.jsoneditor.notifyWatchers(this.path);
     }
     else {
       this.refreshValue();
-      this.jsoneditor.notifyWatchers(this.path);
     }
   },
   enable: function() {

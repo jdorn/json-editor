@@ -18,16 +18,17 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
   getNumColumns: function() {
     return Math.max(Math.min(12,this.width),3);
   },
-  build: function() {
-    this.rows = [];
-    var self = this;
+  preBuild: function() {
+    var item_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
-    this.schema.items = this.schema.items || [];
-    
-    this.hide_delete_buttons = this.options.disable_array_delete || this.jsoneditor.options.disable_array_delete;
-    this.hide_move_buttons = this.options.disable_array_reorder || this.jsoneditor.options.disable_array_reorder;
-    this.hide_add_button = this.options.disable_array_add || this.jsoneditor.options.disable_array_add;
-  
+    this.item_title = item_schema.title || 'row';
+    this.item_default = item_schema.default || null;
+    this.item_has_child_editors = item_schema.properties || item_schema.items;
+    this.width = 12;
+    this._super();
+  },
+  build: function() {
+    var self = this;
     this.table = this.theme.getTable();
     this.container.appendChild(this.table);
     this.thead = this.theme.getTableHead();
@@ -40,13 +41,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     // Determine the default value of array element
     var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
-    this.item_title = this.schema.items.title || 'row';
     this.width = tmp.getNumColumns();
-
-    // Build header row for table
-    if(tmp.getChildEditors()) {
-      this.item_has_child_editors = true;      
-    }
     
     if(!this.options.compact) {
       this.title = this.theme.getHeader(this.getTitle());
@@ -91,8 +86,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     // Add controls
     this.addControls();
-    
-    this.jsoneditor.notifyWatchers(this.path);
   },
   onChildEditorChange: function(editor) {
     this.refreshValue();

@@ -423,8 +423,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       // Do it again now that we know the approximate heights of elements
       this.layoutEditors();
     }
-
-    this.jsoneditor.notifyWatchers(this.path);
   },
   showEditJSON: function() {
     if(!this.editjson_holder) return;

@@ -60,14 +60,18 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     this._super();
   },
-  build: function() {
+  preBuild: function() {
+    this._super();
+
     this.rows = [];
     this.row_cache = [];
-    var self = this;
-    
+
     this.hide_delete_buttons = this.options.disable_array_delete || this.jsoneditor.options.disable_array_delete;
     this.hide_move_buttons = this.options.disable_array_reorder || this.jsoneditor.options.disable_array_reorder;
     this.hide_add_button = this.options.disable_array_add || this.jsoneditor.options.disable_array_add;
+  },
+  build: function() {
+    var self = this;
 
     if(!this.options.compact) {
       this.header = document.createElement('span');
@@ -110,14 +114,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         this.panel.appendChild(this.row_holder);
     }
 
-    this.row_holder.addEventListener('change_header_text',function() {
-      self.refreshTabs(true);
-    });
-    
     // Add controls
     this.addControls();
-    
-    this.jsoneditor.notifyWatchers(this.path);
   },
   onChildEditorChange: function(editor) {
     this.refreshValue();
@@ -425,7 +423,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       } 
       
       if(!this.collapsed && controls_needed) {
-        this.controls.style.display = '';
+        this.controls.style.display = 'inline-block';
       }
       else {
         this.controls.style.display = 'none';

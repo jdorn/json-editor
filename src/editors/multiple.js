@@ -20,6 +20,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
   },
   getNumColumns: function() {
+    if(!this.editors[this.type]) return 4;
     return Math.max(this.editors[this.type].getNumColumns(),4);
   },
   enable: function() {
@@ -114,15 +115,14 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
     if(i !== self.type) holder.style.display = 'none';
   },
-  build: function() {
+  preBuild: function() {
     var self = this;
-    var container = this.container;
-
-    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
-    this.container.appendChild(this.header);
 
     this.types = [];
-    
+    this.type = 0;
+    this.editors = [];
+    this.validators = [];
+
     if(this.schema.oneOf) {
       this.oneOf = true;
       this.types = this.schema.oneOf;
@@ -134,12 +134,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     else {
       if(!this.schema.type || this.schema.type === "any") {
         this.types = ['string','number','integer','boolean','object','array','null'];
-        
+
         // If any of these primitive types are disallowed
         if(this.schema.disallow) {
           var disallow = this.schema.disallow;
-          if(typeof schema.disallow !== 'object' || !(Array.isArray(schema.disallow))) {
-            disallow = [this.schema.disallow];
+          if(typeof disallow !== 'object' || !(Array.isArray(disallow))) {
+            disallow = [disallow];
           }
           var allowed_types = [];
           $each(this.types,function(i,type) {
@@ -156,8 +156,15 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
       delete this.schema.type;
     }
-    
+
     this.display_text = this.getDisplayText(this.types);
+  },
+  build: function() {
+    var self = this;
+    var container = this.container;
+
+    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.container.appendChild(this.header);
 
     this.switcher = this.theme.getSwitcher(this.display_text);
     container.appendChild(this.switcher);
@@ -174,10 +181,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
     this.editor_holder = document.createElement('div');
     container.appendChild(this.editor_holder);
-    this.type = 0;
 
-    this.editors = [];
-    this.validators = [];
     this.switcher_options = this.theme.getSwitcherOptions(this.switcher);
     $each(this.types,function(i,type) {
       self.editors[i] = false;
@@ -204,8 +208,6 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
     this.refreshValue();
     this.refreshHeaderText();
-
-    this.register();
   },
   onChildEditorChange: function(editor) {
     if(this.editors[this.type]) {

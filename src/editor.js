@@ -56,15 +56,18 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   
   preBuild: function() {
+
   },
   build: function() {
     
   },
   postBuild: function() {
+    this.register();
     this.setupWatchListeners();
     this.addLinks();
     this.setValue(this.getDefault(), true);
     this.updateHeaderText();
+    this.jsoneditor.notifyWatchers(this.path);
     this.watch_listener();
   },
   

@@ -45,7 +45,6 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     });
     this.value = this.enum[0];
     this.refreshValue();
-    this.jsoneditor.notifyWatchers(this.path);
 
     if(this.enum.length === 1) this.switcher.style.display = 'none';
   },
