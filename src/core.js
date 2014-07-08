@@ -25,7 +25,7 @@ JSONEditor.prototype = {
         }
 
         if (container.type === 'array' && container.items) {
-          return getSchemaNode(key, container.items)
+          return getSchemaNode(key, container.items);
         }
 
         var keyNibbles = key.split('.');
