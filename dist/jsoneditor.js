@@ -5586,16 +5586,19 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getRadioGroupHolder: function(controls,label,description) {
     var el = document.createElement('div');
+    var radioGroup = document.createElement('div');
+    radioGroup.className = 'radiogroup';
 
     if(label) {
       label.style.display = 'block';
       el.appendChild(label);
     }
+    el.appendChild(radioGroup);
     for(var i in controls) {
       if(!controls.hasOwnProperty(i)) continue;
       controls[i].style.display = 'inline-block';
       controls[i].style.marginRight = '20px';
-      el.appendChild(controls[i]);
+      radioGroup.appendChild(controls[i]);
     }
 
     if(description) el.appendChild(description);
