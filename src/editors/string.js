@@ -236,7 +236,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       ) {
         this.input_type = this.format;
         this.source_code = true;
-        
+
         this.input = this.theme.getTextareaInput();
       }
       // HTML5 Input type
@@ -251,7 +251,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.input_type = 'textarea';
         this.input = this.theme.getTextareaInput();
       } else {
-        this.input_type = 'text';
+        this.input_type = this.schema.inputType || 'text';
         this.input = this.theme.getFormInputField(this.input_type);
       }
     }
