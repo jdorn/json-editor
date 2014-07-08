@@ -24,6 +24,10 @@ JSONEditor.prototype = {
           return container;
         }
 
+        if (container.type === 'array' && container.items) {
+          return getSchemaNode(key, container.items)
+        }
+
         var keyNibbles = key.split('.');
         var keyNibble = keyNibbles.shift();
         if (container && container.properties && container.properties[keyNibble]) {
