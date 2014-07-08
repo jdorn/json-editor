@@ -1113,7 +1113,7 @@ var editor = new JSONEditor(element, {
       }
     }
   },
-  "options": {
+  "form": {
     "user.gender": {
       "inputType": "radio",
       "enumTitles":{
