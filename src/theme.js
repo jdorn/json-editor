@@ -99,6 +99,34 @@ JSONEditor.AbstractTheme = Class.extend({
 
     return el;
   },
+  getRadio: function() {
+    var el = this.getFormInputField('radio');
+    el.style.display = 'inline-block';
+    el.style.width = 'auto';
+    return el;
+  },
+  getRadioGroupHolder: function(controls,label,description) {
+    var el = document.createElement('div');
+
+    if(label) {
+      label.style.display = 'block';
+      el.appendChild(label);
+    }
+    for(var i in controls) {
+      if(!controls.hasOwnProperty(i)) continue;
+      controls[i].style.display = 'inline-block';
+      controls[i].style.marginRight = '20px';
+      el.appendChild(controls[i]);
+    }
+
+    if(description) el.appendChild(description);
+    return el;
+  },
+  getRadioLabel: function(text) {
+    var el = this.getFormInputLabel(text);
+    el.style.fontWeight = 'normal';
+    return el;
+  },
   getSelectInput: function(options) {
     var select = document.createElement('select');
     if(options) this.setSelectOptions(select, options);

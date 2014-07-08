@@ -109,14 +109,14 @@ JSONEditor.defaults.editors.radio = JSONEditor.AbstractEditor.extend({
     this.inputs = {};
     this.controls = {};
     for(i=0; i<options.length; i++) {
-      this.inputs[options[i]] = this.theme.getFormInputField('radio');
+      this.inputs[options[i]] = this.theme.getRadio();
       this.inputs[options[i]].setAttribute('value', options[i]);
       this.inputs[options[i]].setAttribute('name', this.formname);
-      var label = this.theme.getCheckboxLabel(options[i]);
+      var label = this.theme.getRadioLabel(options[i]);
       this.controls[options[i]] = this.theme.getFormControl(label, this.inputs[options[i]]);
     }
 
-    this.control = this.theme.getMultiCheckboxHolder(this.controls,this.label,this.description);
+    this.control = this.theme.getRadioGroupHolder(this.controls,this.label,this.description);
     this.container.appendChild(this.control);
     this.control.addEventListener('change',function(e) {
       e.preventDefault();
