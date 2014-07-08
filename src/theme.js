@@ -127,9 +127,9 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style.fontWeight = 'normal';
     return el;
   },
-  getSelectInput: function(options) {
+  getSelectInput: function(options, titles) {
     var select = document.createElement('select');
-    if(options) this.setSelectOptions(select, options);
+    if(options) this.setSelectOptions(select, options, titles);
     return select;
   },
   getSwitcher: function(options) {
@@ -153,7 +153,7 @@ JSONEditor.AbstractTheme = Class.extend({
     for(var i=0; i<options.length; i++) {
       var option = document.createElement('option');
       option.setAttribute('value',options[i]);
-      option.textContent = titles[i] || options[i];
+      option.textContent = titles[i] || titles[options[i]] || options[i];
       select.appendChild(option);
     }
   },
