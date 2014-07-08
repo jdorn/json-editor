@@ -186,6 +186,15 @@ JSONEditor.AbstractTheme = Class.extend({
     if(label) el.appendChild(label);
     if((input.type === 'checkbox') || (input.type === 'radio')) {
       label.insertBefore(input,label.firstChild);
+      var inputId = input.getAttribute('id');
+      if (!inputId) {
+        inputId = 'input-' + input.getAttribute('name');
+        if (input.type === 'radio') {
+          inputId += '-' + input.getAttribute('value');
+        }
+        input.setAttribute('id', inputId);
+      }
+      label.setAttribute('for', inputId);
     }
     else {
       el.appendChild(input);
