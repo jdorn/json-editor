@@ -482,7 +482,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle());
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
-      self.rows[i].delete_button.addEventListener('click',function() {
+      self.rows[i].delete_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         var value = self.getValue();
@@ -522,7 +524,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.rows[i].moveup_button = this.getButton('','moveup','Move up');
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
-      self.rows[i].moveup_button.addEventListener('click',function() {
+      self.rows[i].moveup_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         if(i<=0) return;
@@ -548,7 +552,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.rows[i].movedown_button = this.getButton('','movedown','Move down');
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
-      self.rows[i].movedown_button.addEventListener('click',function() {
+      self.rows[i].movedown_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         var rows = self.getValue();
@@ -580,7 +586,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.title_controls.appendChild(this.toggle_button);
     var row_holder_display = self.row_holder.style.display;
     var controls_display = self.controls.style.display;
-    this.toggle_button.addEventListener('click',function() {
+    this.toggle_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       if(self.collapsed) {
         self.collapsed = false;
         if(self.panel) self.panel.style.display = '';
@@ -615,7 +623,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
     
-    this.add_row_button.addEventListener('click',function() {
+    this.add_row_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       var i = self.rows.length;
       if(self.row_cache[i]) {
         self.rows[i] = self.row_cache[i];
@@ -636,7 +646,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     self.controls.appendChild(this.add_row_button);
 
     this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
-    this.delete_last_row_button.addEventListener('click',function() {
+    this.delete_last_row_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       var rows = self.getValue();
       
       var new_active_tab = null;
@@ -654,7 +666,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     self.controls.appendChild(this.delete_last_row_button);
 
     this.remove_all_rows_button = this.getButton('All','delete','Delete All');
-    this.remove_all_rows_button.addEventListener('click',function() {
+    this.remove_all_rows_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       self.setValue([]);
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
