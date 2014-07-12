@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Advanced JSON Editor Example</title>
+    <title>Complete JSON Editor Example</title>
 
     <!-- Foundation CSS framework (Bootstrap and jQueryUI also supported) -->
     <link rel='stylesheet' href='//cdn.jsdelivr.net/bootstrap/3.2.0/css/bootstrap.css'>
@@ -48,28 +48,31 @@
     JSONEditor.defaults.iconlib = 'fontawesome4';
     JSONEditor.plugins.sceditor.style = "//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.default.min.css";
 
-    var starting_value = {};
+    var starting_value = undefined;
 
     // Initialize the editor
     var editor = new JSONEditor(document.getElementById('editor_holder'),{
         // The schema for the editor
         schema: {
+            title: "Person",
+            headerTemplate: "Person - {{self.fname}} {{self.lname}}",
             $ref: "#/definitions/person",
             definitions: {
                 person: {
                     type: "object",
-                    title: "Person",
                     id: "person",
-                    dynamicHeader: "Person - {{self.fname}} {{self.lname}}",
-                    required: [
+                    defaultProperties: [
                         "fname",
                         "lname",
                         "birthYear",
                         "gender",
-                        "favoriteJob",
                         "jobs"
                     ],
-                    additionalProperties: false,
+                    patternProperties: {
+                      "^cousin": {
+                        $ref: "#/definitions/person"
+                      }
+                    },
                     properties: {
                         fname: {
                             title: "first name",
@@ -111,7 +114,7 @@
                             items: {
                                 type: "object",
                                 title: "job",
-                                dynamicHeader: "{{self.position}} at {{self.company}}",
+                                headerTemplate: "{{self.position}} at {{self.company}}",
                                 required: [
                                     "position",
                                     "company",
@@ -154,6 +157,26 @@
                                     }
                                 }
                             }
+                        },
+                        coworkers: {
+                          type: "array",
+                          items: {
+                            title: "Coworker",
+                            $ref: "#/definitions/person"
+                          }
+                        },
+                        bestFriend: {
+                          title: "best friend",
+                          oneOf: [
+                            {
+                              title: "none",
+                              type: "null"
+                            },
+                            {
+                              title: "person",
+                              $ref: "#/definitions/person"
+                            }
+                          ]
                         }
                     }
                 },

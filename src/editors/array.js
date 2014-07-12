@@ -62,7 +62,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
   },
   preBuild: function() {
     this._super();
-
+    
     this.rows = [];
     this.row_cache = [];
 
@@ -119,6 +119,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
   },
   onChildEditorChange: function(editor) {
     this.refreshValue();
+    this.refreshTabs(true);
     this._super(editor);
   },
   getItemTitle: function() {

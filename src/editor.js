@@ -266,7 +266,7 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   onWatchedFieldChange: function() {
     var vars;
-    if(this.header_template) {
+    if(this.header_template) {      
       vars = $extend(this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,

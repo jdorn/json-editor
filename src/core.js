@@ -142,7 +142,7 @@ JSONEditor.prototype = {
   getEditorClass: function(schema) {
     var classname;
 
-    schema = this.expandRefs(schema);
+    schema = this.expandSchema(schema);
 
     $each(JSONEditor.defaults.resolvers,function(i,resolver) {
       var tmp = resolver(schema);
@@ -431,51 +431,11 @@ JSONEditor.prototype = {
         }
       });
     }
-    // `items`
-    if(schema.items) {
-      // Array of items
-      if(Array.isArray(schema.items)) {
-        $each(schema.items, function(key,value) {
-          // Schema
-          if(typeof value === 'object') {
-            //schema.items[key] = self.expandSchema(value);
-          }
-        });
-      }
-      // Schema
-      else {
-        //schema.items = self.expandSchema(schema.items);
-      }
-    }
-    // `properties`
-    if(schema.properties) {
-      $each(schema.properties,function(key,value) {
-        if(typeof value === "object" && !(Array.isArray(value))) {
-          schema.properties[key] = self.expandSchema(value);
-        }
-      });
-    }
-    // `patternProperties`
-    if(schema.patternProperties) {
-      $each(schema.patternProperties,function(key,value) {
-        if(typeof value === "object" && !(Array.isArray(value))) {
-          schema.patternProperties[key] = self.expandSchema(value);
-        }
-      });
-    }
     // Version 4 `not`
     if(schema.not) {
       schema.not = this.expandSchema(schema.not);
     }
-    // `additionalProperties`
-    if(schema.additionalProperties && typeof schema.additionalProperties === "object") {
-      schema.additionalProperties = self.expandSchema(schema.additionalProperties);
-    }
-    // `additionalItems`
-    if(schema.additionalItems && typeof schema.additionalItems === "object") {
-      schema.additionalItems = self.expandSchema(schema.additionalItems);
-    }
-
+    
     // allOf schemas should be merged into the parent
     if(schema.allOf) {
       for(i=0; i<schema.allOf.length; i++) {
@@ -502,7 +462,7 @@ JSONEditor.prototype = {
       var tmp = $extend({},extended);
       delete tmp.oneOf;
       for(i=0; i<schema.oneOf.length; i++) {
-        //extended.oneOf[i] = this.extendSchemas(this.expandSchema(schema.oneOf[i]),tmp);
+        extended.oneOf[i] = this.extendSchemas(this.expandSchema(schema.oneOf[i]),tmp);
       }
     }
     
