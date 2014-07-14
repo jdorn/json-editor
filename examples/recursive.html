@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Recursive JSON Editor Example</title>
+
+    <!-- Foundation CSS framework (Bootstrap and jQueryUI also supported) -->
+    <link rel='stylesheet' href='//cdn.jsdelivr.net/bootstrap/3.2.0/css/bootstrap.css'>
+    <!-- Font Awesome icons (Bootstrap, Foundation, and jQueryUI also supported) -->
+    <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css'>
+
+    <link rel='stylesheet' href='//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.default.min.css'>
+    <link rel='stylesheet' href='//cdn.jsdelivr.net/sceditor/1.4.3/themes/modern.min.css'>
+    <script src='//cdn.jsdelivr.net/jquery/2.1.1/jquery.min.js'></script>
+    <script src='//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.min.js'></script>
+    <script src='//cdn.jsdelivr.net/sceditor/1.4.3/plugins/xhtml.js'></script>
+
+    <script src="../dist/jsoneditor.js"></script>
+</head>
+<body>
+<div class='container'>
+    <div class='row' style='padding-bottom: 15px;'>
+        <div class='col-md-12'>
+            <h1>Recursive JSON Editor Example</h1>
+
+            <p>
+              This example demonstrates the many ways you can use recursive schemas (aka self-referential or circular schemas).
+            </p>
+            <ul>
+              <li>Within array items as long as minLength is 0.  See "coworkers" below.</li>
+              <li>In non-default properties.  See "mother" below (click the "object properties" button and check "mother")</li>
+              <li>In oneOf as long as it's not the 1st choice.  See "bestFriend" below.</li>
+              <li>In patternProperties.  Try adding the property "cousin_1" using the "object properties" button.</li>
+            </ul>
+        </div>
+    </div>
+    <div class='row' style='padding-bottom: 15px;'>
+        <div class='col-md-12'>
+            <button id='submit' class='btn btn-info'>Submit (console.log)</button>
+            <button id='restore' class='btn btn-info'>Restore to Default</button>
+            <button id='enable_disable' class='btn btn-info'>Disable/Enable Form</button>
+            <span id='valid_indicator' class='label label-success'></span>
+        </div>
+    </div>
+    <div class='row'>
+        <div class='col-md-12'>
+            <div id='editor_holder'></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    JSONEditor.defaults.theme = 'bootstrap3';
+    JSONEditor.defaults.iconlib = 'fontawesome4';
+    JSONEditor.plugins.sceditor.style = "//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.default.min.css";
+
+    // Initialize the editor
+    var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        // The schema for the editor
+        schema: {
+            title: "Person",
+            $ref: "#/definitions/person",
+            definitions: {
+                person: {
+                    type: "object",
+                    id: "person",
+                    // The object will start with only these properties
+                    defaultProperties: [
+                        "fname",
+                        "lname",
+                        "bestFriend",
+                        "coworkers"
+                    ],
+                    patternProperties: {
+                      // Self-referntial schema in patternProperties
+                      "^cousin_[0-9]+$": {
+                        $ref: "#/definitions/person"
+                      }
+                    },
+                    properties: {
+                        fname: {
+                            title: "first name",
+                            type: "string"
+                        },
+                        lname: {
+                            title: "last name",
+                            type: "string"
+                        },
+                        bestFriend: {
+                          title: "best friend",
+                          oneOf: [
+                            {
+                              title: "none",
+                              type: "null"
+                            },
+                            // Self-referential schema as 2nd choice in oneOf
+                            {
+                              title: "person",
+                              $ref: "#/definitions/person"
+                            }
+                          ]
+                        },
+                        coworkers: {
+                          type: "array",
+                          // Self-referential schema in array items
+                          items: {
+                            title: "Coworker",
+                            $ref: "#/definitions/person"
+                          }
+                        },
+                        // Self-referential schemas in non-default properties
+                        mother: {
+                          title: "mother",
+                          $ref: "#/definitions/person"
+                        }
+                    }
+                },
+                year: {
+                    type: "integer",
+                    pattern: "^[0-9]{4}$",
+                    minimum: 1900,
+                    maximum: 2100
+                }
+            }
+        }
+    });
+
+    // Hook up the submit button to log to the console
+    document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+    });
+
+    // Hook up the Restore to Default button
+    document.getElementById('restore').addEventListener('click',function() {
+        editor.setValue(starting_value);
+    });
+
+    // Hook up the enable/disable button
+    document.getElementById('enable_disable').addEventListener('click',function() {
+        // Enable form
+        if(!editor.isEnabled()) {
+            editor.enable();
+        }
+        // Disable form
+        else {
+            editor.disable();
+        }
+    });
+
+    // Hook up the validation indicator to update its
+    // status whenever the editor changes
+    editor.on('change',function() {
+        // Get an array of errors from the validator
+        var errors = editor.validate();
+
+        var indicator = document.getElementById('valid_indicator');
+
+        // Not valid
+        if(errors.length) {
+            indicator.className = 'label label-danger'
+            indicator.textContent = "not valid";
+        }
+        // Valid
+        else {
+            indicator.className = 'label label-success'
+            indicator.textContent = "valid";
+        }
+    });
+</script>
+</body>
+</html>

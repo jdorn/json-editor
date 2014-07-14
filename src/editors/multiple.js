@@ -1,8 +1,5 @@
 // Multiple Editor (for when `type` is an array)
 JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || null;
-  },
   register: function() {
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
@@ -13,7 +10,17 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this._super();
   },
+  unregister: function() {
+    this._super();
+    if(this.editors) {
+      for(var i=0; i<this.editors.length; i++) {
+        if(!this.editors[i]) continue;
+        this.editors[i].unregister();
+      }
+    }
+  },
   getNumColumns: function() {
+    if(!this.editors[this.type]) return 4;
     return Math.max(this.editors[this.type].getNumColumns(),4);
   },
   enable: function() {
@@ -35,15 +42,6 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     this.switcher.disabled = true;
     this._super();
-  },
-  unregister: function() {
-    this._super();
-    if(this.editors) {
-      for(var i=0; i<this.editors.length; i++) {
-        if(!this.editors[i]) continue;
-        this.editors[i].unregister();
-      }
-    }
   },
   switchEditor: function(i) {
     var self = this;
@@ -85,6 +83,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     }
     else {
       schema = $extend({},self.schema,type);
+      schema = self.jsoneditor.expandRefs(schema);
 
       // If we need to merge `required` arrays
       if(type.required && Array.isArray(type.required) && self.schema.required && Array.isArray(self.schema.required)) {
@@ -92,7 +91,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
     }
 
-    var editor = self.jsoneditor.getEditorClass(schema, self.jsoneditor);
+    var editor = self.jsoneditor.getEditorClass(schema);
 
     self.editors[i] = self.jsoneditor.createEditor(editor,{
       jsoneditor: self.jsoneditor,
@@ -102,6 +101,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       parent: self,
       required: true
     });
+    self.editors[i].preBuild();
+    self.editors[i].build();
+    self.editors[i].postBuild();
+    
     if(self.editors[i].header) self.editors[i].header.style.display = 'none';
     
     self.editors[i].option = self.switcher_options[i];
@@ -112,29 +115,31 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
     if(i !== self.type) holder.style.display = 'none';
   },
-  build: function() {
+  preBuild: function() {
     var self = this;
-    var container = this.container;
-
-    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
-    this.container.appendChild(this.header);
 
     this.types = [];
-    
+    this.type = 0;
+    this.editors = [];
+    this.validators = [];
+
     if(this.schema.oneOf) {
       this.oneOf = true;
       this.types = this.schema.oneOf;
+      $each(this.types,function(i,oneof) {
+        //self.types[i] = self.jsoneditor.expandSchema(oneof);
+      });
       delete this.schema.oneOf;
     }
     else {
       if(!this.schema.type || this.schema.type === "any") {
         this.types = ['string','number','integer','boolean','object','array','null'];
-        
+
         // If any of these primitive types are disallowed
         if(this.schema.disallow) {
           var disallow = this.schema.disallow;
-          if(typeof schema.disallow !== 'object' || !(Array.isArray(schema.disallow))) {
-            disallow = [this.schema.disallow];
+          if(typeof disallow !== 'object' || !(Array.isArray(disallow))) {
+            disallow = [disallow];
           }
           var allowed_types = [];
           $each(this.types,function(i,type) {
@@ -151,8 +156,15 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
       delete this.schema.type;
     }
-    
+
     this.display_text = this.getDisplayText(this.types);
+  },
+  build: function() {
+    var self = this;
+    var container = this.container;
+
+    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.container.appendChild(this.header);
 
     this.switcher = this.theme.getSwitcher(this.display_text);
     container.appendChild(this.switcher);
@@ -169,10 +181,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
     this.editor_holder = document.createElement('div');
     container.appendChild(this.editor_holder);
-    this.type = 0;
 
-    this.editors = [];
-    this.validators = [];
     this.switcher_options = this.theme.getSwitcherOptions(this.switcher);
     $each(this.types,function(i,type) {
       self.editors[i] = false;
@@ -192,19 +201,13 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new JSONEditor.Validator(schema,{
-        required_by_default: self.jsoneditor.options.required_by_default,
-        no_additional_properties: self.jsoneditor.options.no_additional_properties,
-        translate: self.jsoneditor.translate
-      });
+      self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema);
     });
     
     this.switchEditor(0);
 
     this.refreshValue();
     this.refreshHeaderText();
-
-    this.register();
   },
   onChildEditorChange: function(editor) {
     if(this.editors[this.type]) {
@@ -215,11 +218,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   refreshHeaderText: function() {
-    var schemas = [];
-    $each(this.validators, function(i,validator) {
-      schemas.push(validator.schema);
-    });
-    var display_text = this.getDisplayText(schemas);
+    var display_text = this.getDisplayText(this.types);
     $each(this.switcher_options, function(i,option) {
       option.textContent = display_text[i];
     });
@@ -249,8 +248,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     $each(this.editors, function(type,editor) {
       if(editor) editor.destroy();
     });
-    this.editor_holder.parentNode.removeChild(this.editor_holder);
-    this.switcher.parentNode.removeChild(this.switcher);
+    if(this.editor_holder && this.editor_holder.parentNode) this.editor_holder.parentNode.removeChild(this.editor_holder);
+    if(this.switcher && this.switcher.parentNode) this.switcher.parentNode.removeChild(this.switcher);
     this._super();
   },
   showValidationErrors: function(errors) {

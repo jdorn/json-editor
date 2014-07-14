@@ -1,13 +1,10 @@
 JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return this.schema.default || '';
-  },
   getNumColumns: function() {
     return 4;
   },
   build: function() {    
     var self = this;
-    this.title = this.header = this.label = this.getTheme().getFormInputLabel(this.getTitle());
+    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
 
     // Input that holds the base64 string
     this.input = this.theme.getFormInputField('hidden');
@@ -43,10 +40,8 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
     this.preview = this.theme.getFormInputDescription(this.schema.description);
     this.container.appendChild(this.preview);
 
-    this.control = this.getTheme().getFormControl(this.label, this.uploader||this.input, this.preview);
+    this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview);
     this.container.appendChild(this.control);
-    
-    this.register();
   },
   refreshPreview: function() {
     if(this.last_preview === this.value) return;
@@ -92,10 +87,10 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
     }
   },
   destroy: function() {
-    this.preview.parentNode.removeChild(this.preview);
-    this.title.parentNode.removeChild(this.title);
-    this.input.parentNode.removeChild(this.input);
-    if(this.uploader) this.uploader.parentNode.removeChild(this.uploader);
+    if(this.preview && this.preview.parentNode) this.preview.parentNode.removeChild(this.preview);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.uploader && this.uploader.parentNode) this.uploader.parentNode.removeChild(this.uploader);
 
     this._super();
   }

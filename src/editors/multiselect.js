@@ -1,35 +1,37 @@
 JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
-  getDefault: function() {
-    return [];
-  },
-  build: function() {
-    var self = this, i;
-    if(!this.getOption('compact',false)) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
-    if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
+  preBuild: function() {
+    this._super();
 
     this.select_options = {};
     this.select_values = {};
 
-    var e = this.schema.items.enum || [];
-    var options = [];
+    var items_schema = this.jsoneditor.expandRefs(this.schema.items || {});
+
+    var e = items_schema.enum || [];
+    this.option_keys = [];
     for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
       if(this.sanitize(e[i]) !== e[i]) continue;
 
-      options.push(e[i]+"");
+      this.option_keys.push(e[i]+"");
       this.select_values[e[i]+""] = e[i];
     }
+  },
+  build: function() {
+    var self = this, i;
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
-    if((!this.schema.format && options.length < 8) || this.schema.format === "checkbox") {
+    if((!this.schema.format && this.option_keys.length < 8) || this.schema.format === "checkbox") {
       this.input_type = 'checkboxes';
 
       this.inputs = {};
       this.controls = {};
-      for(i=0; i<options.length; i++) {
-        this.inputs[options[i]] = this.theme.getCheckbox();
-        this.select_options[options[i]] = this.inputs[options[i]];
-        var label = this.theme.getCheckboxLabel(options[i]);
-        this.controls[options[i]] = this.theme.getFormControl(label, this.inputs[options[i]]);
+      for(i=0; i<this.option_keys.length; i++) {
+        this.inputs[this.option_keys[i]] = this.theme.getCheckbox();
+        this.select_options[this.option_keys[i]] = this.inputs[this.option_keys[i]];
+        var label = this.theme.getCheckboxLabel(this.option_keys[i]);
+        this.controls[this.option_keys[i]] = this.theme.getFormControl(label, this.inputs[this.option_keys[i]]);
       }
 
       this.control = this.theme.getMultiCheckboxHolder(this.controls,this.label,this.description);
@@ -38,10 +40,10 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       this.input_type = 'select';
       this.input = this.theme.getSelectInput(options);
       this.input.multiple = true;
-      this.input.size = Math.min(10,options.length);
+      this.input.size = Math.min(10,this.option_keys.length);
 
-      for(i=0; i<options.length; i++) {
-        this.select_options[options[i]] = this.input.children[i];
+      for(i=0; i<this.option_keys.length; i++) {
+        this.select_options[this.option_keys[i]] = this.input.children[i];
       }
 
       if(this.schema.readOnly || this.schema.readonly) {
@@ -49,7 +51,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
         this.input.disabled = true;
       }
 
-      this.control = this.getTheme().getFormControl(this.label, this.input, this.description);
+      this.control = this.theme.getFormControl(this.label, this.input, this.description);
     }
 
     this.container.appendChild(this.control);
@@ -58,8 +60,8 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       e.stopPropagation();
 
       var new_value = [];
-      for(i = 0; i<options.length; i++) {
-        if(self.select_options[options[i]].selected || self.select_options[options[i]].checked) new_value.push(self.select_values[options[i]]);
+      for(i = 0; i<self.option_keys.length; i++) {
+        if(self.select_options[self.option_keys[i]].selected || self.select_options[self.option_keys[i]].checked) new_value.push(self.select_values[self.option_keys[i]]);
       }
 
       self.updateValue(new_value);

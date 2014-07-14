@@ -1,12 +1,4 @@
 JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
-  addProperty: function() {
-    this._super();
-    if(this.value.length) this.table.style.display = '';
-  },
-  removeProperty: function() {
-    this._super();
-    this.table.style.display = 'none';
-  },
   register: function() {
     this._super();
     if(this.rows) {
@@ -26,16 +18,17 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
   getNumColumns: function() {
     return Math.max(Math.min(12,this.width),3);
   },
-  build: function() {
-    this.rows = [];
-    var self = this;
+  preBuild: function() {
+    var item_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
-    this.schema.items = this.schema.items || [];
-    
-    this.hide_delete_buttons = this.options.disable_array_delete || this.jsoneditor.options.disable_array_delete;
-    this.hide_move_buttons = this.options.disable_array_reorder || this.jsoneditor.options.disable_array_reorder;
-    this.hide_add_button = this.options.disable_array_add || this.jsoneditor.options.disable_array_add;
-  
+    this.item_title = item_schema.title || 'row';
+    this.item_default = item_schema.default || null;
+    this.item_has_child_editors = item_schema.properties || item_schema.items;
+    this.width = 12;
+    this._super();
+  },
+  build: function() {
+    var self = this;
     this.table = this.theme.getTable();
     this.container.appendChild(this.table);
     this.thead = this.theme.getTableHead();
@@ -48,15 +41,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     // Determine the default value of array element
     var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
-    this.item_title = this.schema.items.title || 'row';
     this.width = tmp.getNumColumns();
-
-    // Build header row for table
-    if(tmp.getChildEditors()) {
-      this.item_has_child_editors = true;      
-    }
     
-    if(!this.getOption('compact',false)) {
+    if(!this.options.compact) {
       this.title = this.theme.getHeader(this.getTitle());
       this.container.appendChild(this.title);
       this.title_controls = this.theme.getHeaderButtonHolder();
@@ -99,8 +86,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     // Add controls
     this.addControls();
-    
-    this.jsoneditor.notifyWatchers(this.path);
   },
   onChildEditorChange: function(editor) {
     this.refreshValue();
@@ -122,13 +107,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       row.appendChild(holder);
     }
 
-    if(ignore) {
-      holder.addEventListener('change_header_text',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-    }
-
     var ret = this.jsoneditor.createEditor(editor,{
       jsoneditor: this.jsoneditor,
       schema: schema_copy,
@@ -138,23 +116,29 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       compact: true,
       table_row: true
     });
+    
+    ret.preBuild();
+    if(!ignore) {
+      ret.build();
+      ret.postBuild();
 
-    ret.controls_cell = row.appendChild(this.theme.getTableCell());
-    ret.row = row;
-    ret.table_controls = this.theme.getButtonHolder();
-    ret.controls_cell.appendChild(ret.table_controls);
-    ret.table_controls.style.margin = 0;
-    ret.table_controls.style.padding = 0;
+      ret.controls_cell = row.appendChild(this.theme.getTableCell());
+      ret.row = row;
+      ret.table_controls = this.theme.getButtonHolder();
+      ret.controls_cell.appendChild(ret.table_controls);
+      ret.table_controls.style.margin = 0;
+      ret.table_controls.style.padding = 0;
+    }
     
     return ret;
   },
   destroy: function() {
     this.innerHTML = '';
-    if(this.title) this.title.parentNode.removeChild(this.title);
-    if(this.description) this.description.parentNode.removeChild(this.description);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
     if(this.row_holder && this.row_holder.parentNode) this.row_holder.parentNode.removeChild(this.row_holder);
-    this.table.parentNode.removeChild(this.table);
-    if(this.panel) this.panel.parentNode.removeChild(this.panel);
+    if(this.table && this.table.parentNode) this.table.parentNode.removeChild(this.table);
+    if(this.panel && this.panel.parentNode) this.panel.parentNode.removeChild(this.panel);
 
     this.rows = this.title = this.description = this.row_holder = this.table = this.panel = null;
 
@@ -413,34 +397,36 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     this.collapsed = false;
     this.toggle_button = this.getButton('','collapse','Collapse');
-    this.title_controls.appendChild(this.toggle_button);
-    this.toggle_button.addEventListener('click',function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      if(self.collapsed) {
-        self.collapsed = false;
-        self.panel.style.display = '';
-        self.setButtonText(this,'','collapse','Collapse');
-      }
-      else {
-        self.collapsed = true;
-        self.panel.style.display = 'none';
-        self.setButtonText(this,'','expand','Expand');
-      }
-    });
+    if(this.title_controls) {
+      this.title_controls.appendChild(this.toggle_button);
+      this.toggle_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-    // If it should start collapsed
-    if(this.options.collapsed) {
-      $trigger(this.toggle_button,'click');
-    }
-    
-    // Collapse button disabled
-    if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
-      if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
-    }
-    else if(this.jsoneditor.options.disable_collapse) {
-      this.toggle_button.style.display = 'none';
+        if(self.collapsed) {
+          self.collapsed = false;
+          self.panel.style.display = '';
+          self.setButtonText(this,'','collapse','Collapse');
+        }
+        else {
+          self.collapsed = true;
+          self.panel.style.display = 'none';
+          self.setButtonText(this,'','expand','Expand');
+        }
+      });
+
+      // If it should start collapsed
+      if(this.options.collapsed) {
+        $trigger(this.toggle_button,'click');
+      }
+
+      // Collapse button disabled
+      if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
+        if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+      }
+      else if(this.jsoneditor.options.disable_collapse) {
+        this.toggle_button.style.display = 'none';
+      }
     }
 
     // Add "new row" and "delete last" buttons below editor
