@@ -330,7 +330,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.rows[i].delete_button = this.getButton('','delete','Delete');
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
-      self.rows[i].delete_button.addEventListener('click',function() {
+      self.rows[i].delete_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         var value = self.getValue();
@@ -353,7 +355,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.rows[i].moveup_button = this.getButton('','moveup','Move up');
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
-      self.rows[i].moveup_button.addEventListener('click',function() {
+      self.rows[i].moveup_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         if(i<=0) return;
@@ -373,7 +377,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.rows[i].movedown_button = this.getButton('','movedown','Move down');
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
-      self.rows[i].movedown_button.addEventListener('click',function() {
+      self.rows[i].movedown_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
         var rows = self.getValue();
         if(i>=rows.length-1) return;
