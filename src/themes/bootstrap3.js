@@ -43,7 +43,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
       group.style.marginTop = '0';
       group.appendChild(label);
       input.style.position = 'relative';
-      input.style.float = 'left';
+      input.style.cssFloat = 'left';
     } 
     else {
       group.className += ' form-group';
