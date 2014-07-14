@@ -373,11 +373,13 @@ JSON Editor supports schema references to external URLs and local definitions.  
 }
 ```
 
-Local references must point to the `definitions` object of the root node of the schema and can't be nested.
-So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
+Local references must point to the `definitions` object of the root node of the schema.
+So, `#/customkey/name` will throw an exception.
 
 If loading an external url via Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
 If your URLs don't meet this requirement, you can pass in the references to JSON Editor during initialization (see Usage section above).
+
+Self-referential $refs are supported.  Check out `examples/recursive.html` for usage examples.
 
 ### hyper-schema links
 
@@ -455,6 +457,26 @@ So, the final order of properties in the form (and in returned JSON data) will b
 2.  prop2 (order 10)
 3.  prop1 (order 1000)
 4.  prop3 (order 1001)
+
+### Default Properties
+
+The default behavior of JSON Editor is to include all object properties defined with the `properties` keyword.
+
+To override this behaviour, you can use the keyword `defaultProperties` to set which ones are included:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": {"type": "string"},
+    "age": {"type": "integer"}
+  },
+  "defaultProperties": ["name"]
+}
+```
+
+Now, only the `name` property above will be included by default.  You can use the "Object Properties" button
+to add the "age" property back in.
 
 ### format
 

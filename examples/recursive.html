@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Complete JSON Editor Example</title>
+    <title>Recursive JSON Editor Example</title>
 
     <!-- Foundation CSS framework (Bootstrap and jQueryUI also supported) -->
     <link rel='stylesheet' href='//cdn.jsdelivr.net/bootstrap/3.2.0/css/bootstrap.css'>
@@ -21,9 +21,17 @@
 <div class='container'>
     <div class='row' style='padding-bottom: 15px;'>
         <div class='col-md-12'>
-            <h1>Complete JSON Editor Example</h1>
+            <h1>Recursive JSON Editor Example</h1>
 
-            <p>This example attempts to demonstrate as many features of JSON Editor as possible in a single JSON Schema.</p>
+            <p>
+              This example demonstrates the many ways you can use recursive schemas (aka self-referential or circular schemas).
+            </p>
+            <ul>
+              <li>Within array items as long as minLength is 0.  See "coworkers" below.</li>
+              <li>In non-default properties.  See "mother" below (click the "object properties" button and check "mother")</li>
+              <li>In oneOf as long as it's not the 1st choice.  See "bestFriend" below.</li>
+              <li>In patternProperties.  Try adding the property "cousin_1" using the "object properties" button.</li>
+            </ul>
         </div>
     </div>
     <div class='row' style='padding-bottom: 15px;'>
@@ -39,8 +47,6 @@
             <div id='editor_holder'></div>
         </div>
     </div>
-
-
 </div>
 
 <script>
@@ -48,122 +54,37 @@
     JSONEditor.defaults.iconlib = 'fontawesome4';
     JSONEditor.plugins.sceditor.style = "//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.default.min.css";
 
-    var starting_value = undefined;
-
     // Initialize the editor
     var editor = new JSONEditor(document.getElementById('editor_holder'),{
         // The schema for the editor
         schema: {
             title: "Person",
-            headerTemplate: "Person - {{self.fname}} {{self.lname}}",
             $ref: "#/definitions/person",
             definitions: {
                 person: {
                     type: "object",
                     id: "person",
+                    // The object will start with only these properties
                     defaultProperties: [
                         "fname",
                         "lname",
-                        "birthYear",
-                        "gender",
-                        "jobs"
+                        "bestFriend",
+                        "coworkers"
                     ],
                     patternProperties: {
-                      "^cousin": {
+                      // Self-referntial schema in patternProperties
+                      "^cousin_[0-9]+$": {
                         $ref: "#/definitions/person"
                       }
                     },
                     properties: {
                         fname: {
                             title: "first name",
-                            type: "string",
-                            minLength: 1
+                            type: "string"
                         },
                         lname: {
                             title: "last name",
-                            type: "string",
-                            minLength: 1
-                        },
-                        birthYear: {
-                            title: "birth year",
-                            $ref: "#/definitions/year",
-                            maximum: 1996
-                        },
-                        gender: {
-                            type: "string",
-                            enum: ["male","female"],
-                            default: "female"
-                        },
-                        favoriteJob: {
-                            type: "string",
-                            title: "favorite job",
-                            enumSource: [
-                                [""],
-                                {
-                                    source: "jobs",
-                                    value: "{{item.position}} at {{item.company}}"
-                                }
-                            ],
-                            watch: {
-                                jobs: "person.jobs"
-                            }
-                        },
-                        jobs: {
-                            type: "array",
-                            format: "tabs",
-                            items: {
-                                type: "object",
-                                title: "job",
-                                headerTemplate: "{{self.position}} at {{self.company}}",
-                                required: [
-                                    "position",
-                                    "company",
-                                    "yearStart",
-                                    "yearEnd",
-                                    "description"
-                                ],
-                                additionalProperties: false,
-                                properties: {
-                                    position: {
-                                        type: "string"
-                                    },
-                                    company: {
-                                        type: "string"
-                                    },
-                                    yearStart: {
-                                        title: "start year",
-                                        $ref: "#/definitions/year",
-                                        default: 2000
-                                    },
-                                    yearEnd: {
-                                        title: "end year",
-                                        oneOf: [
-                                            {
-                                                title: "present",
-                                                type: "null"
-                                            },
-                                            {
-                                                title: "year",
-                                                $ref: "#/definitions/year"
-                                            }
-                                        ]
-                                    },
-                                    description: {
-                                        type: "string",
-                                        format: "html",
-                                        options: {
-                                            wysiwyg: true
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        coworkers: {
-                          type: "array",
-                          items: {
-                            title: "Coworker",
-                            $ref: "#/definitions/person"
-                          }
+                            type: "string"
                         },
                         bestFriend: {
                           title: "best friend",
@@ -172,11 +93,25 @@
                               title: "none",
                               type: "null"
                             },
+                            // Self-referential schema as 2nd choice in oneOf
                             {
                               title: "person",
                               $ref: "#/definitions/person"
                             }
                           ]
+                        },
+                        coworkers: {
+                          type: "array",
+                          // Self-referential schema in array items
+                          items: {
+                            title: "Coworker",
+                            $ref: "#/definitions/person"
+                          }
+                        },
+                        // Self-referential schemas in non-default properties
+                        mother: {
+                          title: "mother",
+                          $ref: "#/definitions/person"
                         }
                     }
                 },
@@ -187,10 +122,7 @@
                     maximum: 2100
                 }
             }
-        },
-
-        // Seed the form with a starting value
-        startval: starting_value
+        }
     });
 
     // Hook up the submit button to log to the console
