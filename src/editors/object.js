@@ -288,11 +288,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.editjson_textarea.style.width = '300px';
       this.editjson_textarea.style.display = 'block';
       this.editjson_save = this.getButton('Save','save','Save');
-      this.editjson_save.addEventListener('click',function() {
+      this.editjson_save.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.saveJSON();
       });
       this.editjson_cancel = this.getButton('Cancel','cancel','Cancel');
-      this.editjson_cancel.addEventListener('click',function() {
+      this.editjson_cancel.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.hideEditJSON();
       });
       this.editjson_holder.appendChild(this.editjson_textarea);
@@ -314,7 +318,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_input.style.width = '220px';
       this.addproperty_input.style.marginBottom = '0';
       this.addproperty_input.style.display = 'inline-block';
-      this.addproperty_add.addEventListener('click',function() {
+      this.addproperty_add.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         if(self.addproperty_input.value) {
           if(self.editors[self.addproperty_input.value]) {
             alert('there is already a property with that name');
@@ -375,7 +381,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.collapsed = false;
       this.toggle_button = this.getButton('','collapse','Collapse');
       this.title_controls.appendChild(this.toggle_button);
-      this.toggle_button.addEventListener('click',function() {
+      this.toggle_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         if(self.collapsed) {
           self.editor_holder.style.display = '';
           self.collapsed = false;
@@ -403,7 +411,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Edit JSON Button
       this.editjson_button = this.getButton('JSON','edit','Edit JSON');
-      this.editjson_button.addEventListener('click',function() {
+      this.editjson_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.toggleEditJSON();
       });
       this.editjson_controls.appendChild(this.editjson_button);
@@ -419,7 +429,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Object Properties Button
       this.addproperty_button = this.getButton('Properties','edit','Object Properties');
-      this.addproperty_button.addEventListener('click',function() {
+      this.addproperty_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.toggleAddProperty();
       });
       this.addproperty_controls.appendChild(this.addproperty_button);
