@@ -1616,7 +1616,7 @@ JSONEditor.AbstractEditor = Class.extend({
   getTitle: function() {
     var title = this.schema.title || this.key;
     if(this.schema.options.title_processing)
-      return this.schema.options.title_processing(title);
+      return this.jsoneditor.options.title_processing(title);
     else
       return title;
   },
