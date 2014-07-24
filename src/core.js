@@ -26,7 +26,10 @@ JSONEditor.prototype = {
     this.root_container = this.theme.getContainer();
     this.element.appendChild(this.root_container);
     
-    this.translate = this.options.translate || JSONEditor.defaults.translate;
+    if(this.options.translate)
+      this.translate = function(key) {return self.options.translate(key) || JSONEditor.defaults.translate(key);};
+    else
+      this.translate = JSONEditor.defaults.translate;
 
     // Fetch all external refs via ajax
     this._loadExternalRefs(this.schema, function() {
