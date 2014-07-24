@@ -48,7 +48,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     var changed = from_template || this.getValue() !== value;
     
     this.refreshValue();
-
+    
+    if(initial) this.is_dirty = false;
+    else if(this.jsoneditor.options.show_errors === "change") this.is_dirty = true;
+    
     if(changed) {
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
@@ -266,6 +269,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         if(val !== sanitized) {
           this.value = sanitized;
         }
+        
+        self.is_dirty = true;
 
         self.refreshValue();
         self.watch_listener();
@@ -342,6 +347,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           // Set the value and update
           self.input.value = val.html();
           self.value = self.input.value;
+          self.is_dirty = true;
           if(self.parent) self.parent.onChildEditorChange(self);
           else self.jsoneditor.onChange();
           self.jsoneditor.notifyWatchers(self.path);
@@ -366,6 +372,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           var val = self.epiceditor.exportFile();
           self.input.value = val;
           self.value = val;
+          self.is_dirty = true;
           if(self.parent) self.parent.onChildEditorChange(self);
           else self.jsoneditor.onChange();
           self.jsoneditor.notifyWatchers(self.path);
@@ -400,6 +407,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           var val = self.ace_editor.getValue();
           self.input.value = val;
           self.refreshValue();
+          self.is_dirty = true;
           if(self.parent) self.parent.onChildEditorChange(self);
           else self.jsoneditor.onChange();
           self.jsoneditor.notifyWatchers(self.path);
@@ -538,6 +546,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   },
   showValidationErrors: function(errors) {
     var self = this;
+    
+    if(this.jsoneditor.options.show_errors === "always") {}
+    else if(!this.is_dirty) return;
+    
+    
 
     var messages = [];
     $each(errors,function(i,error) {

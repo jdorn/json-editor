@@ -176,7 +176,10 @@ JSONEditor.prototype = {
       
       // Validate and cache results
       self.validation_results = self.validator.validate(self.root.getValue());
-      self.root.showValidationErrors(self.validation_results);
+      
+      if(self.options.show_errors !== "never") {
+        self.root.showValidationErrors(self.validation_results);
+      }
       
       // Fire change event
       self.trigger('change');

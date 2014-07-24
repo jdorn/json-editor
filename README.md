@@ -141,6 +141,11 @@ Here are all the available options:
     <td><code>{}</code></td>
   </tr>
   <tr>
+    <td>show_errors</td>
+    <td>When to show validation errors in the UI.  Valid values are <code>interaction</code>, <code>change</code>, <code>always</code>, and <code>never</code>.</td>
+    <td><code>"interaction"</code></td>
+  </tr>
+  <tr>
     <td>startval</td>
     <td>Seed the editor with an initial value.  This should be valid against the editor's schema.</td>
     <td><code>null</code></td>
