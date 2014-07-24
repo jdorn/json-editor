@@ -2268,7 +2268,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
 JSONEditor.defaults.editors.number = JSONEditor.defaults.editors.string.extend({
   sanitize: function(value) {
-    return (value+"").replace(/[^0-9\.\-]/g,'');
+    return (value+"").replace(/[^0-9\.\-eE]/g,'');
   },
   getNumColumns: function() {
     return 2;
@@ -2430,11 +2430,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         var row = this.theme.getGridRow();
         container.appendChild(row);
         for(j=0; j<rows[i].editors.length; j++) {
-          var editor = this.editors[rows[i].editors[j].key];
+          var key = rows[i].editors[j].key;
+          var editor = this.editors[key];
           
           if(editor.options.hidden) editor.container.style.display = 'none';
           else this.theme.setGridColumnSize(editor.container,rows[i].editors[j].width);
-          
+          editor.container.className += ' container-' + key;
           row.appendChild(editor.container);
         }
       }
@@ -2449,7 +2450,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         
         if(editor.options.hidden) editor.container.style.display = 'none';
         else self.theme.setGridColumnSize(editor.container,12);
-        
+        editor.container.className += ' container-' + key;
         row.appendChild(editor.container);
       });
     }
@@ -2577,11 +2578,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.editjson_textarea.style.width = '300px';
       this.editjson_textarea.style.display = 'block';
       this.editjson_save = this.getButton('Save','save','Save');
-      this.editjson_save.addEventListener('click',function() {
+      this.editjson_save.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.saveJSON();
       });
       this.editjson_cancel = this.getButton('Cancel','cancel','Cancel');
-      this.editjson_cancel.addEventListener('click',function() {
+      this.editjson_cancel.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.hideEditJSON();
       });
       this.editjson_holder.appendChild(this.editjson_textarea);
@@ -2603,7 +2608,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_input.style.width = '220px';
       this.addproperty_input.style.marginBottom = '0';
       this.addproperty_input.style.display = 'inline-block';
-      this.addproperty_add.addEventListener('click',function() {
+      this.addproperty_add.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         if(self.addproperty_input.value) {
           if(self.editors[self.addproperty_input.value]) {
             alert('there is already a property with that name');
@@ -2664,7 +2671,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.collapsed = false;
       this.toggle_button = this.getButton('','collapse','Collapse');
       this.title_controls.appendChild(this.toggle_button);
-      this.toggle_button.addEventListener('click',function() {
+      this.toggle_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         if(self.collapsed) {
           self.editor_holder.style.display = '';
           self.collapsed = false;
@@ -2692,7 +2701,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Edit JSON Button
       this.editjson_button = this.getButton('JSON','edit','Edit JSON');
-      this.editjson_button.addEventListener('click',function() {
+      this.editjson_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.toggleEditJSON();
       });
       this.editjson_controls.appendChild(this.editjson_button);
@@ -2708,7 +2719,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Object Properties Button
       this.addproperty_button = this.getButton('Properties','edit','Object Properties');
-      this.addproperty_button.addEventListener('click',function() {
+      this.addproperty_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         self.toggleAddProperty();
       });
       this.addproperty_controls.appendChild(this.addproperty_button);
@@ -3558,7 +3571,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle());
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
-      self.rows[i].delete_button.addEventListener('click',function() {
+      self.rows[i].delete_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         var value = self.getValue();
@@ -3598,7 +3613,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.rows[i].moveup_button = this.getButton('','moveup','Move up');
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
-      self.rows[i].moveup_button.addEventListener('click',function() {
+      self.rows[i].moveup_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         if(i<=0) return;
@@ -3624,7 +3641,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.rows[i].movedown_button = this.getButton('','movedown','Move down');
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
-      self.rows[i].movedown_button.addEventListener('click',function() {
+      self.rows[i].movedown_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         var rows = self.getValue();
@@ -3656,7 +3675,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.title_controls.appendChild(this.toggle_button);
     var row_holder_display = self.row_holder.style.display;
     var controls_display = self.controls.style.display;
-    this.toggle_button.addEventListener('click',function() {
+    this.toggle_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       if(self.collapsed) {
         self.collapsed = false;
         if(self.panel) self.panel.style.display = '';
@@ -3691,7 +3712,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
     
-    this.add_row_button.addEventListener('click',function() {
+    this.add_row_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       var i = self.rows.length;
       if(self.row_cache[i]) {
         self.rows[i] = self.row_cache[i];
@@ -3712,7 +3735,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     self.controls.appendChild(this.add_row_button);
 
     this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
-    this.delete_last_row_button.addEventListener('click',function() {
+    this.delete_last_row_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       var rows = self.getValue();
       
       var new_active_tab = null;
@@ -3730,7 +3755,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     self.controls.appendChild(this.delete_last_row_button);
 
     this.remove_all_rows_button = this.getButton('All','delete','Delete All');
-    this.remove_all_rows_button.addEventListener('click',function() {
+    this.remove_all_rows_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
       self.setValue([]);
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
@@ -4121,7 +4148,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.rows[i].delete_button = this.getButton('','delete','Delete');
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
-      self.rows[i].delete_button.addEventListener('click',function() {
+      self.rows[i].delete_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         var value = self.getValue();
@@ -4144,7 +4173,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.rows[i].moveup_button = this.getButton('','moveup','Move up');
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
-      self.rows[i].moveup_button.addEventListener('click',function() {
+      self.rows[i].moveup_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
 
         if(i<=0) return;
@@ -4164,7 +4195,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.rows[i].movedown_button = this.getButton('','movedown','Move down');
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
-      self.rows[i].movedown_button.addEventListener('click',function() {
+      self.rows[i].movedown_button.addEventListener('click',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         var i = this.getAttribute('data-i')*1;
         var rows = self.getValue();
         if(i>=rows.length-1) return;
