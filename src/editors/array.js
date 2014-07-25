@@ -473,7 +473,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
             // If the one we're deleting is the active tab
             if(self.rows[j].tab === self.active_tab) {
               // Make the next tab active if there is one
-              if(self.rows[j+1]) new_active_tab = self.rows[j+1].tab;
+              // Note: the next tab is going to be the current tab after deletion
+              if(self.rows[j+1]) new_active_tab = self.rows[j].tab;
               // Otherwise, make the previous tab active if there is one
               else if(j) new_active_tab = self.rows[j-1].tab;
             }
