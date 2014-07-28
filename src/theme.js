@@ -99,9 +99,40 @@ JSONEditor.AbstractTheme = Class.extend({
 
     return el;
   },
-  getSelectInput: function(options) {
+  getRadio: function() {
+    var el = this.getFormInputField('radio');
+    el.style.display = 'inline-block';
+    el.style.width = 'auto';
+    return el;
+  },
+  getRadioGroupHolder: function(controls,label,description) {
+    var el = document.createElement('div');
+    var radioGroup = document.createElement('div');
+    radioGroup.className = 'radiogroup';
+
+    if(label) {
+      label.style.display = 'block';
+      el.appendChild(label);
+    }
+    el.appendChild(radioGroup);
+    for(var i in controls) {
+      if(!controls.hasOwnProperty(i)) continue;
+      controls[i].style.display = 'inline-block';
+      controls[i].style.marginRight = '20px';
+      radioGroup.appendChild(controls[i]);
+    }
+
+    if(description) el.appendChild(description);
+    return el;
+  },
+  getRadioLabel: function(text) {
+    var el = this.getFormInputLabel(text);
+    el.style.fontWeight = 'normal';
+    return el;
+  },
+  getSelectInput: function(options, titles) {
     var select = document.createElement('select');
-    if(options) this.setSelectOptions(select, options);
+    if(options) this.setSelectOptions(select, options, titles);
     return select;
   },
   getSwitcher: function(options) {
@@ -125,7 +156,7 @@ JSONEditor.AbstractTheme = Class.extend({
     for(var i=0; i<options.length; i++) {
       var option = document.createElement('option');
       option.setAttribute('value',options[i]);
-      option.textContent = titles[i] || options[i];
+      option.textContent = titles[i] || titles[options[i]] || options[i];
       select.appendChild(option);
     }
   },
@@ -156,8 +187,17 @@ JSONEditor.AbstractTheme = Class.extend({
     var el = document.createElement('div');
     el.className = 'form-control';
     if(label) el.appendChild(label);
-    if(input.type === 'checkbox') {
+    if((input.type === 'checkbox') || (input.type === 'radio')) {
       label.insertBefore(input,label.firstChild);
+      var inputId = input.getAttribute('id');
+      if (!inputId) {
+        inputId = 'input-' + input.getAttribute('name');
+        if (input.type === 'radio') {
+          inputId += '-' + input.getAttribute('value');
+        }
+        input.setAttribute('id', inputId);
+      }
+      label.setAttribute('for', inputId);
     }
     else {
       el.appendChild(input);

@@ -1084,10 +1084,9 @@ The following schema will now use this custom editor for each of the array eleme
 
 If you create a custom editor interface that you think could be helpful to others, submit a pull request!
 
-The possibilities are endless.  Some ideas:
+The possibilities are endless. Some ideas:
 
 *  A compact way to edit objects
-*  Radio button version of the `select` editor
 *  Autosuggest for strings (like enum, but not restricted to those values)
 *  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data URLs

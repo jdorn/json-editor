@@ -1,6 +1,6 @@
 JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
-  getSelectInput: function(options) {
-    var el = this._super(options);
+  getSelectInput: function(options, titles) {
+    var el = this._super(options, titles);
     el.className += 'form-control';
     //el.style.width = 'auto';
     return el;
@@ -28,7 +28,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   },
   getFormInputField: function(type) {
     var el = this._super(type);
-    if(type !== 'checkbox') {
+    if(type !== 'checkbox' && type !== 'radio') {
       el.className += 'form-control';
     }
     return el;
@@ -36,8 +36,17 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   getFormControl: function(label, input, description) {
     var group = document.createElement('div');
 
-    if(label && input.type === 'checkbox') {
-      group.className += ' checkbox';
+    if(label && (input.type === 'checkbox' || (input.type === 'radio'))) {
+      group.className += ' ' + input.type;
+      var inputId = input.getAttribute('id');
+      if (!inputId) {
+        inputId = 'input-' + input.getAttribute('name');
+        if (input.type === 'radio') {
+          inputId += '-' + input.getAttribute('value');
+        }
+        input.setAttribute('id', inputId);
+      }
+      label.setAttribute('for', inputId);
       label.appendChild(input);
       label.style.fontSize = '14px';
       group.style.marginTop = '0';

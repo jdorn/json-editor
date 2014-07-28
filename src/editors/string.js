@@ -90,7 +90,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.schema.enum) {
       this.input_type = 'select';
       this.select_options = this.schema.enum;
-      this.input = this.theme.getSelectInput(this.select_options);
+      this.input = this.theme.getSelectInput(this.select_options, this.schema.enumTitles);
     }
     // Dynamic Select box
     else if(this.schema.enumSource) {
@@ -151,7 +151,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     // Specific format
     else if(this.format) {
       // Text Area
-      if(this.format === 'textarea') {
+      if((this.format === 'textarea') || (this.schema.inputType === 'textarea')) {
         this.input_type = 'textarea';
         this.input = this.theme.getTextareaInput();
       }
@@ -224,7 +224,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       ) {
         this.input_type = this.format;
         this.source_code = true;
-        
+
         this.input = this.theme.getTextareaInput();
       }
       // HTML5 Input type
@@ -235,8 +235,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
     // Normal text input
     else {
-      this.input_type = 'text';
-      this.input = this.theme.getFormInputField(this.input_type);
+      if (this.schema.inputType && this.schema.inputType === 'textarea') {
+        this.input_type = 'textarea';
+        this.input = this.theme.getTextareaInput();
+      } else {
+        this.input_type = this.schema.inputType || 'text';
+        this.input = this.theme.getFormInputField(this.input_type);
+      }
     }
     
     // minLength, maxLength, and pattern
