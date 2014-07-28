@@ -965,10 +965,10 @@ All of the optional templates in the verbose form have the properties `item` and
 
 The `title` keyword of a schema is used to add user friendly headers to the editing UI.  Sometimes though, dynamic headers, which change based on other fields, are helpful.
 
-Consider the example of an array of children.  Without dynamic headers, the UI for the array elements would show `Child 0`, `Child 1`, etc..  
-It would be much nicer if the headers could be dynamic and incorporate information about the children, such as `0 - John (age 9)`, `1 - Sarah (age 11)`.
+Consider the example of an array of children.  Without dynamic headers, the UI for the array elements would show `Child 1`, `Child 2`, etc..  
+It would be much nicer if the headers could be dynamic and incorporate information about the children, such as `1 - John (age 9)`, `2 - Sarah (age 11)`.
 
-To accomplish this, use the `headerTemplate` property.  All of the watched variables are passed into this template, along with the static title `title` (e.g. "Child"), the index `i` (e.g. "0" and "1"), and the field's value `self` (e.g. `{"name": "John", "age": 9}`).
+To accomplish this, use the `headerTemplate` property.  All of the watched variables are passed into this template, along with the static title `title` (e.g. "Child"), the 0-based index `i0` (e.g. "0" and "1"), the 1-based index `i1`, and the field's value `self` (e.g. `{"name": "John", "age": 9}`).
 
 ```js+jinja
 {
@@ -977,7 +977,7 @@ To accomplish this, use the `headerTemplate` property.  All of the watched varia
   "items": {
     "type": "object",
     "title": "Child",
-    "headerTemplate": "{{ i }} - {{ self.name }} (age {{ self.age }})",
+    "headerTemplate": "{{ i1 }} - {{ self.name }} (age {{ self.age }})",
     "properties": {
       "name": { "type": "string" },
       "age": { "type": "integer" }
