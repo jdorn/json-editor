@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.1 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.2 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-07-24
+ * Date: 2014-07-28
  */
 
 /**
@@ -1546,6 +1546,8 @@ JSONEditor.AbstractEditor = Class.extend({
       vars = $extend(this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,
+        i0: (this.key*1),
+        i1: (this.key*1+1),
         title: this.getTitle()
       });
       var header_text = this.header_template(vars);
@@ -2284,7 +2286,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
 JSONEditor.defaults.editors.number = JSONEditor.defaults.editors.string.extend({
   sanitize: function(value) {
-    return (value+"").replace(/[^0-9\.\-]/g,'');
+    return (value+"").replace(/[^0-9\.\-eE]/g,'');
   },
   getNumColumns: function() {
     return 2;
@@ -3307,7 +3309,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     var item_info = this.getItemInfo(i);
     var schema = this.getItemSchema(i);
     schema = this.jsoneditor.expandRefs(schema);
-    schema.title = item_info.title+' '+i;
+    schema.title = item_info.title+' '+(i+1);
 
     var editor = this.jsoneditor.getEditorClass(schema);
 
@@ -3601,7 +3603,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
             // If the one we're deleting is the active tab
             if(self.rows[j].tab === self.active_tab) {
               // Make the next tab active if there is one
-              if(self.rows[j+1]) new_active_tab = self.rows[j+1].tab;
+              // Note: the next tab is going to be the current tab after deletion
+              if(self.rows[j+1]) new_active_tab = self.rows[j].tab;
               // Otherwise, make the previous tab active if there is one
               else if(j) new_active_tab = self.rows[j-1].tab;
             }
