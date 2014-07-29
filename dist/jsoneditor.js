@@ -1,4 +1,4 @@
-/*! JSON Editor v0.7.2 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.3 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
@@ -1306,7 +1306,7 @@ JSONEditor.AbstractEditor = Class.extend({
     
     this.theme = this.jsoneditor.theme;
     this.template_engine = this.jsoneditor.template;
-    this.iconlib = this.jsoneditor.inonlib;
+    this.iconlib = this.jsoneditor.iconlib;
     
     this.original_schema = options.schema;
     this.schema = this.jsoneditor.expandSchema(this.original_schema);
