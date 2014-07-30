@@ -5,8 +5,8 @@ JSONEditor.AbstractTheme = Class.extend({
   getFloatRightLinkHolder: function() {
     var el = document.createElement('div');
     el.style = el.style || {};
-    el.style.float = 'right';
-    el.style['margin-left'] = '10px';
+    el.style.cssFloat = 'right';
+    el.style.marginLeft = '10px';
     return el;
   },
   getModal: function() {
