@@ -8,20 +8,31 @@ JSONEditor.defaults.template = 'default';
 JSONEditor.defaults.options = {};
 
 // String translate function
-JSONEditor.defaults.translate = function(key, variables) {
+JSONEditor.defaults.translate = function (key, variables, translatable) {
   var lang = JSONEditor.defaults.languages[JSONEditor.defaults.language];
-  if(!lang) throw "Unknown language "+JSONEditor.defaults.language;
-  
-  var string = lang[key] || JSONEditor.defaults.languages[JSONEditor.defaults.default_language][key];
-  
-  if(typeof string === "undefined") throw "Unknown translate string "+key;
-  
-  if(variables) {
-    for(var i=0; i<variables.length; i++) {
-      string = string.replace(new RegExp('\\{\\{'+i+'}}','g'),variables[i]);
+  if (!lang) throw "Unknown language " + JSONEditor.defaults.language;
+
+  var string;
+  if (translatable) {
+    if (translatable.translation) {
+      string = translatable.translation[JSONEditor.defaults.language] || translatable.translation[JSONEditor.defaults.default_language];
+    } else {
+      string = translatable[JSONEditor.defaults.language] || translatable[JSONEditor.defaults.default_language];
+    }
+  } else {
+    string = lang[key] || JSONEditor.defaults.languages[JSONEditor.defaults.default_language][key];
+  }
+
+  if (typeof string === "undefined") {
+    string = key;
+  }
+
+  if (variables) {
+    for (var i = 0; i < variables.length; i++) {
+      string = string.replace(new RegExp('\\{\\{' + i + '}}', 'g'), variables[i]);
     }
   }
-  
+
   return string;
 };
 

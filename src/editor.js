@@ -343,7 +343,7 @@ JSONEditor.AbstractEditor = Class.extend({
     return null;
   },
   getTitle: function() {
-    return this.schema.title || this.key;
+    return this.jsoneditor.translate(this.key, null, this.schema);
   },
   enable: function() {
     this.disabled = false;
