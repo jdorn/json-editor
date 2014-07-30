@@ -65,9 +65,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       else editor.container.style.display = 'none';
     });
     self.refreshValue();
-    
-    if(self.parent) self.parent.onChildEditorChange(self);
-    else self.jsoneditor.onChange();
+    if(self.watch_listener) self.watch_listener();
+    self.notify();
+    self.change();
   },
   buildChildEditor: function(i) {
     var self = this;
@@ -242,7 +242,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    this.jsoneditor.notifyWatchers(this.path);
+    this.watch_listener();
+    this.notify();
+    
   },
   destroy: function() {
     $each(this.editors, function(type,editor) {
