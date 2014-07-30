@@ -15,6 +15,9 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     this.value = sanitized;
     this.jsoneditor.notifyWatchers(this.path);
+    if(this.isSelect2Used()) {
+      window.jQuery(this.input).trigger('change');
+    }
   },
   register: function() {
     this._super();
@@ -92,23 +95,32 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       this.input.disabled = true;
     }
 
-    this.input.addEventListener('change',function(e) {
+    function changeListener(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       var val = this.value;
 
       var sanitized = val;
-      if(self.enum_options.indexOf(val) === -1) {
+      if (self.enum_options.indexOf(val) === -1) {
         sanitized = self.enum_options[0];
       }
 
       self.value = self.enum_values[self.enum_options.indexOf(val)];
-      
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+
+      if (self.parent) {
+        self.parent.onChildEditorChange(self);
+      } else {
+        self.jsoneditor.onChange();
+      }
       self.jsoneditor.notifyWatchers(self.path);
-    });
+    }
+
+    if(this.isSelect2Used()) {
+      window.jQuery(this.input).on('change', changeListener);
+    } else {
+      this.input.addEventListener('change', changeListener);
+    }
 
     this.control = this.theme.getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
@@ -116,7 +128,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.value = this.enum_values[0];
 
     // If the Select2 library is loaded use it when we have lots of items
-    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2 && this.enum_options.length > 2) {
+    if(this.isSelect2Used()) {
       window.jQuery(this.input).select2();
     }
   },
@@ -138,5 +150,9 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
 
     this._super();
+  },
+  isSelect2Used: function ()
+  {
+    return window.jQuery && window.jQuery.fn && window.jQuery.fn.select2 && this.enum_options.length > 2;
   }
 });
