@@ -323,7 +323,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         e.stopPropagation();
         if(self.addproperty_input.value) {
           if(self.editors[self.addproperty_input.value]) {
-            alert('there is already a property with that name');
+            window.alert('there is already a property with that name');
             return;
           }
           
@@ -490,7 +490,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.hideEditJSON();
     }
     catch(e) {
-      alert('invalid JSON');
+      window.alert('invalid JSON');
       throw e;
     }
   },

@@ -4,7 +4,7 @@ JSONEditor.defaults.templates.markup = function() {
   return {
     compile: function(template) {
       return function(context) {
-        return Mark.up(template,context);
+        return window.Mark.up(template,context);
       };
     }
   };

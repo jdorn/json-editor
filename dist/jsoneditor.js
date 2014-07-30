@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.3 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.4 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-07-28
+ * Date: 2014-07-29
  */
 
 /**
@@ -17,11 +17,12 @@
  * MIT Licensed.
  */
 // Inspired by base2 and Prototype
+var Class;
 (function(){
-  var initializing = false, fnTest = /xyz/.test(function(){postMessage("xyz");}) ? /\b_super\b/ : /.*/;
+  var initializing = false, fnTest = /xyz/.test(function(){window.postMessage("xyz");}) ? /\b_super\b/ : /.*/;
  
   // The base Class implementation (does nothing)
-  this.Class = function(){};
+  Class = function(){};
  
   // Create a new Class that inherits from this class
   Class.extend = function(prop) {
@@ -75,6 +76,8 @@
    
     return Class;
   };
+  
+  return Class;
 })();
 
 // CustomEvent constructor polyfill
@@ -248,7 +251,7 @@ JSONEditor.prototype = {
       self.ready = true;
 
       // Fire ready event asynchronously
-      requestAnimationFrame(function() {
+      window.requestAnimationFrame(function() {
         self.validation_results = self.validator.validate(self.root.getValue());
         self.root.showValidationErrors(self.validation_results);
         self.trigger('ready');
@@ -365,7 +368,7 @@ JSONEditor.prototype = {
     
     var self = this;
     
-    requestAnimationFrame(function() {
+    window.requestAnimationFrame(function() {
       self.firing_change = false;
       
       // Validate and cache results
@@ -540,7 +543,7 @@ JSONEditor.prototype = {
             response = JSON.parse(r.responseText);
           }
           catch(e) {
-            console.log(e);
+            window.console.log(e);
             throw "Failed to parse external ref "+url;
           }
           if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+url;
@@ -556,7 +559,7 @@ JSONEditor.prototype = {
         }
         // Request failed
         else {
-          console.log(r);
+          window.console.log(r);
           throw "Failed to fetch ref via ajax- "+url;
         }
       };
@@ -1692,7 +1695,7 @@ JSONEditor.AbstractEditor = Class.extend({
       throw "getOption is deprecated";
     }
     catch(e) {
-      console.error(e);
+      window.console.error(e);
     }
     
     return this.options[key];
@@ -2001,12 +2004,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.control);
 
     // If the Select2 library is loaded
-    if(this.input_type === "select" && window.$ && $.fn && $.fn.select2) {
-      $(this.input).select2();
+    if(this.input_type === "select" && window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+      window.jQuery(this.input).select2();
     }
 
     // Any special formatting that needs to happen after the input is added to the dom
-    requestAnimationFrame(function() {
+    window.requestAnimationFrame(function() {
       // Skip in case the input is only a temporary editor,
       // otherwise, in the case of an ace_editor creation,
       // it will generate an error trying to append it to the missing parentNode
@@ -2042,7 +2045,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       // WYSIWYG html and bbcode editor
       if(this.options.wysiwyg && 
         ['html','bbcode'].indexOf(this.input_type) >= 0 && 
-        window.$ && $.fn && $.fn.sceditor
+        window.jQuery && window.jQuery.fn && window.jQuery.fn.sceditor
       ) {
         options = $extend({},{
           plugins: self.input_type==='html'? 'xhtml' : 'bbcode',
@@ -2051,15 +2054,15 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           height: 300
         },JSONEditor.plugins.sceditor);
         
-        $(self.input).sceditor(options);
+        window.jQuery(self.input).sceditor(options);
         
-        self.sceditor_instance = $(self.input).sceditor('instance');
+        self.sceditor_instance = window.jQuery(self.input).sceditor('instance');
         
         self.sceditor_instance.blur(function() {
           // Get editor's value
-          var val = $("<div>"+self.sceditor_instance.val()+"</div>");
+          var val = window.jQuery("<div>"+self.sceditor_instance.val()+"</div>");
           // Remove sceditor spans/divs
-          $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
+          window.jQuery('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
           // Set the value and update
           self.input.value = val.html();
           self.value = self.input.value;
@@ -2080,7 +2083,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           clientSideStorage: false
         });
         
-        this.epiceditor = new EpicEditor(options).load();
+        this.epiceditor = new window.EpicEditor(options).load();
         
         this.epiceditor.importFile(null,this.getValue());
       
@@ -2108,14 +2111,14 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.ace_container.style.height = '400px';
         this.input.parentNode.insertBefore(this.ace_container,this.input);
         this.input.style.display = 'none';
-        this.ace_editor = ace.edit(this.ace_container);
+        this.ace_editor = window.ace.edit(this.ace_container);
         
         this.ace_editor.setValue(this.getValue());
         
         // The theme
         if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
         // The mode
-        mode = ace.require("ace/mode/"+mode);
+        mode = window.ace.require("ace/mode/"+mode);
         if(mode) this.ace_editor.getSession().setMode(new mode.Mode());
         
         // Listen for changes
@@ -2199,7 +2202,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           if(this.enumSource[i].filter) {
             var new_items = [];
             for(j=0; j<items.length; j++) {
-              if(filter({i:j,item:items[j]})) new_items.push(items[j]);
+              if(this.enumSource[i].filter({i:j,item:items[j]})) new_items.push(items[j]);
             }
             items = new_items;
           }
@@ -2631,7 +2634,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         e.stopPropagation();
         if(self.addproperty_input.value) {
           if(self.editors[self.addproperty_input.value]) {
-            alert('there is already a property with that name');
+            window.alert('there is already a property with that name');
             return;
           }
           
@@ -2798,7 +2801,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.hideEditJSON();
     }
     catch(e) {
-      alert('invalid JSON');
+      window.alert('invalid JSON');
       throw e;
     }
   },
@@ -4379,9 +4382,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       else editor.container.style.display = 'none';
     });
     self.refreshValue();
-    
-    if(self.parent) self.parent.onChildEditorChange(self);
-    else self.jsoneditor.onChange();
+    if(self.watch_listener) self.watch_listener();
+    self.notify();
+    self.change();
   },
   buildChildEditor: function(i) {
     var self = this;
@@ -4556,7 +4559,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    this.jsoneditor.notifyWatchers(this.path);
+    this.watch_listener();
+    this.notify();
+    
   },
   destroy: function() {
     $each(this.editors, function(type,editor) {
@@ -4848,8 +4853,8 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.value = this.enum_values[0];
 
     // If the Select2 library is loaded use it when we have lots of items
-    if(window.$ && $.fn && $.fn.select2 && this.enum_options.length > 2) {
-      $(this.input).select2();
+    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2 && this.enum_options.length > 2) {
+      window.jQuery(this.input).select2();
     }
   },
   postBuild: function() {
@@ -4913,7 +4918,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     }
     else {
       this.input_type = 'select';
-      this.input = this.theme.getSelectInput(options);
+      this.input = this.theme.getSelectInput(this.option_keys);
       this.input.multiple = true;
       this.input.size = Math.min(10,this.option_keys.length);
 
@@ -5149,8 +5154,8 @@ JSONEditor.AbstractTheme = Class.extend({
   getFloatRightLinkHolder: function() {
     var el = document.createElement('div');
     el.style = el.style || {};
-    el.style.float = 'right';
-    el.style['margin-left'] = '10px';
+    el.style.cssFloat = 'right';
+    el.style.marginLeft = '10px';
     return el;
   },
   getModal: function() {
@@ -5684,7 +5689,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
       group.style.marginTop = '0';
       group.appendChild(label);
       input.style.position = 'relative';
-      input.style.float = 'left';
+      input.style.cssFloat = 'left';
     } 
     else {
       group.className += ' form-group';
@@ -6375,7 +6380,7 @@ JSONEditor.defaults.templates.ejs = function() {
 
   return {
     compile: function(template) {
-      var compiled = new EJS({
+      var compiled = new window.EJS({
         text: template
       });
 
@@ -6395,7 +6400,7 @@ JSONEditor.defaults.templates.hogan = function() {
 
   return {
     compile: function(template) {
-      var compiled = Hogan.compile(template);
+      var compiled = window.Hogan.compile(template);
       return function(context) {
         return compiled.render(context);
       };
@@ -6409,7 +6414,7 @@ JSONEditor.defaults.templates.markup = function() {
   return {
     compile: function(template) {
       return function(context) {
-        return Mark.up(template,context);
+        return window.Mark.up(template,context);
       };
     }
   };
@@ -6421,7 +6426,7 @@ JSONEditor.defaults.templates.mustache = function() {
   return {
     compile: function(template) {
       return function(view) {
-        return Mustache.render(template, view);
+        return window.Mustache.render(template, view);
       };
     }
   };
@@ -6437,7 +6442,7 @@ JSONEditor.defaults.templates.underscore = function() {
   return {
     compile: function(template) {
       return function(context) {
-        return _.template(template, context);
+        return window._.template(template, context);
       };
     }
   };
@@ -6681,65 +6686,67 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 /**
  * This is a small wrapper for using JSON Editor like a typical jQuery plugin.
  */
-if(window.jQuery || window.Zepto) {
-  window.$ = window.$ || {};
-  $.jsoneditor = JSONEditor.defaults;
-  
-  (window.jQuery || window.Zepto).fn.jsoneditor = function(options) {
-    var self = this;
-    var editor = this.data('jsoneditor');
-    if(options === 'value') {
-      if(!editor) throw "Must initialize jsoneditor before getting/setting the value";
-      
-      // Set value
-      if(arguments.length > 1) {
-        editor.setValue(arguments[1]);
-      }
-      // Get value
-      else {
-        return editor.getValue();
-      }
-    }
-    else if(options === 'validate') {
-      if(!editor) throw "Must initialize jsoneditor before validating";
-      
-      // Validate a specific value
-      if(arguments.length > 1) {
-        return editor.validate(arguments[1]);
-      }
-      // Validate current value
-      else {
-        return editor.validate();
-      }
-    }
-    else if(options === 'destroy') {
-      if(editor) {
-        editor.destroy();
-        this.data('jsoneditor',null);
-      }
-    }
-    else {
-      // Destroy first
-      if(editor) {
-        editor.destroy();
-      }
-      
-      // Create editor
-      editor = new JSONEditor(this.get(0),options);
-      this.data('jsoneditor',editor);
-      
-      // Setup event listeners
-      editor.on('change',function() {
-        self.trigger('change');
-      });
-      editor.on('ready',function() {
-        self.trigger('ready');
-      });
-    }
+(function() {
+  if(window.jQuery || window.Zepto) {
+    var $ = window.jQuery || window.Zepto;
+    $.jsoneditor = JSONEditor.defaults;
     
-    return this;
-  };
-}
+    $.fn.jsoneditor = function(options) {
+      var self = this;
+      var editor = this.data('jsoneditor');
+      if(options === 'value') {
+        if(!editor) throw "Must initialize jsoneditor before getting/setting the value";
+        
+        // Set value
+        if(arguments.length > 1) {
+          editor.setValue(arguments[1]);
+        }
+        // Get value
+        else {
+          return editor.getValue();
+        }
+      }
+      else if(options === 'validate') {
+        if(!editor) throw "Must initialize jsoneditor before validating";
+        
+        // Validate a specific value
+        if(arguments.length > 1) {
+          return editor.validate(arguments[1]);
+        }
+        // Validate current value
+        else {
+          return editor.validate();
+        }
+      }
+      else if(options === 'destroy') {
+        if(editor) {
+          editor.destroy();
+          this.data('jsoneditor',null);
+        }
+      }
+      else {
+        // Destroy first
+        if(editor) {
+          editor.destroy();
+        }
+        
+        // Create editor
+        editor = new JSONEditor(this.get(0),options);
+        this.data('jsoneditor',editor);
+        
+        // Setup event listeners
+        editor.on('change',function() {
+          self.trigger('change');
+        });
+        editor.on('ready',function() {
+          self.trigger('ready');
+        });
+      }
+      
+      return this;
+    };
+  }
+})();
 
   window.JSONEditor = JSONEditor;
 })();

@@ -38,7 +38,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     }
     else {
       this.input_type = 'select';
-      this.input = this.theme.getSelectInput(options);
+      this.input = this.theme.getSelectInput(this.option_keys);
       this.input.multiple = true;
       this.input.size = Math.min(10,this.option_keys.length);
 

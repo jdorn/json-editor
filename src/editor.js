@@ -416,7 +416,7 @@ JSONEditor.AbstractEditor = Class.extend({
       throw "getOption is deprecated";
     }
     catch(e) {
-      console.error(e);
+      window.console.error(e);
     }
     
     return this.options[key];

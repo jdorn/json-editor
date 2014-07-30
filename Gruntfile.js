@@ -73,6 +73,14 @@ module.exports = function(grunt) {
       }
     },
     jshint: {
+      options: {
+        browser: true,
+        indent: 2,
+        nonbsp: true,
+        nonew: true,
+        immed: true,
+        latedef: true
+      },
       beforeconcat: [
         'src/class.js',
         'src/ie9.js',
@@ -105,9 +113,14 @@ module.exports = function(grunt) {
         // Wrapper for $.fn style initialization
         'src/jquery.js'
       ],
-      afterconcat: [
-        'dist/jsoneditor.js'
-      ]
+      afterconcat: {
+        options: {
+          undef: true
+        },
+        files: {
+          src: ['dist/jsoneditor.js']
+        }
+      }
     }
   });
 

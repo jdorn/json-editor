@@ -54,7 +54,7 @@ JSONEditor.prototype = {
       self.ready = true;
 
       // Fire ready event asynchronously
-      requestAnimationFrame(function() {
+      window.requestAnimationFrame(function() {
         self.validation_results = self.validator.validate(self.root.getValue());
         self.root.showValidationErrors(self.validation_results);
         self.trigger('ready');
@@ -171,7 +171,7 @@ JSONEditor.prototype = {
     
     var self = this;
     
-    requestAnimationFrame(function() {
+    window.requestAnimationFrame(function() {
       self.firing_change = false;
       
       // Validate and cache results
@@ -346,7 +346,7 @@ JSONEditor.prototype = {
             response = JSON.parse(r.responseText);
           }
           catch(e) {
-            console.log(e);
+            window.console.log(e);
             throw "Failed to parse external ref "+url;
           }
           if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+url;
@@ -362,7 +362,7 @@ JSONEditor.prototype = {
         }
         // Request failed
         else {
-          console.log(r);
+          window.console.log(r);
           throw "Failed to fetch ref via ajax- "+url;
         }
       };

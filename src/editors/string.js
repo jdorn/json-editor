@@ -285,12 +285,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.control);
 
     // If the Select2 library is loaded
-    if(this.input_type === "select" && window.$ && $.fn && $.fn.select2) {
-      $(this.input).select2();
+    if(this.input_type === "select" && window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+      window.jQuery(this.input).select2();
     }
 
     // Any special formatting that needs to happen after the input is added to the dom
-    requestAnimationFrame(function() {
+    window.requestAnimationFrame(function() {
       // Skip in case the input is only a temporary editor,
       // otherwise, in the case of an ace_editor creation,
       // it will generate an error trying to append it to the missing parentNode
@@ -326,7 +326,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       // WYSIWYG html and bbcode editor
       if(this.options.wysiwyg && 
         ['html','bbcode'].indexOf(this.input_type) >= 0 && 
-        window.$ && $.fn && $.fn.sceditor
+        window.jQuery && window.jQuery.fn && window.jQuery.fn.sceditor
       ) {
         options = $extend({},{
           plugins: self.input_type==='html'? 'xhtml' : 'bbcode',
@@ -335,15 +335,15 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           height: 300
         },JSONEditor.plugins.sceditor);
         
-        $(self.input).sceditor(options);
+        window.jQuery(self.input).sceditor(options);
         
-        self.sceditor_instance = $(self.input).sceditor('instance');
+        self.sceditor_instance = window.jQuery(self.input).sceditor('instance');
         
         self.sceditor_instance.blur(function() {
           // Get editor's value
-          var val = $("<div>"+self.sceditor_instance.val()+"</div>");
+          var val = window.jQuery("<div>"+self.sceditor_instance.val()+"</div>");
           // Remove sceditor spans/divs
-          $('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
+          window.jQuery('#sceditor-start-marker,#sceditor-end-marker,.sceditor-nlf',val).remove();
           // Set the value and update
           self.input.value = val.html();
           self.value = self.input.value;
@@ -364,7 +364,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           clientSideStorage: false
         });
         
-        this.epiceditor = new EpicEditor(options).load();
+        this.epiceditor = new window.EpicEditor(options).load();
         
         this.epiceditor.importFile(null,this.getValue());
       
@@ -392,14 +392,14 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.ace_container.style.height = '400px';
         this.input.parentNode.insertBefore(this.ace_container,this.input);
         this.input.style.display = 'none';
-        this.ace_editor = ace.edit(this.ace_container);
+        this.ace_editor = window.ace.edit(this.ace_container);
         
         this.ace_editor.setValue(this.getValue());
         
         // The theme
         if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
         // The mode
-        mode = ace.require("ace/mode/"+mode);
+        mode = window.ace.require("ace/mode/"+mode);
         if(mode) this.ace_editor.getSession().setMode(new mode.Mode());
         
         // Listen for changes
@@ -483,7 +483,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           if(this.enumSource[i].filter) {
             var new_items = [];
             for(j=0; j<items.length; j++) {
-              if(filter({i:j,item:items[j]})) new_items.push(items[j]);
+              if(this.enumSource[i].filter({i:j,item:items[j]})) new_items.push(items[j]);
             }
             items = new_items;
           }

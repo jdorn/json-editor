@@ -116,8 +116,8 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.value = this.enum_values[0];
 
     // If the Select2 library is loaded use it when we have lots of items
-    if(window.$ && $.fn && $.fn.select2 && this.enum_options.length > 2) {
-      $(this.input).select2();
+    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2 && this.enum_options.length > 2) {
+      window.jQuery(this.input).select2();
     }
   },
   postBuild: function() {
