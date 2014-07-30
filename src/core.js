@@ -75,10 +75,22 @@ JSONEditor.prototype = {
   },
   validate: function(value) {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before validating";
-    
+
     // Custom value
     if(arguments.length === 1) {
-      return this.validator.validate(value);
+      if (true === value) {
+        this.validation_results = this.validator.validate(this.root.getValue());
+        for (var name in this.editors) {
+          if (!this.editors.hasOwnProperty(name) || !this.editors[name]) {
+            continue;
+          }
+          this.editors[name].is_dirty = true;
+        }
+        this.root.showValidationErrors(this.validation_results);
+        return this.validation_results;
+      } else {
+        return this.validator.validate(value);
+      }
     }
     // Current value (use cached result)
     else {
