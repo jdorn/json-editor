@@ -71,7 +71,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     
     if(this.format === 'grid') {
       var rows = [];
-      $each(this.editors, function(key,editor) {
+      $each(this.property_order, function(i,key) {
+        editor = self.editors[key];
         if(editor.property_removed) return;
         var found = false;
         var width = editor.options.hidden? 0 : editor.getNumColumns();
@@ -153,7 +154,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     // Normal layout
     else {
       container = document.createElement('div');
-      $each(this.editors, function(key,editor) {
+      $each(this.property_order, function(i,key) {
+        editor = self.editors[key];
         if(editor.property_removed) return;
         var row = self.theme.getGridRow();
         container.appendChild(row);
@@ -683,7 +685,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(!this.addproperty_checkboxes[i].checked) show_modal = true;
       }
       else if(!(i in this.editors)) {
-        if(!can_add) {
+        if(!can_add  && !this.schema.properties.hasOwnProperty(i)) {
           this.addproperty_checkboxes[i].disabled = true;
         }
         else {
