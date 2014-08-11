@@ -48,12 +48,12 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       this.container.appendChild(this.title);
       this.title_controls = this.theme.getHeaderButtonHolder();
       this.title.appendChild(this.title_controls);
-      this.panel = this.theme.getIndentedPanel();
-      this.container.appendChild(this.panel);
       if(this.schema.description) {
         this.description = this.theme.getDescription(this.schema.description);
-        this.panel.appendChild(this.description);
+        this.container.appendChild(this.description);
       }
+      this.panel = this.theme.getIndentedPanel();
+      this.container.appendChild(this.panel);
       this.error_holder = document.createElement('div');
       this.panel.appendChild(this.error_holder);
     }
