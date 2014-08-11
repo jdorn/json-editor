@@ -105,9 +105,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
       self.value = self.enum_values[self.enum_options.indexOf(val)];
       
+      self.watch_listener();
+      self.notify();
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
-      self.jsoneditor.notifyWatchers(self.path);
     });
 
     this.control = this.theme.getFormControl(this.label, this.input, this.description);
