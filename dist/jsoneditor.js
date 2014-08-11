@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.4 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.5 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-07-29
+ * Date: 2014-08-10
  */
 
 /**
@@ -1735,9 +1735,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       return;
     }
     
-    value = value || '';
-    if(typeof value === "object") value = JSON.stringify(value);
-    if(typeof value !== "string") value = ""+value;
+    if(value === null) value = "";
+    else if(typeof value === "object") value = JSON.stringify(value);
+    else if(typeof value !== "string") value = ""+value;
+    
     if(value === this.serialized) return;
 
     // Sanitize value before setting it
@@ -1780,7 +1781,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.jsoneditor.notifyWatchers(this.path);
   },
   getNumColumns: function() {
-    var min = Math.ceil(this.getTitle().length/5);
+    var min = Math.ceil(Math.max(this.getTitle().length,this.schema.maxLength||0,this.schema.minLength||0)/5);
     var num;
     
     if(this.input_type === 'textarea') num = 6;
@@ -3888,12 +3889,12 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       this.container.appendChild(this.title);
       this.title_controls = this.theme.getHeaderButtonHolder();
       this.title.appendChild(this.title_controls);
-      this.panel = this.theme.getIndentedPanel();
-      this.container.appendChild(this.panel);
       if(this.schema.description) {
         this.description = this.theme.getDescription(this.schema.description);
-        this.panel.appendChild(this.description);
+        this.container.appendChild(this.description);
       }
+      this.panel = this.theme.getIndentedPanel();
+      this.container.appendChild(this.panel);
       this.error_holder = document.createElement('div');
       this.panel.appendChild(this.error_holder);
     }
@@ -4842,9 +4843,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
 
       self.value = self.enum_values[self.enum_options.indexOf(val)];
       
+      self.watch_listener();
+      self.notify();
       if(self.parent) self.parent.onChildEditorChange(self);
       else self.jsoneditor.onChange();
-      self.jsoneditor.notifyWatchers(self.path);
     });
 
     this.control = this.theme.getFormControl(this.label, this.input, this.description);
