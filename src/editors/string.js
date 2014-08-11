@@ -61,7 +61,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     this.jsoneditor.notifyWatchers(this.path);
   },
   getNumColumns: function() {
-    var min = Math.ceil(this.getTitle().length/5);
+    var min = Math.ceil(Math.max(this.getTitle().length,this.schema.maxLength||0,this.schema.minLength||0)/5);
     var num;
     
     if(this.input_type === 'textarea') num = 6;
