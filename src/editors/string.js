@@ -16,9 +16,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       return;
     }
     
-    value = value || '';
-    if(typeof value === "object") value = JSON.stringify(value);
-    if(typeof value !== "string") value = ""+value;
+    if(value === null) value = "";
+    else if(typeof value === "object") value = JSON.stringify(value);
+    else if(typeof value !== "string") value = ""+value;
+    
     if(value === this.serialized) return;
 
     // Sanitize value before setting it
