@@ -115,15 +115,15 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.control);
 
     this.value = this.enum_values[0];
+  },
+  postBuild: function() {
+    this._super();
+    this.theme.afterInputReady(this.input);
 
     // If the Select2 library is loaded use it when we have lots of items
     if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2 && this.enum_options.length > 2) {
       window.jQuery(this.input).select2();
     }
-  },
-  postBuild: function() {
-    this._super();
-    this.theme.afterInputReady(this.input);
   },
   enable: function() {
     if(!this.always_disabled) this.input.disabled = false;
