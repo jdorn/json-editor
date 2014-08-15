@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.5 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.6 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-08-10
+ * Date: 2014-08-15
  */
 
 /**
@@ -2383,7 +2383,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     
     if(this.format === 'grid') {
       var rows = [];
-      $each(this.editors, function(key,editor) {
+      $each(this.property_order, function(j,key) {
+        var editor = self.editors[key];
         if(editor.property_removed) return;
         var found = false;
         var width = editor.options.hidden? 0 : editor.getNumColumns();
@@ -2465,7 +2466,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     // Normal layout
     else {
       container = document.createElement('div');
-      $each(this.editors, function(key,editor) {
+      $each(this.property_order, function(i,key) {
+        var editor = self.editors[key];
         if(editor.property_removed) return;
         var row = self.theme.getGridRow();
         container.appendChild(row);
@@ -2995,7 +2997,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(!this.addproperty_checkboxes[i].checked) show_modal = true;
       }
       else if(!(i in this.editors)) {
-        if(!can_add) {
+        if(!can_add  && !this.schema.properties.hasOwnProperty(i)) {
           this.addproperty_checkboxes[i].disabled = true;
         }
         else {
@@ -4853,15 +4855,15 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.control);
 
     this.value = this.enum_values[0];
+  },
+  postBuild: function() {
+    this._super();
+    this.theme.afterInputReady(this.input);
 
     // If the Select2 library is loaded use it when we have lots of items
     if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2 && this.enum_options.length > 2) {
       window.jQuery(this.input).select2();
     }
-  },
-  postBuild: function() {
-    this._super();
-    this.theme.afterInputReady(this.input);
   },
   enable: function() {
     if(!this.always_disabled) this.input.disabled = false;
