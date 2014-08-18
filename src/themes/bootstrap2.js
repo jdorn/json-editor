@@ -154,5 +154,27 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   },
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
+  },
+  getProgressBar: function() {
+    var container = document.createElement('div');
+    container.className = 'progress';
+
+    var bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.width = '0%';
+    container.appendChild(bar);
+
+    return container;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+
+    progressBar.firstChild.style.width = progress + "%";
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+
+    progressBar.className = 'progress progress-striped active';
+    progressBar.firstChild.style.width = '100%';
   }
 });
