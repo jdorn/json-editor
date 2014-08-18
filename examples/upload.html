@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>JSON Editor Upload Example</title>
+    <script src="../dist/jsoneditor.js"></script>
+  </head>
+  <body>
+    <h1>JSON Editor Upload Example</h1>
+    
+    <div id='editor_holder'></div>
+    <button id='submit'>Submit (console.log)</button>
+    
+    <script>
+      // Specify upload handler
+      JSONEditor.defaults.options.upload = function(type, file, cbs) {
+        var tick = 0;
+
+        var tickFunction = function() {
+            tick += 1;
+            console.log('progress: ' + tick);
+
+            if (tick < 100) {
+                cbs.updateProgress(tick);
+                window.setTimeout(tickFunction, 10)
+            } else if (tick == 100) {
+                cbs.updateProgress();
+                window.setTimeout(tickFunction, 500)
+            } else {
+                cbs.success('./images/' + file.name);
+            }
+        };
+
+        window.setTimeout(tickFunction, 50)
+      };
+
+      // Initialize the editor with a JSON schema
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        schema: {
+          type: "object",
+          title: "Image",
+          properties: {
+            href: {
+              type: "string",
+              format: "resourceUri"
+            },
+            name: {
+              type: "string"
+            }
+          }
+        }
+      });
+      
+      // Hook up the submit button to log to the console
+      document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+      });
+    </script>
+  </body>
+</html>
