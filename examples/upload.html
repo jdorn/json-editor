@@ -12,6 +12,9 @@
     <button id='submit'>Submit (console.log)</button>
     
     <script>
+      // Specify theme
+      JSONEditor.defaults.options.theme = 'html';
+
       // Specify upload handler
       JSONEditor.defaults.options.upload = function(type, file, cbs) {
         var tick = 0;
@@ -22,7 +25,7 @@
 
             if (tick < 100) {
                 cbs.updateProgress(tick);
-                window.setTimeout(tickFunction, 10)
+                window.setTimeout(tickFunction, 50)
             } else if (tick == 100) {
                 cbs.updateProgress();
                 window.setTimeout(tickFunction, 500)
@@ -31,7 +34,7 @@
             }
         };
 
-        window.setTimeout(tickFunction, 50)
+        window.setTimeout(tickFunction)
       };
 
       // Initialize the editor with a JSON schema
