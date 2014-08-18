@@ -35,7 +35,10 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
       });
     }
 
-    this.preview = this.theme.getFormInputDescription(this.schema.description);
+    var description = this.schema.description;
+    if (!description) description = '';
+
+    this.preview = this.theme.getFormInputDescription(description);
     this.container.appendChild(this.preview);
 
     this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview);
@@ -107,6 +110,8 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     if (!this.value) return;
 
     var downloadLink = document.createElement('div');
+    downloadLink.className = "download-link";
+
     var anchor = document.createElement('a');
     anchor.setAttribute('href', this.value);
     anchor.innerHTML = "download";
