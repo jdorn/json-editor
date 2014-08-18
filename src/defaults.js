@@ -203,6 +203,13 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
     return "base64";
   }
 });
+// Editor for uploading files
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  // If the schema can be of any type
+  if(schema.type === "string" && schema.format === "resourceUri") {
+    return "upload";
+  }
+});
 // Use the table editor for arrays with the format set to `table`
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // Type `array` with format set to `table`
