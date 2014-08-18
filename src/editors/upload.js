@@ -13,6 +13,8 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     // Don't show uploader if this is readonly
     if(!this.schema.readOnly && !this.schema.readonly) {
       if(!window.FileReader) throw "FileReader required for upload editor";
+
+      if(!this.jsoneditor.options.upload) throw "Upload handler required for upload editor";
       
       // File uploader
       this.uploader = this.theme.getFormInputField('file');
@@ -24,12 +26,8 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
         if(this.files && this.files.length) {
           var fr = new FileReader();
           fr.onload = function(evt) {
-            self.value = evt.target.result;
+            self.preview_value = evt.target.result;
             self.refreshPreview();
-            self.watch_listener();
-            self.jsoneditor.notifyWatchers(self.path);
-            if(self.parent) self.parent.onChildEditorChange(self);
-            else self.jsoneditor.onChange();
             fr = null;
           };
           fr.readAsDataURL(this.files[0]);
@@ -44,30 +42,51 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.control);
   },
   refreshPreview: function() {
-    if(this.last_preview === this.value) return;
-    this.last_preview = this.value;
-    
+    if(this.last_preview === this.preview_value) return;
+    this.last_preview = this.preview_value;
+
     this.preview.innerHTML = '';
     
-    if(!this.value) return;
-    
-    var mime = this.value.match(/^data:([^;,]+)[;,]/);
+    if(!this.preview_value) return;
+
+    var self = this;
+
+    var mime = this.preview_value.match(/^data:([^;,]+)[;,]/);
     if(mime) mime = mime[1];
-    
-    if(!mime) {
-      this.preview.innerHTML = '<em>Invalid data URI</em>';
+    if(!mime) mime = 'unknown';
+
+    var file = this.uploader.files[0];
+
+    this.preview.innerHTML = '<strong>Type:</strong> '+mime+', <strong>Size:</strong> '+file.size+' bytes';
+    if(mime.substr(0,5)==="image") {
+      this.preview.innerHTML += '<br>';
+      var img = document.createElement('img');
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100px';
+      img.src = this.preview_value;
+      this.preview.appendChild(img);
     }
-    else {
-      this.preview.innerHTML = '<strong>Type:</strong> '+mime+', <strong>Size:</strong> '+Math.floor((this.value.length-this.value.split(',')[0].length-1)/1.33333)+' bytes';
-      if(mime.substr(0,5)==="image") {
-        this.preview.innerHTML += '<br>';
-        var img = document.createElement('img');
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '100px';
-        img.src = this.value;
-        this.preview.appendChild(img);
-      }
-    }
+
+    this.preview.innerHTML += '<br>';
+    var uploadButton = this.getButton('Upload', 'upload', 'Upload');
+    this.preview.appendChild(uploadButton);
+    uploadButton.addEventListener('click',function(event) {
+      event.preventDefault();
+
+      var uploadSuccess = function(url) {
+        self.setValue(url);
+        if(self.parent) self.parent.onChildEditorChange(self);
+        else self.jsoneditor.onChange();
+      };
+
+      var uploadError = function(error) {
+      };
+
+      var uploadProgress = function(progress) {
+      };
+
+      self.jsoneditor.options.upload(self.path, file, uploadSuccess, uploadError, uploadProgress);
+    });
   },
   enable: function() {
     if(this.uploader) this.uploader.disabled = false;
@@ -81,7 +100,6 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     if(this.value !== val) {
       this.value = val;
       this.input.value = this.value;
-      this.refreshPreview();
       this.watch_listener();
       this.jsoneditor.notifyWatchers(this.path);
     }
