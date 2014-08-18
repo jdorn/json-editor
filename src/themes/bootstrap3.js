@@ -155,5 +155,14 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     bar.setAttribute('aria-valuenow', progress);
     bar.style.width = percentage;
     bar.innerHTML = percentage;
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+
+    var bar = progressBar.firstChild;
+    progressBar.className = 'progress progress-striped active';
+    bar.removeAttribute('aria-valuenow');
+    bar.style.width = '100%';
+    bar.innerHTML = '';
   }
 });

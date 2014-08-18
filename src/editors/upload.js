@@ -75,8 +75,11 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
 
       var uploadSuccess = function(url) {
         self.setValue(url);
+
         if(self.parent) self.parent.onChildEditorChange(self);
         else self.jsoneditor.onChange();
+
+        if (self.progressBar) self.preview.removeChild(self.progressBar);
       };
 
       var uploadError = function(error) {
@@ -86,12 +89,16 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
         if (self.progressBar) self.theme.updateProgressBar(self.progressBar, progress);
       };
 
+      var uploadProgressUnknown = function() {
+        if (self.progressBar) self.theme.updateProgressBarUnknown(self.progressBar);
+      };
+
       if (self.theme.getProgressBar) {
         self.progressBar = self.theme.getProgressBar();
         self.preview.appendChild(self.progressBar);
       }
 
-      self.jsoneditor.options.upload(self.path, file, uploadSuccess, uploadError, uploadProgress);
+      self.jsoneditor.options.upload(self.path, file, uploadSuccess, uploadError, uploadProgress, uploadProgressUnknown);
     });
   },
   enable: function() {
