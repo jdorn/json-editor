@@ -81,6 +81,24 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     if(!input.errmsg) return;
     input.group.className = input.group.className.replace(/ error/g,'');
     input.errmsg.style.display = 'none';
+  },
+  getProgressBar: function() {
+    var progressBar = document.createElement('div');
+    progressBar.className = 'progress';
+
+    var meter = document.createElement('span');
+    meter.className = 'meter';
+    meter.style.width = '0%';
+    progressBar.appendChild(meter);
+    return progressBar;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+    progressBar.firstChild.style.width = progress + '%';
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+    progressBar.firstChild.style.width = '100%';
   }
 });
 
