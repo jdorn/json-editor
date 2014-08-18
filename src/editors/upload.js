@@ -83,7 +83,13 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
       };
 
       var uploadProgress = function(progress) {
+        if (self.progressBar) self.theme.updateProgressBar(self.progressBar, progress);
       };
+
+      if (self.theme.getProgressBar) {
+        self.progressBar = self.theme.getProgressBar();
+        self.preview.appendChild(self.progressBar);
+      }
 
       self.jsoneditor.options.upload(self.path, file, uploadSuccess, uploadError, uploadProgress);
     });
