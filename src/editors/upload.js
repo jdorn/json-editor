@@ -76,6 +76,8 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     uploadButton.addEventListener('click',function(event) {
       event.preventDefault();
 
+      self.theme.removeInputError(self.uploader);
+
       if (self.theme.getProgressBar) {
         self.progressBar = self.theme.getProgressBar();
         self.preview.appendChild(self.progressBar);
@@ -91,7 +93,8 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
           if (self.progressBar) self.preview.removeChild(self.progressBar);
         },
         failure: function(error) {
-
+          self.theme.addInputError(self.uploader, error);
+          if (self.progressBar) self.preview.removeChild(self.progressBar);
         },
         updateProgress: function(progress) {
           if (self.progressBar) {
