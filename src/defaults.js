@@ -206,7 +206,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 // Editor for uploading files
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === "string" && schema.format === "uri" && schema.options && schema.options.upload === true) {
-    return "upload";
+    if(window.FileReader) return "upload";
   }
 });
 // Use the table editor for arrays with the format set to `table`

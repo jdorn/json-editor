@@ -12,10 +12,9 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     
     // Don't show uploader if this is readonly
     if(!this.schema.readOnly && !this.schema.readonly) {
-      if(!window.FileReader) throw "FileReader required for upload editor";
 
       if(!this.jsoneditor.options.upload) throw "Upload handler required for upload editor";
-      
+
       // File uploader
       this.uploader = this.theme.getFormInputField('file');
       
