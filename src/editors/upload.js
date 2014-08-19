@@ -123,7 +123,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     downloadLink.appendChild(anchor);
 
     this.downloadLink = downloadLink;
-    this.control.insertBefore(this.downloadLink, this.uploader);
+    this.label.parentNode.insertBefore(this.downloadLink, this.label.nextSibling);
   },
   enable: function() {
     if(this.uploader) this.uploader.disabled = false;

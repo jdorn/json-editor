@@ -43,7 +43,22 @@
           type: "object",
           title: "Image",
           properties: {
-            uri: {
+            upload1: {
+              type: "string",
+              format: "uri",
+              options: {
+                upload: true
+              }
+            },
+            upload2: {
+              type: "string",
+              format: "uri",
+              options: {
+                upload: true
+              }
+            },
+            readonly: {
+              readonly: true,
               type: "string",
               format: "uri",
               options: {
@@ -55,6 +70,13 @@
             }
           }
         }
+      });
+
+      editor.setValue({
+        upload1: "",
+        upload2: "",
+        readonly: "http://www.example.com/images/image.jpg",
+        name: ""
       });
       
       // Hook up the submit button to log to the console
