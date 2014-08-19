@@ -117,7 +117,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
 
     var anchor = document.createElement('a');
     anchor.setAttribute('href', this.value);
-    anchor.innerHTML = "download";
+    anchor.innerHTML = this.value;
     downloadLink.appendChild(anchor);
 
     this.downloadLink = downloadLink;
