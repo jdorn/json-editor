@@ -17,24 +17,27 @@
 
       // Specify upload handler
       JSONEditor.defaults.options.upload = function(type, file, cbs) {
-        var tick = 0;
+        if (type === 'root.upload_fail') cbs.failure('Upload failed');
+        else {
+          var tick = 0;
 
-        var tickFunction = function() {
+          var tickFunction = function() {
             tick += 1;
             console.log('progress: ' + tick);
 
             if (tick < 100) {
-                cbs.updateProgress(tick);
-                window.setTimeout(tickFunction, 50)
+              cbs.updateProgress(tick);
+              window.setTimeout(tickFunction, 50)
             } else if (tick == 100) {
-                cbs.updateProgress();
-                window.setTimeout(tickFunction, 500)
+              cbs.updateProgress();
+              window.setTimeout(tickFunction, 500)
             } else {
-                cbs.success('http://www.example.com/images/' + file.name);
+              cbs.success('http://www.example.com/images/' + file.name);
             }
-        };
+          };
 
-        window.setTimeout(tickFunction)
+          window.setTimeout(tickFunction)
+        }
       };
 
       // Initialize the editor with a JSON schema
@@ -43,22 +46,30 @@
           type: "object",
           title: "Image",
           properties: {
-            upload1: {
+            upload_default: {
               type: "string",
               format: "uri",
               options: {
                 upload: true
               }
             },
-            upload2: {
+            upload_custom_link: {
               type: "string",
               format: "uri",
               options: {
-                upload: true
+                upload: true,
+                link_title: "download"
               }
             },
-            readonly: {
+            upload_readonly: {
               readonly: true,
+              type: "string",
+              format: "uri",
+              options: {
+                upload: true
+              }
+            },
+            upload_fail: {
               type: "string",
               format: "uri",
               options: {
@@ -73,9 +84,10 @@
       });
 
       editor.setValue({
-        upload1: "",
-        upload2: "",
-        readonly: "http://www.example.com/images/image.jpg",
+        upload_default: "",
+        upload_custom_link: "",
+        upload_readonly: "http://www.example.com/images/image.jpg",
+        upload_fail: "",
         name: ""
       });
       
