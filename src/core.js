@@ -28,7 +28,7 @@ JSONEditor.prototype = {
     
     if(this.options.translate)
       this.translate = function(key, variables) {
-        var custom = self.options.translate(key);
+        var custom = self.options.translate(key, variables);
         return typeof custom === 'undefined' ? JSONEditor.defaults.translate(key, variables) : custom;
       };
     else
