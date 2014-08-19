@@ -76,6 +76,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     uploadButton.addEventListener('click',function(event) {
       event.preventDefault();
 
+      uploadButton.setAttribute("disabled", "disabled");
       self.theme.removeInputError(self.uploader);
 
       if (self.theme.getProgressBar) {
@@ -91,10 +92,12 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
           else self.jsoneditor.onChange();
 
           if (self.progressBar) self.preview.removeChild(self.progressBar);
+          uploadButton.removeAttribute("disabled");
         },
         failure: function(error) {
           self.theme.addInputError(self.uploader, error);
           if (self.progressBar) self.preview.removeChild(self.progressBar);
+          uploadButton.removeAttribute("disabled");
         },
         updateProgress: function(progress) {
           if (self.progressBar) {
