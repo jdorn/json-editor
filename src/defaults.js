@@ -205,8 +205,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Editor for uploading files
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  // If the schema can be of any type
-  if(schema.type === "string" && schema.format === "uploadUri") {
+  if(schema.type === "string" && schema.format === "uri" && schema.options && schema.options.upload === true) {
     return "upload";
   }
 });

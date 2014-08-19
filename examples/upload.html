@@ -43,9 +43,12 @@
           type: "object",
           title: "Image",
           properties: {
-            href: {
+            uri: {
               type: "string",
-              format: "uploadUri"
+              format: "uri",
+              options: {
+                upload: true
+              }
             },
             name: {
               type: "string"
