@@ -51,7 +51,12 @@
               format: "url",
               options: {
                 upload: true
-              }
+              },
+              "links": [
+                {
+                    "href": "{{self}}"
+                }
+              ]
             },
             upload_custom_link: {
               type: "string",
@@ -59,7 +64,13 @@
               options: {
                 upload: true,
                 link_title: "download"
-              }
+              },
+              "links": [
+                {
+                  "href": "{{self}}",
+                  "rel": "view"
+                }
+              ]
             },
             upload_readonly: {
               readonly: true,
@@ -67,14 +78,24 @@
               format: "url",
               options: {
                 upload: true
-              }
+              },
+              "links": [
+                {
+                  "href": "{{self}}"
+                }
+              ]
             },
             upload_fail: {
               type: "string",
               format: "url",
               options: {
                 upload: true
-              }
+              },
+              "links": [
+                {
+                  "href": "{{self}}"
+                }
+              ]
             },
             name: {
               type: "string"
