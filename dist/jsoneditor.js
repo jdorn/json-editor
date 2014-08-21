@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.6 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.7 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-08-15
+ * Date: 2014-08-21
  */
 
 /**
@@ -2544,11 +2544,16 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     else {
       this.defaultProperties = this.schema.defaultProperties || Object.keys(this.schema.properties);
 
+      // Increase the grid width to account for padding
+      self.maxwidth += 1;
+
       $each(this.defaultProperties, function(i,key) {
         self.addObjectProperty(key, true, true);
 
-        self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
-        self.maxwidth += self.editors[key].getNumColumns();
+        if(self.editors[key]) {
+          self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
+          self.maxwidth += self.editors[key].getNumColumns();
+        }
       });
     }
     
@@ -2894,6 +2899,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     // New property
     else {
+      if(!this.canHaveAdditionalProperties() && (!this.schema.properties || !this.schema.properties[name])) {
+        return;
+      }
+
       var schema = self.getPropertySchema(name);
       
             
@@ -3054,10 +3063,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     value = value || {};
     
     if(typeof value !== "object" || Array.isArray(value)) value = {};
-    
+
     // First, set the values for all of the defined properties
     $each(this.cached_editors, function(i,editor) {
-      // Value explicitly set   
+      // Value explicitly set
       if(typeof value[i] !== "undefined") {
         self.addObjectProperty(i);
         editor.setValue(value[i],initial);
@@ -3071,16 +3080,13 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         editor.setValue(editor.getDefault(),initial);
       }
     });
-    
-    // If additional properties are allowed, create the editors for any of those
-    if(this.canHaveAdditionalProperties()) {
-      $each(value, function(i,val) {
-        if(!self.cached_editors[i]) {
-          self.addObjectProperty(i);
-          self.editors[i].setValue(val,initial);
-        }
-      });
-    }
+
+    $each(value, function(i,val) {
+      if(!self.cached_editors[i]) {
+        self.addObjectProperty(i);
+        if(self.editors[i]) self.editors[i].setValue(val,initial);
+      }
+    });
     
     this.refreshValue();
     this.notify();
@@ -3884,7 +3890,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     // Determine the default value of array element
     var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
-    this.width = tmp.getNumColumns();
+    this.width = tmp.getNumColumns() + 2;
     
     if(!this.options.compact) {
       this.title = this.theme.getHeader(this.getTitle());
@@ -5151,6 +5157,141 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
   }
 });
 
+JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
+  getNumColumns: function() {
+    return 4;
+  },
+  build: function() {    
+    var self = this;
+    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+
+    // Input that holds the base64 string
+    this.input = this.theme.getFormInputField('hidden');
+    this.container.appendChild(this.input);
+    
+    // Don't show uploader if this is readonly
+    if(!this.schema.readOnly && !this.schema.readonly) {
+
+      if(!this.jsoneditor.options.upload) throw "Upload handler required for upload editor";
+
+      // File uploader
+      this.uploader = this.theme.getFormInputField('file');
+      
+      this.uploader.addEventListener('change',function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if(this.files && this.files.length) {
+          var fr = new FileReader();
+          fr.onload = function(evt) {
+            self.preview_value = evt.target.result;
+            self.refreshPreview();
+            fr = null;
+          };
+          fr.readAsDataURL(this.files[0]);
+        }
+      });
+    }
+
+    var description = this.schema.description;
+    if (!description) description = '';
+
+    this.preview = this.theme.getFormInputDescription(description);
+    this.container.appendChild(this.preview);
+
+    this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview);
+    this.container.appendChild(this.control);
+  },
+  refreshPreview: function() {
+    if(this.last_preview === this.preview_value) return;
+    this.last_preview = this.preview_value;
+
+    this.preview.innerHTML = '';
+    
+    if(!this.preview_value) return;
+
+    var self = this;
+
+    var mime = this.preview_value.match(/^data:([^;,]+)[;,]/);
+    if(mime) mime = mime[1];
+    if(!mime) mime = 'unknown';
+
+    var file = this.uploader.files[0];
+
+    this.preview.innerHTML = '<strong>Type:</strong> '+mime+', <strong>Size:</strong> '+file.size+' bytes';
+    if(mime.substr(0,5)==="image") {
+      this.preview.innerHTML += '<br>';
+      var img = document.createElement('img');
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100px';
+      img.src = this.preview_value;
+      this.preview.appendChild(img);
+    }
+
+    this.preview.innerHTML += '<br>';
+    var uploadButton = this.getButton('Upload', 'upload', 'Upload');
+    this.preview.appendChild(uploadButton);
+    uploadButton.addEventListener('click',function(event) {
+      event.preventDefault();
+
+      uploadButton.setAttribute("disabled", "disabled");
+      self.theme.removeInputError(self.uploader);
+
+      if (self.theme.getProgressBar) {
+        self.progressBar = self.theme.getProgressBar();
+        self.preview.appendChild(self.progressBar);
+      }
+
+      self.jsoneditor.options.upload(self.path, file, {
+        success: function(url) {
+          self.setValue(url);
+
+          if(self.parent) self.parent.onChildEditorChange(self);
+          else self.jsoneditor.onChange();
+
+          if (self.progressBar) self.preview.removeChild(self.progressBar);
+          uploadButton.removeAttribute("disabled");
+        },
+        failure: function(error) {
+          self.theme.addInputError(self.uploader, error);
+          if (self.progressBar) self.preview.removeChild(self.progressBar);
+          uploadButton.removeAttribute("disabled");
+        },
+        updateProgress: function(progress) {
+          if (self.progressBar) {
+            if (progress) self.theme.updateProgressBar(self.progressBar, progress);
+            else self.theme.updateProgressBarUnknown(self.progressBar);
+          }
+        }
+      });
+    });
+  },
+  enable: function() {
+    if(this.uploader) this.uploader.disabled = false;
+    this._super();
+  },
+  disable: function() {
+    if(this.uploader) this.uploader.disabled = true;
+    this._super();
+  },
+  setValue: function(val) {
+    if(this.value !== val) {
+      this.value = val;
+      this.input.value = this.value;
+      this.watch_listener();
+      this.jsoneditor.notifyWatchers(this.path);
+    }
+  },
+  destroy: function() {
+    if(this.preview && this.preview.parentNode) this.preview.parentNode.removeChild(this.preview);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.uploader && this.uploader.parentNode) this.uploader.parentNode.removeChild(this.uploader);
+
+    this._super();
+  }
+});
+
 JSONEditor.AbstractTheme = Class.extend({
   getContainer: function() {
     return document.createElement('div');
@@ -5645,6 +5786,28 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   },
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
+  },
+  getProgressBar: function() {
+    var container = document.createElement('div');
+    container.className = 'progress';
+
+    var bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.width = '0%';
+    container.appendChild(bar);
+
+    return container;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+
+    progressBar.firstChild.style.width = progress + "%";
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+
+    progressBar.className = 'progress progress-striped active';
+    progressBar.firstChild.style.width = '100%';
   }
 });
 
@@ -5779,6 +5942,41 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   },
   markTabInactive: function(tab) {
     tab.className = tab.className.replace(/\s?active/g,'');
+  },
+  getProgressBar: function() {
+    var min = 0, max = 100, start = 0;
+
+    var container = document.createElement('div');
+    container.className = 'progress';
+
+    var bar = document.createElement('div');
+    bar.className = 'progress-bar';
+    bar.setAttribute('role', 'progressbar');
+    bar.setAttribute('aria-valuenow', start);
+    bar.setAttribute('aria-valuemin', min);
+    bar.setAttribute('aria-valuenax', max);
+    bar.innerHTML = start + "%";
+    container.appendChild(bar);
+
+    return container;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+
+    var bar = progressBar.firstChild;
+    var percentage = progress + "%";
+    bar.setAttribute('aria-valuenow', progress);
+    bar.style.width = percentage;
+    bar.innerHTML = percentage;
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+
+    var bar = progressBar.firstChild;
+    progressBar.className = 'progress progress-striped active';
+    bar.removeAttribute('aria-valuenow');
+    bar.style.width = '100%';
+    bar.innerHTML = '';
   }
 });
 
@@ -5865,6 +6063,24 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     if(!input.errmsg) return;
     input.group.className = input.group.className.replace(/ error/g,'');
     input.errmsg.style.display = 'none';
+  },
+  getProgressBar: function() {
+    var progressBar = document.createElement('div');
+    progressBar.className = 'progress';
+
+    var meter = document.createElement('span');
+    meter.className = 'meter';
+    meter.style.width = '0%';
+    progressBar.appendChild(meter);
+    return progressBar;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+    progressBar.firstChild.style.width = progress + '%';
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+    progressBar.firstChild.style.width = '100%';
   }
 });
 
@@ -6052,6 +6268,22 @@ JSONEditor.defaults.themes.html = JSONEditor.AbstractTheme.extend({
   removeInputError: function(input) {
     input.style.borderColor = '';
     if(input.errmsg) input.errmsg.style.display = 'none';
+  },
+  getProgressBar: function() {
+    var max = 100, start = 0;
+
+    var progressBar = document.createElement('progress');
+    progressBar.setAttribute('max', max);
+    progressBar.setAttribute('value', start);
+    return progressBar;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+    progressBar.setAttribute('value', progress);
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+    progressBar.removeAttribute('value');
   }
 });
 
@@ -6655,6 +6887,12 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema can be of any type
   if(schema.type === "string" && schema.media && schema.media.binaryEncoding==="base64") {
     return "base64";
+  }
+});
+// Editor for uploading files
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  if(schema.type === "string" && schema.format === "url" && schema.options && schema.options.upload === true) {
+    if(window.FileReader) return "upload";
   }
 });
 // Use the table editor for arrays with the format set to `table`
