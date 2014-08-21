@@ -203,6 +203,12 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
     return "base64";
   }
 });
+// Editor for uploading files
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  if(schema.type === "string" && schema.format === "url" && schema.options && schema.options.upload === true) {
+    if(window.FileReader) return "upload";
+  }
+});
 // Use the table editor for arrays with the format set to `table`
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // Type `array` with format set to `table`
