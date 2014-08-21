@@ -232,6 +232,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     else {
       this.defaultProperties = this.schema.defaultProperties || Object.keys(this.schema.properties);
 
+      // Increase the grid width to account for padding
+      self.maxwidth += 1;
+
       $each(this.defaultProperties, function(i,key) {
         self.addObjectProperty(key, true, true);
 

@@ -41,7 +41,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     // Determine the default value of array element
     var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
-    this.width = tmp.getNumColumns();
+    this.width = tmp.getNumColumns() + 2;
     
     if(!this.options.compact) {
       this.title = this.theme.getHeader(this.getTitle());
