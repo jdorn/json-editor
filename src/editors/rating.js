@@ -11,62 +11,61 @@ JSONEditor.defaults.editors.rating = JSONEditor.defaults.editors.integer.extend(
       var style = document.createElement('style');
       style.id = styleId;
       style.type = 'text/css';
-      style.innerHTML = '\
-        .rating-container {\
-          display: inline-block;\
-          clear: both;\
-        }\
-        \
-        .rating {\
-          float:left;\
-        }\
-        \
-        /* :not(:checked) is a filter, so that browsers that don’t support :checked don’t\
-           follow these rules. Every browser that supports :checked also supports :not(), so\
-           it doesn’t make the test unnecessarily selective */\
-        .rating:not(:checked) > input {\
-          position:absolute;\
-          top:-9999px;\
-          clip:rect(0,0,0,0);\
-        }\
-        \
-        .rating:not(:checked) > label {\
-          float:right;\
-          width:1em;\
-          padding:0 .1em;\
-          overflow:hidden;\
-          white-space:nowrap;\
-          cursor:pointer;\
-          color:#ddd;\
-        }\
-        \
-        .rating:not(:checked) > label:before {\
-          content: "★ ";\
-        }\
-        \
-        .rating > input:checked ~ label {\
-          color: #FF7700;\
-        }\
-        \
-        .rating:not(:checked) > label:hover,\
-        .rating:not(:checked) > label:hover ~ label {\
-          color: #FFD308;\
-        }\
-        \
-        .rating > input:checked + label:hover,\
-        .rating > input:checked + label:hover ~ label,\
-        .rating > input:checked ~ label:hover,\
-        .rating > input:checked ~ label:hover ~ label,\
-        .rating > label:hover ~ input:checked ~ label {\
-          color: #ea0;\
-        }\
-        \
-        .rating > label:active {\
-          position:relative;\
-          top:2px;\
-          left:2px;\
-        }\
-        ';
+      style.innerHTML =
+        '      .rating-container {' +
+        '        display: inline-block;' +
+        '        clear: both;' +
+        '      }' +
+        '      ' +
+        '      .rating {' +
+        '        float:left;' +
+        '      }' +
+        '      ' +
+        '      /* :not(:checked) is a filter, so that browsers that don’t support :checked don’t' +
+        '         follow these rules. Every browser that supports :checked also supports :not(), so' +
+        '         it doesn’t make the test unnecessarily selective */' +
+        '      .rating:not(:checked) > input {' +
+        '        position:absolute;' +
+        '        top:-9999px;' +
+        '        clip:rect(0,0,0,0);' +
+        '      }' +
+        '      ' +
+        '      .rating:not(:checked) > label {' +
+        '        float:right;' +
+        '        width:1em;' +
+        '        padding:0 .1em;' +
+        '        overflow:hidden;' +
+        '        white-space:nowrap;' +
+        '        cursor:pointer;' +
+        '        color:#ddd;' +
+        '      }' +
+        '      ' +
+        '      .rating:not(:checked) > label:before {' +
+        '        content: \'★ \';' +
+        '      }' +
+        '      ' +
+        '      .rating > input:checked ~ label {' +
+        '        color: #FF7700;' +
+        '      }' +
+        '      ' +
+        '      .rating:not(:checked) > label:hover,' +
+        '      .rating:not(:checked) > label:hover ~ label {' +
+        '        color: #FFD308;' +
+        '      }' +
+        '      ' +
+        '      .rating > input:checked + label:hover,' +
+        '      .rating > input:checked + label:hover ~ label,' +
+        '      .rating > input:checked ~ label:hover,' +
+        '      .rating > input:checked ~ label:hover ~ label,' +
+        '      .rating > label:hover ~ input:checked ~ label {' +
+        '        color: #ea0;' +
+        '      }' +
+        '      ' +
+        '      .rating > label:active {' +
+        '        position:relative;' +
+        '        top:2px;' +
+        '        left:2px;' +
+        '      }';
       document.getElementsByTagName('head')[0].appendChild(style);
     }
 
