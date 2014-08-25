@@ -187,7 +187,6 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Use a specialized editor for ratings
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  // If the schema is a simple type
   if(schema.type === "integer" && schema.format === "rating") return "rating";
 });
 // Use the select editor for all boolean values
