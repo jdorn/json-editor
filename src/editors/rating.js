@@ -45,23 +45,23 @@ JSONEditor.defaults.editors.rating = JSONEditor.defaults.editors.integer.extend(
         '      }' +
         '      ' +
         '      .rating > input:checked ~ label {' +
-        '        color: #FF7700;' +
+        '        color: #FFB200;' +
         '      }' +
         '      ' +
-        '      .rating:not(:checked) > label:hover,' +
-        '      .rating:not(:checked) > label:hover ~ label {' +
-        '        color: #FFD308;' +
+        '      .rating:not([readOnly]):not(:checked) > label:hover,' +
+        '      .rating:not([readOnly]):not(:checked) > label:hover ~ label {' +
+        '        color: #FFDA00;' +
         '      }' +
         '      ' +
-        '      .rating > input:checked + label:hover,' +
-        '      .rating > input:checked + label:hover ~ label,' +
-        '      .rating > input:checked ~ label:hover,' +
-        '      .rating > input:checked ~ label:hover ~ label,' +
-        '      .rating > label:hover ~ input:checked ~ label {' +
-        '        color: #ea0;' +
+        '      .rating:not([readOnly]) > input:checked + label:hover,' +
+        '      .rating:not([readOnly]) > input:checked + label:hover ~ label,' +
+        '      .rating:not([readOnly]) > input:checked ~ label:hover,' +
+        '      .rating:not([readOnly]) > input:checked ~ label:hover ~ label,' +
+        '      .rating:not([readOnly]) > label:hover ~ input:checked ~ label {' +
+        '        color: #FF8C0D;' +
         '      }' +
         '      ' +
-        '      .rating > label:active {' +
+        '      .rating:not([readOnly])  > label:active {' +
         '        position:relative;' +
         '        top:2px;' +
         '        left:2px;' +
@@ -84,11 +84,6 @@ JSONEditor.defaults.editors.rating = JSONEditor.defaults.editors.integer.extend(
 
     if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
 
-    if(this.schema.readOnly || this.schema.readonly) {
-      this.always_disabled = true;
-      this.input.disabled = true;
-    }
-
     var max = this.schema.maximum ? this.schema.maximum : 5;
     if (this.schema.exclusiveMaximum) max--;
 
@@ -106,6 +101,14 @@ JSONEditor.defaults.editors.rating = JSONEditor.defaults.editors.integer.extend(
       label.setAttribute('for', id);
       label.appendChild(document.createTextNode(i + (i == 1 ? ' star' : ' stars')));
       group.appendChild(label);
+    }
+
+    if(this.schema.readOnly || this.schema.readonly) {
+      this.always_disabled = true;
+      $each(this.inputs,function(i,input) {
+        group.setAttribute("readOnly", "readOnly");
+        input.disabled = true;
+      });
     }
 
     ratingContainer
