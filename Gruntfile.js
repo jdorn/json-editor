@@ -27,6 +27,7 @@ module.exports = function(grunt) {
           'src/editors/string.js',
           'src/editors/number.js',
           'src/editors/integer.js',
+          'src/editors/rating.js',
           'src/editors/object.js',
           'src/editors/array.js',
           'src/editors/table.js',
