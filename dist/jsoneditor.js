@@ -216,7 +216,9 @@ JSONEditor.prototype = {
     this.refs = this.options.refs || {};
     this.uuid = 0;
     this.__data = {};
-    
+
+    this.propertySorter = this.getPropertySorter();
+
     var icon_class = JSONEditor.defaults.iconlibs[this.options.iconlib || JSONEditor.defaults.iconlib];
     if(icon_class) this.iconlib = new icon_class();
 
@@ -359,6 +361,22 @@ JSONEditor.prototype = {
   createEditor: function(editor_class, options) {
     options = $extend({},editor_class.options||{},options);
     return new editor_class(options);
+  },
+  getPropertySorter: function () {
+    var propertySorter;
+    var propertySorterOption = this.options.propertySorter;
+    if (typeof propertySorterOption === 'function') {
+      propertySorter = propertySorterOption;
+    }
+    else if (typeof propertySorterOption === 'string') {
+      propertySorter = JSONEditor.defaults.propertySorters[propertySorterOption];
+      if (! propertySorter) throw "Unknown property sorter " + propertySorter;
+    }
+    else {
+      // Default to sort editors by propertyOrder
+      propertySorter = JSONEditor.defaults.propertySorters.propertyOrder;
+    }
+    return propertySorter;
   },
   onChange: function() {
     if(!this.ready) return;
@@ -737,9 +755,27 @@ JSONEditor.defaults = {
   templates: {},
   iconlibs: {},
   editors: {},
+  propertySorters: {},
   languages: {},
   resolvers: [],
   custom_validators: []
+};
+
+JSONEditor.defaults.propertySorters.propertyOrder = function (editors) {
+  var property_order = Object.keys(editors);
+  return property_order.sort(function (a, b) {
+    var ordera = editors[a].schema.propertyOrder;
+    var orderb = editors[b].schema.propertyOrder;
+    if (typeof ordera !== "number") ordera = 1000;
+    if (typeof orderb !== "number") orderb = 1000;
+
+    return ordera - orderb;
+  });
+};
+
+JSONEditor.defaults.propertySorters.native = function (editors) {
+  var property_order = Object.keys(editors);
+  return property_order.sort();
 };
 
 JSONEditor.Validator = Class.extend({
@@ -2368,17 +2404,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     
     if(!this.row_container) return;
 
-    // Sort editors by propertyOrder
-    this.property_order = Object.keys(this.editors);
-    this.property_order = this.property_order.sort(function(a,b) {
-      var ordera = self.editors[a].schema.propertyOrder;
-      var orderb = self.editors[b].schema.propertyOrder;
-      if(typeof ordera !== "number") ordera = 1000;
-      if(typeof orderb !== "number") orderb = 1000;
+    this.property_order = self.jsoneditor.propertySorter(this.editors);
 
-      return ordera - orderb;
-    });
-    
     var container;
     
     if(this.format === 'grid') {
@@ -2556,17 +2583,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         }
       });
     }
-    
-    // Sort editors by propertyOrder
-    this.property_order = Object.keys(this.editors);
-    this.property_order = this.property_order.sort(function(a,b) {
-      var ordera = self.editors[a].schema.propertyOrder;
-      var orderb = self.editors[b].schema.propertyOrder;
-      if(typeof ordera !== "number") ordera = 1000;
-      if(typeof orderb !== "number") orderb = 1000;
 
-      return ordera - orderb;
-    });
+    this.property_order = self.jsoneditor.propertySorter(this.editors);
   },
   build: function() {
     var self = this;

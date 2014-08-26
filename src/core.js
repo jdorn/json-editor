@@ -19,7 +19,9 @@ JSONEditor.prototype = {
     this.refs = this.options.refs || {};
     this.uuid = 0;
     this.__data = {};
-    
+
+    this.propertySorter = this.getPropertySorter();
+
     var icon_class = JSONEditor.defaults.iconlibs[this.options.iconlib || JSONEditor.defaults.iconlib];
     if(icon_class) this.iconlib = new icon_class();
 
@@ -162,6 +164,22 @@ JSONEditor.prototype = {
   createEditor: function(editor_class, options) {
     options = $extend({},editor_class.options||{},options);
     return new editor_class(options);
+  },
+  getPropertySorter: function () {
+    var propertySorter;
+    var propertySorterOption = this.options.propertySorter;
+    if (typeof propertySorterOption === 'function') {
+      propertySorter = propertySorterOption;
+    }
+    else if (typeof propertySorterOption === 'string') {
+      propertySorter = JSONEditor.defaults.propertySorters[propertySorterOption];
+      if (! propertySorter) throw "Unknown property sorter " + propertySorter;
+    }
+    else {
+      // Default to sort editors by propertyOrder
+      propertySorter = JSONEditor.defaults.propertySorters.propertyOrder;
+    }
+    return propertySorter;
   },
   onChange: function() {
     if(!this.ready) return;
@@ -540,6 +558,7 @@ JSONEditor.defaults = {
   templates: {},
   iconlibs: {},
   editors: {},
+  propertySorters: {},
   languages: {},
   resolvers: [],
   custom_validators: []
