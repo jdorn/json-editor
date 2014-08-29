@@ -334,7 +334,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           emoticonsEnabled: false,
           width: '100%',
           height: 300
-        },JSONEditor.plugins.sceditor);
+        },JSONEditor.plugins.sceditor,self.options.sceditor_options||{});
         
         window.jQuery(self.input).sceditor(options);
         
