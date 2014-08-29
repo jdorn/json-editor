@@ -144,7 +144,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         if(this.enumSource[i].title) {
           this.enumSource[i].title = this.jsoneditor.compileTemplate(this.enumSource[i].title, this.template_engine);
         }
-        if(this.enumSource[i].fillter) {
+        if(this.enumSource[i].filter) {
           this.enumSource[i].filter = this.jsoneditor.compileTemplate(this.enumSource[i].filter, this.template_engine);
         }
       }
