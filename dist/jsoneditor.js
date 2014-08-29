@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.7 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.8 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-08-21
+ * Date: 2014-08-28
  */
 
 /**
@@ -1863,7 +1863,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         if(this.enumSource[i].title) {
           this.enumSource[i].title = this.jsoneditor.compileTemplate(this.enumSource[i].title, this.template_engine);
         }
-        if(this.enumSource[i].fillter) {
+        if(this.enumSource[i].filter) {
           this.enumSource[i].filter = this.jsoneditor.compileTemplate(this.enumSource[i].filter, this.template_engine);
         }
       }
@@ -2053,7 +2053,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           emoticonsEnabled: false,
           width: '100%',
           height: 300
-        },JSONEditor.plugins.sceditor);
+        },JSONEditor.plugins.sceditor,self.options.sceditor_options||{});
         
         window.jQuery(self.input).sceditor(options);
         
@@ -4615,7 +4615,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     return 4;
   },
   build: function() {
-    var container = this.getContainer();
+    var container = this.container;
     this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     this.container.appendChild(this.title);
 
@@ -4645,6 +4645,8 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     this.display_area.style.paddingTop = 0;
     this.display_area.style.paddingBottom = 0;
     this.container.appendChild(this.display_area);
+    
+    if(this.options.hide_display) this.display_area.style.display = "none";
 
     this.switcher.addEventListener('change',function() {
       self.selected = self.select_options.indexOf(this.value);
