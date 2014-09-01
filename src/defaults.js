@@ -166,6 +166,9 @@ JSONEditor.plugins = {
   },
   sceditor: {
 
+  },
+  select2: {
+    
   }
 };
 
@@ -215,6 +218,10 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type == "array" && schema.format == "table") {
     return "table";
   }
+});
+// Use the `select` editor for dynamic enumSource enums
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  if(schema.enumSource) return "select";
 });
 // Use the `enum` or `select` editors for schemas with enumerated properties
 JSONEditor.defaults.resolvers.unshift(function(schema) {
