@@ -305,17 +305,17 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     $each(value,function(i,val) {
       if(self.rows[i]) {
         // TODO: don't set the row's value if it hasn't changed
-        self.rows[i].setValue(val);
+        self.rows[i].setValue(val,initial);
       }
       else if(self.row_cache[i]) {
         self.rows[i] = self.row_cache[i];
-        self.rows[i].setValue(val);
+        self.rows[i].setValue(val,initial);
         self.rows[i].container.style.display = '';
         if(self.rows[i].tab) self.rows[i].tab.style.display = '';
         self.rows[i].register();
       }
       else {
-        self.addRow(val);
+        self.addRow(val,initial);
       }
     });
 
@@ -431,7 +431,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       }
     }
   },
-  addRow: function(value) {
+  addRow: function(value, initial) {
     var self = this;
     var i = this.rows.length;
     
@@ -550,7 +550,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       }
     }
 
-    if(value) self.rows[i].setValue(value);
+    if(value) self.rows[i].setValue(value, initial);
     self.refreshTabs();
   },
   addControls: function() {
