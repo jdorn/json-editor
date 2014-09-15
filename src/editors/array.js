@@ -339,8 +339,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
 
     self.refreshValue(initial);
     self.refreshTabs();
-    
-    self.jsoneditor.notifyWatchers(self.path);
+
+    self.onChange();
     
     // TODO: sortable
   },
@@ -488,9 +488,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
           self.active_tab = new_active_tab;
           self.refreshTabs();
         }
-        
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
+
+        self.onChange(true);
       });
       
       if(controls_holder) {
@@ -517,8 +516,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.active_tab = self.rows[i-1].tab;
         self.refreshTabs();
 
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
+        self.onChange(true);
       });
       
       if(controls_holder) {
@@ -544,8 +542,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.setValue(rows);
         self.active_tab = self.rows[i+1].tab;
         self.refreshTabs();
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
+        self.onChange(true);
       });
       
       if(controls_holder) {
@@ -617,9 +614,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       self.active_tab = self.rows[i].tab;
       self.refreshTabs();
       self.refreshValue();
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
-      self.jsoneditor.notifyWatchers(self.path);
+      self.onChange(true);
     });
     self.controls.appendChild(this.add_row_button);
 
@@ -638,8 +633,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.active_tab = new_active_tab;
         self.refreshTabs();
       }
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+      self.onChange(true);
     });
     self.controls.appendChild(this.delete_last_row_button);
 
@@ -648,8 +642,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       e.preventDefault();
       e.stopPropagation();
       self.setValue([]);
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+      self.onChange(true);
     });
     self.controls.appendChild(this.remove_all_rows_button);
 

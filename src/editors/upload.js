@@ -27,6 +27,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
           fr.onload = function(evt) {
             self.preview_value = evt.target.result;
             self.refreshPreview();
+            self.onChange(true);
             fr = null;
           };
           fr.readAsDataURL(this.files[0]);
@@ -119,8 +120,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     if(this.value !== val) {
       this.value = val;
       this.input.value = this.value;
-      this.watch_listener();
-      this.jsoneditor.notifyWatchers(this.path);
+      this.onChange();
     }
   },
   destroy: function() {

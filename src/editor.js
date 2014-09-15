@@ -3,10 +3,7 @@
  */
 JSONEditor.AbstractEditor = Class.extend({
   onChildEditorChange: function(editor) {
-    if(!this.watch_listener) return;
-    this.watch_listener();
-    this.notify();
-    this.change();
+    this.onChange(true);
   },
   notify: function() {
     this.jsoneditor.notifyWatchers(this.path);
@@ -15,8 +12,14 @@ JSONEditor.AbstractEditor = Class.extend({
     if(this.parent) this.parent.onChildEditorChange(this);
     else this.jsoneditor.onChange();
   },
+  onChange: function(bubble) {
+    this.notify();
+    if(this.watch_listener) this.watch_listener();
+    if(bubble) this.change();
+  },
   register: function() {
     this.jsoneditor.registerEditor(this);
+    this.onChange();
   },
   unregister: function() {
     if(!this.jsoneditor) return;
@@ -62,13 +65,12 @@ JSONEditor.AbstractEditor = Class.extend({
     
   },
   postBuild: function() {
-    this.register();
     this.setupWatchListeners();
     this.addLinks();
     this.setValue(this.getDefault(), true);
     this.updateHeaderText();
-    this.jsoneditor.notifyWatchers(this.path);
-    this.watch_listener();
+    this.register();
+    this.onWatchedFieldChange();
   },
   
   setupWatchListeners: function() {

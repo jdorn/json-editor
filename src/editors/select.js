@@ -15,7 +15,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     if(this.select2) this.select2.select2('val',this.input.value);
     this.value = sanitized;
-    this.jsoneditor.notifyWatchers(this.path);
+    this.onChange();
   },
   register: function() {
     this._super();
@@ -172,11 +172,8 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     }
 
     this.value = this.enum_values[this.enum_options.indexOf(val)];
-    
-    this.watch_listener();
-    this.notify();
-    if(this.parent) this.parent.onChildEditorChange(this);
-    else this.jsoneditor.onChange();
+
+    this.onChange(true);
   },
   setupSelect2: function() {
     // If the Select2 library is loaded use it when we have lots of items
@@ -295,6 +292,8 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       
       this.setupSelect2();
     }
+
+    this._super();
   },
   enable: function() {
     if(!this.always_disabled) {
