@@ -643,6 +643,17 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
     this._super();
   },
+  getValue: function() {
+    var result = this._super();
+    if(this.jsoneditor.options.remove_empty_properties || this.options.remove_empty_properties) {
+      for(var i in result) {
+        if(result.hasOwnProperty(i)) {
+          if(!result[i]) delete result[i];
+        }
+      }
+    }
+    return result;
+  },
   refreshValue: function() {
     this.value = {};
     var self = this;
