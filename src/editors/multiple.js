@@ -65,9 +65,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       else editor.container.style.display = 'none';
     });
     self.refreshValue();
-    if(self.watch_listener) self.watch_listener();
-    self.notify();
-    self.change();
+    self.refreshHeaderText();
   },
   buildChildEditor: function(i) {
     var self = this;
@@ -173,6 +171,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       e.stopPropagation();
       
       self.switchEditor(self.display_text.indexOf(this.value));
+      self.onChange(true);
     });
     this.switcher.style.marginBottom = 0;
     this.switcher.style.width = 'auto';
@@ -205,14 +204,11 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     });
     
     this.switchEditor(0);
-
-    this.refreshValue();
-    this.refreshHeaderText();
   },
   onChildEditorChange: function(editor) {
     if(this.editors[this.type]) {
-      this.refreshHeaderText();
       this.refreshValue();
+      this.refreshHeaderText();
     }
     
     this._super();
@@ -242,9 +238,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    this.watch_listener();
-    this.notify();
-    
+    self.onChange();
   },
   destroy: function() {
     $each(this.editors, function(type,editor) {

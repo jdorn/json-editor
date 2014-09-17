@@ -144,18 +144,6 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     this._super();
   },
-  empty: function() {
-    if(!this.rows) return;
-    var self = this;
-    $each(this.rows,function(i,row) {
-      if(!self.item_has_child_editors) {
-        row.row.parentNode.removeChild(row.row);
-      }
-      row.destroy();
-      self.rows[i] = null;
-    });
-    self.rows = [];
-  },
   setValue: function(value, initial) {
     // Update the array's value, adding/removing rows when necessary
     value = value || [];
@@ -202,7 +190,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     self.refreshValue();
     if(numrows_changed || initial) self.refreshRowButtons();
 
-    self.jsoneditor.notifyWatchers(self.path);
+    self.onChange();
           
     // TODO: sortable
   },
@@ -343,9 +331,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
           newval.push(row);
         });
         self.setValue(newval);
-        
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
+        self.onChange(true);
       });
       controls_holder.appendChild(self.rows[i].delete_button);
     }
@@ -367,8 +353,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
         rows[i] = tmp;
 
         self.setValue(rows);
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
+        self.onChange(true);
       });
       controls_holder.appendChild(self.rows[i].moveup_button);
     }
@@ -388,15 +373,12 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
         rows[i] = tmp;
 
         self.setValue(rows);
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
+        self.onChange(true);
       });
       controls_holder.appendChild(self.rows[i].movedown_button);
     }
 
     if(value) self.rows[i].setValue(value);
-    
-    self.jsoneditor.notifyWatchers(self.path);
   },
   addControls: function() {
     var self = this;
@@ -444,8 +426,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       self.addRow();
       self.refreshValue();
       self.refreshRowButtons();
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+      self.onChange(true);
     });
     self.controls.appendChild(this.add_row_button);
 
@@ -457,8 +438,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       var rows = self.getValue();
       rows.pop();
       self.setValue(rows);
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+      self.onChange(true);
     });
     self.controls.appendChild(this.delete_last_row_button);
 
@@ -468,8 +448,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       e.stopPropagation();
       
       self.setValue([]);
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+      self.onChange(true);
     });
     self.controls.appendChild(this.remove_all_rows_button);
   }

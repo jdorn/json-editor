@@ -65,10 +65,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       }
 
       self.updateValue(new_value);
-
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
-      self.jsoneditor.notifyWatchers(self.path);
+      self.onChange(true);
     });
   },
   setValue: function(value, initial) {
@@ -89,12 +86,8 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       this.select_options[i][this.input_type === "select"? "selected" : "checked"] = (value.indexOf(i) !== -1);
     }
 
-    if(this.updateValue(value)) {
-      if(this.parent) this.onChildEditorChange(this);
-      else this.jsoneditor.onChange();
-    }
-
-    this.jsoneditor.notifyWatchers(this.path);
+    this.updateValue(value);
+    this.onChange();
   },
   register: function() {
     this._super();

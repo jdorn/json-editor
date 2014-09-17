@@ -218,7 +218,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // `maximum`
-      if(schema.maximum) {
+      if(schema.hasOwnProperty('maximum')) {
         if(schema.exclusiveMaximum && value >= schema.maximum) {
           errors.push({
             path: path,
@@ -236,7 +236,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // `minimum`
-      if(schema.minimum) {
+      if(schema.hasOwnProperty('minimum')) {
         if(schema.exclusiveMinimum && value <= schema.minimum) {
           errors.push({
             path: path,

@@ -41,9 +41,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
       self.selected = self.select_options.indexOf(this.value);
       self.value = self.enum[self.selected];
       self.refreshValue();
-      
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
+      self.onChange(true);
     });
     this.value = this.enum[0];
     this.refreshValue();
@@ -123,7 +121,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     if(this.value !== val) {
       this.value = val;
       this.refreshValue();
-      this.jsoneditor.notifyWatchers(this.path);
+      this.onChange();
     }
   },
   destroy: function() {

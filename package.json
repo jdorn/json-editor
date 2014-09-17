@@ -1,5 +1,28 @@
 {
-  "name": "jquery-jsoneditor",
+  "name": "json-editor",
+  "title": "JSONEditor",
+  "description": "JSON Schema based editor",
+  "version": "0.7.10",
+  "main": "dist/jsoneditor.js",
+  "author": {
+    "name": "Jeremy Dorn",
+    "email": "jeremy@jeremydorn.com",
+    "url": "http://jeremydorn.com"
+  },
+  "bugs": {
+    "url": "https://github.com/jdorn/json-editor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jdorn/json-editor.git"
+  },
+  "keywords": [
+    "json",
+    "schema",
+    "jsonschema",
+    "editor"
+  ],
+  "license": "MIT",
   "engines": {
     "node": ">= 0.8.0"
   },
@@ -9,5 +32,10 @@
     "grunt-contrib-watch": "~0.5.3",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt": "~0.4.2"
+  },
+  "scripts": {
+    "build": "npm install && grunt",
+    "start": "grunt watch",
+    "test": "grunt"
   }
 }

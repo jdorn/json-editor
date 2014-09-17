@@ -26,10 +26,7 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
           fr.onload = function(evt) {
             self.value = evt.target.result;
             self.refreshPreview();
-            self.watch_listener();
-            self.jsoneditor.notifyWatchers(self.path);
-            if(self.parent) self.parent.onChildEditorChange(self);
-            else self.jsoneditor.onChange();
+            self.onChange(true);
             fr = null;
           };
           fr.readAsDataURL(this.files[0]);
@@ -82,8 +79,7 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
       this.value = val;
       this.input.value = this.value;
       this.refreshPreview();
-      this.watch_listener();
-      this.jsoneditor.notifyWatchers(this.path);
+      this.onChange();
     }
   },
   destroy: function() {

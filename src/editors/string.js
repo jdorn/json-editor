@@ -24,14 +24,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     // Sanitize value before setting it
     var sanitized = this.sanitize(value);
-    if(this.select_options && this.select_options.indexOf(sanitized) < 0) {
-      sanitized = this.select_options[0];
-    }
 
     if(this.input.value === sanitized) {
       return;
     }
-    
 
     this.input.value = sanitized;
     
@@ -52,14 +48,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     if(initial) this.is_dirty = false;
     else if(this.jsoneditor.options.show_errors === "change") this.is_dirty = true;
-    
-    if(changed) {
-      if(self.parent) self.parent.onChildEditorChange(self);
-      else self.jsoneditor.onChange();
-    }
-    
-    this.watch_listener();
-    this.jsoneditor.notifyWatchers(this.path);
+
+    // Bubble this setValue to parents if the value changed
+    this.onChange(changed);
   },
   getNumColumns: function() {
     var min = Math.ceil(Math.max(this.getTitle().length,this.schema.maxLength||0,this.schema.minLength||0)/5);
@@ -87,70 +78,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.format = this.options.format;
     }
 
-    // Select box
-    if(this.schema.enum) {
-      this.input_type = 'select';
-      this.select_options = this.schema.enum;
-      this.input = this.theme.getSelectInput(this.select_options);
-    }
-    // Dynamic Select box
-    else if(this.schema.enumSource) {
-      this.input_type = 'select';
-      this.input = this.theme.getSelectInput([]);
-      this.enumSource = [];
-      
-      // Shortcut declaration for using a single array
-      if(!(Array.isArray(this.schema.enumSource))) {
-        if(this.schema.enumValue) {
-          this.enumSource = [
-            {
-              source: this.schema.enumSource,
-              value: this.schema.enumValue
-            }
-          ];
-        }
-        else {
-          this.enumSource = [
-            {
-              source: this.schema.enumSource
-            }
-          ];
-        }
-      }
-      else {
-        for(i=0; i<this.schema.enumSource.length; i++) {
-          // Shorthand for watched variable
-          if(typeof this.schema.enumSource[i] === "string") {
-            this.enumSource[i] = {
-              source: this.schema.enumSource[i]
-            };
-          }
-          // Make a copy of the schema
-          else if(!(Array.isArray(this.schema.enumSource[i]))) {
-            this.enumSource[i] = $extend({},this.schema.enumSource[i]);
-          }
-          else {
-            this.enumSource[i] = this.schema.enumSource[i];
-          }
-        }
-      }
-      
-      // Now, enumSource is an array of sources
-      // Walk through this array and fix up the values
-      for(i=0; i<this.enumSource.length; i++) {
-        if(this.enumSource[i]) {
-          this.enumSource[i].value = this.jsoneditor.compileTemplate(this.enumSource[i].value, this.template_engine);
-        }
-        if(this.enumSource[i].title) {
-          this.enumSource[i].title = this.jsoneditor.compileTemplate(this.enumSource[i].title, this.template_engine);
-        }
-        if(this.enumSource[i].filter) {
-          this.enumSource[i].filter = this.jsoneditor.compileTemplate(this.enumSource[i].filter, this.template_engine);
-        }
-      }
-    }
     // Specific format
-    else if(this.format) {
+    if(this.format) {
       // Text Area
       if(this.format === 'textarea') {
         this.input_type = 'textarea';
@@ -274,21 +203,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         self.is_dirty = true;
 
         self.refreshValue();
-        self.watch_listener();
-        self.jsoneditor.notifyWatchers(self.path);
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
+        self.onChange(true);
       });
 
     if(this.format) this.input.setAttribute('data-schemaformat',this.format);
 
     this.control = this.theme.getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
-
-    // If the Select2 library is loaded
-    if(this.input_type === "select" && window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-      window.jQuery(this.input).select2();
-    }
 
     // Any special formatting that needs to happen after the input is added to the dom
     window.requestAnimationFrame(function() {
@@ -349,9 +270,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           self.input.value = val.html();
           self.value = self.input.value;
           self.is_dirty = true;
-          if(self.parent) self.parent.onChildEditorChange(self);
-          else self.jsoneditor.onChange();
-          self.jsoneditor.notifyWatchers(self.path);
+          self.onChange(true);
         });
       }
       // EpicEditor for markdown (if it's loaded)
@@ -374,9 +293,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           self.input.value = val;
           self.value = val;
           self.is_dirty = true;
-          if(self.parent) self.parent.onChildEditorChange(self);
-          else self.jsoneditor.onChange();
-          self.jsoneditor.notifyWatchers(self.path);
+          self.onChange(true);
         });
       }
       // ACE editor for everything else
@@ -409,9 +326,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           self.input.value = val;
           self.refreshValue();
           self.is_dirty = true;
-          if(self.parent) self.parent.onChildEditorChange(self);
-          else self.jsoneditor.onChange();
-          self.jsoneditor.notifyWatchers(self.path);
+          self.onChange(true);
         });
       }
     }
@@ -459,88 +374,6 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.template) {
       vars = this.getWatchedFieldValues();
       this.setValue(this.template(vars),false,true);
-    }
-    // If this editor uses a dynamic select box
-    if(this.enumSource) {
-      vars = this.getWatchedFieldValues();
-      var select_options = [];
-      var select_titles = [];
-      
-      for(var i=0; i<this.enumSource.length; i++) {
-        // Constant values
-        if(Array.isArray(this.enumSource[i])) {
-          select_options = select_options.concat(this.enumSource[i]);
-          select_titles = select_titles.concat(this.enumSource[i]);
-        }
-        // A watched field
-        else if(vars[this.enumSource[i].source]) {
-          var items = vars[this.enumSource[i].source];
-          
-          // Only use a predefined part of the array
-          if(this.enumSource[i].slice) {
-            items = Array.prototype.slice.apply(items,this.enumSource[i].slice);
-          }
-          // Filter the items
-          if(this.enumSource[i].filter) {
-            var new_items = [];
-            for(j=0; j<items.length; j++) {
-              if(this.enumSource[i].filter({i:j,item:items[j]})) new_items.push(items[j]);
-            }
-            items = new_items;
-          }
-          
-          var item_titles = [];
-          var item_values = [];
-          for(j=0; j<items.length; j++) {
-            var item = items[j];
-            
-            // Rendered value
-            if(this.enumSource[i].value) {
-              item_values[j] = this.enumSource[i].value({
-                i: j,
-                item: item
-              });
-            }
-            // Use value directly
-            else {
-              item_values[j] = items[j];
-            }
-            
-            // Rendered title
-            if(this.enumSource[i].title) {
-              item_titles[j] = this.enumSource[i].title({
-                i: j,
-                item: item
-              });
-            }
-            // Use value as the title also
-            else {
-              item_titles[j] = item_values[j];
-            }
-          }
-          
-          // TODO: sort
-          
-          select_options = select_options.concat(item_values);
-          select_titles = select_titles.concat(item_titles);
-        }
-      }
-      
-      this.theme.setSelectOptions(this.input, select_options, select_titles);
-      this.select_options = select_options;
-      
-      // If the previous value is still in the new select options, stick with it
-      if(select_options.indexOf(this.value) !== -1) {
-        this.input.value = this.value;
-      }
-      // Otherwise, set the value to the first select option
-      else {
-        this.input.value = select_options[0];
-        this.value = select_options[0] || "";  
-        if(this.parent) this.parent.onChildEditorChange(this);
-        else this.jsoneditor.onChange();
-        this.jsoneditor.notifyWatchers(this.path);
-      }
     }
     
     this._super();

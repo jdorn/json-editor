@@ -236,7 +236,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       self.maxwidth += 1;
 
       $each(this.defaultProperties, function(i,key) {
-        self.addObjectProperty(key, true, true);
+        self.addObjectProperty(key, true);
 
         if(self.editors[key]) {
           self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
@@ -338,6 +338,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           if(self.editors[self.addproperty_input.value]) {
             self.editors[self.addproperty_input.value].disable();
           }
+          self.onChange(true);
         }
       });
       this.addproperty_holder.appendChild(this.addproperty_list);
@@ -526,6 +527,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       else {
         self.removeObjectProperty(key);
       }
+      self.onChange(true);
     });
     self.addproperty_checkboxes[key] = checkbox;
     
@@ -567,12 +569,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       delete this.editors[property];
       
       this.refreshValue();
-      this.notify();
-      this.change();      
       this.layoutEditors();
     }
   },
-  addObjectProperty: function(name, prebuild_only, bulk) {
+  addObjectProperty: function(name, prebuild_only) {
     var self = this;
     
     // Property is already added
@@ -583,7 +583,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.editors[name] = this.cached_editors[name];
       if(prebuild_only) return;
       this.editors[name].register();
-      this.jsoneditor.notifyWatchers(this.editors[name].path);
     }
     // New property
     else {
@@ -617,10 +616,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     
     // If we're only prebuilding the editors, don't refresh values
-    if(!prebuild_only && !bulk) {
+    if(!prebuild_only) {
       self.refreshValue();
-      self.notify();
-      self.change();      
       self.layoutEditors();
     }
   },
@@ -645,6 +642,17 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this.editor_holder = null;
 
     this._super();
+  },
+  getValue: function() {
+    var result = this._super();
+    if(this.jsoneditor.options.remove_empty_properties || this.options.remove_empty_properties) {
+      for(var i in result) {
+        if(result.hasOwnProperty(i)) {
+          if(!result[i]) delete result[i];
+        }
+      }
+    }
+    return result;
   },
   refreshValue: function() {
     this.value = {};
@@ -777,8 +785,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     });
     
     this.refreshValue();
-    this.notify();
     this.layoutEditors();
+    this.onChange();
   },
   showValidationErrors: function(errors) {
     var self = this;
