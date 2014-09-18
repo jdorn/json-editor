@@ -121,6 +121,11 @@ Here are all the available options:
     <td><code>null</code></td>
   </tr>
   <tr>
+    <td>keep_empty_properties_by_default</td>
+    <td>When property exists in schema but not in value object it's editor is not displayed by default. Set this property to true to keep the editor.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
     <td>no_additional_properties</td>
     <td>If <code>true</code>, objects can only contain properties defined with the <code>properties</code> keyword.</td>
     <td><code>false</code></td>

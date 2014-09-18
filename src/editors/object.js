@@ -748,8 +748,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         self.addObjectProperty(i);
         editor.setValue(value[i],initial);
       }
-      // Otherwise, remove value unless this is the initial set or it's required
-      else if(!initial && !self.isRequired(editor)) {
+      // Otherwise, remove value unless this is the initial set or it's required, or user explicitly does not wish that
+      else if(!initial && !self.jsoneditor.options.keep_empty_properties_by_default && !self.isRequired(editor)) {
         self.removeObjectProperty(i);
       }
       // Otherwise, set the value to the default
