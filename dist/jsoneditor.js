@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.10 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.11 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-09-15
+ * Date: 2014-09-28
  */
 
 /**
@@ -153,8 +153,9 @@ var $extend = function(destination) {
   for(i=1; i<arguments.length; i++) {
     source = arguments[i];
     for (property in source) {
+      if(!source.hasOwnProperty(property)) continue;
       if(source[property] && $isplainobject(source[property])) {
-        destination[property] = destination[property] || {};
+        if(!destination.hasOwnProperty(property)) destination[property] = {};
         $extend(destination[property], source[property]);
       }
       else {
@@ -1366,7 +1367,7 @@ JSONEditor.AbstractEditor = Class.extend({
     };
     
     this.register();
-    if(this.schema.watch) {
+    if(this.schema.hasOwnProperty('watch')) {
       var path,path_parts,first,root,adjusted_path;
 
       for(var name in this.schema.watch) {
