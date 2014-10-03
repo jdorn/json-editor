@@ -188,7 +188,7 @@ Instead of getting/setting the value of the entire editor, you can also work on 
 // Get a reference to a node within the editor
 var name = editor.getEditor('root.name');
 
-// name will be null if the path is invalid
+// `getEditor` will return null if the path is invalid
 if(name) {
   name.setValue("John Smith");
   
@@ -199,7 +199,9 @@ if(name) {
 
 ### Validate
 
-When feasible, JSON Editor won't let users enter invalid data.
+When feasible, JSON Editor won't let users enter invalid data.  This is done by 
+using input masks and intelligently enabling/disabling controls.
+
 However, in some cases it is still possible to enter data that doesn't validate against the schema.
 
 You can use the `validate` method to check if the data is valid or not.
@@ -277,7 +279,7 @@ if(editor.isEnabled()) alert("It's editable!");
 
 ### Destroy
 
-This removes the editor HTML from the DOM and frees up memory.
+This removes the editor HTML from the DOM and frees up resources.
 
 ```javascript
 editor.destroy();
@@ -423,7 +425,7 @@ Show a video preview (using HTML5 video)
 }
 ```
 
-The `href` property is a template that gets re-evaluated everytime the value changes.
+The `href` property is a template that gets re-evaluated every time the value changes.
 The variable `self` is always available.  Look at the __Dependencies__ section below for how to include other fields or use a custom template engine.
 
 ### Property Ordering
@@ -495,7 +497,6 @@ JSON Editor uses HTML5 input types, so some of these may render as basic text in
 *  datetime
 *  datetime-local
 *  email
-*  hidden
 *  month
 *  number
 *  range
@@ -534,6 +535,12 @@ __SCEditor__ provides WYSIWYG editing of HTML and BBCode.  To use it, set the fo
     "wysiwyg": true
   }
 }
+```
+
+You can configure SCEditor by setting configuration options in `JSONEditor.plugins.sceditor`.  Here's an example:
+
+```js
+JSONEditor.plugins.sceditor.emoticonsEnabled = false;
 ```
 
 __EpicEditor__ is a simple Markdown editor with live preview.  To use it, set the format to `markdown`:
