@@ -275,6 +275,7 @@ editor.on("change",  function() {
             schema: schema,
             startval: startval
         });
+        window.jsoneditor = jsoneditor;
 
         // When the value of the editor changes, update the JSON output and validation message
         jsoneditor.on('change',function() {

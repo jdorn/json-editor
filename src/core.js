@@ -109,6 +109,8 @@ JSONEditor.prototype = {
     this.callbacks = this.callbacks || {};
     this.callbacks[event] = this.callbacks[event] || [];
     this.callbacks[event].push(callback);
+    
+    return this;
   },
   off: function(event, callback) {
     // Specific callback
@@ -131,6 +133,8 @@ JSONEditor.prototype = {
     else {
       this.callbacks = {};
     }
+    
+    return this;
   },
   trigger: function(event) {
     if(this.callbacks && this.callbacks[event] && this.callbacks[event].length) {
@@ -138,6 +142,20 @@ JSONEditor.prototype = {
         this.callbacks[event][i]();
       }
     }
+    
+    return this;
+  },
+  setOption: function(option, value) {
+    if(option === "show_errors") {
+      this.options.show_errors = value;
+      this.onChange();
+    }
+    // Only the `show_errors` option is supported for now
+    else {
+      throw "Option "+option+" must be set during instantiation and cannot be changed later";
+    }
+    
+    return this;
   },
   getEditorClass: function(schema) {
     var classname;
@@ -180,10 +198,15 @@ JSONEditor.prototype = {
       if(self.options.show_errors !== "never") {
         self.root.showValidationErrors(self.validation_results);
       }
+      else {
+        self.root.showValidationErrors([]);
+      }
       
       // Fire change event
       self.trigger('change');
     });
+    
+    return this;
   },
   compileTemplate: function(template, name) {
     name = name || JSONEditor.defaults.template;
@@ -489,10 +512,10 @@ JSONEditor.prototype = {
           }, []);
         }
         // Type should be intersected and is either an array or string
-        else if(prop === 'type') {
+        else if(prop === 'type' && (typeof val === "string" || Array.isArray(val))) {
           // Make sure we're dealing with arrays
-          if(typeof val !== "object") val = [val];
-          if(typeof obj2.type !== "object") obj2.type = [obj2.type];
+          if(typeof val === "string") val = [val];
+          if(typeof obj2.type === "string") obj2.type = [obj2.type];
 
 
           extended.type = val.filter(function(n) {
