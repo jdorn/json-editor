@@ -30,6 +30,7 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   init: function(options) {
     this.jsoneditor = options.jsoneditor;
+    this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
     
     this.theme = this.jsoneditor.theme;
     this.template_engine = this.jsoneditor.template;

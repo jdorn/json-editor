@@ -71,7 +71,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     }
     // Boolean
     else if(this.schema.type === "boolean") {
-      self.enum_display = ['true','false'];
+      self.enum_display = [this.translate('true'), this.translate('false')];
       self.enum_options = ['1',''];
       self.enum_values = [true,false];
     }

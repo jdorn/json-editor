@@ -79,7 +79,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     var self = this;
 
     if(el === null) {
-      return '<em>null</em>';
+      return '<em>' + this.translate('null') + '</em>';
     }
     // Array or Object
     else if(typeof el === "object") {
@@ -106,7 +106,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     }
     // Boolean
     else if(typeof el === "boolean") {
-      return el? 'true' : 'false';
+      return el? this.translate('true') : this.translate('false');
     }
     // String
     else if(typeof el === "string") {

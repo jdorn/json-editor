@@ -14,7 +14,10 @@ JSONEditor.defaults.translate = function(key, variables) {
   
   var string = lang[key] || JSONEditor.defaults.languages[JSONEditor.defaults.default_language][key];
   
-  if(typeof string === "undefined") throw "Unknown translate string "+key;
+  if(typeof string === "undefined") {
+    window.console.log("Unkown translate string [" + key + "]");
+    return key;
+  }
   
   if(variables) {
     for(var i=0; i<variables.length; i++) {
@@ -154,6 +157,24 @@ JSONEditor.defaults.languages.en = {
    * @variables This key takes one variable: The name of the missing property for the dependency
    */
   error_dependency: "Must have property {{0}}"
+};
+JSONEditor.defaults.languages.fr = {
+  'Move up': 'Monter',
+  'Move down': 'Descendre',
+  'Delete': 'Retirer',
+  'Expand': 'Étendre',
+  'Collapse': 'Replier',
+  'Add ': 'Ajout ',
+  'Delete Last ': 'Retirer le dernier ',
+  'Delete All': 'Tout retirer',
+  'true': 'vrai',
+  'false': 'faux',
+  'Save': 'Enregistrer',
+  'Cancel': 'Annuler',
+  'Property name...': 'Nom de la propriété',
+  'Edit JSON': 'Éditer le JSON',
+  'Object Properties': 'Propriétés de l\'objet',
+  'add': 'ajouter'
 };
 
 // Miscellaneous Plugin Settings
