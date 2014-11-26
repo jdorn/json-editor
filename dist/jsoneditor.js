@@ -215,6 +215,7 @@ JSONEditor.prototype = {
     this.theme = new theme_class();
     this.template = this.options.template;
     this.refs = this.options.refs || {};
+    this.loadFlags = {};
     this.uuid = 0;
     this.__data = {};
     
@@ -228,7 +229,6 @@ JSONEditor.prototype = {
 
     // Fetch all external refs via ajax
     this._loadExternalRefs(this.schema, function() {
-      self._getDefinitions(self.schema);
       self.validator = new JSONEditor.Validator(self);
       
       // Create the root editor
@@ -553,9 +553,9 @@ JSONEditor.prototype = {
     var done = 0, waiting = 0, callback_fired = false;
     
     $each(refs,function(url) {
-      if(self.refs[url]) return;
+      if(self.loadFlags[url]) return;
       if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
-      self.refs[url] = 'loading';
+      self.loadFlags[url] = 'loading';
       waiting++;
 
       var r = new XMLHttpRequest(); 
@@ -574,11 +574,14 @@ JSONEditor.prototype = {
           }
           if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+url;
           
-          self.refs[url] = response;
+          self.loadFlags[url] = "loaded";
           self._loadExternalRefs(response,function() {
             done++;
             if(done >= waiting && !callback_fired) {
               callback_fired = true;
+              var index = url.lastIndexOf(".json");
+              if (index == -1) throw "invalid external reference url";
+              self._getDefinitions(response, url.substring(0, index + 5) + "#/definitions/");
               callback();
             }
           });
@@ -593,6 +596,7 @@ JSONEditor.prototype = {
     });
     
     if(!waiting) {
+      this._getDefinitions(schema);
       callback();
     }
   },
