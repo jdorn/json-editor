@@ -378,12 +378,12 @@ JSONEditor.prototype = {
           
           self.loadFlags[url] = "loaded";
           self._loadExternalRefs(response,function() {
+            var index = url.lastIndexOf(".json");
+            if (index == -1) throw "invalid external reference url";
+            self._getDefinitions(response, url.substring(0, index + 5) + "#/definitions/");
             done++;
             if(done >= waiting && !callback_fired) {
               callback_fired = true;
-              var index = url.lastIndexOf(".json");
-              if (index == -1) throw "invalid external reference url";
-              self._getDefinitions(response, url.substring(0, index + 5) + "#/definitions/");
               callback();
             }
           });
