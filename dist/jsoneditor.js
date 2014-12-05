@@ -2450,6 +2450,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
+
+        if(editor.title && self.schema.$hideTitle) {
+          editor.title.hidden = true;
+        }
       });
     }
     // If the object should be rendered as a table
