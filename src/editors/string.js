@@ -382,9 +382,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     var self = this;
     
     if(this.jsoneditor.options.show_errors === "always") {}
-    else if(!this.is_dirty) return;
+    else if(!this.is_dirty && this.previous_error_setting===this.jsoneditor.options.show_errors) return;
     
-    
+    this.previous_error_setting = this.jsoneditor.options.show_errors;
 
     var messages = [];
     $each(errors,function(i,error) {

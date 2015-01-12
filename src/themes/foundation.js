@@ -68,8 +68,8 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     input.group.className += ' error';
     
     if(!input.errmsg) {
-      input.insertAdjacentHTML('afterend','<small class="errormsg"></small>');
-      input.errmsg = input.parentNode.getElementsByClassName('errormsg')[0];
+      input.insertAdjacentHTML('afterend','<small class="error"></small>');
+      input.errmsg = input.parentNode.getElementsByClassName('error')[0];
     }
     else {
       input.errmsg.style.display = '';

@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.11 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.13 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-09-28
+ * Date: 2014-11-11
  */
 
 /**
@@ -253,6 +253,7 @@ JSONEditor.prototype = {
 
       // Fire ready event asynchronously
       window.requestAnimationFrame(function() {
+        if(!self.ready) return;
         self.validation_results = self.validator.validate(self.root.getValue());
         self.root.showValidationErrors(self.validation_results);
         self.trigger('ready');
@@ -307,6 +308,8 @@ JSONEditor.prototype = {
     this.callbacks = this.callbacks || {};
     this.callbacks[event] = this.callbacks[event] || [];
     this.callbacks[event].push(callback);
+    
+    return this;
   },
   off: function(event, callback) {
     // Specific callback
@@ -329,6 +332,8 @@ JSONEditor.prototype = {
     else {
       this.callbacks = {};
     }
+    
+    return this;
   },
   trigger: function(event) {
     if(this.callbacks && this.callbacks[event] && this.callbacks[event].length) {
@@ -336,6 +341,20 @@ JSONEditor.prototype = {
         this.callbacks[event][i]();
       }
     }
+    
+    return this;
+  },
+  setOption: function(option, value) {
+    if(option === "show_errors") {
+      this.options.show_errors = value;
+      this.onChange();
+    }
+    // Only the `show_errors` option is supported for now
+    else {
+      throw "Option "+option+" must be set during instantiation and cannot be changed later";
+    }
+    
+    return this;
   },
   getEditorClass: function(schema) {
     var classname;
@@ -371,17 +390,23 @@ JSONEditor.prototype = {
     
     window.requestAnimationFrame(function() {
       self.firing_change = false;
-      
+      if(!self.ready) return;
+
       // Validate and cache results
       self.validation_results = self.validator.validate(self.root.getValue());
       
       if(self.options.show_errors !== "never") {
         self.root.showValidationErrors(self.validation_results);
       }
+      else {
+        self.root.showValidationErrors([]);
+      }
       
       // Fire change event
       self.trigger('change');
     });
+    
+    return this;
   },
   compileTemplate: function(template, name) {
     name = name || JSONEditor.defaults.template;
@@ -687,10 +712,10 @@ JSONEditor.prototype = {
           }, []);
         }
         // Type should be intersected and is either an array or string
-        else if(prop === 'type') {
+        else if(prop === 'type' && (typeof val === "string" || Array.isArray(val))) {
           // Make sure we're dealing with arrays
-          if(typeof val !== "object") val = [val];
-          if(typeof obj2.type !== "object") obj2.type = [obj2.type];
+          if(typeof val === "string") val = [val];
+          if(typeof obj2.type === "string") obj2.type = [obj2.type];
 
 
           extended.type = val.filter(function(n) {
@@ -2104,9 +2129,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     var self = this;
     
     if(this.jsoneditor.options.show_errors === "always") {}
-    else if(!this.is_dirty) return;
+    else if(!this.is_dirty && this.previous_error_setting===this.jsoneditor.options.show_errors) return;
     
-    
+    this.previous_error_setting = this.jsoneditor.options.show_errors;
 
     var messages = [];
     $each(errors,function(i,error) {
@@ -2654,19 +2679,40 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     if(this.editing_json) this.hideEditJSON();
     else this.showEditJSON();
   },
+  insertPropertyControlUsingPropertyOrder: function (property, control, container) {
+    var propertyOrder = this.schema.properties[property].propertyOrder;
+    if (typeof propertyOrder !== "number") propertyOrder = 1000;
+    control.propertyOrder = propertyOrder;
+
+    for (var i = 0; i < container.childNodes.length; i++) {
+      var child = container.childNodes[i];
+      if (control.propertyOrder < child.propertyOrder) {
+        this.addproperty_list.insertBefore(control, child);
+        control = null;
+        break;
+      }
+    }
+    if (control) {
+      this.addproperty_list.appendChild(control);
+    }
+  },
   addPropertyCheckbox: function(key) {
     var self = this;
-    var checkbox, label, control;
-    
+    var checkbox, label, labelText, control;
+
     checkbox = self.theme.getCheckbox();
     checkbox.style.width = 'auto';
-    label = self.theme.getCheckboxLabel(key);
+
+    labelText = this.schema.properties[key].title ? this.schema.properties[key].title : key;
+    label = self.theme.getCheckboxLabel(labelText);
+
     control = self.theme.getFormControl(label,checkbox);
     control.style.paddingBottom = control.style.marginBottom = control.style.paddingTop = control.style.marginTop = 0;
     control.style.height = 'auto';
     //control.style.overflowY = 'hidden';
-    self.addproperty_list.appendChild(control);
-    
+
+    this.insertPropertyControlUsingPropertyOrder(key, control, this.addproperty_list);
+
     checkbox.checked = key in this.editors;
     checkbox.addEventListener('change',function() {
       if(checkbox.checked) {
@@ -2774,7 +2820,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this._super(editor);
   },
   canHaveAdditionalProperties: function() {
-    return this.schema.additionalProperties !== false && !this.jsoneditor.options.no_additional_properties;
+    return (this.schema.additionalProperties === true) || !this.jsoneditor.options.no_additional_properties;
   },
   destroy: function() {
     $each(this.cached_editors, function(i,el) {
@@ -2814,7 +2860,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     if(this.adding_property) this.refreshAddProperties();
   },
   refreshAddProperties: function() {
-    if(this.options.disable_properties || this.jsoneditor.options.disable_properties) {
+    if(this.options.disable_properties || (this.options.disable_properties !== false && this.jsoneditor.options.disable_properties)) {
       this.addproperty_controls.style.display = 'none';
       return;
     }
@@ -2874,7 +2920,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       if(this.cached_editors[i]) continue;
       show_modal = true;
       this.addPropertyCheckbox(i);
-      this.addproperty_checkboxes[i].disabled = !can_add;
     }
     
     // If no editors can be added or removed, hide the modal button
@@ -6027,8 +6072,8 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     input.group.className += ' error';
     
     if(!input.errmsg) {
-      input.insertAdjacentHTML('afterend','<small class="errormsg"></small>');
-      input.errmsg = input.parentNode.getElementsByClassName('errormsg')[0];
+      input.insertAdjacentHTML('afterend','<small class="error"></small>');
+      input.errmsg = input.parentNode.getElementsByClassName('error')[0];
     }
     else {
       input.errmsg.style.display = '';
