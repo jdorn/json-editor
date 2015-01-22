@@ -26,7 +26,12 @@ var $extend = function(destination) {
         $extend(destination[property], source[property]);
       }
       else {
-        destination[property] = source[property];
+        //Clone arrays on extend
+        if (Array.isArray(source[property])) {
+          destination[property] = source[property].slice(0);
+        } else {
+          destination[property] = source[property];
+        }
       }
     }
   }

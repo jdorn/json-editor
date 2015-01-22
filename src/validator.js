@@ -268,7 +268,7 @@ JSONEditor.Validator = Class.extend({
 
       // `minLength`
       if(schema.minLength) {
-        if((value+"").length < schema.minLength) {          
+        if((value+"").length < schema.minLength) {
           errors.push({
             path: path,
             property: 'minLength',
@@ -507,9 +507,10 @@ JSONEditor.Validator = Class.extend({
       }
     }
 
-    // Custom type validation
+    // Custom type validation, call custom validator and pass the validator class as this
+    var self = this;
     $each(JSONEditor.defaults.custom_validators,function(i,validator) {
-      errors = errors.concat(validator(schema,value,path));
+      errors = errors.concat(validator.call(self, schema,value,path));
     });
 
     return errors;
