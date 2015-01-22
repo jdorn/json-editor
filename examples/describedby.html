@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hyper-Link DescribedBy JSON Editor Example</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+
+    <script src="../dist/jsoneditor.js"></script>
+  </head>
+  <body>
+    <h1>Hyper-Link DescribedBy JSON Editor Example</h1>
+
+    <div id='editor_holder'></div>
+    <button id='submit'>Submit (console.log)</button>
+
+    <script>
+
+      // Initialize the editor
+      var editor = new JSONEditor(document.getElementById("editor_holder"), {
+        theme: "bootstrap3",
+        iconlib: "bootstrap3",
+        //show_errors: "always",
+        disable_collapse: true,
+        disable_edit_json: true,
+        disable_properties: true,
+        //no_additional_properties: true,
+        schema: {
+          "type": "object",
+          "title": "Property for Sale",
+          "properties": {
+            "propertyName": {
+              "type": "string",
+              "title": "Property Name",
+              "description": "The name of the property being sold",
+              "minLength": 5
+            },
+            "propertyType": {
+              "type": "string",
+              "title": "Property Type",
+              "enum": ["house", "car", "yacht"]
+            },
+            "propertyTypeOptions": {
+              "type": "object",
+              "title": "Property Options",
+              "watch": {
+                  "propertyType": "propertyType"
+              },
+              "links": [{
+                "rel": "describedBy",
+                "href": "#/definitions/{{propertyType}}"
+              }]
+            }
+          },
+          "required": ["propertyName","propertyType"],
+          "definitions": {
+            "house": {
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "title": "Address"
+                },
+                "rooms": {
+                  "type": "integer",
+                  "title": "Number Of Rooms"
+                }
+              }
+            },
+            "car": {
+              "properties": {
+                "brand": {
+                  "type": "string",
+                  "title": "Brand",
+                  "enum": ["Audi", "BMW", "Chevrolet", "Opel", "Mitsubishi"]
+                },
+                "color": {
+                  "type": "string",
+                  "title": "Color",
+                  "format": "color"
+                },
+                "year": {
+                  "type": "string",
+                  "title": "Build Year"
+                }
+              }
+            },
+            "yacht": {
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "title": "Name"
+                },
+                "model": {
+                  "type": "string",
+                  "title": "Model"
+                },
+                "year": {
+                  "type": "integer",
+                  "title": "Year"
+                },
+                "yachtLength": {
+                  "type": "integer",
+                  "title": "Length"
+                }
+              }
+            }
+          }
+        }
+      });
+
+      function validate() {
+          var errors = editor.validate();
+          console.log(editor.getValue());
+          if(errors.length) {
+            // errors is an array of objects, each with a `path`, `property`, and `message` parameter
+            // `property` is the schema keyword that triggered the validation error (e.g. "minLength")
+            // `path` is a dot separated path into the JSON object (e.g. "root.path.to.field")
+            editor.root.showValidationErrors(errors);
+            console.log('ERRORS', errors);
+          }
+          else {
+            // It's valid!
+            console.log("OK");
+          }
+      }
+
+      // Hook up the submit button to log to the console
+      document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        validate();
+      });
+    </script>
+  </body>
+</html>

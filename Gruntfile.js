@@ -7,20 +7,21 @@ module.exports = function(grunt) {
         src: [
           // License & version info, start the containing closure
           'src/intro.js',
-          
+
           // Simple inheritance
           'src/class.js',
           // IE9 polyfills
           'src/ie9.js',
           // Utils like extend, each, and trigger
           'src/utilities.js',
-          
+
           // The main JSONEditor class
           'src/core.js',
 
-          // JSON Schema validator
+          // JSON Schema validators
           'src/validator.js',
-          
+          'src/validators/*.js',
+
           // All the editors
           'src/editor.js',
           'src/editors/null.js',
@@ -36,6 +37,7 @@ module.exports = function(grunt) {
           'src/editors/multiselect.js',
           'src/editors/base64.js',
           'src/editors/upload.js',
+          'src/editors/describedby.js',
 
           // All the themes and iconlibs
           'src/theme.js',
@@ -48,10 +50,13 @@ module.exports = function(grunt) {
 
           // Set the defaults
           'src/defaults.js',
-          
+
+          // Add resolvers
+          'src/resolvers/*.js',
+
           // Wrapper for $.fn style initialization
           'src/jquery.js',
-          
+
           // End the closure
           'src/outro.js'
         ],
@@ -85,20 +90,21 @@ module.exports = function(grunt) {
       beforeconcat: [
         'src/class.js',
         'src/ie9.js',
-        
+
         // Utils like extend, each, and trigger
         'src/utilities.js',
-        
+
         // The main JSONEditor class
         'src/core.js',
 
-        // JSON Schema validator
+        // JSON Schema validators
         'src/validator.js',
-        
+        'src/validators/*.js',
+
         // All the editors
         'src/editor.js',
         'src/editors/*.js',
-        
+
         // All the themes and iconlibs
         'src/theme.js',
         'src/themes/*.js',
@@ -110,7 +116,10 @@ module.exports = function(grunt) {
 
         // Set the defaults
         'src/defaults.js',
-        
+
+        // Add resolvers
+        'src/resolvers/*.js',
+
         // Wrapper for $.fn style initialization
         'src/jquery.js'
       ],
