@@ -75,7 +75,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         var editor = self.editors[key];
         if(editor.property_removed) return;
         var found = false;
-        var width = editor.options.hidden? 0 : editor.getNumColumns();
+        var width = editor.options.hidden? 0 : (editor.options.grid_columns || editor.getNumColumns());
         var height = editor.options.hidden? 0 : editor.container.offsetHeight;
         // See if the editor will fit in any of the existing rows first
         for(var i=0; i<rows.length; i++) {
@@ -216,7 +216,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         });
         self.editors[key].preBuild();
 
-        var width = self.editors[key].options.hidden? 0 : self.editors[key].getNumColumns();
+        var width = self.editors[key].options.hidden? 0 : (self.editors[key].options.grid_columns || self.editors[key].getNumColumns());
 
         self.minwidth += width;
         self.maxwidth += width;
@@ -239,8 +239,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         self.addObjectProperty(key, true);
 
         if(self.editors[key]) {
-          self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
-          self.maxwidth += self.editors[key].getNumColumns();
+          self.minwidth = Math.max(self.minwidth,(self.editors[key].options.grid_columns || self.editors[key].getNumColumns()));
+          self.maxwidth += (self.editors[key].options.grid_columns || self.editors[key].getNumColumns());
         }
       });
     }
