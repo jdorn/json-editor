@@ -174,7 +174,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(typeof this.schema.pattern !== "undefined") this.input.setAttribute('pattern',this.schema.pattern);
     else if(typeof this.schema.minLength !== "undefined") this.input.setAttribute('pattern','.{'+this.schema.minLength+',}');
 
-    if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    if(this.options.compact) {
+      this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    }
+    else {
+      if(this.options.input_width) this.input.style.width = this.options.input_width;
+    }
 
     if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
       this.always_disabled = true;
@@ -210,6 +215,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     this.control = this.theme.getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
+
 
     // Any special formatting that needs to happen after the input is added to the dom
     window.requestAnimationFrame(function() {

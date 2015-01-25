@@ -273,6 +273,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
+        if(self.editors[key].options.input_width) {
+          holder.style.width = self.editors[key].options.input_width;
+        }
       });
     }
     // If the object should be rendered as a table
