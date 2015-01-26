@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.13 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.14 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2014-11-11
+ * Date: 2015-01-25
  */
 
 /**
@@ -1795,6 +1795,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     if(initial) this.is_dirty = false;
     else if(this.jsoneditor.options.show_errors === "change") this.is_dirty = true;
+    
+    if(this.adjust_height) this.adjust_height(this.input);
 
     // Bubble this setValue to parents if the value changed
     this.onChange(changed);
@@ -1921,7 +1923,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(typeof this.schema.pattern !== "undefined") this.input.setAttribute('pattern',this.schema.pattern);
     else if(typeof this.schema.minLength !== "undefined") this.input.setAttribute('pattern','.{'+this.schema.minLength+',}');
 
-    if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    if(this.options.compact) {
+      this.container.className += ' compact';
+    }
+    else {
+      if(this.options.input_width) this.input.style.width = this.options.input_width;
+    }
 
     if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
       this.always_disabled = true;
@@ -1952,6 +1959,42 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         self.refreshValue();
         self.onChange(true);
       });
+      
+    if(this.options.input_height) this.input.style.height = this.options.input_height;
+    if(this.options.expand_height) {
+      this.adjust_height = function(el) {
+        if(!el) return;
+        var i, ch=el.offsetHeight;
+        // Input too short
+        if(el.offsetHeight < el.scrollHeight) {
+          i=0;
+          while(el.offsetHeight < el.scrollHeight+3) {
+            if(i>100) break;
+            i++;
+            ch++;
+            el.style.height = ch+'px';
+          }
+        }
+        else {
+          i=0;
+          while(el.offsetHeight >= el.scrollHeight+3) {
+            if(i>100) break;
+            i++;
+            ch--;
+            el.style.height = ch+'px';
+          }
+          el.style.height = (ch+1)+'px';
+        }
+      };
+      
+      this.input.addEventListener('keyup',function(e) {
+        self.adjust_height(this);
+      });
+      this.input.addEventListener('change',function(e) {
+        self.adjust_height(this);
+      });
+      this.adjust_height();
+    }
 
     if(this.format) this.input.setAttribute('data-schemaformat',this.format);
 
@@ -1964,6 +2007,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       // otherwise, in the case of an ace_editor creation,
       // it will generate an error trying to append it to the missing parentNode
       if(self.input.parentNode) self.afterInputReady();
+      if(self.adjust_height) self.adjust_height(self.input);
     });
 
     // Compile and store the template
@@ -2248,7 +2292,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         var editor = self.editors[key];
         if(editor.property_removed) return;
         var found = false;
-        var width = editor.options.hidden? 0 : editor.getNumColumns();
+        var width = editor.options.hidden? 0 : (editor.options.grid_columns || editor.getNumColumns());
         var height = editor.options.hidden? 0 : editor.container.offsetHeight;
         // See if the editor will fit in any of the existing rows first
         for(var i=0; i<rows.length; i++) {
@@ -2389,7 +2433,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         });
         self.editors[key].preBuild();
 
-        var width = self.editors[key].options.hidden? 0 : self.editors[key].getNumColumns();
+        var width = self.editors[key].options.hidden? 0 : (self.editors[key].options.grid_columns || self.editors[key].getNumColumns());
 
         self.minwidth += width;
         self.maxwidth += width;
@@ -2412,8 +2456,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         self.addObjectProperty(key, true);
 
         if(self.editors[key]) {
-          self.minwidth = Math.max(self.minwidth,self.editors[key].getNumColumns());
-          self.maxwidth += self.editors[key].getNumColumns();
+          self.minwidth = Math.max(self.minwidth,(self.editors[key].options.grid_columns || self.editors[key].getNumColumns()));
+          self.maxwidth += (self.editors[key].options.grid_columns || self.editors[key].getNumColumns());
         }
       });
     }
@@ -2445,6 +2489,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
+        }
+        if(self.editors[key].options.input_width) {
+          holder.style.width = self.editors[key].options.input_width;
         }
       });
     }
@@ -3369,6 +3416,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     self.active_tab = new_active_tab;
 
     self.refreshValue(initial);
+    self.refreshTabs(true);
     self.refreshTabs();
 
     self.onChange();
@@ -3798,11 +3846,13 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     this.panel.appendChild(this.controls);
 
     if(this.item_has_child_editors) {
-      $each(tmp.getChildEditors(), function(i,editor) {
-        var th = self.theme.getTableHeaderCell(editor.getTitle());
-        if(editor.options.hidden) th.style.display = 'none';
+      var ce = tmp.getChildEditors();
+      var order = tmp.property_order || Object.keys(ce);
+      for(var i=0; i<order.length; i++) {
+        var th = self.theme.getTableHeaderCell(ce[order[i]].getTitle());
+        if(ce[order[i]].options.hidden) th.style.display = 'none';
         self.header_row.appendChild(th);
-      });
+      }
     }
     else {
       self.header_row.appendChild(self.theme.getTableHeaderCell(this.item_title));
@@ -4672,7 +4722,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     }
     // Boolean
     else if(this.schema.type === "boolean") {
-      self.enum_display = ['true','false'];
+      self.enum_display = this.schema.options && this.schema.options.enum_titles || ['true','false'];
       self.enum_options = ['1',''];
       self.enum_values = [true,false];
     }
@@ -4743,7 +4793,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
-    if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    if(this.options.compact) this.container.className += ' compact';
 
     this.input = this.theme.getSelectInput(this.enum_options);
     this.theme.setSelectOptions(this.input,this.enum_options,this.enum_display);
