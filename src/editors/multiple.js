@@ -59,7 +59,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     $each(self.editors,function(type,editor) {
       if(!editor) return;
       if(self.type === type) {
-        editor.setValue(current_value,true);
+        if(self.keep_values) editor.setValue(current_value,true);
         editor.container.style.display = '';
       }
       else editor.container.style.display = 'none';
@@ -120,6 +120,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.type = 0;
     this.editors = [];
     this.validators = [];
+    
+    this.keep_values = true;
+    if(typeof this.jsoneditor.options.keep_oneof_values !== "undefined") this.keep_values = this.jsoneditor.options.keep_oneof_values;
+    if(typeof this.options.keep_oneof_values !== "undefined") this.keep_values = this.options.keep_oneof_values;
 
     if(this.schema.oneOf) {
       this.oneOf = true;
