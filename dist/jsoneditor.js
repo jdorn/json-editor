@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.14 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.15 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2015-01-25
+ * Date: 2015-02-02
  */
 
 /**
@@ -169,7 +169,7 @@ var $extend = function(destination) {
 var $each = function(obj,callback) {
   if(!obj) return;
   var i;
-  if(typeof obj.length !== 'undefined') {
+  if(typeof obj.length === 'number') {
     for(i=0; i<obj.length; i++) {
       if(callback(i,obj[i])===false) return;
     }
@@ -4296,7 +4296,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     $each(self.editors,function(type,editor) {
       if(!editor) return;
       if(self.type === type) {
-        editor.setValue(current_value,true);
+        if(self.keep_values) editor.setValue(current_value,true);
         editor.container.style.display = '';
       }
       else editor.container.style.display = 'none';
@@ -4357,6 +4357,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.type = 0;
     this.editors = [];
     this.validators = [];
+    
+    this.keep_values = true;
+    if(typeof this.jsoneditor.options.keep_oneof_values !== "undefined") this.keep_values = this.jsoneditor.options.keep_oneof_values;
+    if(typeof this.options.keep_oneof_values !== "undefined") this.keep_values = this.options.keep_oneof_values;
 
     if(this.schema.oneOf) {
       this.oneOf = true;
