@@ -11,11 +11,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getModal: function() {
     var el = document.createElement('div');
-    el.style.backgroundColor = 'white';
-    el.style.border = '1px solid black';
-    el.style.boxShadow = '3px 3px black';
-    el.style.position = 'absolute';
-    el.style.zIndex = '10';
+    el.className = 'jse-modal';
     el.style.display = 'none';
     return el;
   },
@@ -25,7 +21,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getGridRow: function() {
     var el = document.createElement('div');
-    el.className = 'row';
+    el.className = 'jse-row';
     return el;
   },
   getGridColumn: function() {
@@ -42,16 +38,16 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   disableHeader: function(header) {
-    header.style.color = '#ccc';
+    header.className = 'jse-disableHeader';
   },
   disableLabel: function(label) {
-    label.style.color = '#ccc';
+    label.className = 'jse-disableLabel';
   },
   enableHeader: function(header) {
-    header.style.color = '';
+    header.className = '';
   },
   enableLabel: function(label) {
-    label.style.color = '';
+    label.className = '';
   },
   getFormInputLabel: function(text) {
     var el = document.createElement('label');
@@ -60,7 +56,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getCheckboxLabel: function(text) {
     var el = this.getFormInputLabel(text);
-    el.style.fontWeight = 'normal';
+    el.className = 'jse-CheckboxLabel';
     return el;
   },
   getHeader: function(text) {
@@ -76,22 +72,20 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getCheckbox: function() {
     var el = this.getFormInputField('checkbox');
-    el.style.display = 'inline-block';
-    el.style.width = 'auto';
+    el.className = 'jse-Checkbox';
     return el;
   },
   getMultiCheckboxHolder: function(controls,label,description) {
     var el = document.createElement('div');
 
     if(label) {
-      label.style.display = 'block';
+      el.className = 'jse-MultiCheckboxLabel';
       el.appendChild(label);
     }
 
     for(var i in controls) {
       if(!controls.hasOwnProperty(i)) continue;
-      controls[i].style.display = 'inline-block';
-      controls[i].style.marginRight = '20px';
+      controls[i].className = 'jse-MultiCheckboxControl';
       el.appendChild(controls[i]);
     }
 
@@ -106,11 +100,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getSwitcher: function(options) {
     var switcher = this.getSelectInput(options);
-    switcher.style.backgroundColor = 'transparent';
-    switcher.style.height = 'auto';
-    switcher.style.fontStyle = 'italic';
-    switcher.style.fontWeight = 'normal';
-    switcher.style.padding = '0 0 0 3px';
+    switcher.className = 'jse-Switcher';
     return switcher;
   },
   getSwitcherOptions: function(switcher) {
@@ -131,10 +121,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getTextareaInput: function() {
     var el = document.createElement('textarea');
-    el.style = el.style || {};
-    el.style.width = '100%';
-    el.style.height = '300px';
-    el.style.boxSizing = 'border-box';
+    el.className = 'jse-TextareaInput';
     return el;
   },
   getRangeInput: function(min,max,step) {
@@ -168,10 +155,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getIndentedPanel: function() {
     var el = document.createElement('div');
-    el.style = el.style || {};
-    el.style.paddingLeft = '10px';
-    el.style.marginLeft = '10px';
-    el.style.borderLeft = '1px solid #ccc';
+    el.className = 'jse-IndentedPanel';
     return el;
   },
   getChildEditorHolder: function() {
@@ -277,18 +261,7 @@ JSONEditor.AbstractTheme = Class.extend({
   getTab: function(span) {
     var el = document.createElement('div');
     el.appendChild(span);
-    el.style = el.style || {};
-    this.applyStyles(el,{
-      border: '1px solid #ccc',
-      borderWidth: '1px 0 1px 1px',
-      textAlign: 'center',
-      lineHeight: '30px',
-      borderRadius: '5px',
-      borderBottomRightRadius: 0,
-      borderTopRightRadius: 0,
-      fontWeight: 'bold',
-      cursor: 'pointer'
-    });
+    el.className = 'jse-Tab';
     return el;
   },
   getTabContentHolder: function(tab_holder) {
@@ -298,23 +271,19 @@ JSONEditor.AbstractTheme = Class.extend({
     return this.getIndentedPanel();
   },
   markTabActive: function(tab) {
-    this.applyStyles(tab,{
-      opacity: 1,
-      background: 'white'
-    });
+    tab.classList.add("TabActive");
+    tab.classList.remove("TabInActive");
   },
   markTabInactive: function(tab) {
-    this.applyStyles(tab,{
-      opacity:0.5,
-      background: ''
-    });
+    tab.classList.remove("TabActive");
+    tab.classList.add("TabInActive");
   },
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
   },
   getBlockLink: function() {
     var link = document.createElement('a');
-    link.style.display = 'block';
+    link.className = 'jse-BlockLink';
     return link;
   },
   getBlockLinkHolder: function() {
@@ -327,7 +296,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   createMediaLink: function(holder,link,media) {
     holder.appendChild(link);
-    media.style.width='100%';
+    media.className = 'jse-Media';
     holder.appendChild(media);
   },
   createImageLink: function(holder,link,image) {
