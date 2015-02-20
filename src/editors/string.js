@@ -188,8 +188,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.input.disabled = true;
     }
 
+    var inputEvent = 'change';
+	// Check attribute overrideInputEvent to see if event 'change' should be overridden. I.e you could use 'keyup' to validate while the user is typing the string. Recommend to add _.debounce.
+    if(typeof this.schema.overrideInputEvent !== "undefined") inputEvent = this.schema.overrideInputEvent;
+
     this.input
-      .addEventListener('change',function(e) {        
+      .addEventListener(inputEvent ,function(e) {
         e.preventDefault();
         e.stopPropagation();
         
