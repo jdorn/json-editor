@@ -46,6 +46,9 @@ module.exports = function(grunt) {
           // The JS templating engines
           'src/templates/*.js',
 
+          // The language files
+          'src/languages/*.js',
+
           // Set the defaults
           'src/defaults.js',
           
