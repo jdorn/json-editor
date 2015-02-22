@@ -499,7 +499,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     if(i && !self.hide_move_buttons) {
-      self.rows[i].moveup_button = this.getButton('','moveup','Hoch');
+      self.rows[i].moveup_button = this.getButton(self.jsoneditor.translate('button_text_moveup'),'moveup',self.jsoneditor.translate('button_title_moveup'));
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
       self.rows[i].moveup_button.addEventListener('click',function(e) {
