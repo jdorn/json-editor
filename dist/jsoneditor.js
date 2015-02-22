@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.15 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.16 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2015-02-02
+ * Date: 2015-02-22
  */
 
 /**
@@ -197,6 +197,9 @@ var $triggerc = function(el,event) {
 };
 
 var JSONEditor = function(element,options) {
+  if (!(element instanceof Element)) {
+    throw new Error('element should be an instance of Element');
+  }
   options = $extend({},JSONEditor.defaults.options,options||{});
   this.element = element;
   this.options = options;
@@ -526,7 +529,7 @@ JSONEditor.prototype = {
       }
     };
     
-    if(schema.$ref && schema.$ref.substr(0,1) !== "#" && !this.refs[schema.$ref]) {
+    if(schema.$ref && typeof schema.$ref !== "object" && schema.$ref.substr(0,1) !== "#" && !this.refs[schema.$ref]) {
       refs[schema.$ref] = true;
     }
     
@@ -3439,7 +3442,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       
       $each(this.rows,function(i,editor) {
         // Hide the move down button for the last row
-        if(editor.movedown_buttons) {
+        if(editor.movedown_button) {
           if(i === self.rows.length - 1) {
             editor.movedown_button.style.display = 'none';
           }
