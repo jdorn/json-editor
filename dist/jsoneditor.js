@@ -526,7 +526,7 @@ JSONEditor.prototype = {
       }
     };
     
-    if(schema.$ref && schema.$ref.substr(0,1) !== "#" && !this.refs[schema.$ref]) {
+    if(schema.$ref  && typeof schema.$ref != 'object' && schema.$ref.substr(0,1) !== "#" && !this.refs[schema.$ref]) {
       refs[schema.$ref] = true;
     }
     
