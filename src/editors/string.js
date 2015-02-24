@@ -188,35 +188,38 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.input.disabled = true;
     }
 
-    var inputEvent = 'change';
-	// Check attribute overrideInputEvent to see if event 'change' should be overridden. I.e you could use 'keyup' to validate while the user is typing the string. Recommend to add _.debounce.
-    if(typeof this.schema.overrideInputEvent !== "undefined") inputEvent = this.schema.overrideInputEvent;
+	var eventHandler = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
 
-    this.input
-      .addEventListener(inputEvent ,function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Don't allow changing if this field is a template
-        if(self.schema.template) {
-          this.value = self.value;
-          return;
-        }
+      // Don't allow changing if this field is a template
+      if(self.schema.template) {
+        this.value = self.value;
+        return;
+      }
 
-        var val = this.value;
-        
-        // sanitize value
-        var sanitized = self.sanitize(val);
-        if(val !== sanitized) {
-          this.value = sanitized;
-        }
-        
-        self.is_dirty = true;
+      var val = this.value;
 
-        self.refreshValue();
-        self.onChange(true);
-      });
-      
+      // sanitize value
+      var sanitized = self.sanitize(val);
+      if(val !== sanitized) {
+        this.value = sanitized;
+      }
+
+      self.is_dirty = true;
+
+      self.refreshValue();
+      self.onChange(true);
+    };
+
+    // Default input event, 'change'
+    this.input.addEventListener('change' , eventHandler);
+
+    // Additional input event. I.e. 'keyup'
+    if(this.options.input_event) {
+      this.input.addEventListener(this.options.input_event, eventHandler);
+    }
+	
     if(this.options.input_height) this.input.style.height = this.options.input_height;
     if(this.options.expand_height) {
       this.adjust_height = function(el) {
