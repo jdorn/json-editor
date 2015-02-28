@@ -41,11 +41,18 @@
                 2010,2011,2012,2013,2014
               ],
               default: 2008
+            },
+            safety: {
+              type: "integer",
+              format: "rating",
+              maximum: "5",
+              exclusiveMaximum: false,
+              readonly: false
             }
           }
         }
       });
-      
+
       // Hook up the submit button to log to the console
       document.getElementById('submit').addEventListener('click',function() {
         // Get the value from the editor
