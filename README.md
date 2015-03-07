@@ -966,7 +966,7 @@ also make it work with an array of objects.  Here's an example:
       "enumSource": [{
         "source": "colors",
         "value": "{{item.text}}"
-      ]}
+      }]
     }
   }
 }
