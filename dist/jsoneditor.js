@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.16 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.17 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2015-02-22
+ * Date: 2015-03-07
  */
 
 /**
@@ -1566,7 +1566,19 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   updateHeaderText: function() {
     if(this.header) {
-      this.header.textContent = this.getHeaderText();
+      // If the header has children, only update the text node's value
+      if(this.header.children.length) {
+        for(var i=0; i<this.header.childNodes.length; i++) {
+          if(this.header.childNodes[i].nodeType===3) {
+            this.header.childNodes[i].nodeValue = this.getHeaderText();
+            break;
+          }
+        }
+      }
+      // Otherwise, just update the entire node
+      else {
+        this.header.textContent = this.getHeaderText();
+      }
     }
   },
   getHeaderText: function(title_only) {
@@ -5371,6 +5383,68 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
   }
 });
 
+JSONEditor.defaults.editors.checkbox = JSONEditor.AbstractEditor.extend({
+  setValue: function(value,initial) {
+    this.value = !!value;
+    this.input.checked = this.value;
+    this.onChange();
+  },
+  register: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.setAttribute('name',this.formname);
+  },
+  unregister: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.removeAttribute('name');
+  },
+  getNumColumns: function() {
+    return Math.min(12,Math.max(this.getTitle().length/7,2));
+  },
+  build: function() {
+    var self = this;
+    if(!this.options.compact) {
+      this.label = this.header = this.theme.getCheckboxLabel(this.getTitle());
+    }
+    if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
+    if(this.options.compact) this.container.className += ' compact';
+
+    this.input = this.theme.getCheckbox();
+    this.control = this.theme.getFormControl(this.label, this.input, this.description);
+
+    if(this.schema.readOnly || this.schema.readonly) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
+
+    this.input.addEventListener('change',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      self.value = this.checked;
+      self.onChange(true);
+    });
+
+    this.container.appendChild(this.control);
+  },
+  enable: function() {
+    if(!this.always_disabled) {
+      this.input.disabled = false;
+    }
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    this._super();
+  },
+  destroy: function() {
+    if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    this._super();
+  }
+});
+
 JSONEditor.AbstractTheme = Class.extend({
   getContainer: function() {
     return document.createElement('div');
@@ -5552,7 +5626,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getDescription: function(text) {
     var el = document.createElement('p');
-    el.appendChild(document.createTextNode(text));
+    el.innerHTML = text;
     return el;
   },
   getCheckboxDescription: function(text) {
@@ -5569,6 +5643,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getButton: function(text, icon, title) {
     var el = document.createElement('button');
+    el.type = 'button';
     this.setButtonText(el,text,icon,title);
     return el;
   },
@@ -6953,9 +7028,14 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema is a simple type
   if(typeof schema.type === "string") return schema.type;
 });
-// Use the select editor for all boolean values
+// Boolean editors
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === 'boolean') {
+    // If explicitly set to 'checkbox', use that
+    if(schema.format === "checkbox" || (schema.options && schema.options.checkbox)) {
+      return "checkbox";
+    }
+    // Otherwise, default to select menu
     return "select";
   }
 });
