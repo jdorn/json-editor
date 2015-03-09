@@ -188,9 +188,14 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema is a simple type
   if(typeof schema.type === "string") return schema.type;
 });
-// Use the select editor for all boolean values
+// Boolean editors
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === 'boolean') {
+    // If explicitly set to 'checkbox', use that
+    if(schema.format === "checkbox" || (schema.options && schema.options.checkbox)) {
+      return "checkbox";
+    }
+    // Otherwise, default to select menu
     return "select";
   }
 });

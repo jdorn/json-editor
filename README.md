@@ -633,6 +633,17 @@ You can override the default Ace theme by setting the `JSONEditor.plugins.ace.th
 JSONEditor.plugins.ace.theme = 'twilight';
 ```
 
+#### Booleans
+
+The default boolean editor is a select box with options "true" and "false".  To use a checkbox instead, set the format to `checkbox`.
+
+```json
+{
+  "type": "boolean",
+  "format": "checkbox"
+}
+```
+
 #### Arrays
 
 The default array editor takes up a lot of screen real estate.  The `table` and `tabs` formats provide more compact UIs for editing arrays.
@@ -966,7 +977,7 @@ also make it work with an array of objects.  Here's an example:
       "enumSource": [{
         "source": "colors",
         "value": "{{item.text}}"
-      ]}
+      }]
     }
   }
 }
