@@ -332,12 +332,12 @@ editor.on("change",  function() {
 
         var mapping = {
             html: '',
-            bootstrap2: '//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css',
-            bootstrap3: '//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css',
-            foundation3: '//cdnjs.cloudflare.com/ajax/libs/foundation/3.2.5/stylesheets/foundation.css',
-            foundation4: '//cdn.jsdelivr.net/foundation/4.3.2/css/foundation.min.css',
-            foundation5: '//cdn.jsdelivr.net/foundation/5.0.2/css/foundation.min.css',
-            jqueryui: '//code.jquery.com/ui/1.10.3/themes/south-street/jquery-ui.css'
+            bootstrap2: 'http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css',
+            bootstrap3: 'http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css',
+            foundation3: 'http://cdnjs.cloudflare.com/ajax/libs/foundation/3.2.5/stylesheets/foundation.css',
+            foundation4: 'http://cdn.jsdelivr.net/foundation/4.3.2/css/foundation.min.css',
+            foundation5: 'http://cdn.jsdelivr.net/foundation/5.0.2/css/foundation.min.css',
+            jqueryui: 'http://code.jquery.com/ui/1.10.3/themes/south-street/jquery-ui.css'
         };
 
         if(typeof mapping[theme] === 'undefined') {
@@ -358,10 +358,10 @@ editor.on("change",  function() {
     var setIconlib = function(iconlib,no_reload) {
         iconlib = iconlib || '';
         var mapping = {
-            foundation2: '//cdnjs.cloudflare.com/ajax/libs/foundicons/2.0/stylesheets/general_foundicons.css',
-            foundation3: '//cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.css',
-            fontawesome3: '//cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.css',
-            fontawesome4: '//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css'
+            foundation2: 'http://cdnjs.cloudflare.com/ajax/libs/foundicons/2.0/stylesheets/general_foundicons.css',
+            foundation3: 'http://cdnjs.cloudflare.com/ajax/libs/foundicons/3.0.0/foundation-icons.css',
+            fontawesome3: 'http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.css',
+            fontawesome4: 'http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css'
         };
 
         JSONEditor.defaults.options.iconlib = iconlib;
