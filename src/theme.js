@@ -179,7 +179,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getDescription: function(text) {
     var el = document.createElement('p');
-    el.appendChild(document.createTextNode(text));
+    el.innerHTML = text;
     return el;
   },
   getCheckboxDescription: function(text) {
@@ -196,6 +196,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   getButton: function(text, icon, title) {
     var el = document.createElement('button');
+    el.type = 'button';
     this.setButtonText(el,text,icon,title);
     return el;
   },
