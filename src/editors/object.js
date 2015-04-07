@@ -297,13 +297,13 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.editjson_textarea.style.height = '170px';
       this.editjson_textarea.style.width = '300px';
       this.editjson_textarea.style.display = 'block';
-      this.editjson_save = this.getButton('Save','save','Save');
+      this.editjson_save = this.getButton(this.jsoneditor.translate('button_text_save'),'save',this.jsoneditor.translate('button_title_save'));
       this.editjson_save.addEventListener('click',function(e) {
         e.preventDefault();
         e.stopPropagation();
         self.saveJSON();
       });
-      this.editjson_cancel = this.getButton('Cancel','cancel','Cancel');
+      this.editjson_cancel = this.getButton(this.jsoneditor.translate('button_text_cancel'),'cancel',this.jsoneditor.translate('button_title_cancel'));
       this.editjson_cancel.addEventListener('click',function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -322,9 +322,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_list.style.overflowY = 'auto';
       this.addproperty_list.style.overflowX = 'hidden';
       this.addproperty_list.style.paddingLeft = '5px';
-      this.addproperty_add = this.getButton('add','add','add');
+      this.addproperty_add = this.getButton(this.jsoneditor.translate('button_text_add'),'add',this.jsoneditor.translate('button_title_add'));
       this.addproperty_input = this.theme.getFormInputField('text');
-      this.addproperty_input.setAttribute('placeholder','Property name...');
+      this.addproperty_input.setAttribute('placeholder',this.jsoneditor.translate('placeholder_object_property'));
       this.addproperty_input.style.width = '220px';
       this.addproperty_input.style.marginBottom = '0';
       this.addproperty_input.style.display = 'inline-block';
@@ -390,7 +390,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
       // Show/Hide button
       this.collapsed = false;
-      this.toggle_button = this.getButton('','collapse','Collapse');
+      this.toggle_button = this.getButton(this.jsoneditor.translate('button_text_collapse'),'collapse',this.jsoneditor.translate('button_title_collapse'));
       this.title_controls.appendChild(this.toggle_button);
       this.toggle_button.addEventListener('click',function(e) {
         e.preventDefault();
@@ -398,12 +398,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(self.collapsed) {
           self.editor_holder.style.display = '';
           self.collapsed = false;
-          self.setButtonText(self.toggle_button,'','collapse','Collapse');
+          self.setButtonText(self.toggle_button,self.jsoneditor.translate('button_text_collapse'),'collapse',self.jsoneditor.translate('button_title_collapse'));
         }
         else {
           self.editor_holder.style.display = 'none';
           self.collapsed = true;
-          self.setButtonText(self.toggle_button,'','expand','Expand');
+          self.setButtonText(self.toggle_button,self.jsoneditor.translate('button_text_expand'),'expand',self.jsoneditor.translate('button_title_expand'));
         }
       });
 
@@ -421,7 +421,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
       
       // Edit JSON Button
-      this.editjson_button = this.getButton('JSON','edit','Edit JSON');
+      this.editjson_button = this.getButton(this.jsoneditor.translate('button_text_edit_json'),'edit',this.jsoneditor.translate('button_title_edit_json'));
       this.editjson_button.addEventListener('click',function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -439,7 +439,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
       
       // Object Properties Button
-      this.addproperty_button = this.getButton('Properties','edit','Object Properties');
+      this.addproperty_button = this.getButton(this.jsoneditor.translate('button_text_object_properties'),'edit',this.jsoneditor.translate('button_title_object_properties'));
       this.addproperty_button.addEventListener('click',function(e) {
         e.preventDefault();
         e.stopPropagation();

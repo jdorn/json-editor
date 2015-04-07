@@ -2,6 +2,11 @@
 
 module.exports = function(grunt) {
   grunt.initConfig({
+    clean: {
+      dist: {
+        src: 'dist/'
+      }
+    },
     concat: {
       dist: {
         src: [
@@ -47,6 +52,9 @@ module.exports = function(grunt) {
           // The JS templating engines
           'src/templates/*.js',
 
+          // The english language file
+          'src/languages/en.js',
+
           // Set the defaults
           'src/defaults.js',
           
@@ -59,10 +67,29 @@ module.exports = function(grunt) {
         dest: 'dist/jsoneditor.js'
       }
     },
+    copy: {
+      dist: {
+        expand: true,
+        cwd: 'src/languages/',
+        src: ['*.js', '!en.js'],
+        dest: 'dist/languages/'
+      },
+      prepareMin: {
+        expand: true,
+        cwd: 'dist/',
+        src: '**/*.js',
+        dest: 'dist/',
+        rename: function (dest, src) {
+          return dest + src.replace(".js", ".min.js");
+        }
+      }
+    },
     uglify: {
       dist: {
-        src: '<%= concat.dist.dest %>',
-        dest: 'dist/jsoneditor.min.js'
+        expand: true,
+        cwd: '<%= copy.prepareMin.dest %>',
+        src: '**/*.min.js',
+        dest: '<%= copy.prepareMin.dest %>'
       },
       options: {
         preserveComments: 'some'
@@ -109,6 +136,9 @@ module.exports = function(grunt) {
         // The JS templating engines
         'src/templates/*.js',
 
+        // All the language files
+        'src/languages/*.js',
+
         // Set the defaults
         'src/defaults.js',
         
@@ -127,12 +157,14 @@ module.exports = function(grunt) {
   });
 
   // These plugins provide necessary tasks.
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
 
   // Default task.
-  grunt.registerTask('default', ['jshint:beforeconcat','concat','jshint:afterconcat','uglify']);
+  grunt.registerTask('default', ['jshint:beforeconcat','clean','concat','copy','jshint:afterconcat','uglify']);
 
 };
