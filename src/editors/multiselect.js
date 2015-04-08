@@ -7,7 +7,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 
     var items_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
-    var e = items_schema.enum || [];
+    var e = items_schema["enum"] || [];
     this.option_keys = [];
     for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
