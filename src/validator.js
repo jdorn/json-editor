@@ -24,7 +24,7 @@ JSONEditor.Validator = Class.extend({
 
     // Version 3 `required`
     if(schema.required && schema.required === true) {
-      if(typeof value === "undefined") {
+      if(value === this.jsoneditor.getEditor(path).getDefault()) {
         errors.push({
           path: path,
           property: 'required',
@@ -36,7 +36,7 @@ JSONEditor.Validator = Class.extend({
       }
     }
     // Value not defined
-    else if(typeof value === "undefined") {
+    else if(value === this.jsoneditor.getEditor(path).getDefault()) {
       // If required_by_default is set, all fields are required
       if(this.jsoneditor.options.required_by_default) {
         errors.push({
@@ -409,9 +409,10 @@ JSONEditor.Validator = Class.extend({
       // Version 4 `required`
       if(schema.required && Array.isArray(schema.required)) {
         for(i=0; i<schema.required.length; i++) {
-          if(typeof value[schema.required[i]] === "undefined") {
+          var localPath = path + "." + schema.required[i];
+          if(value[schema.required[i]] === this.jsoneditor.getEditor(localPath).getDefault()) {
             errors.push({
-              path: path,
+              path: localPath,
               property: 'required',
               message: this.translate('error_required', [schema.required[i]])
             });
