@@ -11,7 +11,7 @@ module.exports = function(grunt) {
           // Simple inheritance
           'src/class.js',
           // IE9 polyfills
-          'src/ie9.js',
+//          'src/ie9.js', // todo: remove ??
           // Utils like extend, each, and trigger
           'src/utilities.js',
           
@@ -40,18 +40,18 @@ module.exports = function(grunt) {
 
           // All the themes and iconlibs
           'src/theme.js',
-          'src/themes/*.js',
+//          'src/themes/*.js', // todo: remove all but Goldfish / Polymer theme
           'src/iconlib.js',
-          'src/iconlibs/*.js',
+//          'src/iconlibs/*.js', // todo: remove all but Goldfish / Polymer class mapping
 
           // The JS templating engines
-          'src/templates/*.js',
-
+//          'src/templates/*.js', // todo: remove all but default.js OR replace with Polymer template???
+          'src/templates/default.js', // package default only
           // Set the defaults
           'src/defaults.js',
           
           // Wrapper for $.fn style initialization
-          'src/jquery.js',
+//          'src/jquery.js',  // todo: remove
           
           // End the closure
           'src/outro.js'
@@ -85,7 +85,7 @@ module.exports = function(grunt) {
       },
       beforeconcat: [
         'src/class.js',
-        'src/ie9.js',
+//        'src/ie9.js',
         
         // Utils like extend, each, and trigger
         'src/utilities.js',
@@ -102,18 +102,18 @@ module.exports = function(grunt) {
         
         // All the themes and iconlibs
         'src/theme.js',
-        'src/themes/*.js',
+//        'src/themes/*.js', // todo: remove
         'src/iconlib.js',
-        'src/iconlibs/*.js',
+//        'src/iconlibs/*.js', // todo: remove
 
         // The JS templating engines
-        'src/templates/*.js',
-
+//        'src/templates/*.js',  // todo: remove (see above)
+        'src/templates/default.js', // package default only
         // Set the defaults
-        'src/defaults.js',
+        'src/defaults.js'
         
         // Wrapper for $.fn style initialization
-        'src/jquery.js'
+//        'src/jquery.js' // todo: remove
       ],
       afterconcat: {
         options: {
