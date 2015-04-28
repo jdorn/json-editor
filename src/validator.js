@@ -9,6 +9,7 @@ JSONEditor.Validator = Class.extend({
     return this._validateSchema(this.schema, value);
   },
   _validateSchema: function(schema,value,path) {
+    var self = this;
     var errors = [];
     var valid, i, j;
     var stringified = JSON.stringify(value);
@@ -509,7 +510,7 @@ JSONEditor.Validator = Class.extend({
 
     // Custom type validation
     $each(JSONEditor.defaults.custom_validators,function(i,validator) {
-      errors = errors.concat(validator(schema,value,path));
+      errors = errors.concat(validator.call(self,schema,value,path));
     });
 
     return errors;
