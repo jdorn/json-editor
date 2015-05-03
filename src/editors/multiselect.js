@@ -89,6 +89,30 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     this.updateValue(value);
     this.onChange();
   },
+  setupSelect2: function() {
+    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+        var options = $.extend({},JSONEditor.plugins.select2);
+        if(this.schema.options && this.schema.options.select2_options) options = $extend(options,this.schema.options.select2_options);
+        this.select2 = window.jQuery(this.input).select2(options);
+        var self = this;
+        this.select2.on('select2-blur',function() {
+            var val =self.select2.select2('val');
+            self.value = val;
+            self.onChange(true);
+        });
+    }
+    else {
+        this.select2 = null;
+    }
+  },
+  onInputChange: function() {
+      this.value = this.input.value;
+      this.onChange(true);
+  },
+  postBuild: function() {
+      this._super();
+      this.setupSelect2();
+  },
   register: function() {
     this._super();
     if(!this.input) return;
@@ -121,6 +145,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       if(sanitized !== value[i]) changed = true;
     }
     this.value = new_value;
+    if(this.select2) this.select2.select2('val',this.value);
     return changed;
   },
   sanitize: function(value) {
@@ -145,6 +170,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
           this.inputs[i].disabled = false;
         }
       }
+      if(this.select2) this.select2.select2("enable",true);
     }
     this._super();
   },
@@ -157,6 +183,14 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
         if(!this.inputs.hasOwnProperty(i)) continue;
         this.inputs[i].disabled = true;
       }
+    }
+    if(this.select2) this.select2.select2("enable",false);
+    this._super();
+  },
+  destroy: function() {
+    if(this.select2) {
+        this.select2.select2('destroy');
+        this.select2 = null;
     }
     this._super();
   }
