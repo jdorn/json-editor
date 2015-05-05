@@ -1,4 +1,4 @@
-// Multiple Editor (for when `type` is an array)
+// Multiple Editor (for when `type` is an array, also when `oneOf` is present)
 JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   register: function() {
     if(this.editors) {
@@ -229,6 +229,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   setValue: function(val,initial) {
     // Determine type by getting the first one that validates
     var self = this;
+    var prev_type = this.type;
     $each(this.validators, function(i,validator) {
       if(!validator.validate(val).length) {
         self.type = i;
@@ -237,12 +238,15 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       }
     });
     
-    this.switchEditor(this.type);
+    var type_changed = this.type != prev_type;
+    if (type_changed) {
+	this.switchEditor(this.type);
+    }
 
     this.editors[this.type].setValue(val,initial);
 
     this.refreshValue();
-    self.onChange();
+    self.onChange(type_changed);
   },
   destroy: function() {
     $each(this.editors, function(type,editor) {
