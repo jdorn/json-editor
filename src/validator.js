@@ -52,10 +52,10 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `enum`
-    if(schema.enum) {
+    if(schema["enum"]) {
       valid = false;
-      for(i=0; i<schema.enum.length; i++) {
-        if(stringified === JSON.stringify(schema.enum[i])) valid = true;
+      for(i=0; i<schema["enum"].length; i++) {
+        if(stringified === JSON.stringify(schema["enum"][i])) valid = true;
       }
       if(!valid) {
         errors.push({
@@ -67,9 +67,9 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `extends` (version 3)
-    if(schema.extends) {
-      for(i=0; i<schema.extends.length; i++) {
-        errors = errors.concat(this._validateSchema(schema.extends[i],value,path));
+    if(schema["extends"]) {
+      for(i=0; i<schema["extends"].length; i++) {
+        errors = errors.concat(this._validateSchema(schema["extends"][i],value,path));
       }
     }
 

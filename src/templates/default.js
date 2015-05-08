@@ -1,4 +1,4 @@
-JSONEditor.defaults.templates.default = function() {
+JSONEditor.defaults.templates["default"] = function() {
   var expandVars = function(vars) {
     var expanded = {};
     $each(vars, function(i,el) {

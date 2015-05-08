@@ -2,7 +2,7 @@ JSONEditor.defaults.iconlibs.foundation2 = JSONEditor.AbstractIconLib.extend({
   mapping: {
     collapse: 'minus',
     expand: 'plus',
-    delete: 'remove',
+    "delete": 'remove',
     edit: 'edit',
     add: 'add-doc',
     cancel: 'error',
