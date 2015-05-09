@@ -58,7 +58,13 @@
       var editor = new JSONEditor(document.getElementById('editor_holder'),{
         // Enable fetching schemas via ajax
         ajax: true,
-        
+
+//        propertySorter: function (editors) {
+//          return Object.keys(editors).sort();
+//        },
+//        propertySorter: 'propertyOrder',
+//        propertySorter: 'native',
+
         // The schema for the editor
         schema: {
           type: "array",
