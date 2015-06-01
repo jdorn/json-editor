@@ -929,13 +929,24 @@ JSONEditor.Validator = Class.extend({
     if(typeof value === "number") {
       // `multipleOf` and `divisibleBy`
       if(schema.multipleOf || schema.divisibleBy) {
-        valid = value / (schema.multipleOf || schema.divisibleBy);
-        if(valid !== Math.floor(valid)) {
-          errors.push({
-            path: path,
-            property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-            message: this.translate('error_multipleOf', [schema.multipleOf || schema.divisibleBy])
-          });
+          var divisor = (schema.multipleOf || schema.divisibleBy);
+          var dividend = value;
+          if(parseInt(divisor, 10) < divisor) {
+              var place = (divisor + "").split(".")[1].length;
+              var multiplier = Math.pow(10, parseInt(place, 10));
+              if(dividend.toFixed(place) == dividend) {
+                  divisor = Math.round(divisor * multiplier);
+                  dividend = Math.round(dividend * multiplier);
+              }
+          }
+          valid = dividend / divisor;
+          if(valid !== Math.floor(valid)) {
+              errors.push({
+                  path: path,
+                  property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
+                  message: this.translate('error_multipleOf', [schema.multipleOf ||
+                      schema.divisibleBy])
+              });
         }
       }
 
