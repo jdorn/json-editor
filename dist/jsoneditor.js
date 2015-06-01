@@ -944,8 +944,7 @@ JSONEditor.Validator = Class.extend({
               errors.push({
                   path: path,
                   property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-                  message: this.translate('error_multipleOf', [schema.multipleOf ||
-                      schema.divisibleBy])
+                  message: this.translate('error_multipleOf', [schema.multipleOf || schema.divisibleBy])
               });
         }
       }
