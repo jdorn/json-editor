@@ -933,7 +933,7 @@ JSONEditor.Validator = Class.extend({
           var dividend = value;
           if(parseInt(divisor, 10) < divisor) {
               var place = (divisor + "").split(".")[1].length;
-              var multiplier = Math.pow(10, parseInt(place, 10));
+              var multiplier = Math.pow(10, place);
               if(dividend.toFixed(place) == dividend) {
                   divisor = Math.round(divisor * multiplier);
                   dividend = Math.round(dividend * multiplier);
