@@ -16,7 +16,7 @@ Contributing Code
 --------------------------
 One of the major goals of JSON Editor is to be easy to modify and hack.
 
-If you fix a bug or add a cool feature, plase submit a pull request!
+If you fix a bug or add a cool feature, please submit a pull request!
 
 
 ### Code Style
