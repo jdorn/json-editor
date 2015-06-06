@@ -9,6 +9,7 @@ JSONEditor.Validator = Class.extend({
     return this._validateSchema(this.schema, value);
   },
   _validateSchema: function(schema,value,path) {
+    var self = this;
     var errors = [];
     var valid, i, j;
     var stringified = JSON.stringify(value);
@@ -52,10 +53,10 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `enum`
-    if(schema.enum) {
+    if(schema["enum"]) {
       valid = false;
-      for(i=0; i<schema.enum.length; i++) {
-        if(stringified === JSON.stringify(schema.enum[i])) valid = true;
+      for(i=0; i<schema["enum"].length; i++) {
+        if(stringified === JSON.stringify(schema["enum"][i])) valid = true;
       }
       if(!valid) {
         errors.push({
@@ -67,9 +68,9 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `extends` (version 3)
-    if(schema.extends) {
-      for(i=0; i<schema.extends.length; i++) {
-        errors = errors.concat(this._validateSchema(schema.extends[i],value,path));
+    if(schema["extends"]) {
+      for(i=0; i<schema["extends"].length; i++) {
+        errors = errors.concat(this._validateSchema(schema["extends"][i],value,path));
       }
     }
 
@@ -509,7 +510,7 @@ JSONEditor.Validator = Class.extend({
 
     // Custom type validation
     $each(JSONEditor.defaults.custom_validators,function(i,validator) {
-      errors = errors.concat(validator(schema,value,path));
+      errors = errors.concat(validator.call(self,schema,value,path));
     });
 
     return errors;

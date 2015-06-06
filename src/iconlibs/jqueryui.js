@@ -2,7 +2,7 @@ JSONEditor.defaults.iconlibs.jqueryui = JSONEditor.AbstractIconLib.extend({
   mapping: {
     collapse: 'triangle-1-s',
     expand: 'triangle-1-e',
-    delete: 'trash',
+    "delete": 'trash',
     edit: 'pencil',
     add: 'plusthick',
     cancel: 'closethick',

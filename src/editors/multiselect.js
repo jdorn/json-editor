@@ -7,7 +7,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 
     var items_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
-    var e = items_schema.enum || [];
+    var e = items_schema["enum"] || [];
     this.option_keys = [];
     for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
@@ -91,7 +91,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
   },
   setupSelect2: function() {
     if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
-        var options = $.extend({},JSONEditor.plugins.select2);
+        var options = window.jQuery.extend({},JSONEditor.plugins.select2);
         if(this.schema.options && this.schema.options.select2_options) options = $extend(options,this.schema.options.select2_options);
         this.select2 = window.jQuery(this.input).select2(options);
         var self = this;

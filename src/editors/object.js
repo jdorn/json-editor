@@ -1,6 +1,6 @@
 JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   getDefault: function() {
-    return $extend({},this.schema.default || {});
+    return $extend({},this.schema["default"] || {});
   },
   getChildEditors: function() {
     return this.editors;
@@ -173,6 +173,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     // Schema declared directly in properties
     var schema = this.schema.properties[key] || {};
     schema = $extend({},schema);
+    var matched = this.schema.properties[key]? true : false;
     
     // Any matching patternProperties should be merged in
     if(this.schema.patternProperties) {
@@ -182,8 +183,14 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(regex.test(key)) {
           schema.allOf = schema.allOf || [];
           schema.allOf.push(this.schema.patternProperties[i]);
+          matched = true;
         }
       }
+    }
+    
+    // Hasn't matched other rules, use additionalProperties schema
+    if(!matched && this.schema.additionalProperties && typeof this.schema.additionalProperties === "object") {
+      schema = $extend({},this.schema.additionalProperties);
     }
     
     return schema;

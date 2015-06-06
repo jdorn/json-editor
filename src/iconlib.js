@@ -2,7 +2,7 @@ JSONEditor.AbstractIconLib = Class.extend({
   mapping: {
     collapse: '',
     expand: '',
-    delete: '',
+    "delete": '',
     edit: '',
     add: '',
     cancel: '',

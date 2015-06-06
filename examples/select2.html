@@ -25,7 +25,7 @@
         schema: {
           type: "object",
           title: "Text",
-          required: ["fontSize","color","font","weight","possibleFonts"],
+          required: ["fontSize","color","font","weight","tags","possibleFonts"],
           properties: {
             fontSize: {
               type: "integer",
@@ -54,6 +54,15 @@
               enum: ["normal","bold","bolder","lighter"],
               options: {
                 enum_titles: ["Normal (400)","Bold (700)","Bolder (900)","Lighter (200)"]
+              }
+            },
+            tags: {
+              type: "array",
+              uniqueItems: true,
+              format: "select",
+              items: {
+                type: "string",
+                enum: ["bold","italic","smallcaps"]
               }
             },
             possibleFonts: {

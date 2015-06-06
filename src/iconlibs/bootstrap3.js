@@ -2,7 +2,7 @@ JSONEditor.defaults.iconlibs.bootstrap3 = JSONEditor.AbstractIconLib.extend({
   mapping: {
     collapse: 'chevron-down',
     expand: 'chevron-right',
-    delete: 'remove',
+    "delete": 'remove',
     edit: 'pencil',
     add: 'plus',
     cancel: 'floppy-remove',
