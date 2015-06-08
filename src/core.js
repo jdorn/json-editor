@@ -407,6 +407,9 @@ JSONEditor.prototype = {
     while (schema.$ref) {
       var ref = schema.$ref;
       delete schema.$ref;
+      
+      if(!this.refs[ref]) ref = decodeURIComponent(ref);
+      
       schema = this.extendSchemas(schema,this.refs[ref]);
     }
     return schema;
