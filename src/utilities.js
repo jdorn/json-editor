@@ -66,9 +66,9 @@ var $extend = function(destination) {
 };
 
 var $each = function(obj,callback) {
-  if(!obj) return;
+  if(!obj || typeof obj !== "object") return;
   var i;
-  if(!obj.hasOwnProperty('length') && typeof obj.length === 'number') {
+  if(Array.isArray(obj) || (typeof obj.length === 'number' && obj.length > 0 && (obj.length - 1) in obj)) {
     for(i=0; i<obj.length; i++) {
       if(callback(i,obj[i])===false) return;
     }
