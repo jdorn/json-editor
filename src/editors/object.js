@@ -146,7 +146,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           
           if(editor.options.hidden) editor.container.style.display = 'none';
           else this.theme.setGridColumnSize(editor.container,rows[i].editors[j].width);
-          editor.container.className += ' container-' + key;
           row.appendChild(editor.container);
         }
       }
@@ -162,7 +161,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         
         if(editor.options.hidden) editor.container.style.display = 'none';
         else self.theme.setGridColumnSize(editor.container,12);
-        editor.container.className += ' container-' + key;
         row.appendChild(editor.container);
       });
     }
