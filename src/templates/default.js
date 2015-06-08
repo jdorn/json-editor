@@ -1,31 +1,55 @@
 JSONEditor.defaults.templates["default"] = function() {
-  var expandVars = function(vars) {
-    var expanded = {};
-    $each(vars, function(i,el) {
-      if(typeof el === "object" && el !== null) {
-        var tmp = {};
-        $each(el, function(j,item) {
-          tmp[i+'.'+j] = item;
-        });
-        $extend(expanded,expandVars(tmp));
-      }
-      else {
-        expanded[i] = el;
-      }
-    });
-    return expanded;
-  };
-  
   return {
     compile: function(template) {
-      return function (vars) {
-        var expanded = expandVars(vars);
+      var matches = template.match(/{{\s*([a-zA-Z0-9\-_\.]+)\s*}}/g);
+      var l = matches.length;
+
+      // Shortcut if the template contains no variables
+      if(!l) return function() { return template; };
+
+      // Pre-compute the search/replace functions
+      // This drastically speeds up template execution
+      var replacements = [];
+      var get_replacement = function(i) {
+        var p = matches[i].replace(/[{}\s]+/g,'').split('.');
+        var n = p.length;
+        var func;
         
-        var ret = template+"";
-        // Only supports basic {{var}} macro replacement
-        $each(expanded,function(key,value) {
-          ret = ret.replace(new RegExp('{{\\s*'+key+'\\s*}}','g'),value);
+        if(n > 1) {
+          var cur;
+          func = function(vars) {
+            cur = vars;
+            for(i=0; i<n; i++) {
+              cur = cur[p[i]];
+              if(!cur) break;
+            }
+            return cur;
+          };
+        }
+        else {
+          p = p[0];
+          func = function(vars) {
+            return vars[p];
+          };
+        }
+        
+        replacements.push({
+          s: matches[i],
+          r: func
         });
+      };
+      for(var i=0; i<l; i++) {
+        get_replacement(i);
+      }
+
+      // The compiled function
+      return function(vars) {
+        var ret = template+"";
+        var r;
+        for(i=0; i<l; i++) {
+          r = replacements[i];
+          ret = ret.replace(r.s, r.r(vars));
+        }
         return ret;
       };
     }
