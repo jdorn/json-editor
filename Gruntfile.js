@@ -2,6 +2,11 @@
 
 module.exports = function(grunt) {
   grunt.initConfig({
+	clean: {
+		dist: {
+			src: ['dist/*.js']
+		}	
+	},  	
     concat: {
       dist: {
         src: [
@@ -71,7 +76,7 @@ module.exports = function(grunt) {
     watch: {
       scripts: {
         files: ["src/**/*.js"],
-        tasks: ["concat"]
+        tasks: ["clean","concat"]
       }
     },
     jshint: {
@@ -131,8 +136,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-clean');
 
   // Default task.
-  grunt.registerTask('default', ['jshint:beforeconcat','concat','jshint:afterconcat','uglify']);
+  grunt.registerTask('default', ['clean','jshint:beforeconcat','concat','jshint:afterconcat','uglify']);
 
 };
