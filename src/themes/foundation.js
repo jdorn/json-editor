@@ -191,7 +191,7 @@ JSONEditor.defaults.themes.foundation5 = JSONEditor.defaults.themes.foundation.e
   },
   getTabHolder: function() {
     var el = document.createElement('div');
-    el.innerHTML = "<dl class='tabs vertical'></dl><div class='tabs-content'></div>";
+    el.innerHTML = "<dl class='tabs vertical'></dl><div class='tabs-content vertical'></div>";
     return el;
   },
   getTab: function(text) {
