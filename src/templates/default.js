@@ -1,31 +1,32 @@
 JSONEditor.defaults.templates["default"] = function() {
-  var expandVars = function(vars) {
-    var expanded = {};
-    $each(vars, function(i,el) {
-      if(typeof el === "object" && el !== null) {
-        var tmp = {};
-        $each(el, function(j,item) {
-          tmp[i+'.'+j] = item;
-        });
-        $extend(expanded,expandVars(tmp));
-      }
-      else {
-        expanded[i] = el;
-      }
-    });
-    return expanded;
-  };
+  function resolve(ref, context) {
+    var dot = ref.indexOf('.');
+    if (dot === -1)
+      return context[ref];
+    var predot = ref.slice(0, dot);
+    if (!predot)
+      return null;
+    
+    if (context[predot] === undefined)
+      return null;
+    
+    return resolve(ref.slice(dot + 1), context[predot]);
+  }
   
   return {
     compile: function(template) {
       return function (vars) {
-        var expanded = expandVars(vars);
-        
         var ret = template+"";
-        // Only supports basic {{var}} macro replacement
-        $each(expanded,function(key,value) {
-          ret = ret.replace(new RegExp('{{\\s*'+key+'\\s*}}','g'),value);
-        });
+        var re = /{{\s*([a-zA-Z0-9_.\-]+)\s*}}/g;
+        var m = re.exec(ret);
+        while (m) {
+          var t = resolve(m[1], vars);
+          if (t) {
+            ret = ret.replace(m[0], t);
+            re.lastIndex += (t.length - m[0].length); // handle short substitutions
+          }
+          m = re.exec(ret);
+        }
         return ret;
       };
     }
