@@ -16,7 +16,7 @@ Download the [production version][min] (22K when gzipped) or the [development ve
 Requirements
 -----------------
 
-JSON Schema has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
+JSON Editor has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
 
 ### Optional Requirements
 
@@ -39,7 +39,7 @@ If you learn best by example, check these out:
 *  Advanced Usage Example - http://rawgithub.com/jdorn/json-editor/master/examples/advanced.html
 *  CSS Integration Example - http://rawgithub.com/jdorn/json-editor/master/examples/css_integration.html
 
-The rest of this README contains detailed documentation about every aspect of JSON Editor.
+The rest of this README contains detailed documentation about every aspect of JSON Editor.  For more under-the-hood documentation, check the wiki.
 
 ### Initialize
 
