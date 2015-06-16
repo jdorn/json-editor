@@ -94,3 +94,81 @@ var $triggerc = function(el,event) {
 
   el.dispatchEvent(e);
 };
+
+/*
+ * Minimal functionality taken from math.js v1.7.0 for floating point arithmetic.
+ * math.js is under Apache license, see https://github.com/josdejong/mathjs/blob/master/LICENSE for license
+ */
+var $math = {
+  epsilon: 1e-14,
+  dbl_epsilon: Number.EPSILON || 2.2204460492503130808472633361816E-16,
+  isNumber: function(value) {
+    return (value instanceof Number) || (typeof value == 'number');
+  },
+  mod: function(x, y) {
+    if (y > 0) {
+      // We don't use JavaScript's % operator here as this doesn't work
+      // correctly for x < 0 and x == 0
+      // see http://en.wikipedia.org/wiki/Modulo_operation
+      return x - y * Math.floor(x / y);
+    }
+    else if (y === 0) {
+      return x;
+    }
+    else { // y < 0
+      // TODO: implement mod for a negative divisor
+      throw new Error('Cannot calculate mod for a negative divisor');
+    }
+  },
+  nearlyEqual: function(x, y) {
+    // use "==" operator, handles infinities
+    if (x == y) return true;
+
+    // NaN
+    if (isNaN(x) || isNaN(y)) return false;
+
+    // at this point x and y should be finite
+    if(isFinite(x) && isFinite(y)) {
+      // check numbers are very close, needed when comparing numbers near zero
+      var diff = Math.abs(x - y);
+      if (diff < $math.dbl_epsilon) {
+	return true;
+      }
+      else {
+	// use relative error
+	return diff <= Math.max(Math.abs(x), Math.abs(y)) * $math.epsilon;
+      }
+    }
+
+    // Infinite and Number or negative Infinite and positive Infinite cases
+    return false;
+  },
+  larger: function(x, y) {
+    if ($math.isNumber(x) && $math.isNumber(y)) {
+      return !$math.nearlyEqual(x, y, $math.epsilon) && x > y;
+    } else {
+      throw new TypeError('larger', typeof(x), typeof(y));
+    }
+  },
+  largerEq: function(x, y) {
+    if ($math.isNumber(x) && $math.isNumber(y)) {
+      return $math.nearlyEqual(x, y, $math.epsilon) || x > y;
+    } else {
+      throw new TypeError('largerEq', typeof(x), typeof(y));
+    }
+  },
+  smaller: function(x, y) {
+    if ($math.isNumber(x) && $math.isNumber(y)) {
+      return !$math.nearlyEqual(x, y, $math.epsilon) && x < y;
+    } else {
+      throw new TypeError('smaller', typeof(x), typeof(y));
+    }
+  },
+  smallerEq: function(x, y) {
+    if ($math.isNumber(x) && $math.isNumber(y)) {
+      return !$math.nearlyEqual(x, y, $math.epsilon) && x < y;
+    } else {
+      throw new TypeError('smallerEq', typeof(x), typeof(y));
+    }
+  }
+};
