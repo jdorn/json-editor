@@ -2,6 +2,14 @@
 
 module.exports = function(grunt) {
   grunt.initConfig({
+    bower_concat: {
+      all: {
+        dest: 'src/bower.js',
+        mainFiles: {
+          'mathjs': ['dist/math.js']
+	}
+      }
+    },
     concat_sourcemap: {
       options: {
         sourcesContent: true
@@ -12,6 +20,9 @@ module.exports = function(grunt) {
             
             // License & version info, start the containing closure
             'src/intro.js',
+
+            // bower dependencies
+            'src/bower.js',
             
             // Simple inheritance
             'src/class.js',
@@ -119,25 +130,18 @@ module.exports = function(grunt) {
         
         // Wrapper for $.fn style initialization
         'src/jquery.js'
-      ],
-      afterconcat: {
-        options: {
-          undef: true
-        },
-        files: {
-          src: ['dist/jsoneditor.js']
-        }
-      }
+      ]
     }
   });
 
   // These plugins provide necessary tasks.
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-bower-concat');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-concat-sourcemap');
 
   // Default task.
-  grunt.registerTask('default', ['jshint:beforeconcat','concat_sourcemap','jshint:afterconcat','uglify']);
+  grunt.registerTask('default', ['jshint:beforeconcat','bower_concat','concat_sourcemap','uglify']);
 
 };

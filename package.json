@@ -27,14 +27,16 @@
     "node": ">= 0.8.0"
   },
   "devDependencies": {
+    "bower": "~1.4.1",
     "grunt": "~0.4.2",
+    "grunt-bower-concat": "~0.5.0",
     "grunt-concat-sourcemap": "^0.4.3",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt-contrib-uglify": "~0.2.0",
     "grunt-contrib-watch": "~0.5.3"
   },
   "scripts": {
-    "build": "npm install && grunt",
+    "build": "npm install && node_modules/.bin/bower install --config.interactive=false && grunt",
     "start": "grunt watch",
     "test": "grunt"
   }
