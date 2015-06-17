@@ -26,6 +26,7 @@ The following are not required, but can improve the style and usability of JSON 
 *  A compatible CSS framework for styling (bootstrap 2/3, foundation 3/4/5, or jqueryui)
 *  A compatible icon library (bootstrap 2/3 glyphicons, foundation icons 2/3, jqueryui, or font awesome 3/4)
 *  [SCEditor](http://www.sceditor.com/) for WYSIWYG editing of HTML or BBCode content
+*  [Summernote](http://summernote.org/) for WYSIWYG editing of HTML content
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
 *  [Ace Editor](http://ace.c9.io/) for editing code
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
@@ -525,14 +526,14 @@ Here is an example that will show a color picker in browsers that support it:
 
 In addition to the standard HTML input formats, JSON Editor can also integrate with several 3rd party specialized editors.  These libraries are not included in JSON Editor and you must load them on the page yourself.
 
-__SCEditor__ provides WYSIWYG editing of HTML and BBCode.  To use it, set the format to `html` or `bbcode` and set the `wysiwyg` option to `true`:
+__SCEditor__ provides WYSIWYG editing of HTML and BBCode.  To use it, set the format to `html` or `bbcode` and set the `wysiwyg` option to `sceditor`:
 
 ```json
 {
   "type": "string",
   "format": "html",
   "options": {
-    "wysiwyg": true
+    "wysiwyg": "sceditor"
   }
 }
 ```
@@ -541,6 +542,18 @@ You can configure SCEditor by setting configuration options in `JSONEditor.plugi
 
 ```js
 JSONEditor.plugins.sceditor.emoticonsEnabled = false;
+```
+
+__Summernote__ provides WYSIWYG editing of HTML. To use it, set the format to `html` and set the `wysiwyg` option to `summernote`:
+
+```json
+{
+  "type": "string",
+  "format": "html",
+  "options": {
+    "wysiwyg": "summernote"
+  }
+}
 ```
 
 __EpicEditor__ is a simple Markdown editor with live preview.  To use it, set the format to `markdown`:
