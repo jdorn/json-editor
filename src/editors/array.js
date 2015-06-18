@@ -605,6 +605,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       var i = self.rows.length;
       if(self.row_cache[i]) {
         self.rows[i] = self.row_cache[i];
+        self.rows[i].setValue(self.rows[i].getDefault());
         self.rows[i].container.style.display = '';
         if(self.rows[i].tab) self.rows[i].tab.style.display = '';
         self.rows[i].register();
