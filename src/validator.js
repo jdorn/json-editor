@@ -1,7 +1,7 @@
 JSONEditor.Validator = Class.extend({
   init: function(jsoneditor,schema) {
     this.jsoneditor = jsoneditor;
-    this.schema = schema || this.jsoneditor.schema;
+    this.schema = schema || this.jsoneditor.root_schema;
     this.options = {};
     this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
   },

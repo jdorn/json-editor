@@ -94,3 +94,17 @@ var $triggerc = function(el,event) {
 
   el.dispatchEvent(e);
 };
+
+
+var $walk = function(path,obj) {
+  path = path.split('.');
+  for (var i = 0; i < path.length; ++i) {
+    if (obj[path[i]]) {
+      obj = obj[path[i]];
+    }
+    else {
+      return null;
+    }
+  }
+  return obj;
+}

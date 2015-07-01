@@ -17,12 +17,13 @@ JSONEditor.prototype = {
     if(!theme_class) throw "Unknown theme " + (this.options.theme || JSONEditor.defaults.theme);
     
     this.schema = this.options.schema;
+    this.root_schema = this.options.root_schema ? $walk(this.options.root_schema, this.schema) : this.schema;
     this.theme = new theme_class();
     this.template = this.options.template;
     this.refs = this.options.refs || {};
     this.uuid = 0;
     this.__data = {};
-    
+
     var icon_class = JSONEditor.defaults.iconlibs[this.options.iconlib || JSONEditor.defaults.iconlib];
     if(icon_class) this.iconlib = new icon_class();
 
@@ -37,10 +38,10 @@ JSONEditor.prototype = {
       self.validator = new JSONEditor.Validator(self);
       
       // Create the root editor
-      var editor_class = self.getEditorClass(self.schema);
+      var editor_class = self.getEditorClass(self.root_schema);
       self.root = self.createEditor(editor_class, {
         jsoneditor: self,
-        schema: self.schema,
+        schema: self.root_schema,
         required: true,
         container: self.root_container
       });
