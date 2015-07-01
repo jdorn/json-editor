@@ -68,12 +68,26 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
         self.enum_display[i] = ""+(display[i] || option);
         self.enum_values[i] = self.typecast(option);
       });
+
+      if(!this.schema.required){
+        self.enum_display.unshift(' ');
+        self.enum_options.unshift('undefined');
+        self.enum_values.unshift(undefined)
+      }
+            
     }
     // Boolean
     else if(this.schema.type === "boolean") {
       self.enum_display = this.schema.options && this.schema.options.enum_titles || ['true','false'];
       self.enum_options = ['1',''];
       self.enum_values = [true,false];
+      
+      if(!this.schema.required){
+        self.enum_display.unshift(' ');
+        self.enum_options.unshift('undefined');
+        self.enum_values.unshift(undefined)
+      }
+    
     }
     // Dynamic Enum
     else if(this.schema.enumSource) {
