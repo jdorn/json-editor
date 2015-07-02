@@ -377,10 +377,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.ace_editor.setValue(this.getValue());
         
         // The theme
-        if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
+        if(JSONEditor.plugins.ace.theme) {
+          this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
+        }
         // The mode
-        mode = window.ace.require("ace/mode/"+mode);
-        if(mode) this.ace_editor.getSession().setMode(new mode.Mode());
+        if(mode) {
+          this.ace_editor.getSession().setMode("ace/mode/"+mode);
+        }
         
         // Listen for changes
         this.ace_editor.on('change',function() {
