@@ -4,7 +4,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
   },
   build: function() {    
     var self = this;
-    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
 
     // Input that holds the base64 string
     this.input = this.theme.getFormInputField('hidden');

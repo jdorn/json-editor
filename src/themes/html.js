@@ -1,9 +1,10 @@
 JSONEditor.defaults.themes.html = JSONEditor.AbstractTheme.extend({
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.display = 'block';
     el.style.marginBottom = '3px';
     el.style.fontWeight = 'bold';
+    if(required)el.className += " required";
     return el;
   },
   getFormInputDescription: function(text) {

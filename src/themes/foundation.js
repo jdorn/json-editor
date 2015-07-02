@@ -23,9 +23,10 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     }
     input.group = this.closest(input,'.form-control');
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.display = 'inline-block';
+    if(required)el.className += " required";
     return el;
   },
   getFormInputField: function(type) {
@@ -109,9 +110,10 @@ JSONEditor.defaults.themes.foundation3 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.6em';
     return el;
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.fontWeight = 'bold';
+    if(required)el.className += " required";
     return el;
   },
   getTabHolder: function() {
@@ -167,9 +169,10 @@ JSONEditor.defaults.themes.foundation4 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.8rem';
     return el;
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.fontWeight = 'bold';
+    if(required)el.className += " required";
     return el;
   }
 });

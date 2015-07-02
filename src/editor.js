@@ -368,6 +368,12 @@ JSONEditor.AbstractEditor = Class.extend({
   isEnabled: function() {
     return !this.disabled;
   },
+  isRequired: function() {
+    if(typeof this.schema.required === "boolean") return editor.schema.required;
+    else if(this.parent && this.parent.schema && Array.isArray(this.parent.schema.required)) return this.parent.schema.required.indexOf(this.getTitle()) > -1;
+    else if(this.jsoneditor.options.required_by_default) return true;
+    else return false;
+  },
   getDisplayText: function(arr) {
     var disp = [];
     var used = {};
