@@ -35,6 +35,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.sceditor_instance) {
       this.sceditor_instance.val(sanitized);
     }
+    else if(this.summernote_instance) {
+       this.summernote_instance.code(sanitized);
+    }
     else if(this.epiceditor) {
       this.epiceditor.importFile(null,sanitized);
     }
@@ -290,7 +293,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     // Code editor
     if(this.source_code) {      
       // WYSIWYG html and bbcode editor
-      if(this.options.wysiwyg && 
+      if(this.options.wysiwyg === 'sceditor'  && 
         ['html','bbcode'].indexOf(this.input_type) >= 0 && 
         window.jQuery && window.jQuery.fn && window.jQuery.fn.sceditor
       ) {
@@ -317,6 +320,21 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           self.onChange(true);
         });
       }
+
+      else if (this.options.wysiwyg === 'summernote' && this.input_type === 'html' && 
+        window.jQuery && window.jQuery.fn && window.jQuery.fn.summernote) {
+        self.summernote_instance =window.jQuery(self.input).summernote({          
+          height: 300,
+          onBlur: function(e) {
+            self.input.value = self.summernote_instance.code();
+            self.value = self.input.value;
+            self.is_dirty = true;
+            self.onChange(true);
+          }          
+        }); 
+        self.summernote_instance.code(this.getValue());
+      }
+
       // EpicEditor for markdown (if it's loaded)
       else if (this.input_type === 'markdown' && window.EpicEditor) {
         this.epiceditor_container = document.createElement('div');
@@ -359,10 +377,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.ace_editor.setValue(this.getValue());
         
         // The theme
-        if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
+        if(JSONEditor.plugins.ace.theme) {
+          this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
+        }
         // The mode
-        mode = window.ace.require("ace/mode/"+mode);
-        if(mode) this.ace_editor.getSession().setMode(new mode.Mode());
+        if(mode) {
+          this.ace_editor.getSession().setMode("ace/mode/"+mode);
+        }
         
         // Listen for changes
         this.ace_editor.on('change',function() {
@@ -386,6 +407,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     // If using SCEditor, destroy the editor instance
     if(this.sceditor_instance) {
       this.sceditor_instance.destroy();
+    }
+    else if (this.summernote_instance) {
+      this.summernote_instance.destroy();
     }
     else if(this.epiceditor) {
       this.epiceditor.unload();

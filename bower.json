@@ -1,6 +1,6 @@
 {
   "name": "json-editor",
-  "version": "0.7.20",
+  "version": "0.7.24",
   "authors": [
     "Jeremy Dorn <jeremy@jeremydorn.com>"
   ],
@@ -23,5 +23,11 @@
     "package.json",
     "Gruntfile.js",
     "src"
-  ]
+  ],
+  "devDependencies": {
+    "bootstrap": "~3.3.5",
+    "SCEditor": "~1.4.7",
+    "font-awesome": "~4.3.0",
+    "summernote": "~0.6.7"
+  }
 }
