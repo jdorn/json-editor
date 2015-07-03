@@ -209,7 +209,7 @@ JSONEditor.Validator = Class.extend({
       // `multipleOf` and `divisibleBy`
       if(schema.multipleOf || schema.divisibleBy) {
         var divisor = schema.multipleOf || schema.divisibleBy;
-        valid = math.mod(value, divisor);
+        valid = math.mod(math.bignumber(value), math.bignumber(divisor));
         if(!math.equal(valid, 0.0) && !math.equal(valid, divisor)) {
           errors.push({
             path: path,
