@@ -951,6 +951,29 @@ Here's a more complex example (this uses the Swig template engine syntax to show
 }
 ```
 
+You can also specify a list of static items with a slightly different syntax:
+
+```js+jinja
+{
+  "enumSource": [{
+      // A watched field source
+      "source": [
+        {
+          "value": 1,
+          "title": "One"
+        },
+        {
+          "value": 2,
+          "title": "Two"
+        }
+      ],
+      "title": "{{item.title}}",
+      "value": "{{item.value}}"
+    }]
+  ]
+}
+```
+
 The colors examples used an array of strings directly.  Using the verbose form, you can 
 also make it work with an array of objects.  Here's an example:
 

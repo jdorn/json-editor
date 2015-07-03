@@ -211,9 +211,15 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
           select_options = select_options.concat(this.enumSource[i]);
           select_titles = select_titles.concat(this.enumSource[i]);
         }
-        // A watched field
-        else if(vars[this.enumSource[i].source]) {
-          var items = vars[this.enumSource[i].source];
+        else {
+          var items = [];
+          // Static list of items
+          if(Array.isArray(this.enumSource[i].source)) {
+            items = this.enumSource[i].source;
+          // A watched field
+          } else {
+            items = vars[this.enumSource[i].source];
+          }
           
           // Only use a predefined part of the array
           if(this.enumSource[i].slice) {
