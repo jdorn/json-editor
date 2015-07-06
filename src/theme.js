@@ -63,7 +63,7 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style.fontWeight = 'normal';
     return el;
   },
-  getHeader: function(text) {
+  getHeader: function(text, required) {
     var el = document.createElement('h3');
     if(typeof text === "string") {
       el.textContent = text;
@@ -71,6 +71,8 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(text);
     }
+
+    if(required)el.className += " required";
     
     return el;
   },

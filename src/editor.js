@@ -369,8 +369,8 @@ JSONEditor.AbstractEditor = Class.extend({
     return !this.disabled;
   },
   isRequired: function() {
-    if(typeof this.schema.required === "boolean") return editor.schema.required;
-    else if(this.parent && this.parent.schema && Array.isArray(this.parent.schema.required)) return this.parent.schema.required.indexOf(this.getTitle()) > -1;
+    if(typeof this.schema.required === "boolean") return this.schema.required;
+    else if(this.parent && this.parent.schema && Array.isArray(this.parent.schema.required)) return this.parent.schema.required.indexOf(this.key) > -1;
     else if(this.jsoneditor.options.required_by_default) return true;
     else return false;
   },
