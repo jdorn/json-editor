@@ -136,6 +136,11 @@ Here are all the available options:
     <td><code>false</code></td>
   </tr>
   <tr>
+    <td>keep_oneof_values</td>
+    <td>If <code>true</code>, makes oneOf copy properties over when switching.</td>
+    <td><code>true</code></td>
+  </tr>
+  <tr>
     <td>schema</td>
     <td>A valid JSON Schema to use for the editor.  Version 3 and Version 4 of the draft specification are supported.</td>
     <td><code>{}</code></td>
