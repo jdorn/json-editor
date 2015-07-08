@@ -129,9 +129,17 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
   afterInputReady: function(input) {
     if(input.controls) return;
     input.controls = this.closest(input,'.form-control');
+    if (this.queuedInputErrorText) {
+        var text = this.queuedInputErrorText;
+        delete this.queuedInputErrorText;
+        this.addInputError(input,text);
+    }
   },
   addInputError: function(input,text) {
-    if(!input.controls) return;
+    if(!input.controls) {
+        this.queuedInputErrorText = text;
+        return;
+    }
     if(!input.errmsg) {
       input.errmsg = document.createElement('div');
       input.errmsg.className = 'ui-state-error';
@@ -144,6 +152,9 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
     input.errmsg.textContent = text;
   },
   removeInputError: function(input) {
+    if(!input.controls) {
+        delete this.queuedInputErrorText;
+    }
     if(!input.errmsg) return;
     input.errmsg.style.display = 'none';
   },
