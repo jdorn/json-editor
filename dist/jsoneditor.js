@@ -3769,11 +3769,12 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       e.preventDefault();
       e.stopPropagation();
       var rows = self.getValue();
-      
+
       var new_active_tab = null;
       if(self.rows.length > 1 && self.rows[self.rows.length-1].tab === self.active_tab) new_active_tab = self.rows[self.rows.length-2].tab;
-      
+
       rows.pop();
+      self.row_cache = rows;
       self.setValue(rows);
       if(new_active_tab) {
         self.active_tab = new_active_tab;
