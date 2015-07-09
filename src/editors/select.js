@@ -72,7 +72,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       if(!this.schema.required){
         self.enum_display.unshift(' ');
         self.enum_options.unshift('undefined');
-        self.enum_values.unshift(undefined)
+        self.enum_values.unshift(undefined);
       }
             
     }
@@ -85,7 +85,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       if(!this.schema.required){
         self.enum_display.unshift(' ');
         self.enum_options.unshift('undefined');
-        self.enum_values.unshift(undefined)
+        self.enum_values.unshift(undefined);
       }
     
     }
