@@ -69,7 +69,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
         self.enum_values[i] = self.typecast(option);
       });
 
-      if(!this.schema.required){
+      if(!this.isRequired()){
         self.enum_display.unshift(' ');
         self.enum_options.unshift('undefined');
         self.enum_values.unshift(undefined);
@@ -82,7 +82,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       self.enum_options = ['1',''];
       self.enum_values = [true,false];
       
-      if(!this.schema.required){
+      if(!this.isRequired()){
         self.enum_display.unshift(' ');
         self.enum_options.unshift('undefined');
         self.enum_values.unshift(undefined);
