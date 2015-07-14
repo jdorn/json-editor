@@ -258,7 +258,7 @@ JSONEditor.AbstractTheme = Class.extend({
     }
   },
   closest: function(elem, selector) {
-    var matchesSelector = elem.matches || elem.webkitMatchesSelector || elem.mozMatchesSelector || elem.msMatchesSelector;
+    var matchesSelector = elem.matches || elem.webkitMatchesSelector || elem.mozMatchesSelector || elem.msMatchesSelector || elem.oMatchesSelector;
 
     while (elem && elem !== document) {
       try {
