@@ -107,4 +107,4 @@ var $walk = function(path,obj) {
     }
   }
   return obj;
-}
+};

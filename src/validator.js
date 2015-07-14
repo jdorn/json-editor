@@ -1,7 +1,7 @@
 JSONEditor.Validator = Class.extend({
   init: function(jsoneditor,schema) {
     this.jsoneditor = jsoneditor;
-    this.schema = schema || this.jsoneditor.root_schema;
+    this.schema = schema || this.jsoneditor.subschema;
     this.options = {};
     this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
   },
@@ -269,7 +269,7 @@ JSONEditor.Validator = Class.extend({
 
       // `minLength`
       if(schema.minLength) {
-        if((value+"").length < schema.minLength) {          
+        if((value+"").length < schema.minLength) {
           errors.push({
             path: path,
             property: 'minLength',
