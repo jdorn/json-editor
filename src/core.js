@@ -8,6 +8,9 @@ var JSONEditor = function(element,options) {
   this.init();
 };
 JSONEditor.prototype = {
+  // necessary since we remove the ctor property by doing a literal assignment. Without this
+  // the $isplainobject function will think that this is a plain object.
+  constructor: JSONEditor,
   init: function() {
     var self = this;
     
