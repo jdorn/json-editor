@@ -242,14 +242,14 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
               
               // Rendered value
               if(this.enumSource[i].value) {
-                item_values[j] = this.enumSource[i].value({
+                item_values[j] = this.typecast(this.enumSource[i].value({
                   i: j,
                   item: item
-                });
+                }));
               }
               // Use value directly
               else {
-                item_values[j] = items[j];
+                item_values[j] = this.typecast(items[j]);
               }
               
               // Rendered title
