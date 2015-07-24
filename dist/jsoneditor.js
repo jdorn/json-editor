@@ -4349,11 +4349,11 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   switchEditor: function(i) {
     var self = this;
-    
+
     if(!this.editors[i]) {
       this.buildChildEditor(i);
     }
-    
+
     self.type = i;
 
     self.register();
@@ -4378,7 +4378,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     self.editor_holder.appendChild(holder);
 
     var schema;
-    
+
     if(typeof type === "string") {
       schema = $extend({},self.schema);
       schema.type = type;
@@ -4406,11 +4406,11 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     self.editors[i].preBuild();
     self.editors[i].build();
     self.editors[i].postBuild();
-    
+
     if(self.editors[i].header) self.editors[i].header.style.display = 'none';
-    
+
     self.editors[i].option = self.switcher_options[i];
-    
+
     holder.addEventListener('change_header_text',function() {
       self.refreshHeaderText();
     });
@@ -4424,7 +4424,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.type = 0;
     this.editors = [];
     this.validators = [];
-    
+
     this.keep_values = true;
     if(typeof this.jsoneditor.options.keep_oneof_values !== "undefined") this.keep_values = this.jsoneditor.options.keep_oneof_values;
     if(typeof this.options.keep_oneof_values !== "undefined") this.keep_values = this.options.keep_oneof_values;
@@ -4477,14 +4477,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       self.switchEditor(self.display_text.indexOf(this.value));
       self.onChange(true);
     });
-    this.switcher.style.marginBottom = 0;
-    this.switcher.style.width = 'auto';
-    this.switcher.style.display = 'inline-block';
-    this.switcher.style.marginLeft = '5px';
 
     this.editor_holder = document.createElement('div');
     container.appendChild(this.editor_holder);
@@ -4492,9 +4488,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.switcher_options = this.theme.getSwitcherOptions(this.switcher);
     $each(this.types,function(i,type) {
       self.editors[i] = false;
-      
+
       var schema;
-      
+
       if(typeof type === "string") {
         schema = $extend({},self.schema);
         schema.type = type;
@@ -4510,7 +4506,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
       self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema);
     });
-    
+
     this.switchEditor(0);
   },
   onChildEditorChange: function(editor) {
@@ -4518,7 +4514,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       this.refreshValue();
       this.refreshHeaderText();
     }
-    
+
     this._super();
   },
   refreshHeaderText: function() {
@@ -4540,7 +4536,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         return false;
       }
     });
-    
+
     this.switchEditor(this.type);
 
     this.editors[this.type].setValue(val,initial);
@@ -4558,7 +4554,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   showValidationErrors: function(errors) {
     var self = this;
-    
+
     // oneOf error paths need to remove the oneOf[i] part before passing to child editors
     if(this.oneOf) {
       $each(this.editors,function(i,editor) {
@@ -4572,7 +4568,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
             new_errors.push(new_error);
           }
         });
-        
+
         editor.showValidationErrors(new_errors);
       });
     }
@@ -4611,17 +4607,11 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
     // Switcher
     this.switcher = this.theme.getSwitcher(this.select_options);
     this.container.appendChild(this.switcher);
-    this.switcher.style.width = 'auto';
-    this.switcher.style.display = 'inline-block';
-    this.switcher.style.marginLeft = '5px';
-    this.switcher.style.marginBottom = 0;
 
     // Display area
     this.display_area = this.theme.getIndentedPanel();
-    this.display_area.style.paddingTop = 0;
-    this.display_area.style.paddingBottom = 0;
     this.container.appendChild(this.display_area);
-    
+
     if(this.options.hide_display) this.display_area.style.display = "none";
 
     this.switcher.addEventListener('change',function() {
@@ -4685,7 +4675,7 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
         // TODO: use theme
         ret += '<li>'+html+'</li>';
       });
-      
+
       if(Array.isArray(el)) ret = '<ol>'+ret+'</ol>';
       else ret = "<ul style='margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;'>"+ret+'</ul>';
 
@@ -5574,7 +5564,7 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   setGridColumnSize: function(el,size) {
-    
+
   },
   getLink: function(text) {
     var el = document.createElement('a');
@@ -5612,7 +5602,7 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(text);
     }
-    
+
     return el;
   },
   getCheckbox: function() {
@@ -5648,10 +5638,14 @@ JSONEditor.AbstractTheme = Class.extend({
   getSwitcher: function(options) {
     var switcher = this.getSelectInput(options);
     switcher.style.backgroundColor = 'transparent';
-    switcher.style.height = 'auto';
+    switcher.style.display = 'inline-block';
     switcher.style.fontStyle = 'italic';
     switcher.style.fontWeight = 'normal';
+    switcher.style.height = 'auto';
+    switcher.style.marginBottom = 0;
+    switcher.style.marginLeft = '5px';
     switcher.style.padding = '0 0 0 3px';
+    switcher.style.width = 'auto';
     return switcher;
   },
   getSwitcherOptions: function(switcher) {
@@ -5691,7 +5685,7 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   afterInputReady: function(input) {
-    
+
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
@@ -5703,7 +5697,7 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(input);
     }
-    
+
     if(description) el.appendChild(description);
     return el;
   },
