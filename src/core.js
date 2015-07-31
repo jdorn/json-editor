@@ -12,6 +12,7 @@ JSONEditor.prototype = {
     var self = this;
     
     this.ready = false;
+    this.copyClipboard = null;
 
     var theme_class = JSONEditor.defaults.themes[this.options.theme || JSONEditor.defaults.theme];
     if(!theme_class) throw "Unknown theme " + (this.options.theme || JSONEditor.defaults.theme);
@@ -563,6 +564,12 @@ JSONEditor.prototype = {
     });
 
     return extended;
+  },
+  setCopyClipboardContents: function(value) {
+    this.copyClipboard = value;
+  },
+  getCopyClipboardContents: function() {
+    return this.copyClipboard;
   }
 };
 
