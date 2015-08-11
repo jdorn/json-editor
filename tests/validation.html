@@ -205,17 +205,17 @@
         },
         multipleOf: {
             schema: {
-                multipleOf: 5
+                multipleOf: .3
             },
-            valid: [5,0,10],
-            invalid: [5.5,8,1]
+            valid: [.3,.6,.9,1.8],
+            invalid: [.4,1,2]
         },
         divisibleBy: {
             schema: {
-                divisibleBy: 5
+                divisibleBy: .3
             },
-            valid: [5,0,10],
-            invalid: [5.5,8,1]
+            valid: [0,.3,.6,.9,1.8],
+            invalid: [.4,1,2]
         },
         minmax: {
             schema: {
