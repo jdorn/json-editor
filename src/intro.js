@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.21 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.22 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2015-07-03
+ * Date: 2015-08-12
  */
 
 /**
