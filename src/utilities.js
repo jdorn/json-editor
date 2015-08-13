@@ -9,7 +9,7 @@ var $isplainobject = function( obj ) {
   // - Any object or value whose internal [[Class]] property is not "[object Object]"
   // - DOM nodes
   // - window
-  if (typeof obj !== "object" || obj.nodeType || (obj != null && obj === obj.window)) {
+  if (typeof obj !== "object" || obj.nodeType || (obj !== null && obj === obj.window)) {
     return false;
   }
 
