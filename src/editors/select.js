@@ -244,7 +244,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
             if(this.enumSource[i].filter) {
               var new_items = [];
               for(j=0; j<items.length; j++) {
-                if(this.enumSource[i].filter({i:j,item:items[j]})) new_items.push(items[j]);
+                if(this.enumSource[i].filter({i:j,item:items[j],watched:vars})) new_items.push(items[j]);
               }
               items = new_items;
             }
