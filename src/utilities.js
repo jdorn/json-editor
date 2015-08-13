@@ -1,50 +1,25 @@
 /**
- * Taken from jQuery 1
+ * Taken from jQuery 2.1.3
  *
  * @param obj
- * @returns {*}
+ * @returns {boolean}
  */
 var $isplainobject = function( obj ) {
-  var key;
-
-  // Must be an Object.
-  // Because of IE, we also have to check the presence of the constructor property.
-  // Make sure that DOM nodes and window objects don't pass through, as well
-  if ( !obj || typeof obj !== "object" || obj.nodeType || obj === window ) {
+  // Not plain objects:
+  // - Any object or value whose internal [[Class]] property is not "[object Object]"
+  // - DOM nodes
+  // - window
+  if (typeof obj !== "object" || obj.nodeType || (obj !== null && obj === obj.window)) {
     return false;
   }
 
-  // Not own constructor property must be Object
-  if (obj.constructor &&
-    !obj.hasOwnProperty('constructor') &&
-    !obj.constructor.prototype.hasOwnProperty('isPrototypeOf')) {
+  if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
     return false;
   }
 
-  try {
-    // Not own constructor property must be Object
-    if ( obj.constructor &&
-        !obj.hasOwnProperty("constructor") &&
-        !obj.constructor.prototype.hasOwnProperty('isPrototypeOf') ) {
-      return false;
-    }
-  } catch ( e ) {
-    // IE8,9 Will throw exceptions on certain host objects #9897
-    return false;
-  }
-
-  // Support: IE<9
-  // Handle iteration over inherited properties before own properties.
-  if ( /msie 8\.0/i.test( window.navigator.userAgent ) ) {
-    for ( key in obj ) {
-      return obj.hasOwnProperty(key);
-    }
-  }
-
-  // Own properties are enumerated firstly, so to speed up,
-  // if last one is own, then all properties are own.
-  for ( key in obj ) {}
-  return key === undefined || obj.hasOwnProperty(key);
+  // If the function hasn't returned already, we're confident that
+  // |obj| is a plain object, created by {} or constructed with new Object
+  return true;
 };
 
 var $extend = function(destination) {
@@ -74,9 +49,17 @@ var $each = function(obj,callback) {
     }
   }
   else {
-    for(i in obj) {
-      if(!obj.hasOwnProperty(i)) continue;
-      if(callback(i,obj[i])===false) return;
+    if (Object.keys) {
+      var keys = Object.keys(obj);
+      for(i=0; i<keys.length; i++) {
+        if(callback(keys[i],obj[keys[i]])===false) return;
+      }
+    }
+    else {
+      for(i in obj) {
+        if(!obj.hasOwnProperty(i)) continue;
+        if(callback(i,obj[i])===false) return;
+      }
     }
   }
 };
