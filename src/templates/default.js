@@ -2,7 +2,7 @@ JSONEditor.defaults.templates["default"] = function() {
   return {
     compile: function(template) {
       var matches = template.match(/{{\s*([a-zA-Z0-9\-_\.]+)\s*}}/g);
-      var l = matches.length;
+      var l = matches && matches.length;
 
       // Shortcut if the template contains no variables
       if(!l) return function() { return template; };
