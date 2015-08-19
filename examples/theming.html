@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Standalone theme JSON Editor Example</title>
+
+    <!-- Foundation CSS framework (Bootstrap and jQueryUI also supported) -->
+    <link rel='stylesheet' href='//cdn.jsdelivr.net/foundation/5.0.2/css/foundation.min.css'>
+    <!-- Font Awesome icons (Bootstrap, Foundation, and jQueryUI also supported) -->
+    <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css'>
+
+    <script src="../dist/jsoneditor.js"></script>
+
+    <script>
+    // Set the default CSS theme and icon library globally
+    // The theme can be reused to generate custom UI elements
+    var theme = new JSONEditor.defaults.themes["foundation5"]();
+    JSONEditor.defaults.theme = theme;
+    JSONEditor.defaults.iconlib = 'fontawesome4';
+    </script>
+  </head>
+  <body>
+    <div class='row'>
+      <div class='medium-12 columns'>
+        <h1>CSS Integration JSON Editor Example</h1>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='medium-6 columns'>
+        <p>JSON Editor supports these popular CSS frameworks:</p>
+        <ul>
+          <li>Bootstrap 2</li>
+          <li>Bootstrap 3</li>
+          <li>Foundation 3</li>
+          <li>Foundation 4</li>
+          <li>Foundation 5 (shown here)</li>
+          <li>jQuery UI</li>
+        </ul>
+      </div>
+      <div class='medium-6 columns'>
+        <p>JSON Editor supports these popular icon libraries:</p>
+        <ul>
+          <li>Bootstrap 2 Glyphicons</li>
+          <li>Bootstrap 3 Glyphicons</li>
+          <li>Foundicons 2</li>
+          <li>Foundicons 3</li>
+          <li>jQueryUI</li>
+          <li>Font Awesome 3</li>
+          <li>Font Awesome 4 (shown here)</li>
+        </ul>
+      </div>
+    </div>
+    <div class='row'>
+      <div class='medium-12-columns'>
+        <button id='submit' class='tiny'>Submit (console.log)</button>
+        <button id='restore' class='secondary tiny'>Restore to Default</button>
+        <span id='valid_indicator' class='label'></span>
+      </div>
+    </div>
+    <div class='row'>
+      <div id='editor_holder' class='medium-12 columns'></div>
+    </div>
+
+    <script>
+      // This is the starting value for the editor
+      // We will use this to seed the initial editor
+      // and to provide a "Restore to Default" button.
+      var starting_value = {
+        name: "John Smith",
+        age: 35,
+        gender: "male",
+        location: {
+          city: "San Francisco",
+          state: "California"
+        },
+        pets: [
+          {
+            name: "Spot",
+            type: "dog",
+            fixed: true
+          },
+          {
+            name: "Whiskers",
+            type: "cat",
+            fixed: false
+          }
+        ]
+      };
+
+      // Initialize the editor
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        // Enable fetching schemas via ajax
+        ajax: true,
+        // We could have set the theme here instead of globally
+        //theme: theme,
+
+        // The schema for the editor
+        schema: {
+          $ref: "person.json",
+          format: "grid"
+        },
+
+        // Seed the form with a starting value
+        startval: starting_value
+      });
+
+      // Hook up the submit button to log to the console
+      document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+      });
+
+      // Hook up the Restore to Default button
+      document.getElementById('restore').addEventListener('click',function() {
+        editor.setValue(starting_value);
+      });
+
+      // Hook up the validation indicator to update its
+      // status whenever the editor changes
+      editor.on('change',function() {
+        // Get an array of errors from the validator
+        var errors = editor.validate();
+
+        var indicator = document.getElementById('valid_indicator');
+
+        // Not valid
+        if(errors.length) {
+          indicator.className = 'label alert';
+          indicator.textContent = 'not valid';
+        }
+        // Valid
+        else {
+          indicator.className = 'label success';
+          indicator.textContent = 'valid';
+        }
+      });
+    </script>
+  </body>
+</html>
