@@ -1,8 +1,5 @@
 JSONEditor.defaults.editors.arraySelectize = JSONEditor.AbstractEditor.extend({
   build: function() {
-
-    var self = this;
-
     this.title = this.theme.getFormInputLabel(this.getTitle());
 
     this.title_controls = this.theme.getHeaderButtonHolder();
@@ -13,8 +10,8 @@ JSONEditor.defaults.editors.arraySelectize = JSONEditor.AbstractEditor.extend({
       this.description = this.theme.getDescription(this.schema.description);
     }
 
-    this.input = document.createElement('input');
-    this.input.setAttribute('type', 'text');
+    this.input = document.createElement('select');
+    this.input.setAttribute('multiple', 'multiple');
 
     var group = this.theme.getFormControl(this.title, this.input, this.description);
 
@@ -22,12 +19,10 @@ JSONEditor.defaults.editors.arraySelectize = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.error_holder);
 
     window.jQuery(this.input).selectize({
-      delimiter: ',',
+      delimiter: false,
       createOnBlur: true,
       create: true
     });
-
-
   },
   postBuild: function() {
       var self = this;
@@ -62,7 +57,7 @@ JSONEditor.defaults.editors.arraySelectize = JSONEditor.AbstractEditor.extend({
     this.refreshValue(initial);
   },
   refreshValue: function(force) {
-    this.value = this.input.value.split(',');
+    this.value = this.input.selectize.getValue();
   },
   showValidationErrors: function(errors) {
     var self = this;
