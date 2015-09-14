@@ -10,7 +10,10 @@
 
     <style>[class*="foundicon-"] {font-family: GeneralFoundicons;font-style: normal;}</style>
     <script src='dist/jsoneditor.js'></script>
-    
+    <script src="dist/selectize-0.11.2-min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/js/standalone/selectize.js"></script>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/css/selectize.bootstrap3.css">
+
     <script>
     /**
      * LZString compression library
@@ -81,6 +84,11 @@
                         <option value='always'>Always</option>
                         <option value='never'>Never</option>
                     </select>
+                </div>
+                <div>
+                    <label>
+                        <input id='selectize_support' type='checkbox'> Selectize Support
+                    </label>
                 </div>
                 <div>
                     <label>Boolean options</label>
@@ -188,6 +196,13 @@ editor.on("change",  function() {
                 gender: {
                     type: "string",
                     enum: ["male", "female"]
+                },
+                interests: {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    default: ["Squash", "Badminton", "Rugby"]
                 },
                 location: {
                     type: "object",
@@ -393,6 +408,10 @@ editor.on("change",  function() {
     });
     document.getElementById('show_errors').addEventListener('change',function() {
        JSONEditor.defaults.options.show_errors = this.value;
+        reload(true);
+    });
+    document.getElementById('selectize_support').addEventListener('change',function() {
+        JSONEditor.plugins.selectize.enable = (this.value === 'on');
         reload(true);
     });
     document.getElementById('boolean_options').addEventListener('change',function() {

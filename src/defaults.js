@@ -169,6 +169,8 @@ JSONEditor.plugins = {
   },
   select2: {
     
+  },
+  selectize: {
   }
 };
 
@@ -196,7 +198,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
       return "checkbox";
     }
     // Otherwise, default to select menu
-    return "select";
+    return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
   }
 });
 // Use the multiple editor for schemas where the `type` is set to "any"
@@ -226,7 +228,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Use the `select` editor for dynamic enumSource enums
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.enumSource) return "select";
+  if(schema.enumSource) return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
 });
 // Use the `enum` or `select` editors for schemas with enumerated properties
 JSONEditor.defaults.resolvers.unshift(function(schema) {
@@ -235,7 +237,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
       return "enum";
     }
     else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
-      return "select";
+      return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
     }
   }
 });

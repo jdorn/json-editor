@@ -29,6 +29,7 @@ The following are not required, but can improve the style and usability of JSON 
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
 *  [Ace Editor](http://ace.c9.io/) for editing code
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
+*  [Selectize](http://brianreavis.github.io/selectize.js/) for nicer Select & Array boxes
 
 Usage
 --------------
@@ -1144,6 +1145,15 @@ The possibilities are endless.  Some ideas:
 *  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data URLs
 
+Select2 & Selectize Support
+----------------
+Select2 support is enabled by default and will become active if the Select2 library is detected.
+
+Selectize support is enabled via the following snippet:
+```js
+JSONEditor.plugins.selectize.enable = true;
+```
+See the demo for an example of the `array` and `select` editor with Selectize support enabled.
 
 Custom Validation
 ----------------

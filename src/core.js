@@ -180,6 +180,9 @@ JSONEditor.prototype = {
     });
 
     if(!classname) throw "Unknown editor for schema "+JSON.stringify(schema);
+    if(classname === "array" && JSONEditor.plugins.selectize.enable) {
+        classname = classname + "Selectize";
+    }
     if(!JSONEditor.defaults.editors[classname]) throw "Unknown editor "+classname;
 
     return JSONEditor.defaults.editors[classname];
