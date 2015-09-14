@@ -252,3 +252,9 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If this schema uses `oneOf`
   if(schema.oneOf) return "multiple";
 });
+// If enabled, use Selectize for arrays
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  if(schema.type === "array" && JSONEditor.plugins.selectize.enable) {
+      return 'arraySelectize';
+  }
+});
