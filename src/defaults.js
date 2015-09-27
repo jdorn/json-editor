@@ -241,20 +241,21 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
     }
   }
 });
-// Use the 'multiselect' editor for arrays of enumerated strings/numbers/integers
+// Specialized editors for arrays of strings
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && schema.uniqueItems && schema.items["enum"] && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
-    return 'multiselect';
+  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && schema.uniqueItems && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
+    // For enumerated strings, number, or integers
+    if(schema.items.enum) {
+      return 'multiselect';
+    }
+    // For non-enumerated strings (tag editor)
+    else if(JSONEditor.plugins.selectize.enable && schema.items.type === "string") {
+      return 'arraySelectize';
+    }
   }
 });
 // Use the multiple editor for schemas with `oneOf` set
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If this schema uses `oneOf`
   if(schema.oneOf) return "multiple";
-});
-// If enabled, use Selectize for arrays
-JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.type === "array" && JSONEditor.plugins.selectize.enable) {
-      return 'arraySelectize';
-  }
 });

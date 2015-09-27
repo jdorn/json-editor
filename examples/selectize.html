@@ -59,14 +59,11 @@
             },
             possibleFonts: {
               type: "array",
-              format: 'table',
+              uniqueItems: true,
               items: {
                 type: "string"
               },
-              default: ["Arial","Times","Helvetica","Comic Sans"],
-              options: {
-                collapsed: true
-              }
+              default: ["Arial","Times","Helvetica","Comic Sans"]
             }
           }
         },

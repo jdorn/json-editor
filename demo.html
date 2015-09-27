@@ -7,7 +7,6 @@
     <!-- placeholders for the theme switcher -->
     <link rel='stylesheet' id='theme_stylesheet'>
     <link rel='stylesheet' id='icon_stylesheet'>
-    <link rel='stylesheet' id='selectize_stylesheet'>
 
     <style>[class*="foundicon-"] {font-family: GeneralFoundicons;font-style: normal;}</style>
     <script src='dist/jsoneditor.js'></script>
@@ -82,9 +81,6 @@
                         <option value='always'>Always</option>
                         <option value='never'>Never</option>
                     </select>
-                </div>
-                <div>
-                    <button class='btn btn-primary' id='selectize_support'>Enable Selectize Support</button>
                 </div>
                 <div>
                     <label>Boolean options</label>
@@ -192,13 +188,6 @@ editor.on("change",  function() {
                 gender: {
                     type: "string",
                     enum: ["male", "female"]
-                },
-                interests: {
-                    type: "array",
-                    items: {
-                        type: "string"
-                    },
-                    default: ["Squash", "Badminton", "Rugby"]
                 },
                 location: {
                     type: "object",
@@ -391,14 +380,6 @@ editor.on("change",  function() {
         if(!no_reload) reload(true);
     };
 
-    function loadScript(path, onload) {
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = path;
-        script.onload = onload
-        document.getElementsByTagName('head')[0].appendChild(script);
-    }
-
     // Change listeners for options
     document.getElementById('theme_switcher').addEventListener('change',function() {
         setTheme(this.value);
@@ -413,23 +394,6 @@ editor.on("change",  function() {
     document.getElementById('show_errors').addEventListener('change',function() {
        JSONEditor.defaults.options.show_errors = this.value;
         reload(true);
-    });
-    document.getElementById('selectize_support').addEventListener('click',function() {
-        var button = this;
-
-        JSONEditor.plugins.selectize.enable = true;
-
-        if (!window.jQuery) {
-            document.getElementById('selectize_stylesheet').href = '//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/css/selectize.bootstrap3.css';
-
-            // jQuery must be loaded before Selectize can be safely loaded
-            loadScript('//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js', function() {
-                loadScript('//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/js/standalone/selectize.js', function() {
-                    button.setAttribute('disabled', true)
-                    reload(true);
-                })
-            });
-        }
     });
     document.getElementById('boolean_options').addEventListener('change',function() {
         refreshBooleanOptions();
