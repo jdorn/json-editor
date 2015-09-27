@@ -86,7 +86,7 @@ JSONEditor.defaults.languages.en = {
    * When a value is greater than it's supposed to be (inclusive
    * @variables This key takes one variable: The maximum
    */
-  error_maximum_incl: "Value must at most {{0}}",
+  error_maximum_incl: "Value must be at most {{0}}",
   /**
    * When a value is lesser than it's supposed to be (exclusive)
    * @variables This key takes one variable: The minimum
