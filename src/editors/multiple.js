@@ -180,6 +180,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
 
     this.editor_holder = document.createElement('div');
     container.appendChild(this.editor_holder);
+    
+      
+    var validator_options = {};
+    if(self.jsoneditor.options.custom_validators) {
+      validator_options.custom_validators = self.jsoneditor.options.custom_validators;
+    }
 
     this.switcher_options = this.theme.getSwitcherOptions(this.switcher);
     $each(this.types,function(i,type) {
@@ -200,7 +206,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema);
+      self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema,validator_options);
     });
 
     this.switchEditor(0);

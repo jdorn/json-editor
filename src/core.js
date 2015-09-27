@@ -37,7 +37,13 @@ JSONEditor.prototype = {
     // Fetch all external refs via ajax
     this._loadExternalRefs(this.schema, function() {
       self._getDefinitions(self.schema);
-      self.validator = new JSONEditor.Validator(self);
+      
+      // Validator options
+      var validator_options = {};
+      if(self.options.custom_validators) {
+        validator_options.custom_validators = self.options.custom_validators;
+      }
+      self.validator = new JSONEditor.Validator(self,null,validator_options);
       
       // Create the root editor
       var editor_class = self.getEditorClass(self.schema);

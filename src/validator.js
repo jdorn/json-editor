@@ -1,8 +1,8 @@
 JSONEditor.Validator = Class.extend({
-  init: function(jsoneditor,schema) {
+  init: function(jsoneditor,schema,options) {
     this.jsoneditor = jsoneditor;
     this.schema = schema || this.jsoneditor.schema;
-    this.options = {};
+    this.options = options || {};
     this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
   },
   validate: function(value) {
@@ -508,10 +508,16 @@ JSONEditor.Validator = Class.extend({
       }
     }
 
-    // Custom type validation
+    // Custom type validation (global)
     $each(JSONEditor.defaults.custom_validators,function(i,validator) {
       errors = errors.concat(validator.call(self,schema,value,path));
     });
+    // Custom type validation (instance specific)
+    if(this.options.custom_validators) {
+      $each(this.options.custom_validators,function(i,validator) {
+        errors = errors.concat(validator.call(self,schema,value,path));
+      });
+    }
 
     return errors;
   },
