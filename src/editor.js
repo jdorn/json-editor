@@ -2,18 +2,24 @@
  * All editors should extend from this class
  */
 JSONEditor.AbstractEditor = Class.extend({
-  fireChangeHeaderEvent: function() {
-    $triggerc(this.container,'change_header_text');
-  },
   onChildEditorChange: function(editor) {
-    if(!this.watch_listener) return;
-    this.watch_listener();
+    this.onChange(true);
+  },
+  notify: function() {
     this.jsoneditor.notifyWatchers(this.path);
+  },
+  change: function() {
     if(this.parent) this.parent.onChildEditorChange(this);
     else this.jsoneditor.onChange();
   },
+  onChange: function(bubble) {
+    this.notify();
+    if(this.watch_listener) this.watch_listener();
+    if(bubble) this.change();
+  },
   register: function() {
     this.jsoneditor.registerEditor(this);
+    this.onChange();
   },
   unregister: function() {
     if(!this.jsoneditor) return;
@@ -23,58 +29,52 @@ JSONEditor.AbstractEditor = Class.extend({
     return 12;
   },
   init: function(options) {
-    var self = this;
-    this.container = options.container;
     this.jsoneditor = options.jsoneditor;
-
+    
     this.theme = this.jsoneditor.theme;
     this.template_engine = this.jsoneditor.template;
     this.iconlib = this.jsoneditor.iconlib;
-
+    
+    this.original_schema = options.schema;
+    this.schema = this.jsoneditor.expandSchema(this.original_schema);
+    
     this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
-    this.schema = this.options.schema;
-
+    
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
     this.formname = options.formname || this.path.replace(/\.([^.]+)/g,'[$1]');
     if(this.jsoneditor.options.form_name_root) this.formname = this.formname.replace(/^root\[/,this.jsoneditor.options.form_name_root+'[');
+    this.key = this.path.split('.').pop();
+    this.parent = options.parent;
+    
+    this.link_watchers = [];
+    
+    if(options.container) this.setContainer(options.container);
+  },
+  setContainer: function(container) {
+    this.container = container;
     if(this.schema.id) this.container.setAttribute('data-schemaid',this.schema.id);
     if(this.schema.type && typeof this.schema.type === "string") this.container.setAttribute('data-schematype',this.schema.type);
     this.container.setAttribute('data-schemapath',this.path);
-    this.jsoneditor._data(this.container,'editor',this);
+  },
+  
+  preBuild: function() {
 
-    this.key = this.path.split('.').pop();
-    this.parent = options.parent;
-    this.link_watchers = [];
+  },
+  build: function() {
     
+  },
+  postBuild: function() {
+    this.setupWatchListeners();
+    this.addLinks();
+    this.setValue(this.getDefault(), true);
+    this.updateHeaderText();
     this.register();
-    
-    // If not required, add an add/remove property link
-    if(!this.isRequired() && !this.options.compact && false) {
-      this.title_links = this.theme.getFloatRightLinkHolder();
-      this.container.appendChild(this.title_links);
-
-      this.addremove = this.theme.getLink('remove '+this.getTitle());
-      this.title_links.appendChild(this.addremove);
-
-      this.addremove.addEventListener('click',function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Don't allow changing the properties when disabled
-        if(self.disabled) return;
-        
-        if(self.property_removed) {
-          self.addProperty();
-        }
-        else {
-          self.removeProperty();
-        }
-      
-        if(self.parent) self.parent.onChildEditorChange(self);
-        else self.jsoneditor.onChange();
-      });
-    }
+    this.onWatchedFieldChange();
+  },
+  
+  setupWatchListeners: function() {
+    var self = this;
     
     // Watched fields
     this.watched = {};
@@ -85,14 +85,16 @@ JSONEditor.AbstractEditor = Class.extend({
         self.onWatchedFieldChange();
       }
     };
-    if(this.schema.watch) {
+    
+    this.register();
+    if(this.schema.hasOwnProperty('watch')) {
       var path,path_parts,first,root,adjusted_path;
 
       for(var name in this.schema.watch) {
         if(!this.schema.watch.hasOwnProperty(name)) continue;
         path = this.schema.watch[name];
 
-        if(path instanceof Array) {
+        if(Array.isArray(path)) {
           path_parts = [path[0]].concat(path[1].split('.'));
         }
         else {
@@ -120,9 +122,9 @@ JSONEditor.AbstractEditor = Class.extend({
     if(this.schema.headerTemplate) {
       this.header_template = this.jsoneditor.compileTemplate(this.schema.headerTemplate, this.template_engine);
     }
-
-    this.build();
-    
+  },
+  
+  addLinks: function() {
     // Add links
     if(!this.no_link_holder) {
       this.link_holder = this.theme.getLinksHolder();
@@ -133,11 +135,9 @@ JSONEditor.AbstractEditor = Class.extend({
         }
       }
     }
-    
-    this.setValue(this.getDefault(), true);
-    this.updateHeaderText();
-    this.watch_listener();
   },
+  
+  
   getButton: function(text, icon, title) {
     var btnClass = 'json-editor-btn-'+icon;
     if(!this.iconlib) icon = null;
@@ -258,7 +258,19 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   updateHeaderText: function() {
     if(this.header) {
-      this.header.textContent = this.getHeaderText();
+      // If the header has children, only update the text node's value
+      if(this.header.children.length) {
+        for(var i=0; i<this.header.childNodes.length; i++) {
+          if(this.header.childNodes[i].nodeType===3) {
+            this.header.childNodes[i].nodeValue = this.getHeaderText();
+            break;
+          }
+        }
+      }
+      // Otherwise, just update the entire node
+      else {
+        this.header.textContent = this.getHeaderText();
+      }
     }
   },
   getHeaderText: function(title_only) {
@@ -268,10 +280,12 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   onWatchedFieldChange: function() {
     var vars;
-    if(this.header_template) {
+    if(this.header_template) {      
       vars = $extend(this.getWatchedFieldValues(),{
         key: this.key,
         i: this.key,
+        i0: (this.key*1),
+        i1: (this.key*1+1),
         title: this.getTitle()
       });
       var header_text = this.header_template(vars);
@@ -279,7 +293,8 @@ JSONEditor.AbstractEditor = Class.extend({
       if(header_text !== this.header_text) {
         this.header_text = header_text;
         this.updateHeaderText();
-        this.fireChangeHeaderEvent();
+        this.notify();
+        //this.fireChangeHeaderEvent();
       }
     }
     if(this.link_watchers.length) {
@@ -288,12 +303,6 @@ JSONEditor.AbstractEditor = Class.extend({
         this.link_watchers[i](vars);
       }
     }
-  },
-  build: function() {
-
-  },
-  isValid: function(callback) {
-    callback();
   },
   setValue: function(value) {
     this.value = value;
@@ -319,7 +328,7 @@ JSONEditor.AbstractEditor = Class.extend({
     this.header_text = null;
     this.header_template = null;
     this.value = null;
-    if(this.container.parentNode) this.container.parentNode.removeChild(this.container);
+    if(this.container && this.container.parentNode) this.container.parentNode.removeChild(this.container);
     this.container = null;
     this.jsoneditor = null;
     this.schema = null;
@@ -327,59 +336,44 @@ JSONEditor.AbstractEditor = Class.extend({
     this.key = null;
     this.parent = null;
   },
-  isRequired: function() {
-    if(typeof this.options.required !== "undefined") {
-      return this.options.required;
-    }
-    else if(typeof this.schema.required === "boolean") {
-      return this.schema.required;
-    }
-    else if(this.jsoneditor.options.required_by_default) {
-      return true;
-    }
-    else {
-      return false;
-    }
-  },
   getDefault: function() {
-    return this.schema.default || null;
-  },
-
-  getTheme: function() {
-    return this.theme;
-  },
-  getSchema: function() {
-    return this.schema;
-  },
-  getContainer: function() {
-    return this.container;
+    if(this.schema["default"]) return this.schema["default"];
+    if(this.schema["enum"]) return this.schema["enum"][0];
+    
+    var type = this.schema.type || this.schema.oneOf;
+    if(type && Array.isArray(type)) type = type[0];
+    if(type && typeof type === "object") type = type.type;
+    if(type && Array.isArray(type)) type = type[0];
+    
+    if(typeof type === "string") {
+      if(type === "number") return 0.0;
+      if(type === "boolean") return false;
+      if(type === "integer") return 0;
+      if(type === "string") return "";
+      if(type === "object") return {};
+      if(type === "array") return [];
+    }
+    
+    return null;
   },
   getTitle: function() {
     return this.schema.title || this.key;
   },
-  getPath: function() {
-    return this.path;
-  },
-  getParent: function() {
-    return this.parent;
-  },
   enable: function() {
-    if(this.addremove) this.addremove.style.opacity = '';
-    
     this.disabled = false;
   },
   disable: function() {
-    if(this.addremove) this.addremove.style.opacity = '.6';
-    
     this.disabled = true;
   },
   isEnabled: function() {
     return !this.disabled;
   },
-  getOption: function(key, def) {
-    if(typeof this.options[key] !== 'undefined') return this.options[key];
-    else return def;
-  },
+  isRequired: function() {
+    if(typeof this.schema.required === "boolean") return this.schema.required;
+    else if(this.parent && this.parent.schema && Array.isArray(this.parent.schema.required)) return this.parent.schema.required.indexOf(this.key) > -1;
+    else if(this.jsoneditor.options.required_by_default) return true;
+    else return false;
+  },  
   getDisplayText: function(arr) {
     var disp = [];
     var used = {};
@@ -436,6 +430,16 @@ JSONEditor.AbstractEditor = Class.extend({
     });
     
     return disp;
+  },
+  getOption: function(key) {
+    try {
+      throw "getOption is deprecated";
+    }
+    catch(e) {
+      window.console.error(e);
+    }
+    
+    return this.options[key];
   },
   showValidationErrors: function(errors) {
 

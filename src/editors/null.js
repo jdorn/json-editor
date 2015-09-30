@@ -1,9 +1,9 @@
-JSONEditor.defaults.editors.null = JSONEditor.AbstractEditor.extend({
+JSONEditor.defaults.editors["null"] = JSONEditor.AbstractEditor.extend({
   getValue: function() {
     return null;
   },
   setValue: function() {
-    this.jsoneditor.notifyWatchers(this.path);
+    this.onChange();
   },
   getNumColumns: function() {
     return 2;

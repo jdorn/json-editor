@@ -42,6 +42,8 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
       label.style.fontSize = '14px';
       group.style.marginTop = '0';
       group.appendChild(label);
+      input.style.position = 'relative';
+      input.style.cssFloat = 'left';
     } 
     else {
       group.className += ' form-group';
@@ -59,12 +61,13 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {
     var el = document.createElement('div');
     el.className = 'well well-sm';
+    el.style.paddingBottom = 0;
     return el;
   },
   getFormInputDescription: function(text) {
     var el = document.createElement('p');
     el.className = 'help-block';
-    el.textContent = text;
+    el.innerHTML = text;
     return el;
   },
   getHeaderButtonHolder: function() {
@@ -127,5 +130,40 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   },
   markTabInactive: function(tab) {
     tab.className = tab.className.replace(/\s?active/g,'');
+  },
+  getProgressBar: function() {
+    var min = 0, max = 100, start = 0;
+
+    var container = document.createElement('div');
+    container.className = 'progress';
+
+    var bar = document.createElement('div');
+    bar.className = 'progress-bar';
+    bar.setAttribute('role', 'progressbar');
+    bar.setAttribute('aria-valuenow', start);
+    bar.setAttribute('aria-valuemin', min);
+    bar.setAttribute('aria-valuenax', max);
+    bar.innerHTML = start + "%";
+    container.appendChild(bar);
+
+    return container;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+
+    var bar = progressBar.firstChild;
+    var percentage = progress + "%";
+    bar.setAttribute('aria-valuenow', progress);
+    bar.style.width = percentage;
+    bar.innerHTML = percentage;
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+
+    var bar = progressBar.firstChild;
+    progressBar.className = 'progress progress-striped active';
+    bar.removeAttribute('aria-valuenow');
+    bar.style.width = '100%';
+    bar.innerHTML = '';
   }
 });

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>JSON Editor Upload Example</title>
+    <script src="../dist/jsoneditor.js"></script>
+  </head>
+  <body>
+    <h1>JSON Editor Upload Example</h1>
+    
+    <div id='editor_holder'></div>
+    <button id='submit'>Submit (console.log)</button>
+    
+    <script>
+      // Specify theme
+      JSONEditor.defaults.options.theme = 'html';
+
+      // Specify upload handler
+      JSONEditor.defaults.options.upload = function(type, file, cbs) {
+        if (type === 'root.upload_fail') cbs.failure('Upload failed');
+        else {
+          var tick = 0;
+
+          var tickFunction = function() {
+            tick += 1;
+            console.log('progress: ' + tick);
+
+            if (tick < 100) {
+              cbs.updateProgress(tick);
+              window.setTimeout(tickFunction, 50)
+            } else if (tick == 100) {
+              cbs.updateProgress();
+              window.setTimeout(tickFunction, 500)
+            } else {
+              cbs.success('http://www.example.com/images/' + file.name);
+            }
+          };
+
+          window.setTimeout(tickFunction)
+        }
+      };
+
+      // Initialize the editor with a JSON schema
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        schema: {
+          type: "object",
+          title: "Image",
+          properties: {
+            upload_default: {
+              type: "string",
+              format: "url",
+              options: {
+                upload: true
+              },
+              "links": [
+                {
+                    "href": "{{self}}"
+                }
+              ]
+            },
+            upload_custom_link: {
+              type: "string",
+              format: "url",
+              options: {
+                upload: true
+              },
+              "links": [
+                {
+                  "href": "{{self}}",
+                  "rel": "view"
+                }
+              ]
+            },
+            upload_readonly: {
+              readonly: true,
+              type: "string",
+              format: "url",
+              options: {
+                upload: true
+              },
+              "links": [
+                {
+                  "href": "{{self}}"
+                }
+              ]
+            },
+            upload_fail: {
+              type: "string",
+              format: "url",
+              options: {
+                upload: true
+              },
+              "links": [
+                {
+                  "href": "{{self}}"
+                }
+              ]
+            },
+            name: {
+              type: "string"
+            }
+          }
+        }
+      });
+
+      editor.setValue({
+        upload_default: "",
+        upload_custom_link: "",
+        upload_readonly: "http://www.example.com/images/image.jpg",
+        upload_fail: "",
+        name: ""
+      });
+      
+      // Hook up the submit button to log to the console
+      document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+      });
+    </script>
+  </body>
+</html>

@@ -6,7 +6,7 @@ JSON Editor
 JSON Editor takes a JSON Schema and uses it to generate an HTML form.  
 It has full support for JSON Schema version 3 and 4 and can integrate with several popular CSS frameworks (bootstrap, foundation, and jQueryUI).
 
-Check out an interactive demo: http://rawgithub.com/jdorn/json-editor/master/demo.html
+Check out an interactive demo (demo.html): http://jeremydorn.com/json-editor/
 
 Download the [production version][min] (22K when gzipped) or the [development version][max].
 
@@ -16,7 +16,7 @@ Download the [production version][min] (22K when gzipped) or the [development ve
 Requirements
 -----------------
 
-JSON Schema has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
+JSON Editor has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
 
 ### Optional Requirements
 
@@ -29,6 +29,7 @@ The following are not required, but can improve the style and usability of JSON 
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
 *  [Ace Editor](http://ace.c9.io/) for editing code
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
+*  [Selectize](http://brianreavis.github.io/selectize.js/) for nicer Select & Array boxes
 
 Usage
 --------------
@@ -39,7 +40,7 @@ If you learn best by example, check these out:
 *  Advanced Usage Example - http://rawgithub.com/jdorn/json-editor/master/examples/advanced.html
 *  CSS Integration Example - http://rawgithub.com/jdorn/json-editor/master/examples/css_integration.html
 
-The rest of this README contains detailed documentation about every aspect of JSON Editor.
+The rest of this README contains detailed documentation about every aspect of JSON Editor.  For more under-the-hood documentation, check the wiki.
 
 ### Initialize
 
@@ -78,6 +79,21 @@ Here are all the available options:
   <tr>
     <td>ajax</td>
     <td>If <code>true</code>, JSON Editor will load external URLs in <code>$ref</code> via ajax.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_array_add</td>
+    <td>If <code>true</code>, remove all "add row" buttons from arrays.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_array_delete</td>
+    <td>If <code>true</code>, remove all "delete row" buttons from arrays.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>disable_array_reorder</td>
+    <td>If <code>true</code>, remove all "move up" and "move down" buttons from arrays.</td>
     <td><code>false</code></td>
   </tr>
   <tr>
@@ -121,9 +137,19 @@ Here are all the available options:
     <td><code>false</code></td>
   </tr>
   <tr>
+    <td>keep_oneof_values</td>
+    <td>If <code>true</code>, makes oneOf copy properties over when switching.</td>
+    <td><code>true</code></td>
+  </tr>
+  <tr>
     <td>schema</td>
     <td>A valid JSON Schema to use for the editor.  Version 3 and Version 4 of the draft specification are supported.</td>
     <td><code>{}</code></td>
+  </tr>
+  <tr>
+    <td>show_errors</td>
+    <td>When to show validation errors in the UI.  Valid values are <code>interaction</code>, <code>change</code>, <code>always</code>, and <code>never</code>.</td>
+    <td><code>"interaction"</code></td>
   </tr>
   <tr>
     <td>startval</td>
@@ -168,7 +194,7 @@ Instead of getting/setting the value of the entire editor, you can also work on 
 // Get a reference to a node within the editor
 var name = editor.getEditor('root.name');
 
-// name will be null if the path is invalid
+// `getEditor` will return null if the path is invalid
 if(name) {
   name.setValue("John Smith");
   
@@ -179,7 +205,9 @@ if(name) {
 
 ### Validate
 
-When feasible, JSON Editor won't let users enter invalid data.
+When feasible, JSON Editor won't let users enter invalid data.  This is done by 
+using input masks and intelligently enabling/disabling controls.
+
 However, in some cases it is still possible to enter data that doesn't validate against the schema.
 
 You can use the `validate` method to check if the data is valid or not.
@@ -257,7 +285,7 @@ if(editor.isEnabled()) alert("It's editable!");
 
 ### Destroy
 
-This removes the editor HTML from the DOM and frees up memory.
+This removes the editor HTML from the DOM and frees up resources.
 
 ```javascript
 editor.destroy();
@@ -358,11 +386,13 @@ JSON Editor supports schema references to external URLs and local definitions.  
 }
 ```
 
-Local references must point to the `definitions` object of the root node of the schema and can't be nested.
-So, both `#/customkey/name` and `#/definitions/name/first` will throw an exception.
+Local references must point to the `definitions` object of the root node of the schema.
+So, `#/customkey/name` will throw an exception.
 
 If loading an external url via Ajax, the url must either be on the same domain or return the correct HTTP cross domain headers.
 If your URLs don't meet this requirement, you can pass in the references to JSON Editor during initialization (see Usage section above).
+
+Self-referential $refs are supported.  Check out `examples/recursive.html` for usage examples.
 
 ### hyper-schema links
 
@@ -401,7 +431,7 @@ Show a video preview (using HTML5 video)
 }
 ```
 
-The `href` property is a template that gets re-evaluated everytime the value changes.
+The `href` property is a template that gets re-evaluated every time the value changes.
 The variable `self` is always available.  Look at the __Dependencies__ section below for how to include other fields or use a custom template engine.
 
 ### Property Ordering
@@ -441,6 +471,26 @@ So, the final order of properties in the form (and in returned JSON data) will b
 3.  prop1 (order 1000)
 4.  prop3 (order 1001)
 
+### Default Properties
+
+The default behavior of JSON Editor is to include all object properties defined with the `properties` keyword.
+
+To override this behaviour, you can use the keyword `defaultProperties` to set which ones are included:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": {"type": "string"},
+    "age": {"type": "integer"}
+  },
+  "defaultProperties": ["name"]
+}
+```
+
+Now, only the `name` property above will be included by default.  You can use the "Object Properties" button
+to add the "age" property back in.
+
 ### format
 
 JSON Editor supports many different formats for schemas of type `string`.  They will work with schemas of type `integer` and `number` as well, but some formats may produce weird results.
@@ -453,7 +503,6 @@ JSON Editor uses HTML5 input types, so some of these may render as basic text in
 *  datetime
 *  datetime-local
 *  email
-*  hidden
 *  month
 *  number
 *  range
@@ -492,6 +541,12 @@ __SCEditor__ provides WYSIWYG editing of HTML and BBCode.  To use it, set the fo
     "wysiwyg": true
   }
 }
+```
+
+You can configure SCEditor by setting configuration options in `JSONEditor.plugins.sceditor`.  Here's an example:
+
+```js
+JSONEditor.plugins.sceditor.emoticonsEnabled = false;
 ```
 
 __EpicEditor__ is a simple Markdown editor with live preview.  To use it, set the format to `markdown`:
@@ -584,6 +639,17 @@ You can override the default Ace theme by setting the `JSONEditor.plugins.ace.th
 JSONEditor.plugins.ace.theme = 'twilight';
 ```
 
+#### Booleans
+
+The default boolean editor is a select box with options "true" and "false".  To use a checkbox instead, set the format to `checkbox`.
+
+```json
+{
+  "type": "boolean",
+  "format": "checkbox"
+}
+```
+
 #### Arrays
 
 The default array editor takes up a lot of screen real estate.  The `table` and `tabs` formats provide more compact UIs for editing arrays.
@@ -661,10 +727,19 @@ Editor Options
 Editors can accept options which alter the behavior in some way.
 
 *  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
+*  `disable_array_add` - If set to true, the "add row" button will be hidden (works for arrays)
+*  `disable_array_delete` - If set to true, the "delete row" buttons will be hidden (works for arrays)
+*  `disable_array_reorder` - If set to true, the "move up/down" buttons will be hidden (works for arrays)
 *  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
 *  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)
 *  `disable_properties` - If set to true, the Edit Properties button will be hidden (works for objects)
+*  `enum_titles` - An array of display values to use for select box options in the same order as defined with the `enum` keyword. Works with schema using enum values.
+*  `expand_height` - If set to true, the input will auto expand/contract to fit the content.  Works best with textareas.
+*  `grid_columns` - Explicitly set the number of grid columns (1-12) for the editor if it's within an object using a grid layout.
 *  `hidden` - If set to true, the editor will not appear in the UI (works for all types)
+*  `input_height` - Explicitly set the height of the input element. Should be a valid CSS width string (e.g. "100px").  Works best with textareas.
+*  `input_width` - Explicitly set the width of the input element. Should be a valid CSS width string (e.g. "100px").  Works for string, number, and integer data types.
+*  `remove_empty_properties` - If set to true for an object, empty object properties (i.e. those with falsy values) will not be returned by getValue().
 
 ```json
 {
@@ -882,6 +957,29 @@ Here's a more complex example (this uses the Swig template engine syntax to show
 }
 ```
 
+You can also specify a list of static items with a slightly different syntax:
+
+```js+jinja
+{
+  "enumSource": [{
+      // A watched field source
+      "source": [
+        {
+          "value": 1,
+          "title": "One"
+        },
+        {
+          "value": 2,
+          "title": "Two"
+        }
+      ],
+      "title": "{{item.title}}",
+      "value": "{{item.value}}"
+    }]
+  ]
+}
+```
+
 The colors examples used an array of strings directly.  Using the verbose form, you can 
 also make it work with an array of objects.  Here's an example:
 
@@ -908,7 +1006,7 @@ also make it work with an array of objects.  Here's an example:
       "enumSource": [{
         "source": "colors",
         "value": "{{item.text}}"
-      ]}
+      }]
     }
   }
 }
@@ -920,10 +1018,10 @@ All of the optional templates in the verbose form have the properties `item` and
 
 The `title` keyword of a schema is used to add user friendly headers to the editing UI.  Sometimes though, dynamic headers, which change based on other fields, are helpful.
 
-Consider the example of an array of children.  Without dynamic headers, the UI for the array elements would show `Child 0`, `Child 1`, etc..  
-It would be much nicer if the headers could be dynamic and incorporate information about the children, such as `0 - John (age 9)`, `1 - Sarah (age 11)`.
+Consider the example of an array of children.  Without dynamic headers, the UI for the array elements would show `Child 1`, `Child 2`, etc..  
+It would be much nicer if the headers could be dynamic and incorporate information about the children, such as `1 - John (age 9)`, `2 - Sarah (age 11)`.
 
-To accomplish this, use the `headerTemplate` property.  All of the watched variables are passed into this template, along with the static title `title` (e.g. "Child"), the index `i` (e.g. "0" and "1"), and the field's value `self` (e.g. `{"name": "John", "age": 9}`).
+To accomplish this, use the `headerTemplate` property.  All of the watched variables are passed into this template, along with the static title `title` (e.g. "Child"), the 0-based index `i0` (e.g. "0" and "1"), the 1-based index `i1`, and the field's value `self` (e.g. `{"name": "John", "age": 9}`).
 
 ```js+jinja
 {
@@ -932,7 +1030,7 @@ To accomplish this, use the `headerTemplate` property.  All of the watched varia
   "items": {
     "type": "object",
     "title": "Child",
-    "headerTemplate": "{{ i }} - {{ self.name }} (age {{ self.age }})",
+    "headerTemplate": "{{ i1 }} - {{ self.name }} (age {{ self.age }})",
     "properties": {
       "name": { "type": "string" },
       "age": { "type": "integer" }
@@ -968,6 +1066,31 @@ var editor = new JSONEditor(element,{
 });
 ```
 
+Language and String Customization
+-----------------
+
+JSON Editor uses a translate function to generate strings in the UI.  A default `en` language mapping is provided.
+
+You can easily override individual translations in the default language or create your own language mapping entirely.
+
+```js+jinja
+// Override a specific translation
+JSONEditor.defaults.languages.en.error_minLength = 
+  "This better be at least {{0}} characters long or else!";
+  
+  
+// Create your own language mapping
+// Any keys not defined here will fall back to the "en" language
+JSONEditor.defaults.languages.es = {
+  error_notset: "propiedad debe existir"
+};
+```
+
+By default, all instances of JSON Editor will use the `en` language.  To override this default, set the `JSONEditor.defaults.language` property.
+
+```js
+JSONEditor.defaults.language = "es";
+```
 
 Custom Editor Interfaces
 -----------------
@@ -1022,6 +1145,15 @@ The possibilities are endless.  Some ideas:
 *  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data URLs
 
+Select2 & Selectize Support
+----------------
+Select2 support is enabled by default and will become active if the Select2 library is detected.
+
+Selectize support is enabled via the following snippet:
+```js
+JSONEditor.plugins.selectize.enable = true;
+```
+See the demo for an example of the `array` and `select` editor with Selectize support enabled.
 
 Custom Validation
 ----------------

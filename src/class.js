@@ -4,11 +4,12 @@
  * MIT Licensed.
  */
 // Inspired by base2 and Prototype
+var Class;
 (function(){
-  var initializing = false, fnTest = /xyz/.test(function(){postMessage("xyz");}) ? /\b_super\b/ : /.*/;
+  var initializing = false, fnTest = /xyz/.test(function(){window.postMessage("xyz");}) ? /\b_super\b/ : /.*/;
  
   // The base Class implementation (does nothing)
-  this.Class = function(){};
+  Class = function(){};
  
   // Create a new Class that inherits from this class
   Class.extend = function(prop) {
@@ -62,4 +63,6 @@
    
     return Class;
   };
+  
+  return Class;
 })();

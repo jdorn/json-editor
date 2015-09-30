@@ -44,6 +44,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {
     var el = document.createElement('div');
     el.className = 'panel';
+    el.style.paddingBottom = 0;
     return el;
   },
   getHeaderButtonHolder: function() {
@@ -68,8 +69,8 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     input.group.className += ' error';
     
     if(!input.errmsg) {
-      input.insertAdjacentHTML('afterend','<small class="errormsg"></small>');
-      input.errmsg = input.parentNode.getElementsByClassName('errormsg')[0];
+      input.insertAdjacentHTML('afterend','<small class="error"></small>');
+      input.errmsg = input.parentNode.getElementsByClassName('error')[0];
     }
     else {
       input.errmsg.style.display = '';
@@ -81,6 +82,24 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     if(!input.errmsg) return;
     input.group.className = input.group.className.replace(/ error/g,'');
     input.errmsg.style.display = 'none';
+  },
+  getProgressBar: function() {
+    var progressBar = document.createElement('div');
+    progressBar.className = 'progress';
+
+    var meter = document.createElement('span');
+    meter.className = 'meter';
+    meter.style.width = '0%';
+    progressBar.appendChild(meter);
+    return progressBar;
+  },
+  updateProgressBar: function(progressBar, progress) {
+    if (!progressBar) return;
+    progressBar.firstChild.style.width = progress + '%';
+  },
+  updateProgressBarUnknown: function(progressBar) {
+    if (!progressBar) return;
+    progressBar.firstChild.style.width = '100%';
   }
 });
 
@@ -173,7 +192,7 @@ JSONEditor.defaults.themes.foundation5 = JSONEditor.defaults.themes.foundation.e
   },
   getTabHolder: function() {
     var el = document.createElement('div');
-    el.innerHTML = "<dl class='tabs vertical'></dl><div class='tabs-content'></div>";
+    el.innerHTML = "<dl class='tabs vertical'></dl><div class='tabs-content vertical'></div>";
     return el;
   },
   getTab: function(text) {

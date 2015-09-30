@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>JSON Editor WYSIWYG Example</title>
+    <script src="../dist/jsoneditor.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.bbcode.min.js"></script>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.default.min.css">
+    <script src="//cdn.jsdelivr.net/sceditor/1.4.3/jquery.sceditor.xhtml.min.js"></script>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/sceditor/1.4.3/themes/default.min.css">
+  </head>
+  <body>
+    <h1>JSON Editor WYSIWYG Example</h1>
+    
+    <p style='margin-bottom:20px;'>This example demonstrates JSONEditor's integration with SCEditor</p>
+    
+    <div id='editor_holder'></div>
+    <button id='submit'>Submit (console.log)</button>
+    
+    <script>
+      // Initialize the editor with a JSON schema
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        schema: {
+          type: "object",
+          title: "Blog Post",
+          properties: {
+            title: {
+              type: "string"
+            },
+            body: {
+              type: "string",
+              format: "html",
+              options: {
+                wysiwyg: true
+              }
+            }
+          }
+        }
+      });
+      
+      // Hook up the submit button to log to the console
+      document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+      });
+    </script>
+  </body>
+</html>

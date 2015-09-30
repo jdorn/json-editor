@@ -4,7 +4,7 @@ JSONEditor.defaults.templates.underscore = function() {
   return {
     compile: function(template) {
       return function(context) {
-        return _.template(template, context);
+        return window._.template(template, context);
       };
     }
   };

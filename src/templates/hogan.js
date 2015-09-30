@@ -3,7 +3,7 @@ JSONEditor.defaults.templates.hogan = function() {
 
   return {
     compile: function(template) {
-      var compiled = Hogan.compile(template);
+      var compiled = window.Hogan.compile(template);
       return function(context) {
         return compiled.render(context);
       };

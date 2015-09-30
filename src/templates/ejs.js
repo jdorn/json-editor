@@ -3,7 +3,7 @@ JSONEditor.defaults.templates.ejs = function() {
 
   return {
     compile: function(template) {
-      var compiled = new EJS({
+      var compiled = new window.EJS({
         text: template
       });
 
