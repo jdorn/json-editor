@@ -251,9 +251,9 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
     //For quick lists via splitting the value of a text field
     if(schema.format==="split"){
-      if(schema.items.type="string"){return 'splitStrings';}
-      if(schema.items.type="number"){return 'splitNumbers';}
-      if(schema.items.type="integer"){return 'splitIntegers';}
+      if(schema.items.type==="string"){return 'splitStrings';}
+      if(schema.items.type==="number"){return 'splitNumbers';}
+      if(schema.items.type==="integer"){return 'splitIntegers';}
     }
     // For enumerated strings, number, or integers
     if(schema.items.enum && schema.uniqueItems) {
