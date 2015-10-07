@@ -22,5 +22,8 @@
     "package.json",
     "Gruntfile.js",
     "src"
-  ]
+  ],
+  "dependencies": {
+    "mathjs": "~1.7.0"
+  }
 }

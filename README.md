@@ -16,7 +16,11 @@ Download the [production version][min] (22K when gzipped) or the [development ve
 Requirements
 -----------------
 
-JSON Editor has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
+JSON Schema has the following dependencies:
+
+* [math.js](http://mathjs.org/) for floating point math
+
+It needs a modern browser (tested in Chrome and Firefox).
 
 ### Optional Requirements
 
