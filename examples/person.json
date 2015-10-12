@@ -6,6 +6,7 @@
       "title": "Location",
       "properties": {
         "city": {
+          "tooltip": "this is a tooltip",
           "type": "string"
         },
         "state": {

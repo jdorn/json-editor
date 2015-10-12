@@ -10,10 +10,11 @@ JSONEditor.defaults.editors.arraySelectize = JSONEditor.AbstractEditor.extend({
       this.description = this.theme.getDescription(this.schema.description);
     }
 
+    if(this.schema.tooltip) this.tooltip = this.schema.tooltip;
     this.input = document.createElement('select');
     this.input.setAttribute('multiple', 'multiple');
 
-    var group = this.theme.getFormControl(this.title, this.input, this.description);
+    var group = this.theme.getFormControl(this.title, this.input, this.description, this.tooltip);
 
     this.container.appendChild(group);
     this.container.appendChild(this.error_holder);

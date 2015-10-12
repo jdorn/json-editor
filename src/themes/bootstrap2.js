@@ -57,9 +57,10 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
     el.textContent = text;
     return el;
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function(label, input, description, tooltip) {
     var ret = document.createElement('div');
     ret.className = 'control-group';
+    if(tooltip) ret.title = tooltip;
 
     var controls = document.createElement('div');
     controls.className = 'controls';

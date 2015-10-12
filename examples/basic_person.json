@@ -6,6 +6,7 @@
     "name": {
       "type": "string",
       "description": "First and Last name",
+      "tooltip": "First and last name of the simple person",
       "minLength": 4
     },
     "age": {
