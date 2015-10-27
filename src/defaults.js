@@ -153,7 +153,51 @@ JSONEditor.defaults.languages.en = {
    * When a dependency is not resolved
    * @variables This key takes one variable: The name of the missing property for the dependency
    */
-  error_dependency: "Must have property {{0}}"
+  error_dependency: "Must have property {{0}}",
+  /**
+   * Text on Delete All buttons
+   */
+  button_delete_all: "All",
+  /**
+   * Title on Delete All buttons
+   */
+  button_delete_all_title: "Delete All",
+  /**
+    * Text on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last: "Last {{0}}",
+  /**
+    * Title on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last_title: "Delete Last {{0}}",
+  /**
+    * Title on Add Row buttons
+    * @variable This key takes one variable: The title of object to add
+    */
+  button_add_row_title: "Add {{0}}",
+  /**
+    * Title on Move Down buttons
+    */
+  button_move_down_title: "Move down",
+  /**
+    * Title on Move Up buttons
+    */
+  button_move_up_title: "Move up",
+  /**
+    * Title on Delete Row buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_row_title: "Delete {{0}}",
+  /**
+    * Title on Delete Row buttons, short version (no parameter with the object title)
+    */
+  button_delete_row_title_short: "Delete",
+  /**
+    * Title on Collapse buttons
+    */
+  button_collapse: "Collapse"
 };
 
 // Miscellaneous Plugin Settings
