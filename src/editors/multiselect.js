@@ -111,6 +111,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
   },
   postBuild: function() {
       this._super();
+      this.theme.afterInputReady(this.input);
       this.setupSelect2();
   },
   register: function() {
@@ -193,5 +194,28 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
         this.select2 = null;
     }
     this._super();
+  },
+  showValidationErrors: function(errors) {
+    var self = this;
+
+    if(this.jsoneditor.options.show_errors === "always") {}
+    else if(!this.is_dirty && this.previous_error_setting===this.jsoneditor.options.show_errors) return;
+
+    this.previous_error_setting = this.jsoneditor.options.show_errors;
+
+    var messages = [];
+    $each(errors, function(i,error) {
+      if(error.path === self.path) {
+        messages.push(error.message);
+      }
+    });
+
+    if(messages.length) {
+      this.theme.addInputError(this.input, messages.join('. ') + '.');
+    }
+    else {
+      this.theme.removeInputError(this.input);
+    }
+
   }
 });
