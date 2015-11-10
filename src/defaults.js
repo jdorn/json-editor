@@ -110,7 +110,7 @@ JSONEditor.defaults.languages.en = {
   /**
    * When a value does not match a given pattern
    */
-  error_pattern: "Value must match the provided pattern",
+  error_pattern: "Value must match the pattern {{0}}",
   /**
    * When an array has additional items whereas it is not supposed to
    */

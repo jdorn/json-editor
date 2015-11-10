@@ -318,7 +318,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'pattern',
-            message: this.translate('error_pattern')
+            message: this.translate('error_pattern', [schema.pattern])
           });
         }
       }
