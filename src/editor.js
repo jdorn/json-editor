@@ -349,7 +349,7 @@ JSONEditor.AbstractEditor = Class.extend({
       if(type === "number") return 0.0;
       if(type === "boolean") return false;
       if(type === "integer") return 0;
-      if(type === "string") return "";
+      if(type === "string") return this.format ==="uuid" ? $uuid(this.options) : "";
       if(type === "object") return {};
       if(type === "array") return [];
     }
