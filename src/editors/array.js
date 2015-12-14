@@ -212,47 +212,40 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       ret.array_controls = this.theme.getButtonHolder();
       holder.appendChild(ret.array_controls);
     }
-    
+
     return ret;
   },
   destroy: function() {
-    this.empty(true);
+    //this.empty(true);
+    this.empty();
     if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
     if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
     if(this.row_holder && this.row_holder.parentNode) this.row_holder.parentNode.removeChild(this.row_holder);
     if(this.controls && this.controls.parentNode) this.controls.parentNode.removeChild(this.controls);
     if(this.panel && this.panel.parentNode) this.panel.parentNode.removeChild(this.panel);
-    
+
     this.rows = this.row_cache = this.title = this.description = this.row_holder = this.panel = this.controls = null;
 
     this._super();
   },
-  empty: function(hard) {
+  //empty: function(hard) {
+  empty: function() {
     if(!this.rows) return;
     var self = this;
     $each(this.rows,function(i,row) {
-      if(hard) {
-        if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
-        self.destroyRow(row,true);
-        self.row_cache[i] = null;
-      }
+      if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
+      self.destroyRow(row);
       self.rows[i] = null;
     });
     self.rows = [];
-    if(hard) self.row_cache = [];
   },
-  destroyRow: function(row,hard) {
+  destroyRow: function(row) {
     var holder = row.container;
-    if(hard) {
-      row.destroy();
-      if(holder.parentNode) holder.parentNode.removeChild(holder);
-      if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
-    }
-    else {
-      if(row.tab) row.tab.style.display = 'none';
-      holder.style.display = 'none';
-      row.unregister();
-    }
+    if(holder.parentNode) holder.parentNode.removeChild(holder);
+    if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
+    row.destroy();
+    if(holder.parentNode) holder.parentNode.removeChild(holder);
+    if(row.tab && row.tab.parentNode) row.tab.parentNode.removeChild(row.tab);
   },
   getMax: function() {
     if((Array.isArray(this.schema.items)) && this.schema.additionalItems === false) {
@@ -390,8 +383,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         this.delete_last_row_button.style.display = 'none';
         this.remove_all_rows_button.style.display = 'none';
       }
-      else if(this.value.length === 1) {      
-        this.remove_all_rows_button.style.display = 'none';  
+      else if(this.value.length === 1) {
+        this.remove_all_rows_button.style.display = 'none';
 
         // If there are minItems items in the array, hide the delete button beneath the rows
         if(minItems || this.hide_delete_buttons) {
@@ -422,8 +415,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       else {
         this.add_row_button.style.display = '';
         controls_needed = true;
-      } 
-      
+      }
+
       if(!this.collapsed && controls_needed) {
         this.controls.style.display = 'inline-block';
       }
@@ -595,24 +588,15 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     else if(this.jsoneditor.options.disable_collapse) {
       this.toggle_button.style.display = 'none';
     }
-    
+
     // Add "new row" and "delete last" buttons below editor
     this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
-    
+
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
       var i = self.rows.length;
-      if(self.row_cache[i]) {
-        self.rows[i] = self.row_cache[i];
-        self.rows[i].setValue(self.rows[i].getDefault());
-        self.rows[i].container.style.display = '';
-        if(self.rows[i].tab) self.rows[i].tab.style.display = '';
-        self.rows[i].register();
-      }
-      else {
-        self.addRow();
-      }
+      self.addRow();
       self.active_tab = self.rows[i].tab;
       self.refreshTabs();
       self.refreshValue();
