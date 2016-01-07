@@ -258,8 +258,8 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       this.table.style.display = '';
       this.remove_all_rows_button.style.display = 'none';
 
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems || this.hide_delete_buttons) {
+      // If there are minItems items in the array, or configured to hide the delete_last_row button, hide the delete button beneath the rows
+      if(minItems || this.hide_delete_buttons || this.hide_delete_last_row_buttons) {
         this.delete_last_row_button.style.display = 'none';
       }
       else {
@@ -275,8 +275,19 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
         this.remove_all_rows_button.style.display = 'none';
       }
       else {
-        this.delete_last_row_button.style.display = '';
-        this.remove_all_rows_button.style.display = '';
+        if(this.hide_delete_last_row_buttons) {
+          this.delete_last_row_button.style.display = 'none';
+        }
+        else {
+          this.delete_last_row_button.style.display = '';
+        }
+
+        if(this.hide_delete_all_rows_buttons) {
+          this.remove_all_rows_button.style.display = 'none';
+        }
+        else {
+          this.remove_all_rows_button.style.display = '';
+        }
         controls_needed = true;
       }
     }

@@ -455,6 +455,14 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.refreshAddProperties();
     }
     
+    // Edit Properties Button disabled
+    if(this.schema.options && typeof this.schema.options.disable_add_properties !== "undefined") {
+      if(this.schema.options.disable_add_properties) this.addproperty_button.style.display = 'none';
+    }
+    else if(this.jsoneditor.options.disable_add_properties) {
+      this.addproperty_button.style.display = 'none';
+    }
+
     // Fix table cell ordering
     if(this.options.table_row) {
       this.editor_holder = this.container;
