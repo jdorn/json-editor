@@ -170,6 +170,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.input_type = 'text';
       this.input = this.theme.getFormInputField(this.input_type);
     }
+
+    if (this.schema.required) {
+        this.input.setAttribute('required', true);
+    }
     
     // minLength, maxLength, and pattern
     if(typeof this.schema.maxLength !== "undefined") this.input.setAttribute('maxlength',this.schema.maxLength);
