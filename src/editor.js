@@ -175,6 +175,9 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // Template to generate the link href
     var href = this.jsoneditor.compileTemplate(data.href,this.template_engine);
+
+    // Template to generate the link's download attribute
+    var download = this.jsoneditor.compileTemplate(data.download, this.template_engine);          
     
     // Image links
     if(type === 'image') {
@@ -224,6 +227,9 @@ JSONEditor.AbstractEditor = Class.extend({
         var url = href(vars);
         holder.setAttribute('href',url);
         holder.textContent = data.rel || url;
+
+        var downloadCompile = download(vars);
+        holder.setAttribute('download', downloadCompile);                      
       });
     }
     

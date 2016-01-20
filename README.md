@@ -417,6 +417,21 @@ Simple text link
 }
 ```
 
+Text link with base64 encoded data in it
+```js+jinja
+{
+  "title": "Link for file download widh data in it",
+  "type": "string",
+  "links": [
+    {
+      "rel": "anchor name",
+      "href": "...here is base64 encoded data string with MIME...",
+      "download": "filename for download"
+    }
+  ]
+}
+```
+
 Show a video preview (using HTML5 video)
 ```js+jinja
 {
