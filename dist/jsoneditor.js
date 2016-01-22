@@ -585,8 +585,11 @@ JSONEditor.prototype = {
       self.refs[url] = 'loading';
       waiting++;
 
+      if( self.options.ajaxBase && self.options.ajaxBase!=url.substr(0,self.options.ajaxBase.length) && "http"!=url.substr(0,4)) url=self.options.ajaxBase+url;
+
       var r = new XMLHttpRequest(); 
       r.open("GET", url, true);
+      if(self.options.ajaxCredentials) r.withCredentials=self.options.ajaxCredentials;
       r.onreadystatechange = function () {
         if (r.readyState != 4) return; 
         // Request succeeded
