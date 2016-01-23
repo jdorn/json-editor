@@ -585,10 +585,11 @@ JSONEditor.prototype = {
       self.refs[url] = 'loading';
       waiting++;
 
-      if( self.options.ajaxBase && self.options.ajaxBase!=url.substr(0,self.options.ajaxBase.length) && "http"!=url.substr(0,4)) url=self.options.ajaxBase+url;
+      var fetchUrl=url;
+      if( self.options.ajaxBase && self.options.ajaxBase!=url.substr(0,self.options.ajaxBase.length) && "http"!=url.substr(0,4)) fetchUrl=self.options.ajaxBase+url;
 
       var r = new XMLHttpRequest(); 
-      r.open("GET", url, true);
+      r.open("GET", fetchUrl, true);
       if(self.options.ajaxCredentials) r.withCredentials=self.options.ajaxCredentials;
       r.onreadystatechange = function () {
         if (r.readyState != 4) return; 
@@ -600,9 +601,9 @@ JSONEditor.prototype = {
           }
           catch(e) {
             window.console.log(e);
-            throw "Failed to parse external ref "+url;
+            throw "Failed to parse external ref "+fetchUrl;
           }
-          if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+url;
+          if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+fetchUrl;
           
           self.refs[url] = response;
           self._loadExternalRefs(response,function() {
