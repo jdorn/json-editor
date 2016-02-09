@@ -5427,10 +5427,15 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 
     this.select_options = {};
     this.select_values = {};
+    this.select_titles = {};
 
     var items_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
     var e = items_schema["enum"] || [];
+    var option_titles = [];
+    if(items_schema.options)
+      option_titles = items_schema.options.enum_titles || [];
+
     this.option_keys = [];
     for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
@@ -5438,10 +5443,12 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 
       this.option_keys.push(e[i]+"");
       this.select_values[e[i]+""] = e[i];
+      if(option_titles)
+        this.select_titles[e[i]+""] = option_titles[i];
     }
   },
   build: function() {
-    var self = this, i;
+    var self = this, i, label;
     if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
@@ -5453,7 +5460,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       for(i=0; i<this.option_keys.length; i++) {
         this.inputs[this.option_keys[i]] = this.theme.getCheckbox();
         this.select_options[this.option_keys[i]] = this.inputs[this.option_keys[i]];
-        var label = this.theme.getCheckboxLabel(this.option_keys[i]);
+        label = this.theme.getCheckboxLabel(this.select_titles[this.option_keys[i]] || this.option_keys[i]);
         this.controls[this.option_keys[i]] = this.theme.getFormControl(label, this.inputs[this.option_keys[i]]);
       }
 
@@ -5467,6 +5474,9 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
 
       for(i=0; i<this.option_keys.length; i++) {
         this.select_options[this.option_keys[i]] = this.input.children[i];
+        label = this.select_titles[this.option_keys[i]];
+        if(label)
+          this.input.children[i].text = label;
       }
 
       if(this.schema.readOnly || this.schema.readonly) {
