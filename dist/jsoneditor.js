@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.23 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.24 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2015-09-27
+ * Date: 2016-02-11
  */
 
 /**
@@ -1008,48 +1008,82 @@ JSONEditor.Validator = Class.extend({
     if(typeof value === "number") {
       // `multipleOf` and `divisibleBy`
       if(schema.multipleOf || schema.divisibleBy) {
-        valid = value / (schema.multipleOf || schema.divisibleBy);
-        if(valid !== Math.floor(valid)) {
+        var divisor = schema.multipleOf || schema.divisibleBy;
+        // Vanilla JS, prone to floating point rounding errors (e.g. 1.14 / .01 == 113.99999)
+        valid = (value/divisor === Math.floor(value/divisor));
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math.mod(window.math.bignumber(value), window.math.bignumber(divisor)).equals(0);
+        }
+        // Use decimal.js is available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value)).mod(new window.Decimal(divisor)).equals(0);
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-            message: this.translate('error_multipleOf', [schema.multipleOf || schema.divisibleBy])
+            message: this.translate('error_multipleOf', [divisor])
           });
         }
       }
 
       // `maximum`
       if(schema.hasOwnProperty('maximum')) {
-        if(schema.exclusiveMaximum && value >= schema.maximum) {
-          errors.push({
-            path: path,
-            property: 'maximum',
-            message: this.translate('error_maximum_excl', [schema.maximum])
-          });
+        // Vanilla JS, prone to floating point rounding errors (e.g. .999999999999999 == 1)
+        valid = schema.exclusiveMaximum? (value < schema.maximum) : (value <= schema.maximum);
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math[schema.exclusiveMaximum?'smaller':'smallerEq'](
+            window.math.bignumber(value),
+            window.math.bignumber(schema.maximum)
+          );
         }
-        else if(!schema.exclusiveMaximum && value > schema.maximum) {
+        // Use Decimal.js if available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value))[schema.exclusiveMaximum?'lt':'lte'](new window.Decimal(schema.maximum));
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: 'maximum',
-            message: this.translate('error_maximum_incl', [schema.maximum])
+            message: this.translate(
+              (schema.exclusiveMaximum?'error_maximum_excl':'error_maximum_incl'),
+              [schema.maximum]
+            )
           });
         }
       }
 
       // `minimum`
       if(schema.hasOwnProperty('minimum')) {
-        if(schema.exclusiveMinimum && value <= schema.minimum) {
-          errors.push({
-            path: path,
-            property: 'minimum',
-            message: this.translate('error_minimum_excl', [schema.minimum])
-          });
+        // Vanilla JS, prone to floating point rounding errors (e.g. .999999999999999 == 1)
+        valid = schema.exclusiveMinimum? (value > schema.minimum) : (value >= schema.minimum);
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math[schema.exclusiveMinimum?'larger':'largerEq'](
+            window.math.bignumber(value),
+            window.math.bignumber(schema.minimum)
+          );
         }
-        else if(!schema.exclusiveMinimum && value < schema.minimum) {
+        // Use Decimal.js if available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value))[schema.exclusiveMinimum?'gt':'gte'](new window.Decimal(schema.minimum));
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: 'minimum',
-            message: this.translate('error_minimum_incl', [schema.minimum])
+            message: this.translate(
+              (schema.exclusiveMinimum?'error_minimum_excl':'error_minimum_incl'),
+              [schema.minimum]
+            )
           });
         }
       }
@@ -1069,7 +1103,7 @@ JSONEditor.Validator = Class.extend({
 
       // `minLength`
       if(schema.minLength) {
-        if((value+"").length < schema.minLength) {          
+        if((value+"").length < schema.minLength) {
           errors.push({
             path: path,
             property: 'minLength',
@@ -1084,7 +1118,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'pattern',
-            message: this.translate('error_pattern')
+            message: this.translate('error_pattern', [schema.pattern])
           });
         }
       }
@@ -1377,6 +1411,8 @@ JSONEditor.AbstractEditor = Class.extend({
     this.template_engine = this.jsoneditor.template;
     this.iconlib = this.jsoneditor.iconlib;
     
+    this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
+
     this.original_schema = options.schema;
     this.schema = this.jsoneditor.expandSchema(this.original_schema);
     
@@ -3604,7 +3640,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     
     // Buttons to delete row, move row up, and move row down
     if(!self.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle());
+      self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete',this.translate('button_delete_row_title',[self.getItemTitle()]));
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
       self.rows[i].delete_button.addEventListener('click',function(e) {
@@ -3646,7 +3682,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     if(i && !self.hide_move_buttons) {
-      self.rows[i].moveup_button = this.getButton('','moveup','Move up');
+      self.rows[i].moveup_button = this.getButton('','moveup',this.translate('button_move_up_title'));
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
       self.rows[i].moveup_button.addEventListener('click',function(e) {
@@ -3673,7 +3709,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     if(!self.hide_move_buttons) {
-      self.rows[i].movedown_button = this.getButton('','movedown','Move down');
+      self.rows[i].movedown_button = this.getButton('','movedown',this.translate('button_move_down_title'));
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
       self.rows[i].movedown_button.addEventListener('click',function(e) {
@@ -3705,7 +3741,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     var self = this;
     
     this.collapsed = false;
-    this.toggle_button = this.getButton('','collapse','Collapse');
+    this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
     this.title_controls.appendChild(this.toggle_button);
     var row_holder_display = self.row_holder.style.display;
     var controls_display = self.controls.style.display;
@@ -3744,7 +3780,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
+    this.add_row_button = this.getButton(this.getItemTitle(),'add',this.translate('button_add_row_title',[this.getItemTitle()]));
     
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
@@ -3767,7 +3803,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     });
     self.controls.appendChild(this.add_row_button);
 
-    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
+    this.delete_last_row_button = this.getButton(this.translate('button_delete_last',[this.getItemTitle()]),'delete',this.translate('button_delete_last_title',[this.getItemTitle()]));
     this.delete_last_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -3786,7 +3822,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     });
     self.controls.appendChild(this.delete_last_row_button);
 
-    this.remove_all_rows_button = this.getButton('All','delete','Delete All');
+    this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'),'delete',this.translate('button_delete_all_title'));
     this.remove_all_rows_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -4166,7 +4202,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     // Buttons to delete row, move row up, and move row down
     if(!this.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton('','delete','Delete');
+      self.rows[i].delete_button = this.getButton('','delete',this.translate('button_delete_row_title_short'));
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
       self.rows[i].delete_button.addEventListener('click',function(e) {
@@ -4189,7 +4225,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     
     if(i && !this.hide_move_buttons) {
-      self.rows[i].moveup_button = this.getButton('','moveup','Move up');
+      self.rows[i].moveup_button = this.getButton('','moveup',this.translate('button_move_up_title'));
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
       self.rows[i].moveup_button.addEventListener('click',function(e) {
@@ -4210,7 +4246,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
     
     if(!this.hide_move_buttons) {
-      self.rows[i].movedown_button = this.getButton('','movedown','Move down');
+      self.rows[i].movedown_button = this.getButton('','movedown',this.translate('button_move_down_title'));
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
       self.rows[i].movedown_button.addEventListener('click',function(e) {
@@ -4235,7 +4271,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     var self = this;
 
     this.collapsed = false;
-    this.toggle_button = this.getButton('','collapse','Collapse');
+    this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
     if(this.title_controls) {
       this.title_controls.appendChild(this.toggle_button);
       this.toggle_button.addEventListener('click',function(e) {
@@ -4269,7 +4305,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
 
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
+    this.add_row_button = this.getButton(this.getItemTitle(),'add',this.translate('button_add_row_title',[this.getItemTitle()]));
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -4281,7 +4317,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     });
     self.controls.appendChild(this.add_row_button);
 
-    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
+    this.delete_last_row_button = this.getButton(this.translate('button_delete_last',[this.getItemTitle()]),'delete',this.translate('button_delete_last_title',[this.getItemTitle()]));
     this.delete_last_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -4293,7 +4329,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     });
     self.controls.appendChild(this.delete_last_row_button);
 
-    this.remove_all_rows_button = this.getButton('All','delete','Delete All');
+    this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'),'delete',this.translate('button_delete_all_title'));
     this.remove_all_rows_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -7548,7 +7584,7 @@ JSONEditor.defaults.languages.en = {
   /**
    * When a value does not match a given pattern
    */
-  error_pattern: "Value must match the provided pattern",
+  error_pattern: "Value must match the pattern {{0}}",
   /**
    * When an array has additional items whereas it is not supposed to
    */
@@ -7591,7 +7627,51 @@ JSONEditor.defaults.languages.en = {
    * When a dependency is not resolved
    * @variables This key takes one variable: The name of the missing property for the dependency
    */
-  error_dependency: "Must have property {{0}}"
+  error_dependency: "Must have property {{0}}",
+  /**
+   * Text on Delete All buttons
+   */
+  button_delete_all: "All",
+  /**
+   * Title on Delete All buttons
+   */
+  button_delete_all_title: "Delete All",
+  /**
+    * Text on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last: "Last {{0}}",
+  /**
+    * Title on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last_title: "Delete Last {{0}}",
+  /**
+    * Title on Add Row buttons
+    * @variable This key takes one variable: The title of object to add
+    */
+  button_add_row_title: "Add {{0}}",
+  /**
+    * Title on Move Down buttons
+    */
+  button_move_down_title: "Move down",
+  /**
+    * Title on Move Up buttons
+    */
+  button_move_up_title: "Move up",
+  /**
+    * Title on Delete Row buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_row_title: "Delete {{0}}",
+  /**
+    * Title on Delete Row buttons, short version (no parameter with the object title)
+    */
+  button_delete_row_title_short: "Delete",
+  /**
+    * Title on Collapse buttons
+    */
+  button_collapse: "Collapse"
 };
 
 // Miscellaneous Plugin Settings
