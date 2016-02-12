@@ -648,6 +648,20 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     });
     self.controls.appendChild(this.remove_all_rows_button);
 
+    this.paste_button = this.getButton('Paste', 'paste', 'Paste');
+    this.paste_button.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var clipboardContents = self.jsoneditor.getCopyClipboardContents();
+      if (clipboardContents !== null)
+      {
+        var extendedValue = self.getValue();
+        extendedValue.push(clipboardContents);
+        self.setValue(extendedValue);
+      }
+    });
+    this.title_controls.appendChild(this.paste_button);
+
     if(self.tabs) {
       this.add_row_button.style.width = '100%';
       this.add_row_button.style.textAlign = 'left';

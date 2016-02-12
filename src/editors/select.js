@@ -50,7 +50,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     }
   },
   getValue: function() {
-    return this.value;
+    return this.typecast(this.value);
   },
   preBuild: function() {
     var self = this;
@@ -178,7 +178,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.value = this.enum_values[0];
   },
   onInputChange: function() {
-    var val = this.input.value;
+    var val = this.typecast(this.input.value);
 
     var new_val;
     // Invalid option, use first option instead
@@ -267,14 +267,14 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
               
               // Rendered value
               if(this.enumSource[i].value) {
-                item_values[j] = this.enumSource[i].value({
+                item_values[j] = this.typecast(this.enumSource[i].value({
                   i: j,
                   item: item
-                });
+                }));
               }
               // Use value directly
               else {
-                item_values[j] = items[j];
+                item_values[j] = this.typecast(items[j]);
               }
               
               // Rendered title
@@ -317,7 +317,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       // Otherwise, set the value to the first select option
       else {
         this.input.value = select_options[0];
-        this.value = select_options[0] || "";  
+        this.value = this.typecast(select_options[0] || "");  
         if(this.parent) this.parent.onChildEditorChange(this);
         else this.jsoneditor.onChange();
         this.jsoneditor.notifyWatchers(this.path);

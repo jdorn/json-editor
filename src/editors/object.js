@@ -442,6 +442,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       else if(this.jsoneditor.options.disable_edit_json) {
         this.editjson_button.style.display = 'none';
       }
+
+      // Copy Button
+      this.copy_button = this.getButton('Copy', 'copy', 'Copy');
+      this.copy_button.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        self.jsoneditor.setCopyClipboardContents(self.getValue());
+      });
+      this.title_controls.appendChild(this.copy_button);      
       
       // Object Properties Button
       this.addproperty_button = this.getButton('Properties','edit','Object Properties');
