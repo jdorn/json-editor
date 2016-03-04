@@ -683,10 +683,20 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
   },
   getValue: function() {
     var result = this._super();
-    if(this.jsoneditor.options.remove_empty_properties || this.options.remove_empty_properties) {
-      for(var i in result) {
-        if(result.hasOwnProperty(i)) {
-          if(!result[i]) delete result[i];
+    if (this.options.remove_empty_properties && typeof this.options.remove_empty_properties != 'boolean') {
+      for (var i in result) {
+        if (result.hasOwnProperty(i) && this.options.remove_empty_properties.indexOf(i) >= 0) {
+          if (!result[i])
+            delete result[i];
+        }
+      }
+    } else {
+      if (this.jsoneditor.options.remove_empty_properties || this.options.remove_empty_properties) {
+        for (var i in result) {
+          if (result.hasOwnProperty(i)) {
+            if (!result[i])
+              delete result[i];
+          }
         }
       }
     }
