@@ -61,6 +61,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {
     var el = document.createElement('div');
     el.className = 'well well-sm';
+    el.style.paddingBottom = 0;
     return el;
   },
   getFormInputDescription: function(text) {

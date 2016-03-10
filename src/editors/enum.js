@@ -24,17 +24,11 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
     // Switcher
     this.switcher = this.theme.getSwitcher(this.select_options);
     this.container.appendChild(this.switcher);
-    this.switcher.style.width = 'auto';
-    this.switcher.style.display = 'inline-block';
-    this.switcher.style.marginLeft = '5px';
-    this.switcher.style.marginBottom = 0;
 
     // Display area
     this.display_area = this.theme.getIndentedPanel();
-    this.display_area.style.paddingTop = 0;
-    this.display_area.style.paddingBottom = 0;
     this.container.appendChild(this.display_area);
-    
+
     if(this.options.hide_display) this.display_area.style.display = "none";
 
     this.switcher.addEventListener('change',function() {
@@ -98,7 +92,7 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
         // TODO: use theme
         ret += '<li>'+html+'</li>';
       });
-      
+
       if(Array.isArray(el)) ret = '<ol>'+ret+'</ol>';
       else ret = "<ul style='margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;'>"+ret+'</ul>';
 

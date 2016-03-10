@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.20 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.24 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2015-06-08
+ * Date: 2016-02-11
  */
 
 /**
@@ -132,52 +132,27 @@ var Class;
 	}
 }());
 /**
- * Taken from jQuery 1
+ * Taken from jQuery 2.1.3
  *
  * @param obj
- * @returns {*}
+ * @returns {boolean}
  */
 var $isplainobject = function( obj ) {
-  var key;
-
-  // Must be an Object.
-  // Because of IE, we also have to check the presence of the constructor property.
-  // Make sure that DOM nodes and window objects don't pass through, as well
-  if ( !obj || typeof obj !== "object" || obj.nodeType || obj === window ) {
+  // Not plain objects:
+  // - Any object or value whose internal [[Class]] property is not "[object Object]"
+  // - DOM nodes
+  // - window
+  if (typeof obj !== "object" || obj.nodeType || (obj !== null && obj === obj.window)) {
     return false;
   }
 
-  // Not own constructor property must be Object
-  if (obj.constructor &&
-    !obj.hasOwnProperty('constructor') &&
-    !obj.constructor.prototype.hasOwnProperty('isPrototypeOf')) {
+  if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf")) {
     return false;
   }
 
-  try {
-    // Not own constructor property must be Object
-    if ( obj.constructor &&
-        !obj.hasOwnProperty("constructor") &&
-        !obj.constructor.prototype.hasOwnProperty('isPrototypeOf') ) {
-      return false;
-    }
-  } catch ( e ) {
-    // IE8,9 Will throw exceptions on certain host objects #9897
-    return false;
-  }
-
-  // Support: IE<9
-  // Handle iteration over inherited properties before own properties.
-  if ( /msie 8\.0/i.test( window.navigator.userAgent ) ) {
-    for ( key in obj ) {
-      return obj.hasOwnProperty(key);
-    }
-  }
-
-  // Own properties are enumerated firstly, so to speed up,
-  // if last one is own, then all properties are own.
-  for ( key in obj ) {}
-  return key === undefined || obj.hasOwnProperty(key);
+  // If the function hasn't returned already, we're confident that
+  // |obj| is a plain object, created by {} or constructed with new Object
+  return true;
 };
 
 var $extend = function(destination) {
@@ -207,9 +182,17 @@ var $each = function(obj,callback) {
     }
   }
   else {
-    for(i in obj) {
-      if(!obj.hasOwnProperty(i)) continue;
-      if(callback(i,obj[i])===false) return;
+    if (Object.keys) {
+      var keys = Object.keys(obj);
+      for(i=0; i<keys.length; i++) {
+        if(callback(keys[i],obj[keys[i]])===false) return;
+      }
+    }
+    else {
+      for(i in obj) {
+        if(!obj.hasOwnProperty(i)) continue;
+        if(callback(i,obj[i])===false) return;
+      }
     }
   }
 };
@@ -238,6 +221,9 @@ var JSONEditor = function(element,options) {
   this.init();
 };
 JSONEditor.prototype = {
+  // necessary since we remove the ctor property by doing a literal assignment. Without this
+  // the $isplainobject function will think that this is a plain object.
+  constructor: JSONEditor,
   init: function() {
     var self = this;
     
@@ -264,7 +250,13 @@ JSONEditor.prototype = {
     // Fetch all external refs via ajax
     this._loadExternalRefs(this.schema, function() {
       self._getDefinitions(self.schema);
-      self.validator = new JSONEditor.Validator(self);
+      
+      // Validator options
+      var validator_options = {};
+      if(self.options.custom_validators) {
+        validator_options.custom_validators = self.options.custom_validators;
+      }
+      self.validator = new JSONEditor.Validator(self,null,validator_options);
       
       // Create the root editor
       var editor_class = self.getEditorClass(self.schema);
@@ -807,10 +799,10 @@ JSONEditor.defaults = {
 };
 
 JSONEditor.Validator = Class.extend({
-  init: function(jsoneditor,schema) {
+  init: function(jsoneditor,schema,options) {
     this.jsoneditor = jsoneditor;
     this.schema = schema || this.jsoneditor.schema;
-    this.options = {};
+    this.options = options || {};
     this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
   },
   validate: function(value) {
@@ -1016,48 +1008,82 @@ JSONEditor.Validator = Class.extend({
     if(typeof value === "number") {
       // `multipleOf` and `divisibleBy`
       if(schema.multipleOf || schema.divisibleBy) {
-        valid = value / (schema.multipleOf || schema.divisibleBy);
-        if(valid !== Math.floor(valid)) {
+        var divisor = schema.multipleOf || schema.divisibleBy;
+        // Vanilla JS, prone to floating point rounding errors (e.g. 1.14 / .01 == 113.99999)
+        valid = (value/divisor === Math.floor(value/divisor));
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math.mod(window.math.bignumber(value), window.math.bignumber(divisor)).equals(0);
+        }
+        // Use decimal.js is available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value)).mod(new window.Decimal(divisor)).equals(0);
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-            message: this.translate('error_multipleOf', [schema.multipleOf || schema.divisibleBy])
+            message: this.translate('error_multipleOf', [divisor])
           });
         }
       }
 
       // `maximum`
       if(schema.hasOwnProperty('maximum')) {
-        if(schema.exclusiveMaximum && value >= schema.maximum) {
-          errors.push({
-            path: path,
-            property: 'maximum',
-            message: this.translate('error_maximum_excl', [schema.maximum])
-          });
+        // Vanilla JS, prone to floating point rounding errors (e.g. .999999999999999 == 1)
+        valid = schema.exclusiveMaximum? (value < schema.maximum) : (value <= schema.maximum);
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math[schema.exclusiveMaximum?'smaller':'smallerEq'](
+            window.math.bignumber(value),
+            window.math.bignumber(schema.maximum)
+          );
         }
-        else if(!schema.exclusiveMaximum && value > schema.maximum) {
+        // Use Decimal.js if available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value))[schema.exclusiveMaximum?'lt':'lte'](new window.Decimal(schema.maximum));
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: 'maximum',
-            message: this.translate('error_maximum_incl', [schema.maximum])
+            message: this.translate(
+              (schema.exclusiveMaximum?'error_maximum_excl':'error_maximum_incl'),
+              [schema.maximum]
+            )
           });
         }
       }
 
       // `minimum`
       if(schema.hasOwnProperty('minimum')) {
-        if(schema.exclusiveMinimum && value <= schema.minimum) {
-          errors.push({
-            path: path,
-            property: 'minimum',
-            message: this.translate('error_minimum_excl', [schema.minimum])
-          });
+        // Vanilla JS, prone to floating point rounding errors (e.g. .999999999999999 == 1)
+        valid = schema.exclusiveMinimum? (value > schema.minimum) : (value >= schema.minimum);
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math[schema.exclusiveMinimum?'larger':'largerEq'](
+            window.math.bignumber(value),
+            window.math.bignumber(schema.minimum)
+          );
         }
-        else if(!schema.exclusiveMinimum && value < schema.minimum) {
+        // Use Decimal.js if available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value))[schema.exclusiveMinimum?'gt':'gte'](new window.Decimal(schema.minimum));
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: 'minimum',
-            message: this.translate('error_minimum_incl', [schema.minimum])
+            message: this.translate(
+              (schema.exclusiveMinimum?'error_minimum_excl':'error_minimum_incl'),
+              [schema.minimum]
+            )
           });
         }
       }
@@ -1077,7 +1103,7 @@ JSONEditor.Validator = Class.extend({
 
       // `minLength`
       if(schema.minLength) {
-        if((value+"").length < schema.minLength) {          
+        if((value+"").length < schema.minLength) {
           errors.push({
             path: path,
             property: 'minLength',
@@ -1092,7 +1118,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'pattern',
-            message: this.translate('error_pattern')
+            message: this.translate('error_pattern', [schema.pattern])
           });
         }
       }
@@ -1316,10 +1342,16 @@ JSONEditor.Validator = Class.extend({
       }
     }
 
-    // Custom type validation
+    // Custom type validation (global)
     $each(JSONEditor.defaults.custom_validators,function(i,validator) {
       errors = errors.concat(validator.call(self,schema,value,path));
     });
+    // Custom type validation (instance specific)
+    if(this.options.custom_validators) {
+      $each(this.options.custom_validators,function(i,validator) {
+        errors = errors.concat(validator.call(self,schema,value,path));
+      });
+    }
 
     return errors;
   },
@@ -1379,6 +1411,8 @@ JSONEditor.AbstractEditor = Class.extend({
     this.template_engine = this.jsoneditor.template;
     this.iconlib = this.jsoneditor.iconlib;
     
+    this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
+
     this.original_schema = options.schema;
     this.schema = this.jsoneditor.expandSchema(this.original_schema);
     
@@ -1712,6 +1746,12 @@ JSONEditor.AbstractEditor = Class.extend({
   isEnabled: function() {
     return !this.disabled;
   },
+  isRequired: function() {
+    if(typeof this.schema.required === "boolean") return this.schema.required;
+    else if(this.parent && this.parent.schema && Array.isArray(this.parent.schema.required)) return this.parent.schema.required.indexOf(this.key) > -1;
+    else if(this.jsoneditor.options.required_by_default) return true;
+    else return false;
+  },  
   getDisplayText: function(arr) {
     var disp = [];
     var used = {};
@@ -1814,7 +1854,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       return;
     }
     
-    if(value === null) value = "";
+    if(value === null || typeof value === 'undefined') value = "";
     else if(typeof value === "object") value = JSON.stringify(value);
     else if(typeof value !== "string") value = ""+value;
     
@@ -1864,7 +1904,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this, i;
-    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     this.format = this.schema.format;
@@ -2595,6 +2635,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_list.style.overflowY = 'auto';
       this.addproperty_list.style.overflowX = 'hidden';
       this.addproperty_list.style.paddingLeft = '5px';
+      this.addproperty_list.setAttribute('class', 'property-selector');
       this.addproperty_add = this.getButton('add','add','add');
       this.addproperty_input = this.theme.getFormInputField('text');
       this.addproperty_input.setAttribute('placeholder','Property name...');
@@ -2637,7 +2678,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Container for child editor area
       this.editor_holder = this.theme.getIndentedPanel();
-      this.editor_holder.style.paddingBottom = '0';
       this.container.appendChild(this.editor_holder);
 
       // Container for rows of child editors
@@ -2929,7 +2969,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this._super(editor);
   },
   canHaveAdditionalProperties: function() {
-    return (this.schema.additionalProperties === true) || !this.jsoneditor.options.no_additional_properties;
+    if (typeof this.schema.additionalProperties === "boolean") {
+      return this.schema.additionalProperties;
+    }
+    return !this.jsoneditor.options.no_additional_properties;
   },
   destroy: function() {
     $each(this.cached_editors, function(i,el) {
@@ -3216,7 +3259,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     if(!this.options.compact) {
       this.header = document.createElement('span');
       this.header.textContent = this.getTitle();
-      this.title = this.theme.getHeader(this.header);
+      this.title = this.theme.getHeader(this.header,this.isRequired());
       this.container.appendChild(this.title);
       this.title_controls = this.theme.getHeaderButtonHolder();
       this.title.appendChild(this.title_controls);
@@ -3597,7 +3640,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     
     // Buttons to delete row, move row up, and move row down
     if(!self.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete','Delete '+self.getItemTitle());
+      self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete',this.translate('button_delete_row_title',[self.getItemTitle()]));
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
       self.rows[i].delete_button.addEventListener('click',function(e) {
@@ -3639,7 +3682,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     if(i && !self.hide_move_buttons) {
-      self.rows[i].moveup_button = this.getButton('','moveup','Move up');
+      self.rows[i].moveup_button = this.getButton('','moveup',this.translate('button_move_up_title'));
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
       self.rows[i].moveup_button.addEventListener('click',function(e) {
@@ -3666,7 +3709,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     if(!self.hide_move_buttons) {
-      self.rows[i].movedown_button = this.getButton('','movedown','Move down');
+      self.rows[i].movedown_button = this.getButton('','movedown',this.translate('button_move_down_title'));
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
       self.rows[i].movedown_button.addEventListener('click',function(e) {
@@ -3698,7 +3741,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     var self = this;
     
     this.collapsed = false;
-    this.toggle_button = this.getButton('','collapse','Collapse');
+    this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
     this.title_controls.appendChild(this.toggle_button);
     var row_holder_display = self.row_holder.style.display;
     var controls_display = self.controls.style.display;
@@ -3737,7 +3780,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
+    this.add_row_button = this.getButton(this.getItemTitle(),'add',this.translate('button_add_row_title',[this.getItemTitle()]));
     
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
@@ -3745,6 +3788,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       var i = self.rows.length;
       if(self.row_cache[i]) {
         self.rows[i] = self.row_cache[i];
+        self.rows[i].setValue(self.rows[i].getDefault());
         self.rows[i].container.style.display = '';
         if(self.rows[i].tab) self.rows[i].tab.style.display = '';
         self.rows[i].register();
@@ -3759,7 +3803,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     });
     self.controls.appendChild(this.add_row_button);
 
-    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
+    this.delete_last_row_button = this.getButton(this.translate('button_delete_last',[this.getItemTitle()]),'delete',this.translate('button_delete_last_title',[this.getItemTitle()]));
     this.delete_last_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -3778,7 +3822,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     });
     self.controls.appendChild(this.delete_last_row_button);
 
-    this.remove_all_rows_button = this.getButton('All','delete','Delete All');
+    this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'),'delete',this.translate('button_delete_all_title'));
     this.remove_all_rows_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -3885,7 +3929,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     this.width = tmp.getNumColumns() + 2;
     
     if(!this.options.compact) {
-      this.title = this.theme.getHeader(this.getTitle());
+      this.title = this.theme.getHeader(this.getTitle(),this.isRequired());
       this.container.appendChild(this.title);
       this.title_controls = this.theme.getHeaderButtonHolder();
       this.title.appendChild(this.title_controls);
@@ -4158,7 +4202,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     // Buttons to delete row, move row up, and move row down
     if(!this.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton('','delete','Delete');
+      self.rows[i].delete_button = this.getButton('','delete',this.translate('button_delete_row_title_short'));
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
       self.rows[i].delete_button.addEventListener('click',function(e) {
@@ -4181,7 +4225,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     
     if(i && !this.hide_move_buttons) {
-      self.rows[i].moveup_button = this.getButton('','moveup','Move up');
+      self.rows[i].moveup_button = this.getButton('','moveup',this.translate('button_move_up_title'));
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
       self.rows[i].moveup_button.addEventListener('click',function(e) {
@@ -4202,7 +4246,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
     
     if(!this.hide_move_buttons) {
-      self.rows[i].movedown_button = this.getButton('','movedown','Move down');
+      self.rows[i].movedown_button = this.getButton('','movedown',this.translate('button_move_down_title'));
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
       self.rows[i].movedown_button.addEventListener('click',function(e) {
@@ -4227,7 +4271,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     var self = this;
 
     this.collapsed = false;
-    this.toggle_button = this.getButton('','collapse','Collapse');
+    this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
     if(this.title_controls) {
       this.title_controls.appendChild(this.toggle_button);
       this.toggle_button.addEventListener('click',function(e) {
@@ -4261,7 +4305,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
 
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
+    this.add_row_button = this.getButton(this.getItemTitle(),'add',this.translate('button_add_row_title',[this.getItemTitle()]));
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -4273,7 +4317,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     });
     self.controls.appendChild(this.add_row_button);
 
-    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
+    this.delete_last_row_button = this.getButton(this.translate('button_delete_last',[this.getItemTitle()]),'delete',this.translate('button_delete_last_title',[this.getItemTitle()]));
     this.delete_last_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -4285,7 +4329,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     });
     self.controls.appendChild(this.delete_last_row_button);
 
-    this.remove_all_rows_button = this.getButton('All','delete','Delete All');
+    this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'),'delete',this.translate('button_delete_all_title'));
     this.remove_all_rows_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -4344,11 +4388,11 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   switchEditor: function(i) {
     var self = this;
-    
+
     if(!this.editors[i]) {
       this.buildChildEditor(i);
     }
-    
+
     self.type = i;
 
     self.register();
@@ -4373,7 +4417,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     self.editor_holder.appendChild(holder);
 
     var schema;
-    
+
     if(typeof type === "string") {
       schema = $extend({},self.schema);
       schema.type = type;
@@ -4401,11 +4445,11 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     self.editors[i].preBuild();
     self.editors[i].build();
     self.editors[i].postBuild();
-    
+
     if(self.editors[i].header) self.editors[i].header.style.display = 'none';
-    
+
     self.editors[i].option = self.switcher_options[i];
-    
+
     holder.addEventListener('change_header_text',function() {
       self.refreshHeaderText();
     });
@@ -4419,7 +4463,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.type = 0;
     this.editors = [];
     this.validators = [];
-    
+
     this.keep_values = true;
     if(typeof this.jsoneditor.options.keep_oneof_values !== "undefined") this.keep_values = this.jsoneditor.options.keep_oneof_values;
     if(typeof this.options.keep_oneof_values !== "undefined") this.keep_values = this.options.keep_oneof_values;
@@ -4464,7 +4508,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     var self = this;
     var container = this.container;
 
-    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
     this.container.appendChild(this.header);
 
     this.switcher = this.theme.getSwitcher(this.display_text);
@@ -4472,24 +4516,26 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       self.switchEditor(self.display_text.indexOf(this.value));
       self.onChange(true);
     });
-    this.switcher.style.marginBottom = 0;
-    this.switcher.style.width = 'auto';
-    this.switcher.style.display = 'inline-block';
-    this.switcher.style.marginLeft = '5px';
 
     this.editor_holder = document.createElement('div');
     container.appendChild(this.editor_holder);
+    
+      
+    var validator_options = {};
+    if(self.jsoneditor.options.custom_validators) {
+      validator_options.custom_validators = self.jsoneditor.options.custom_validators;
+    }
 
     this.switcher_options = this.theme.getSwitcherOptions(this.switcher);
     $each(this.types,function(i,type) {
       self.editors[i] = false;
-      
+
       var schema;
-      
+
       if(typeof type === "string") {
         schema = $extend({},self.schema);
         schema.type = type;
@@ -4503,9 +4549,9 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         }
       }
 
-      self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema);
+      self.validators[i] = new JSONEditor.Validator(self.jsoneditor,schema,validator_options);
     });
-    
+
     this.switchEditor(0);
   },
   onChildEditorChange: function(editor) {
@@ -4513,7 +4559,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       this.refreshValue();
       this.refreshHeaderText();
     }
-    
+
     this._super();
   },
   refreshHeaderText: function() {
@@ -4535,7 +4581,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
         return false;
       }
     });
-    
+
     this.switchEditor(this.type);
 
     this.editors[this.type].setValue(val,initial);
@@ -4553,7 +4599,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   showValidationErrors: function(errors) {
     var self = this;
-    
+
     // oneOf error paths need to remove the oneOf[i] part before passing to child editors
     if(this.oneOf) {
       $each(this.editors,function(i,editor) {
@@ -4567,7 +4613,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
             new_errors.push(new_error);
           }
         });
-        
+
         editor.showValidationErrors(new_errors);
       });
     }
@@ -4587,7 +4633,7 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
   },
   build: function() {
     var container = this.container;
-    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
     this.container.appendChild(this.title);
 
     this.options.enum_titles = this.options.enum_titles || [];
@@ -4606,17 +4652,11 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
     // Switcher
     this.switcher = this.theme.getSwitcher(this.select_options);
     this.container.appendChild(this.switcher);
-    this.switcher.style.width = 'auto';
-    this.switcher.style.display = 'inline-block';
-    this.switcher.style.marginLeft = '5px';
-    this.switcher.style.marginBottom = 0;
 
     // Display area
     this.display_area = this.theme.getIndentedPanel();
-    this.display_area.style.paddingTop = 0;
-    this.display_area.style.paddingBottom = 0;
     this.container.appendChild(this.display_area);
-    
+
     if(this.options.hide_display) this.display_area.style.display = "none";
 
     this.switcher.addEventListener('change',function() {
@@ -4680,7 +4720,7 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
         // TODO: use theme
         ret += '<li>'+html+'</li>';
       });
-      
+
       if(Array.isArray(el)) ret = '<ol>'+ret+'</ol>';
       else ret = "<ul style='margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;'>"+ret+'</ul>';
 
@@ -4785,12 +4825,26 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
         self.enum_display[i] = ""+(display[i] || option);
         self.enum_values[i] = self.typecast(option);
       });
+
+      if(!this.isRequired()){
+        self.enum_display.unshift(' ');
+        self.enum_options.unshift('undefined');
+        self.enum_values.unshift(undefined);
+      }
+            
     }
     // Boolean
     else if(this.schema.type === "boolean") {
       self.enum_display = this.schema.options && this.schema.options.enum_titles || ['true','false'];
       self.enum_options = ['1',''];
       self.enum_values = [true,false];
+      
+      if(!this.isRequired()){
+        self.enum_display.unshift(' ');
+        self.enum_options.unshift('undefined');
+        self.enum_values.unshift(undefined);
+      }
+    
     }
     // Dynamic Enum
     else if(this.schema.enumSource) {
@@ -4856,7 +4910,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this;
-    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     if(this.options.compact) this.container.className += ' compact';
@@ -4883,13 +4937,20 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   onInputChange: function() {
     var val = this.input.value;
 
-    var sanitized = val;
+    var new_val;
+    // Invalid option, use first option instead
     if(this.enum_options.indexOf(val) === -1) {
-      sanitized = this.enum_options[0];
+      new_val = this.enum_values[0];
+    }
+    else {
+      new_val = this.enum_values[this.enum_options.indexOf(val)];
     }
 
-    this.value = this.enum_values[this.enum_options.indexOf(val)];
+    // If valid hasn't changed
+    if(new_val === this.value) return;
 
+    // Store new value and propogate change event
+    this.value = new_val;
     this.onChange(true);
   },
   setupSelect2: function() {
@@ -4900,6 +4961,10 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
       this.select2 = window.jQuery(this.input).select2(options);
       var self = this;
       this.select2.on('select2-blur',function() {
+        self.input.value = self.select2.select2('val');
+        self.onInputChange();
+      });
+      this.select2.on('change',function() {
         self.input.value = self.select2.select2('val');
         self.onInputChange();
       });
@@ -4928,57 +4993,65 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
           select_options = select_options.concat(this.enumSource[i]);
           select_titles = select_titles.concat(this.enumSource[i]);
         }
-        // A watched field
-        else if(vars[this.enumSource[i].source]) {
-          var items = vars[this.enumSource[i].source];
-          
-          // Only use a predefined part of the array
-          if(this.enumSource[i].slice) {
-            items = Array.prototype.slice.apply(items,this.enumSource[i].slice);
+        else {
+          var items = [];
+          // Static list of items
+          if(Array.isArray(this.enumSource[i].source)) {
+            items = this.enumSource[i].source;
+          // A watched field
+          } else {
+            items = vars[this.enumSource[i].source];
           }
-          // Filter the items
-          if(this.enumSource[i].filter) {
-            var new_items = [];
+          
+          if(items) {
+            // Only use a predefined part of the array
+            if(this.enumSource[i].slice) {
+              items = Array.prototype.slice.apply(items,this.enumSource[i].slice);
+            }
+            // Filter the items
+            if(this.enumSource[i].filter) {
+              var new_items = [];
+              for(j=0; j<items.length; j++) {
+                if(this.enumSource[i].filter({i:j,item:items[j],watched:vars})) new_items.push(items[j]);
+              }
+              items = new_items;
+            }
+            
+            var item_titles = [];
+            var item_values = [];
             for(j=0; j<items.length; j++) {
-              if(this.enumSource[i].filter({i:j,item:items[j]})) new_items.push(items[j]);
+              var item = items[j];
+              
+              // Rendered value
+              if(this.enumSource[i].value) {
+                item_values[j] = this.enumSource[i].value({
+                  i: j,
+                  item: item
+                });
+              }
+              // Use value directly
+              else {
+                item_values[j] = items[j];
+              }
+              
+              // Rendered title
+              if(this.enumSource[i].title) {
+                item_titles[j] = this.enumSource[i].title({
+                  i: j,
+                  item: item
+                });
+              }
+              // Use value as the title also
+              else {
+                item_titles[j] = item_values[j];
+              }
             }
-            items = new_items;
-          }
-          
-          var item_titles = [];
-          var item_values = [];
-          for(j=0; j<items.length; j++) {
-            var item = items[j];
             
-            // Rendered value
-            if(this.enumSource[i].value) {
-              item_values[j] = this.enumSource[i].value({
-                i: j,
-                item: item
-              });
-            }
-            // Use value directly
-            else {
-              item_values[j] = items[j];
-            }
+            // TODO: sort
             
-            // Rendered title
-            if(this.enumSource[i].title) {
-              item_titles[j] = this.enumSource[i].title({
-                i: j,
-                item: item
-              });
-            }
-            // Use value as the title also
-            else {
-              item_titles[j] = item_values[j];
-            }
+            select_options = select_options.concat(item_values);
+            select_titles = select_titles.concat(item_titles);
           }
-          
-          // TODO: sort
-          
-          select_options = select_options.concat(item_values);
-          select_titles = select_titles.concat(item_titles);
         }
       }
       
@@ -5037,6 +5110,353 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   }
 });
 
+JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
+  setValue: function(value,initial) {
+    value = this.typecast(value||'');
+
+    // Sanitize value before setting it
+    var sanitized = value;
+    if(this.enum_values.indexOf(sanitized) < 0) {
+      sanitized = this.enum_values[0];
+    }
+
+    if(this.value === sanitized) {
+      return;
+    }
+
+    this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
+
+    if(this.selectize) {
+      this.selectize[0].selectize.addItem(sanitized);
+    }
+
+    this.value = sanitized;
+    this.onChange();
+  },
+  register: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.setAttribute('name',this.formname);
+  },
+  unregister: function() {
+    this._super();
+    if(!this.input) return;
+    this.input.removeAttribute('name');
+  },
+  getNumColumns: function() {
+    if(!this.enum_options) return 3;
+    var longest_text = this.getTitle().length;
+    for(var i=0; i<this.enum_options.length; i++) {
+      longest_text = Math.max(longest_text,this.enum_options[i].length+4);
+    }
+    return Math.min(12,Math.max(longest_text/7,2));
+  },
+  typecast: function(value) {
+    if(this.schema.type === "boolean") {
+      return !!value;
+    }
+    else if(this.schema.type === "number") {
+      return 1*value;
+    }
+    else if(this.schema.type === "integer") {
+      return Math.floor(value*1);
+    }
+    else {
+      return ""+value;
+    }
+  },
+  getValue: function() {
+    return this.value;
+  },
+  preBuild: function() {
+    var self = this;
+    this.input_type = 'select';
+    this.enum_options = [];
+    this.enum_values = [];
+    this.enum_display = [];
+
+    // Enum options enumerated
+    if(this.schema.enum) {
+      var display = this.schema.options && this.schema.options.enum_titles || [];
+
+      $each(this.schema.enum,function(i,option) {
+        self.enum_options[i] = ""+option;
+        self.enum_display[i] = ""+(display[i] || option);
+        self.enum_values[i] = self.typecast(option);
+      });
+    }
+    // Boolean
+    else if(this.schema.type === "boolean") {
+      self.enum_display = this.schema.options && this.schema.options.enum_titles || ['true','false'];
+      self.enum_options = ['1','0'];
+      self.enum_values = [true,false];
+    }
+    // Dynamic Enum
+    else if(this.schema.enumSource) {
+      this.enumSource = [];
+      this.enum_display = [];
+      this.enum_options = [];
+      this.enum_values = [];
+
+      // Shortcut declaration for using a single array
+      if(!(Array.isArray(this.schema.enumSource))) {
+        if(this.schema.enumValue) {
+          this.enumSource = [
+            {
+              source: this.schema.enumSource,
+              value: this.schema.enumValue
+            }
+          ];
+        }
+        else {
+          this.enumSource = [
+            {
+              source: this.schema.enumSource
+            }
+          ];
+        }
+      }
+      else {
+        for(i=0; i<this.schema.enumSource.length; i++) {
+          // Shorthand for watched variable
+          if(typeof this.schema.enumSource[i] === "string") {
+            this.enumSource[i] = {
+              source: this.schema.enumSource[i]
+            };
+          }
+          // Make a copy of the schema
+          else if(!(Array.isArray(this.schema.enumSource[i]))) {
+            this.enumSource[i] = $extend({},this.schema.enumSource[i]);
+          }
+          else {
+            this.enumSource[i] = this.schema.enumSource[i];
+          }
+        }
+      }
+
+      // Now, enumSource is an array of sources
+      // Walk through this array and fix up the values
+      for(i=0; i<this.enumSource.length; i++) {
+        if(this.enumSource[i].value) {
+          this.enumSource[i].value = this.jsoneditor.compileTemplate(this.enumSource[i].value, this.template_engine);
+        }
+        if(this.enumSource[i].title) {
+          this.enumSource[i].title = this.jsoneditor.compileTemplate(this.enumSource[i].title, this.template_engine);
+        }
+        if(this.enumSource[i].filter) {
+          this.enumSource[i].filter = this.jsoneditor.compileTemplate(this.enumSource[i].filter, this.template_engine);
+        }
+      }
+    }
+    // Other, not supported
+    else {
+      throw "'select' editor requires the enum property to be set.";
+    }
+  },
+  build: function() {
+    var self = this;
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
+
+    if(this.options.compact) this.container.className += ' compact';
+
+    this.input = this.theme.getSelectInput(this.enum_options);
+    this.theme.setSelectOptions(this.input,this.enum_options,this.enum_display);
+
+    if(this.schema.readOnly || this.schema.readonly) {
+      this.always_disabled = true;
+      this.input.disabled = true;
+    }
+
+    this.input.addEventListener('change',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      self.onInputChange();
+    });
+
+    this.control = this.theme.getFormControl(this.label, this.input, this.description);
+    this.container.appendChild(this.control);
+
+    this.value = this.enum_values[0];
+  },
+  onInputChange: function() {
+    var val = this.input.value;
+
+    var sanitized = val;
+    if(this.enum_options.indexOf(val) === -1) {
+      sanitized = this.enum_options[0];
+    }
+
+    this.value = this.enum_values[this.enum_options.indexOf(val)];
+    this.onChange(true);
+  },
+  setupSelectize: function() {
+    // If the Selectize library is loaded use it when we have lots of items
+    var self = this;
+    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.selectize && (this.enum_options.length >= 2 || (this.enum_options.length && this.enumSource))) {
+      var options = $extend({},JSONEditor.plugins.selectize);
+      if(this.schema.options && this.schema.options.selectize_options) options = $extend(options,this.schema.options.selectize_options);
+      this.selectize = window.jQuery(this.input).selectize($extend(options,
+      {
+        create: true,
+        onChange : function() {
+          self.onInputChange();
+        }
+      }));
+    }
+    else {
+      this.selectize = null;
+    }
+  },
+  postBuild: function() {
+    this._super();
+    this.theme.afterInputReady(this.input);
+    this.setupSelectize();
+  },
+  onWatchedFieldChange: function() {
+    var self = this, vars, j;
+
+    // If this editor uses a dynamic select box
+    if(this.enumSource) {
+      vars = this.getWatchedFieldValues();
+      var select_options = [];
+      var select_titles = [];
+
+      for(var i=0; i<this.enumSource.length; i++) {
+        // Constant values
+        if(Array.isArray(this.enumSource[i])) {
+          select_options = select_options.concat(this.enumSource[i]);
+          select_titles = select_titles.concat(this.enumSource[i]);
+        }
+        // A watched field
+        else if(vars[this.enumSource[i].source]) {
+          var items = vars[this.enumSource[i].source];
+
+          // Only use a predefined part of the array
+          if(this.enumSource[i].slice) {
+            items = Array.prototype.slice.apply(items,this.enumSource[i].slice);
+          }
+          // Filter the items
+          if(this.enumSource[i].filter) {
+            var new_items = [];
+            for(j=0; j<items.length; j++) {
+              if(this.enumSource[i].filter({i:j,item:items[j]})) new_items.push(items[j]);
+            }
+            items = new_items;
+          }
+
+          var item_titles = [];
+          var item_values = [];
+          for(j=0; j<items.length; j++) {
+            var item = items[j];
+
+            // Rendered value
+            if(this.enumSource[i].value) {
+              item_values[j] = this.enumSource[i].value({
+                i: j,
+                item: item
+              });
+            }
+            // Use value directly
+            else {
+              item_values[j] = items[j];
+            }
+
+            // Rendered title
+            if(this.enumSource[i].title) {
+              item_titles[j] = this.enumSource[i].title({
+                i: j,
+                item: item
+              });
+            }
+            // Use value as the title also
+            else {
+              item_titles[j] = item_values[j];
+            }
+          }
+
+          // TODO: sort
+
+          select_options = select_options.concat(item_values);
+          select_titles = select_titles.concat(item_titles);
+        }
+      }
+
+      var prev_value = this.value;
+
+      this.theme.setSelectOptions(this.input, select_options, select_titles);
+      this.enum_options = select_options;
+      this.enum_display = select_titles;
+      this.enum_values = select_options;
+
+      // If the previous value is still in the new select options, stick with it
+      if(select_options.indexOf(prev_value) !== -1) {
+        this.input.value = prev_value;
+        this.value = prev_value;
+      }
+
+      // Otherwise, set the value to the first select option
+      else {
+        this.input.value = select_options[0];
+        this.value = select_options[0] || "";
+        if(this.parent) this.parent.onChildEditorChange(this);
+        else this.jsoneditor.onChange();
+        this.jsoneditor.notifyWatchers(this.path);
+      }
+
+      if(this.selectize) {
+        // Update the Selectize options
+        this.updateSelectizeOptions(select_options);
+      }
+      else {
+        this.setupSelectize();
+      }
+
+      this._super();
+    }
+  },
+  updateSelectizeOptions: function(select_options) {
+    var selectized = this.selectize[0].selectize,
+        self = this;
+
+    selectized.off();
+    selectized.clearOptions();
+    for(var n in select_options) {
+      selectized.addOption({value:select_options[n],text:select_options[n]});
+    }
+    selectized.addItem(this.value);
+    selectized.on('change',function() {
+      self.onInputChange();
+    });
+  },
+  enable: function() {
+    if(!this.always_disabled) {
+      this.input.disabled = false;
+      if(this.selectize) {
+        this.selectize[0].selectize.unlock();
+      }
+    }
+    this._super();
+  },
+  disable: function() {
+    this.input.disabled = true;
+    if(this.selectize) {
+      this.selectize[0].selectize.lock();
+    }
+    this._super();
+  },
+  destroy: function() {
+    if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
+    if(this.selectize) {
+      this.selectize[0].selectize.destroy();
+      this.selectize = null;
+    }
+    this._super();
+  }
+});
+
 JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
   preBuild: function() {
     this._super();
@@ -5058,7 +5478,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
   },
   build: function() {
     var self = this, i;
-    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
 
     if((!this.schema.format && this.option_keys.length < 8) || this.schema.format === "checkbox") {
@@ -5241,7 +5661,7 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
   },
   build: function() {    
     var self = this;
-    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
 
     // Input that holds the base64 string
     this.input = this.theme.getFormInputField('hidden');
@@ -5335,7 +5755,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
   },
   build: function() {    
     var self = this;
-    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle(),this.isRequired());
 
     // Input that holds the base64 string
     this.input = this.theme.getFormInputField('hidden');
@@ -5526,6 +5946,111 @@ JSONEditor.defaults.editors.checkbox = JSONEditor.AbstractEditor.extend({
   }
 });
 
+JSONEditor.defaults.editors.arraySelectize = JSONEditor.AbstractEditor.extend({
+  build: function() {
+    this.title = this.theme.getFormInputLabel(this.getTitle());
+
+    this.title_controls = this.theme.getHeaderButtonHolder();
+    this.title.appendChild(this.title_controls);
+    this.error_holder = document.createElement('div');
+
+    if(this.schema.description) {
+      this.description = this.theme.getDescription(this.schema.description);
+    }
+
+    this.input = document.createElement('select');
+    this.input.setAttribute('multiple', 'multiple');
+
+    var group = this.theme.getFormControl(this.title, this.input, this.description);
+
+    this.container.appendChild(group);
+    this.container.appendChild(this.error_holder);
+
+    window.jQuery(this.input).selectize({
+      delimiter: false,
+      createOnBlur: true,
+      create: true
+    });
+  },
+  postBuild: function() {
+      var self = this;
+      this.input.selectize.on('change', function(event) {
+          self.refreshValue();
+          self.onChange(true);
+      });
+  },
+  destroy: function() {
+    this.empty(true);
+    if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
+    if(this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description);
+    if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
+
+    this._super();
+  },
+  empty: function(hard) {},
+  setValue: function(value, initial) {
+    var self = this;
+    // Update the array's value, adding/removing rows when necessary
+    value = value || [];
+    if(!(Array.isArray(value))) value = [value];
+
+    this.input.selectize.clearOptions();
+    this.input.selectize.clear(true);
+
+    value.forEach(function(item) {
+      self.input.selectize.addOption({text: item, value: item});
+    });
+    this.input.selectize.setValue(value);
+
+    this.refreshValue(initial);
+  },
+  refreshValue: function(force) {
+    this.value = this.input.selectize.getValue();
+  },
+  showValidationErrors: function(errors) {
+    var self = this;
+
+    // Get all the errors that pertain to this editor
+    var my_errors = [];
+    var other_errors = [];
+    $each(errors, function(i,error) {
+      if(error.path === self.path) {
+        my_errors.push(error);
+      }
+      else {
+        other_errors.push(error);
+      }
+    });
+
+    // Show errors for this editor
+    if(this.error_holder) {
+
+      if(my_errors.length) {
+        var message = [];
+        this.error_holder.innerHTML = '';
+        this.error_holder.style.display = '';
+        $each(my_errors, function(i,error) {
+          self.error_holder.appendChild(self.theme.getErrorMessage(error.message));
+        });
+      }
+      // Hide error area
+      else {
+        this.error_holder.style.display = 'none';
+      }
+    }
+  }
+});
+
+var matchKey = (function () {
+  var elem = document.documentElement;
+
+  if (elem.matches) return 'matches';
+  else if (elem.webkitMatchesSelector) return 'webkitMatchesSelector';
+  else if (elem.mozMatchesSelector) return 'mozMatchesSelector';
+  else if (elem.msMatchesSelector) return 'msMatchesSelector';
+  else if (elem.oMatchesSelector) return 'oMatchesSelector';
+})();
+
 JSONEditor.AbstractTheme = Class.extend({
   getContainer: function() {
     return document.createElement('div');
@@ -5561,7 +6086,7 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   setGridColumnSize: function(el,size) {
-    
+
   },
   getLink: function(text) {
     var el = document.createElement('a');
@@ -5591,7 +6116,7 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style.fontWeight = 'normal';
     return el;
   },
-  getHeader: function(text) {
+  getHeader: function(text, required) {
     var el = document.createElement('h3');
     if(typeof text === "string") {
       el.textContent = text;
@@ -5599,7 +6124,9 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(text);
     }
-    
+
+    if(required)el.className += " required";
+
     return el;
   },
   getCheckbox: function() {
@@ -5635,10 +6162,14 @@ JSONEditor.AbstractTheme = Class.extend({
   getSwitcher: function(options) {
     var switcher = this.getSelectInput(options);
     switcher.style.backgroundColor = 'transparent';
-    switcher.style.height = 'auto';
+    switcher.style.display = 'inline-block';
     switcher.style.fontStyle = 'italic';
     switcher.style.fontWeight = 'normal';
+    switcher.style.height = 'auto';
+    switcher.style.marginBottom = 0;
+    switcher.style.marginLeft = '5px';
     switcher.style.padding = '0 0 0 3px';
+    switcher.style.width = 'auto';
     return switcher;
   },
   getSwitcherOptions: function(switcher) {
@@ -5678,7 +6209,7 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   afterInputReady: function(input) {
-    
+
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
@@ -5690,7 +6221,7 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(input);
     }
-    
+
     if(description) el.appendChild(description);
     return el;
   },
@@ -5786,18 +6317,15 @@ JSONEditor.AbstractTheme = Class.extend({
     }
   },
   closest: function(elem, selector) {
-    var matchesSelector = elem.matches || elem.webkitMatchesSelector || elem.mozMatchesSelector || elem.msMatchesSelector;
-
     while (elem && elem !== document) {
-      try {
-        var f = matchesSelector.bind(elem);
-        if (f(selector)) {
+      if (matchKey) {
+        if (elem[matchKey](selector)) {
           return elem;
         } else {
           elem = elem.parentNode;
         }
       }
-      catch(e) {
+      else {
         return false;
       }
     }
@@ -5880,10 +6408,11 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
     el.className = 'row-fluid';
     return el;
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.display = 'inline-block';
     el.style.fontWeight = 'bold';
+    if(required)el.className += " required";
     return el;
   },
   setGridColumnSize: function(el,size) {
@@ -5915,6 +6444,7 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {
     var el = document.createElement('div');
     el.className = 'well well-small';
+    el.style.paddingBottom = 0;
     return el;
   },
   getFormInputDescription: function(text) {
@@ -6109,6 +6639,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {
     var el = document.createElement('div');
     el.className = 'well well-sm';
+    el.style.paddingBottom = 0;
     return el;
   },
   getFormInputDescription: function(text) {
@@ -6240,9 +6771,10 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     }
     input.group = this.closest(input,'.form-control');
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.display = 'inline-block';
+    if(required)el.className += " required";
     return el;
   },
   getFormInputField: function(type) {
@@ -6261,6 +6793,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {
     var el = document.createElement('div');
     el.className = 'panel';
+    el.style.paddingBottom = 0;
     return el;
   },
   getHeaderButtonHolder: function() {
@@ -6326,9 +6859,10 @@ JSONEditor.defaults.themes.foundation3 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.6em';
     return el;
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.fontWeight = 'bold';
+    if(required)el.className += " required";
     return el;
   },
   getTabHolder: function() {
@@ -6384,9 +6918,10 @@ JSONEditor.defaults.themes.foundation4 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.8rem';
     return el;
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.fontWeight = 'bold';
+    if(required)el.className += " required";
     return el;
   }
 });
@@ -6440,11 +6975,12 @@ JSONEditor.defaults.themes.foundation5 = JSONEditor.defaults.themes.foundation.e
 });
 
 JSONEditor.defaults.themes.html = JSONEditor.AbstractTheme.extend({
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = this._super(text);
     el.style.display = 'block';
     el.style.marginBottom = '3px';
     el.style.fontWeight = 'bold';
+    if(required)el.className += " required";
     return el;
   },
   getFormInputDescription: function(text) {
@@ -6578,10 +7114,11 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
     el.style.fontSize = '.7em';
     return el;
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function(text, required) {
     var el = document.createElement('label');
     el.style.fontWeight = 'bold';
     el.style.display = 'block';
+    if(required)el.className += " required";
     el.textContent = text;
     return el;
   },
@@ -6815,8 +7352,8 @@ JSONEditor.defaults.iconlibs.jqueryui = JSONEditor.AbstractIconLib.extend({
 JSONEditor.defaults.templates["default"] = function() {
   return {
     compile: function(template) {
-      var matches = template.match(/{{\s*([a-zA-Z0-9\-_\.]+)\s*}}/g);
-      var l = matches.length;
+      var matches = template.match(/{{\s*([a-zA-Z0-9\-_ \.]+)\s*}}/g);
+      var l = matches && matches.length;
 
       // Shortcut if the template contains no variables
       if(!l) return function() { return template; };
@@ -6825,7 +7362,7 @@ JSONEditor.defaults.templates["default"] = function() {
       // This drastically speeds up template execution
       var replacements = [];
       var get_replacement = function(i) {
-        var p = matches[i].replace(/[{}\s]+/g,'').split('.');
+        var p = matches[i].replace(/[{}]+/g,'').trim().split('.');
         var n = p.length;
         var func;
         
@@ -7031,7 +7568,7 @@ JSONEditor.defaults.languages.en = {
    * When a value is greater than it's supposed to be (inclusive
    * @variables This key takes one variable: The maximum
    */
-  error_maximum_incl: "Value must at most {{0}}",
+  error_maximum_incl: "Value must be at most {{0}}",
   /**
    * When a value is lesser than it's supposed to be (exclusive)
    * @variables This key takes one variable: The minimum
@@ -7055,7 +7592,7 @@ JSONEditor.defaults.languages.en = {
   /**
    * When a value does not match a given pattern
    */
-  error_pattern: "Value must match the provided pattern",
+  error_pattern: "Value must match the pattern {{0}}",
   /**
    * When an array has additional items whereas it is not supposed to
    */
@@ -7098,7 +7635,51 @@ JSONEditor.defaults.languages.en = {
    * When a dependency is not resolved
    * @variables This key takes one variable: The name of the missing property for the dependency
    */
-  error_dependency: "Must have property {{0}}"
+  error_dependency: "Must have property {{0}}",
+  /**
+   * Text on Delete All buttons
+   */
+  button_delete_all: "All",
+  /**
+   * Title on Delete All buttons
+   */
+  button_delete_all_title: "Delete All",
+  /**
+    * Text on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last: "Last {{0}}",
+  /**
+    * Title on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last_title: "Delete Last {{0}}",
+  /**
+    * Title on Add Row buttons
+    * @variable This key takes one variable: The title of object to add
+    */
+  button_add_row_title: "Add {{0}}",
+  /**
+    * Title on Move Down buttons
+    */
+  button_move_down_title: "Move down",
+  /**
+    * Title on Move Up buttons
+    */
+  button_move_up_title: "Move up",
+  /**
+    * Title on Delete Row buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_row_title: "Delete {{0}}",
+  /**
+    * Title on Delete Row buttons, short version (no parameter with the object title)
+    */
+  button_delete_row_title_short: "Delete",
+  /**
+    * Title on Collapse buttons
+    */
+  button_collapse: "Collapse"
 };
 
 // Miscellaneous Plugin Settings
@@ -7114,6 +7695,8 @@ JSONEditor.plugins = {
   },
   select2: {
     
+  },
+  selectize: {
   }
 };
 
@@ -7128,6 +7711,11 @@ for(var i in JSONEditor.defaults.editors) {
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(typeof schema.type !== "string") return "multiple";
 });
+// If the type is not set but properties are defined, we can infer the type is actually object
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  // If the schema is a simple type
+  if(!schema.type && schema.properties ) return "object";
+});
 // If the type is set and it's a basic type, use the primitive editor
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema is a simple type
@@ -7141,7 +7729,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
       return "checkbox";
     }
     // Otherwise, default to select menu
-    return "select";
+    return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
   }
 });
 // Use the multiple editor for schemas where the `type` is set to "any"
@@ -7171,7 +7759,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Use the `select` editor for dynamic enumSource enums
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.enumSource) return "select";
+  if(schema.enumSource) return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
 });
 // Use the `enum` or `select` editors for schemas with enumerated properties
 JSONEditor.defaults.resolvers.unshift(function(schema) {
@@ -7180,14 +7768,21 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
       return "enum";
     }
     else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
-      return "select";
+      return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
     }
   }
 });
-// Use the 'multiselect' editor for arrays of enumerated strings/numbers/integers
+// Specialized editors for arrays of strings
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && schema.uniqueItems && schema.items["enum"] && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
-    return 'multiselect';
+  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && schema.uniqueItems && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
+    // For enumerated strings, number, or integers
+    if(schema.items.enum) {
+      return 'multiselect';
+    }
+    // For non-enumerated strings (tag editor)
+    else if(JSONEditor.plugins.selectize.enable && schema.items.type === "string") {
+      return 'arraySelectize';
+    }
   }
 });
 // Use the multiple editor for schemas with `oneOf` set

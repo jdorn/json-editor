@@ -7,25 +7,25 @@ module.exports = function(grunt) {
         sourcesContent: true
       },
       target: {
-        files: { 
+        files: {
           'dist/jsoneditor.js': [
-            
+
             // License & version info, start the containing closure
             'src/intro.js',
-            
+
             // Simple inheritance
             'src/class.js',
             // IE9 polyfills
             'src/ie9.js',
             // Utils like extend, each, and trigger
             'src/utilities.js',
-            
+
             // The main JSONEditor class
             'src/core.js',
 
             // JSON Schema validator
             'src/validator.js',
-            
+
             // All the editors
             'src/editor.js',
             'src/editors/null.js',
@@ -38,10 +38,12 @@ module.exports = function(grunt) {
             'src/editors/multiple.js',
             'src/editors/enum.js',
             'src/editors/select.js',
+            'src/editors/selectize.js',
             'src/editors/multiselect.js',
             'src/editors/base64.js',
             'src/editors/upload.js',
             'src/editors/checkbox.js',
+            'src/editors/array/selectize.js',
 
             // All the themes and iconlibs
             'src/theme.js',
@@ -54,10 +56,10 @@ module.exports = function(grunt) {
 
             // Set the defaults
             'src/defaults.js',
-            
+
             // Wrapper for $.fn style initialization
             'src/jquery.js',
-            
+
             // End the closure
             'src/outro.js'
           ],
@@ -91,20 +93,20 @@ module.exports = function(grunt) {
       beforeconcat: [
         'src/class.js',
         'src/ie9.js',
-        
+
         // Utils like extend, each, and trigger
         'src/utilities.js',
-        
+
         // The main JSONEditor class
         'src/core.js',
 
         // JSON Schema validator
         'src/validator.js',
-        
+
         // All the editors
         'src/editor.js',
         'src/editors/*.js',
-        
+
         // All the themes and iconlibs
         'src/theme.js',
         'src/themes/*.js',
@@ -116,7 +118,7 @@ module.exports = function(grunt) {
 
         // Set the defaults
         'src/defaults.js',
-        
+
         // Wrapper for $.fn style initialization
         'src/jquery.js'
       ],

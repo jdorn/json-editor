@@ -1,8 +1,8 @@
 JSONEditor.defaults.templates["default"] = function() {
   return {
     compile: function(template) {
-      var matches = template.match(/{{\s*([a-zA-Z0-9\-_\.]+)\s*}}/g);
-      var l = matches.length;
+      var matches = template.match(/{{\s*([a-zA-Z0-9\-_ \.]+)\s*}}/g);
+      var l = matches && matches.length;
 
       // Shortcut if the template contains no variables
       if(!l) return function() { return template; };
@@ -11,7 +11,7 @@ JSONEditor.defaults.templates["default"] = function() {
       // This drastically speeds up template execution
       var replacements = [];
       var get_replacement = function(i) {
-        var p = matches[i].replace(/[{}\s]+/g,'').split('.');
+        var p = matches[i].replace(/[{}]+/g,'').trim().split('.');
         var n = p.length;
         var func;
         

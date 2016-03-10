@@ -35,6 +35,8 @@ JSONEditor.AbstractEditor = Class.extend({
     this.template_engine = this.jsoneditor.template;
     this.iconlib = this.jsoneditor.iconlib;
     
+    this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
+
     this.original_schema = options.schema;
     this.schema = this.jsoneditor.expandSchema(this.original_schema);
     
@@ -373,7 +375,7 @@ JSONEditor.AbstractEditor = Class.extend({
     else if(this.parent && this.parent.schema && Array.isArray(this.parent.schema.required)) return this.parent.schema.required.indexOf(this.key) > -1;
     else if(this.jsoneditor.options.required_by_default) return true;
     else return false;
-  },
+  },  
   getDisplayText: function(arr) {
     var disp = [];
     var used = {};

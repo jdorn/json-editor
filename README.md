@@ -16,7 +16,11 @@ Download the [production version][min] (22K when gzipped) or the [development ve
 Requirements
 -----------------
 
-JSON Editor has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
+JSON Schema has the following dependencies:
+
+* [math.js](http://mathjs.org/) for floating point math
+
+It needs a modern browser (tested in Chrome and Firefox).
 
 ### Optional Requirements
 
@@ -29,6 +33,7 @@ The following are not required, but can improve the style and usability of JSON 
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
 *  [Ace Editor](http://ace.c9.io/) for editing code
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
+*  [Selectize](http://brianreavis.github.io/selectize.js/) for nicer Select & Array boxes
 
 Usage
 --------------
@@ -134,6 +139,11 @@ Here are all the available options:
     <td>required_by_default</td>
     <td>If <code>true</code>, all schemas that don't explicitly set the <code>required</code> property will be required.</td>
     <td><code>false</code></td>
+  </tr>
+  <tr>
+    <td>keep_oneof_values</td>
+    <td>If <code>true</code>, makes oneOf copy properties over when switching.</td>
+    <td><code>true</code></td>
   </tr>
   <tr>
     <td>schema</td>
@@ -951,6 +961,29 @@ Here's a more complex example (this uses the Swig template engine syntax to show
 }
 ```
 
+You can also specify a list of static items with a slightly different syntax:
+
+```js+jinja
+{
+  "enumSource": [{
+      // A watched field source
+      "source": [
+        {
+          "value": 1,
+          "title": "One"
+        },
+        {
+          "value": 2,
+          "title": "Two"
+        }
+      ],
+      "title": "{{item.title}}",
+      "value": "{{item.value}}"
+    }]
+  ]
+}
+```
+
 The colors examples used an array of strings directly.  Using the verbose form, you can 
 also make it work with an array of objects.  Here's an example:
 
@@ -1116,6 +1149,15 @@ The possibilities are endless.  Some ideas:
 *  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data URLs
 
+Select2 & Selectize Support
+----------------
+Select2 support is enabled by default and will become active if the Select2 library is detected.
+
+Selectize support is enabled via the following snippet:
+```js
+JSONEditor.plugins.selectize.enable = true;
+```
+See the demo for an example of the `array` and `select` editor with Selectize support enabled.
 
 Custom Validation
 ----------------

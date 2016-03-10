@@ -8,6 +8,9 @@ var JSONEditor = function(element,options) {
   this.init();
 };
 JSONEditor.prototype = {
+  // necessary since we remove the ctor property by doing a literal assignment. Without this
+  // the $isplainobject function will think that this is a plain object.
+  constructor: JSONEditor,
   init: function() {
     var self = this;
     
@@ -34,7 +37,13 @@ JSONEditor.prototype = {
     // Fetch all external refs via ajax
     this._loadExternalRefs(this.schema, function() {
       self._getDefinitions(self.schema);
-      self.validator = new JSONEditor.Validator(self);
+      
+      // Validator options
+      var validator_options = {};
+      if(self.options.custom_validators) {
+        validator_options.custom_validators = self.options.custom_validators;
+      }
+      self.validator = new JSONEditor.Validator(self,null,validator_options);
       
       // Create the root editor
       var editor_class = self.getEditorClass(self.schema);

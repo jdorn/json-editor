@@ -327,6 +327,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_list.style.overflowY = 'auto';
       this.addproperty_list.style.overflowX = 'hidden';
       this.addproperty_list.style.paddingLeft = '5px';
+      this.addproperty_list.setAttribute('class', 'property-selector');
       this.addproperty_add = this.getButton('add','add','add');
       this.addproperty_input = this.theme.getFormInputField('text');
       this.addproperty_input.setAttribute('placeholder','Property name...');
@@ -369,7 +370,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       
       // Container for child editor area
       this.editor_holder = this.theme.getIndentedPanel();
-      this.editor_holder.style.paddingBottom = '0';
       this.container.appendChild(this.editor_holder);
 
       // Container for rows of child editors
@@ -661,7 +661,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this._super(editor);
   },
   canHaveAdditionalProperties: function() {
-    return (this.schema.additionalProperties === true) || !this.jsoneditor.options.no_additional_properties;
+    if (typeof this.schema.additionalProperties === "boolean") {
+      return this.schema.additionalProperties;
+    }
+    return !this.jsoneditor.options.no_additional_properties;
   },
   destroy: function() {
     $each(this.cached_editors, function(i,el) {

@@ -1,3 +1,13 @@
+var matchKey = (function () {
+  var elem = document.documentElement;
+
+  if (elem.matches) return 'matches';
+  else if (elem.webkitMatchesSelector) return 'webkitMatchesSelector';
+  else if (elem.mozMatchesSelector) return 'mozMatchesSelector';
+  else if (elem.msMatchesSelector) return 'msMatchesSelector';
+  else if (elem.oMatchesSelector) return 'oMatchesSelector';
+})();
+
 JSONEditor.AbstractTheme = Class.extend({
   getContainer: function() {
     return document.createElement('div');
@@ -33,7 +43,7 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   setGridColumnSize: function(el,size) {
-    
+
   },
   getLink: function(text) {
     var el = document.createElement('a');
@@ -73,7 +83,7 @@ JSONEditor.AbstractTheme = Class.extend({
     }
 
     if(required)el.className += " required";
-    
+
     return el;
   },
   getCheckbox: function() {
@@ -109,10 +119,14 @@ JSONEditor.AbstractTheme = Class.extend({
   getSwitcher: function(options) {
     var switcher = this.getSelectInput(options);
     switcher.style.backgroundColor = 'transparent';
-    switcher.style.height = 'auto';
+    switcher.style.display = 'inline-block';
     switcher.style.fontStyle = 'italic';
     switcher.style.fontWeight = 'normal';
+    switcher.style.height = 'auto';
+    switcher.style.marginBottom = 0;
+    switcher.style.marginLeft = '5px';
     switcher.style.padding = '0 0 0 3px';
+    switcher.style.width = 'auto';
     return switcher;
   },
   getSwitcherOptions: function(switcher) {
@@ -152,7 +166,7 @@ JSONEditor.AbstractTheme = Class.extend({
     return el;
   },
   afterInputReady: function(input) {
-    
+
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
@@ -164,7 +178,7 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(input);
     }
-    
+
     if(description) el.appendChild(description);
     return el;
   },
@@ -260,18 +274,15 @@ JSONEditor.AbstractTheme = Class.extend({
     }
   },
   closest: function(elem, selector) {
-    var matchesSelector = elem.matches || elem.webkitMatchesSelector || elem.mozMatchesSelector || elem.msMatchesSelector;
-
     while (elem && elem !== document) {
-      try {
-        var f = matchesSelector.bind(elem);
-        if (f(selector)) {
+      if (matchKey) {
+        if (elem[matchKey](selector)) {
           return elem;
         } else {
           elem = elem.parentNode;
         }
       }
-      catch(e) {
+      else {
         return false;
       }
     }
