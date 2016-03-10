@@ -6127,6 +6127,7 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(text);
     }
+
     return el;
   },
   getCheckbox: function() {
@@ -6857,10 +6858,9 @@ JSONEditor.defaults.themes.foundation3 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.6em';
     return el;
   },
-  getFormInputLabel: function(text, required) {
+  getFormInputLabel: function(text) {
     var el = this._super(text);
     el.style.fontWeight = 'bold';
-    if(required)el.className += " required";
     return el;
   },
   getTabHolder: function() {
@@ -6916,10 +6916,9 @@ JSONEditor.defaults.themes.foundation4 = JSONEditor.defaults.themes.foundation.e
     el.style.fontSize = '.8rem';
     return el;
   },
-  getFormInputLabel: function(text, required) {
+  getFormInputLabel: function(text) {
     var el = this._super(text);
     el.style.fontWeight = 'bold';
-    if(required)el.className += " required";
     return el;
   }
 });
