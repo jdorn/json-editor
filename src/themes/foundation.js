@@ -23,10 +23,9 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     }
     input.group = this.closest(input,'.form-control');
   },
-  getFormInputLabel: function(text, required) {
+  getFormInputLabel: function(text) {
     var el = this._super(text);
     el.style.display = 'inline-block';
-    if(required)el.className += " required";
     return el;
   },
   getFormInputField: function(type) {

@@ -58,6 +58,9 @@ JSONEditor.AbstractEditor = Class.extend({
     if(this.schema.id) this.container.setAttribute('data-schemaid',this.schema.id);
     if(this.schema.type && typeof this.schema.type === "string") this.container.setAttribute('data-schematype',this.schema.type);
     this.container.setAttribute('data-schemapath',this.path);
+    if(this.isRequired(this)){
+        this.container.classList.add("required");
+    }
   },
   
   preBuild: function() {

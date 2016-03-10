@@ -13,11 +13,10 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
     el.className = 'row-fluid';
     return el;
   },
-  getFormInputLabel: function(text, required) {
+  getFormInputLabel: function(text) {
     var el = this._super(text);
     el.style.display = 'inline-block';
     el.style.fontWeight = 'bold';
-    if(required)el.className += " required";
     return el;
   },
   setGridColumnSize: function(el,size) {
