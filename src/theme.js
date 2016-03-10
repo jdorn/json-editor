@@ -81,6 +81,7 @@ JSONEditor.AbstractTheme = Class.extend({
     else {
       el.appendChild(text);
     }
+    
     return el;
   },
   getCheckbox: function() {
