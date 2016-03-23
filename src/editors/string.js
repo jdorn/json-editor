@@ -117,6 +117,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           'ejs',
           'erlang',
           'golang',
+          'groovy',
           'handlebars',
           'haskell',
           'haxe',
