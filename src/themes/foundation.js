@@ -257,18 +257,15 @@ JSONEditor.defaults.themes.foundation6 = JSONEditor.defaults.themes.foundation5.
     return el;
   },
   addInputError: function(input,text) {
-    console.log(input, text, input.group);
     if(!input.group) return;
     input.group.className += ' error';
-
-    console.log(input.group.getElementsByTagName('label')[0]);
 
     if(!input.errmsg) {
       var errorEl = document.createElement('span');
       errorEl.className = 'form-error is-visible';
       input.group.getElementsByTagName('label')[0].appendChild(errorEl);
 
-      input.className = 'is-invalid-input';
+      input.className = input.className + ' is-invalid-input';
 
       input.errmsg = errorEl;
     }
@@ -281,7 +278,7 @@ JSONEditor.defaults.themes.foundation6 = JSONEditor.defaults.themes.foundation5.
   },
   removeInputError: function(input) {
     if(!input.errmsg) return;
-    input.group.className = input.group.className.replace(/ error/g,'');
-    input.errmsg.style.display = 'none';
+    input.className = input.className.replace(/ is-invalid-input/g,'');
+    input.errmsg.parentNode.removeChild(input.errmsg);
   },
 })
