@@ -5467,12 +5467,17 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     var items_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
     var e = items_schema["enum"] || [];
+	var eTitles = items_schema.options.enum_titles || items_schema["enum"] || [];
+	
+	
     this.option_keys = [];
+	this.option_titles = [];
     for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
       if(this.sanitize(e[i]) !== e[i]) continue;
 
       this.option_keys.push(e[i]+"");
+	  this.option_titles.push(eTitles[i]+"");
       this.select_values[e[i]+""] = e[i];
     }
   },
@@ -5489,7 +5494,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       for(i=0; i<this.option_keys.length; i++) {
         this.inputs[this.option_keys[i]] = this.theme.getCheckbox();
         this.select_options[this.option_keys[i]] = this.inputs[this.option_keys[i]];
-        var label = this.theme.getCheckboxLabel(this.option_keys[i]);
+        var label = this.theme.getCheckboxLabel(this.option_titles[i]);
         this.controls[this.option_keys[i]] = this.theme.getFormControl(label, this.inputs[this.option_keys[i]]);
       }
 
@@ -5497,7 +5502,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     }
     else {
       this.input_type = 'select';
-      this.input = this.theme.getSelectInput(this.option_keys);
+      this.input = this.theme.getSelectInput(this.option_keys, this.option_titles);
       this.input.multiple = true;
       this.input.size = Math.min(10,this.option_keys.length);
 
@@ -6152,9 +6157,9 @@ JSONEditor.AbstractTheme = Class.extend({
 
     return el;
   },
-  getSelectInput: function(options) {
+  getSelectInput: function(options, titles) {
     var select = document.createElement('select');
-    if(options) this.setSelectOptions(select, options);
+    if(options) this.setSelectOptions(select, options, titles);
     return select;
   },
   getSwitcher: function(options) {
@@ -6415,8 +6420,8 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   setGridColumnSize: function(el,size) {
     el.className = 'span'+size;
   },
-  getSelectInput: function(options) {
-    var input = this._super(options);
+  getSelectInput: function(options, titles) {
+    var input = this._super(options, titles);
     input.style.width = 'auto';
     input.style.maxWidth = '98%';
     return input;
@@ -6574,8 +6579,8 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
 });
 
 JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
-  getSelectInput: function(options) {
-    var el = this._super(options);
+  getSelectInput: function(options, titles) {
+    var el = this._super(options, titles);
     el.className += 'form-control';
     //el.style.width = 'auto';
     return el;
@@ -6750,8 +6755,8 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     el.style.marginBottom = '15px';
     return el;
   },
-  getSelectInput: function(options) {
-    var el = this._super(options);
+  getSelectInput: function(options, titles) {
+    var el = this._super(options, titles);
     el.style.minWidth = 'none';
     el.style.padding = '5px';
     el.style.marginTop = '3px';
