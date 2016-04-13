@@ -67,6 +67,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.row_cache = [];
 
     this.hide_delete_buttons = this.options.disable_array_delete || this.jsoneditor.options.disable_array_delete;
+    this.hide_delete_all_rows_buttons = this.hide_delete_buttons || this.options.disable_array_delete_all_rows || this.jsoneditor.options.disable_array_delete_all_rows;
+    this.hide_delete_last_row_buttons = this.hide_delete_buttons || this.options.disable_array_delete_last_row || this.jsoneditor.options.disable_array_delete_last_row;
     this.hide_move_buttons = this.options.disable_array_reorder || this.jsoneditor.options.disable_array_reorder;
     this.hide_add_button = this.options.disable_array_add || this.jsoneditor.options.disable_array_add;
   },
@@ -393,8 +395,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       else if(this.value.length === 1) {      
         this.remove_all_rows_button.style.display = 'none';  
 
-        // If there are minItems items in the array, hide the delete button beneath the rows
-        if(minItems || this.hide_delete_buttons) {
+        // If there are minItems items in the array, or configured to hide the delete_last_row button, hide the delete button beneath the rows
+        if(minItems || this.hide_delete_last_row_buttons) {
           this.delete_last_row_button.style.display = 'none';
         }
         else {
@@ -403,13 +405,18 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         }
       }
       else {
-        // If there are minItems items in the array, hide the delete button beneath the rows
-        if(minItems || this.hide_delete_buttons) {
+        if(minItems || this.hide_delete_last_row_buttons) {
           this.delete_last_row_button.style.display = 'none';
-          this.remove_all_rows_button.style.display = 'none';
         }
         else {
           this.delete_last_row_button.style.display = '';
+          controls_needed = true;
+        }
+
+        if(minItems || this.hide_delete_all_rows_buttons) {
+          this.remove_all_rows_button.style.display = 'none';
+        }
+        else {
           this.remove_all_rows_button.style.display = '';
           controls_needed = true;
         }
