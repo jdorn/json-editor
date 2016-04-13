@@ -197,7 +197,7 @@ var name = editor.getEditor('root.name');
 // `getEditor` will return null if the path is invalid
 if(name) {
   name.setValue("John Smith");
-  
+
   console.log(name.getValue());
 }
 ```
@@ -205,7 +205,7 @@ if(name) {
 
 ### Validate
 
-When feasible, JSON Editor won't let users enter invalid data.  This is done by 
+When feasible, JSON Editor won't let users enter invalid data.  This is done by
 using input masks and intelligently enabling/disabling controls.
 
 However, in some cases it is still possible to enter data that doesn't validate against the schema.
@@ -417,16 +417,16 @@ Simple text link
 }
 ```
 
-Text link with base64 encoded data in it
+Make link download when clicked (can also )
 ```js+jinja
 {
-  "title": "Link for file download widh data in it",
+  "title": "Document filename",
   "type": "string",
   "links": [
     {
-      "rel": "anchor name",
-      "href": "...here is base64 encoded data string with MIME...",
-      "download": "filename for download"
+      "href": "/documents/{{self}}",
+      // Can also specify a filename string here instead of `true`
+      "download": true
     }
   ]
 }
@@ -764,7 +764,7 @@ Editors can accept options which alter the behavior in some way.
   },
   "properties": {
     "name": {
-      "type": "string" 
+      "type": "string"
     }
   }
 }
@@ -781,7 +781,7 @@ Dependencies
 ------------------
 Sometimes, it's necessary to have one field's value depend on another's.  
 
-The `dependencies` keyword from the JSON Schema specification is not nearly flexible enough to handle most use cases, 
+The `dependencies` keyword from the JSON Schema specification is not nearly flexible enough to handle most use cases,
 so JSON Editor introduces a couple custom keywords that help in this regard.
 
 The first step is to have a field "watch" other fields for changes.
@@ -944,7 +944,7 @@ Then, we use the special keyword `enumSource` to tell JSON Editor that we want t
 
 Now, anytime the `possible_colors` array changes, the dropdown's values will be changed as well.
 
-This is the most basic usage of `enumSource`.  The more verbose form of this property supports 
+This is the most basic usage of `enumSource`.  The more verbose form of this property supports
 filtering, pulling from multiple sources, constant values, etc..
 Here's a more complex example (this uses the Swig template engine syntax to show some advanced features)
 
@@ -995,7 +995,7 @@ You can also specify a list of static items with a slightly different syntax:
 }
 ```
 
-The colors examples used an array of strings directly.  Using the verbose form, you can 
+The colors examples used an array of strings directly.  Using the verbose form, you can
 also make it work with an array of objects.  Here's an example:
 
 ```js+jinja
@@ -1056,7 +1056,7 @@ To accomplish this, use the `headerTemplate` property.  All of the watched varia
 
 ### Custom Template Engines
 
-If one of the included template engines isn't sufficient, 
+If one of the included template engines isn't sufficient,
 you can use any custom template engine with a `compile` method.  For example:
 
 ```js
@@ -1090,10 +1090,10 @@ You can easily override individual translations in the default language or creat
 
 ```js+jinja
 // Override a specific translation
-JSONEditor.defaults.languages.en.error_minLength = 
+JSONEditor.defaults.languages.en.error_minLength =
   "This better be at least {{0}} characters long or else!";
-  
-  
+
+
 // Create your own language mapping
 // Any keys not defined here will fall back to the "en" language
 JSONEditor.defaults.languages.es = {
@@ -1125,7 +1125,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === "object" && schema.format === "location") {
     return "location";
   }
-  
+
   // If no valid editor is returned, the next resolver function will be used
 });
 ```
@@ -1211,9 +1211,9 @@ $("#editor_holder")
   .on('ready', function() {
     // Get the value
     var value = $(this).jsoneditor('value');
-    
+
     value.name = "John Smith";
-    
+
     // Set the value
     $(this).jsoneditor('value',value);
   });
