@@ -94,6 +94,8 @@
                         <option value='disable_array_add'>Disable array add buttons</option>
                         <option value='disable_array_reorder'>Disable array move buttons</option>
                         <option value='disable_array_delete'>Disable array delete buttons</option>
+                        <option value='disable_array_delete_all_rows'>Disable array delete all rows buttons</option>
+                        <option value='disable_array_delete_last_row'>Disable array delete last row buttons</option>
                     </select>
                 </div>
             </div>
@@ -398,23 +400,23 @@ editor.on("change",  function() {
     document.getElementById('boolean_options').addEventListener('change',function() {
         refreshBooleanOptions();
     });
-    
+
     // Get starting value from url
     if(window.location.href.match('[?&]value=([^&]+)')) {
       window.startval = JSON.parse(LZString.decompressFromBase64(window.location.href.match('[?&]value=([^&]+)')[1]));
     }
- 
+
     // Set options from direct link
     setTheme((window.location.href.match(/[?&]theme=([^&]+)/)||[])[1] || 'bootstrap2', true);
-    
+
     setIconlib((window.location.href.match(/[?&]iconlib=([^&]*)/)||[null,'fontawesome4'])[1], true);
-    
+
     document.getElementById('object_layout').value = (window.location.href.match(/[?&]object_layout=([^&]+)/)||[])[1] || 'normal';
     JSONEditor.defaults.options.object_layout = document.getElementById('object_layout').value;
-    
+
     document.getElementById('show_errors').value = (window.location.href.match(/[?&]show_errors=([^&]+)/)||[])[1] || 'interaction';
     JSONEditor.defaults.options.show_errors = document.getElementById('show_errors').value;
-    
+
     var boolean_options = document.getElementById('boolean_options').children;
     for(var i=0; i<boolean_options.length; i++) {
         if(window.location.href.match(new RegExp('[?&]'+boolean_options[i].getAttribute('value')+'([&=]|$)'))) {
@@ -422,7 +424,7 @@ editor.on("change",  function() {
         }
     }
     refreshBooleanOptions(true);
-    
+
     reload();
 })();
 </script>
