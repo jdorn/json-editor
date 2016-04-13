@@ -177,7 +177,15 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // Template to generate the link href
     var href = this.jsoneditor.compileTemplate(data.href,this.template_engine);
-    
+
+    // Template to generate the link's download attribute
+    var download = null;
+    if(data.download) download = data.download;
+
+    if(download && download !== true) {
+      download = this.jsoneditor.compileTemplate(download, this.template_engine);
+    }
+
     // Image links
     if(type === 'image') {
       holder = this.theme.getBlockLinkHolder();
@@ -217,18 +225,29 @@ JSONEditor.AbstractEditor = Class.extend({
     }
     // Text links
     else {
-      holder = this.theme.getBlockLink();
+      link = holder = this.theme.getBlockLink();
       holder.setAttribute('target','_blank');
       holder.textContent = data.rel;
-      
-      // When a watched field changes, update the url  
+
+      // When a watched field changes, update the url
       this.link_watchers.push(function(vars) {
         var url = href(vars);
         holder.setAttribute('href',url);
         holder.textContent = data.rel || url;
       });
     }
-    
+
+    if(download && link) {
+      if(download === true) {
+        link.setAttribute('download','');
+      }
+      else {
+        this.link_watchers.push(function(vars) {
+          link.setAttribute('download',download(vars));
+        });
+      }
+    }
+
     return holder;
   },
   refreshWatchedFieldValues: function() {
