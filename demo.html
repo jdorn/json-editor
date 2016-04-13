@@ -44,13 +44,15 @@
                 <div>
                     <label>CSS Framework</label>
                     <select id='theme_switcher' class='form-control'>
-                        <option value='html'>None</option>
+                        <option value='barebones'>Barebones</option>
+                        <option value='html'>HTML</option>
                         <option value='jqueryui'>jQuery UI</option>
                         <option value='bootstrap2'>Bootstrap 2</option>
                         <option value='bootstrap3'>Bootstrap 3</option>
                         <option value='foundation3'>Foundation 3</option>
                         <option value='foundation4'>Foundation 4</option>
                         <option value='foundation5'>Foundation 5</option>
+                        <option value='foundation6'>Foundation 6</option>
                     </select>
                 </div>
                 <div>
@@ -333,12 +335,14 @@ editor.on("change",  function() {
         theme = theme || '';
 
         var mapping = {
+            barebones: '',
             html: '',
             bootstrap2: '//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css',
             bootstrap3: '//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css',
             foundation3: '//cdnjs.cloudflare.com/ajax/libs/foundation/3.2.5/stylesheets/foundation.css',
             foundation4: '//cdn.jsdelivr.net/foundation/4.3.2/css/foundation.min.css',
             foundation5: '//cdn.jsdelivr.net/foundation/5.0.2/css/foundation.min.css',
+            foundation6: '//cdn.jsdelivr.net/foundation/6.2.1/foundation.min.css',
             jqueryui: '//code.jquery.com/ui/1.10.3/themes/south-street/jquery-ui.css'
         };
 

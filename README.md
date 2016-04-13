@@ -301,16 +301,20 @@ JSON Editor can integrate with several popular CSS frameworks out of the box.
 
 The currently supported themes are:
 
+*  barebones
 *  html (the default)
 *  bootstrap2
 *  bootstrap3
 *  foundation3
 *  foundation4
 *  foundation5
+*  foundation6
 *  jqueryui
 
-The default theme is `html`, which doesn't use any special class names or styling.
+The default theme is `html`, which does not rely on an external framework.
 This default can be changed by setting the `JSONEditor.defaults.options.theme` variable.
+
+If you want to specify your own styles with CSS, you can use `barebones`, which includes almost no classes or inline styles.
 
 ```javascript
 JSONEditor.defaults.options.theme = 'foundation5';
@@ -421,15 +425,16 @@ Simple text link
 }
 ```
 
-Make link download when clicked (can also )
+Make link download when clicked
 ```js+jinja
 {
   "title": "Document filename",
   "type": "string",
   "links": [
     {
+      "rel": "Download File",
       "href": "/documents/{{self}}",
-      // Can also specify a filename string here instead of `true`
+      // Can also set `download` to a string as per the HTML5 spec
       "download": true
     }
   ]
@@ -598,6 +603,7 @@ __Ace Editor__ is a syntax highlighting source code editor. You can use it by se
 *  ejs
 *  erlang
 *  golang
+*  groovy
 *  handlebars
 *  haskell
 *  haxe
@@ -747,7 +753,9 @@ Editors can accept options which alter the behavior in some way.
 
 *  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
 *  `disable_array_add` - If set to true, the "add row" button will be hidden (works for arrays)
-*  `disable_array_delete` - If set to true, the "delete row" buttons will be hidden (works for arrays)
+*  `disable_array_delete` - If set to true, all of the "delete" buttons will be hidden (works for arrays)
+*  `disable_array_delete_all_rows` - If set to true, just the "delete all rows" button will be hidden (works for arrays)
+*  `disable_array_delete_last_row` - If set to true, just the "delete last row" buttons will be hidden (works for arrays)
 *  `disable_array_reorder` - If set to true, the "move up/down" buttons will be hidden (works for arrays)
 *  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
 *  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)

@@ -279,6 +279,8 @@ JSONEditor.defaults.themes.foundation6 = JSONEditor.defaults.themes.foundation5.
   removeInputError: function(input) {
     if(!input.errmsg) return;
     input.className = input.className.replace(/ is-invalid-input/g,'');
-    input.errmsg.parentNode.removeChild(input.errmsg);
+    if(input.errmsg.parentNode) {
+      input.errmsg.parentNode.removeChild(input.errmsg);
+    }
   },
-})
+});
