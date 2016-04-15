@@ -8,17 +8,16 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     var items_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
     var e = items_schema["enum"] || [];
-	var eTitles = items_schema.options.enum_titles || items_schema["enum"] || [];
-	
-	
+    var eTitles = items_schema.options.enum_titles || items_schema["enum"] || [];
+    
     this.option_keys = [];
-	this.option_titles = [];
+    this.option_titles = [];
     for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
       if(this.sanitize(e[i]) !== e[i]) continue;
 
       this.option_keys.push(e[i]+"");
-	  this.option_titles.push(eTitles[i]+"");
+      this.option_titles.push(eTitles[i]+"");
       this.select_values[e[i]+""] = e[i];
     }
   },
