@@ -39,20 +39,33 @@ JSONEditor.defaults.themes.materializecss = JSONEditor.AbstractTheme.extend({
   },
   getSelectInput: function(options) {
     var select = document.createElement('select');
+    select.className = 'browser-default';
     if(options) this.setSelectOptions(select, options);
     return select;
   },
   getFormControl: function(label, input, description) {
     var el = document.createElement('div');
-    el.className = 'input-field col s12 m4';
 
     var id = 'json-editor-input-' + inputIdSequence++;
     input.setAttribute('id', id);
-    el.appendChild(input);
 
     if(label) {
       label.setAttribute('for', id);
-      el.appendChild(label);
+    }
+
+    if (input.tagName === 'SELECT' || (input.tagName === 'INPUT' && input.getAttribute('type').toLowerCase() === 'color')) {
+      el.className = 'col s12 m4';
+      if(label) {
+        el.appendChild(label);
+      }
+      input.style.display = 'block';
+      el.appendChild(input);
+    } else {
+      el.className = 'input-field col s12 m4';
+      el.appendChild(input);
+      if(label) {
+        el.appendChild(label);
+      }
     }
 
     return el;
