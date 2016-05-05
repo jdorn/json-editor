@@ -578,7 +578,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.row_holder.style.display = row_holder_display;
         if(self.tabs_holder) self.tabs_holder.style.display = '';
         self.controls.style.display = controls_display;
-        self.setButtonText(this,'','collapse','Collapse');
+        self.setButtonText(this,'','collapse',self.translate('button_collapse'));
       }
       else {
         self.collapsed = true;
@@ -586,7 +586,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         if(self.tabs_holder) self.tabs_holder.style.display = 'none';
         self.controls.style.display = 'none';
         if(self.panel) self.panel.style.display = 'none';
-        self.setButtonText(this,'','expand','Expand');
+        self.setButtonText(this,'','expand',self.translate('button_expand'));
       }
     });
 
