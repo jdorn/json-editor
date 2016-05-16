@@ -16,11 +16,7 @@ Download the [production version][min] (22K when gzipped) or the [development ve
 Requirements
 -----------------
 
-JSON Schema has the following dependencies:
-
-* [math.js](http://mathjs.org/) for floating point math
-
-It needs a modern browser (tested in Chrome and Firefox).
+JSON Editor has no dependencies. It only needs a modern browser (tested in Chrome and Firefox).
 
 ### Optional Requirements
 
@@ -34,6 +30,7 @@ The following are not required, but can improve the style and usability of JSON 
 *  [Ace Editor](http://ace.c9.io/) for editing code
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
 *  [Selectize](http://brianreavis.github.io/selectize.js/) for nicer Select & Array boxes
+*  [math.js](http://mathjs.org/) for more accurate floating point math (multipleOf, divisibleBy, etc.)
 
 Usage
 --------------
