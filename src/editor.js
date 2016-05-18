@@ -177,7 +177,7 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // Template to generate the link href
     var href = this.jsoneditor.compileTemplate(data.href,this.template_engine);
-    var relTemplate = this.jsoneditor.compileTemplate(data.rel,this.template_engine);
+    var relTemplate = this.jsoneditor.compileTemplate(data.rel ? data.rel : data.href,this.template_engine);
     
     // Template to generate the link's download attribute
     var download = null;
