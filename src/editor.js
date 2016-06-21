@@ -248,6 +248,8 @@ JSONEditor.AbstractEditor = Class.extend({
         });
       }
     }
+    
+    if(data.class) link.className = link.className + ' ' + data.class;
 
     return holder;
   },

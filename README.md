@@ -421,7 +421,9 @@ Simple text link
   "links": [
     {
       "rel": "comments",
-      "href": "/posts/{{self}}/comments/"
+      "href": "/posts/{{self}}/comments/",
+      // Optional - set CSS classes for the link
+      "class": "comment-link open-in-modal primary-text"
     }
   ]
 }
