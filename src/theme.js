@@ -273,7 +273,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   closest: function(elem, selector) {
     while (elem && elem !== document) {
-      if (matchKey) {
+      if (elem[matchKey]) {
         if (elem[matchKey](selector)) {
           return elem;
         } else {
