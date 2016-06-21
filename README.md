@@ -167,6 +167,11 @@ Here are all the available options:
     <td>The CSS theme to use.  See the <strong>CSS Integration</strong> section below for more info.</td>
     <td><code>html</code></td>
   </tr>
+  <tr>
+    <td>display_required_only</td>
+    <td>If <code>true</code>, only required properties will be included by default.</td>
+    <td><code>false</code></td>
+  </tr>
   </tbody>
 </table>
 

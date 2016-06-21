@@ -235,12 +235,24 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     // If the object should be rendered as a div
     else {
-      this.defaultProperties = this.schema.defaultProperties || Object.keys(this.schema.properties);
+      if(!this.schema.defaultProperties) {
+        if(this.jsoneditor.options.display_required_only || this.options.display_required_only) {
+          this.schema.defaultProperties = [];
+          $each(this.schema.properties, function(k,s) {
+            if(self.isRequired({key: k, schema: s})) {
+              self.schema.defaultProperties.push(k);
+            }
+          });
+        }
+        else {
+          self.schema.defaultProperties = Object.keys(self.schema.properties);
+        }
+      }
 
       // Increase the grid width to account for padding
       self.maxwidth += 1;
 
-      $each(this.defaultProperties, function(i,key) {
+      $each(this.schema.defaultProperties, function(i,key) {
         self.addObjectProperty(key, true);
 
         if(self.editors[key]) {
