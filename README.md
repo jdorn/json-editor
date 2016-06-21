@@ -169,7 +169,7 @@ Here are all the available options:
   </tr>
   <tr>
     <td>display_required_only</td>
-    <td>If <code>true</code>, JSON Editor will only display required JSON properties by default.</td>
+    <td>If <code>true</code>, only required properties will be included by default.</td>
     <td><code>false</code></td>
   </tr>
   </tbody>
