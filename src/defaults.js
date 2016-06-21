@@ -197,7 +197,11 @@ JSONEditor.defaults.languages.en = {
   /**
     * Title on Collapse buttons
     */
-  button_collapse: "Collapse"
+  button_collapse: "Collapse",
+  /**
+    * Title on Expand buttons
+    */
+  button_expand: "Expand"
 };
 
 // Miscellaneous Plugin Settings
