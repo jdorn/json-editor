@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.25 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.26 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2016-04-12
+ * Date: 2016-06-21
  */
 
 /**
@@ -1473,6 +1473,7 @@ JSONEditor.AbstractEditor = Class.extend({
         path = this.schema.watch[name];
 
         if(Array.isArray(path)) {
+          if(path.length<2) continue;
           path_parts = [path[0]].concat(path[1].split('.'));
         }
         else {
@@ -1623,6 +1624,8 @@ JSONEditor.AbstractEditor = Class.extend({
         });
       }
     }
+    
+    if(data.class) link.className = link.className + ' ' + data.class;
 
     return holder;
   },
@@ -2563,12 +2566,24 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     // If the object should be rendered as a div
     else {
-      this.defaultProperties = this.schema.defaultProperties || Object.keys(this.schema.properties);
+      if(!this.schema.defaultProperties) {
+        if(this.jsoneditor.options.display_required_only || this.options.display_required_only) {
+          this.schema.defaultProperties = [];
+          $each(this.schema.properties, function(k,s) {
+            if(self.isRequired({key: k, schema: s})) {
+              self.schema.defaultProperties.push(k);
+            }
+          });
+        }
+        else {
+          self.schema.defaultProperties = Object.keys(self.schema.properties);
+        }
+      }
 
       // Increase the grid width to account for padding
       self.maxwidth += 1;
 
-      $each(this.defaultProperties, function(i,key) {
+      $each(this.schema.defaultProperties, function(i,key) {
         self.addObjectProperty(key, true);
 
         if(self.editors[key]) {
@@ -2723,7 +2738,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
       // Show/Hide button
       this.collapsed = false;
-      this.toggle_button = this.getButton('','collapse','Collapse');
+      this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
       this.title_controls.appendChild(this.toggle_button);
       this.toggle_button.addEventListener('click',function(e) {
         e.preventDefault();
@@ -2731,12 +2746,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(self.collapsed) {
           self.editor_holder.style.display = '';
           self.collapsed = false;
-          self.setButtonText(self.toggle_button,'','collapse','Collapse');
+          self.setButtonText(self.toggle_button,'','collapse',self.translate('button_collapse'));
         }
         else {
           self.editor_holder.style.display = 'none';
           self.collapsed = true;
-          self.setButtonText(self.toggle_button,'','expand','Expand');
+          self.setButtonText(self.toggle_button,'','expand',self.translate('button_expand'));
         }
       });
 
@@ -3781,7 +3796,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.row_holder.style.display = row_holder_display;
         if(self.tabs_holder) self.tabs_holder.style.display = '';
         self.controls.style.display = controls_display;
-        self.setButtonText(this,'','collapse','Collapse');
+        self.setButtonText(this,'','collapse',self.translate('button_collapse'));
       }
       else {
         self.collapsed = true;
@@ -3789,7 +3804,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         if(self.tabs_holder) self.tabs_holder.style.display = 'none';
         self.controls.style.display = 'none';
         if(self.panel) self.panel.style.display = 'none';
-        self.setButtonText(this,'','expand','Expand');
+        self.setButtonText(this,'','expand',self.translate('button_expand'));
       }
     });
 
@@ -4314,12 +4329,12 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
         if(self.collapsed) {
           self.collapsed = false;
           self.panel.style.display = '';
-          self.setButtonText(this,'','collapse','Collapse');
+          self.setButtonText(this,'','collapse',this.translate('button_collapse'));
         }
         else {
           self.collapsed = true;
           self.panel.style.display = 'none';
-          self.setButtonText(this,'','expand','Expand');
+          self.setButtonText(this,'','expand',this.translate('button_expand'));
         }
       });
 
@@ -4425,12 +4440,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(!this.editors[i]) {
       this.buildChildEditor(i);
     }
+    
+    var current_value = self.getValue();
 
     self.type = i;
 
     self.register();
-
-    var current_value = self.getValue();
 
     $each(self.editors,function(type,editor) {
       if(!editor) return;
@@ -6349,7 +6364,7 @@ JSONEditor.AbstractTheme = Class.extend({
   },
   closest: function(elem, selector) {
     while (elem && elem !== document) {
-      if (matchKey) {
+      if (elem[matchKey]) {
         if (elem[matchKey](selector)) {
           return elem;
         } else {
@@ -7827,7 +7842,11 @@ JSONEditor.defaults.languages.en = {
   /**
     * Title on Collapse buttons
     */
-  button_collapse: "Collapse"
+  button_collapse: "Collapse",
+  /**
+    * Title on Expand buttons
+    */
+  button_expand: "Expand"
 };
 
 // Miscellaneous Plugin Settings
