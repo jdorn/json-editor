@@ -49,12 +49,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(!this.editors[i]) {
       this.buildChildEditor(i);
     }
+    
+    var current_value = self.getValue();
 
     self.type = i;
 
     self.register();
-
-    var current_value = self.getValue();
 
     $each(self.editors,function(type,editor) {
       if(!editor) return;
