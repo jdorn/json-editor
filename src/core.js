@@ -520,10 +520,10 @@ JSONEditor.prototype = {
     $each(obj1, function(prop,val) {
       // If this key is also defined in obj2, merge them
       if(typeof obj2[prop] !== "undefined") {
-        // Required arrays should be unioned together
-        if(prop === 'required' && typeof val === "object" && Array.isArray(val)) {
+        // Required and defaultProperties arrays should be unioned together
+        if((prop === 'required'||prop === 'defaultProperties') && typeof val === "object" && Array.isArray(val)) {
           // Union arrays and unique
-          extended.required = val.concat(obj2[prop]).reduce(function(p, c) {
+          extended[prop] = val.concat(obj2[prop]).reduce(function(p, c) {
             if (p.indexOf(c) < 0) p.push(c);
             return p;
           }, []);
@@ -534,14 +534,24 @@ JSONEditor.prototype = {
           if(typeof val === "string") val = [val];
           if(typeof obj2.type === "string") obj2.type = [obj2.type];
 
-
-          extended.type = val.filter(function(n) {
-            return obj2.type.indexOf(n) !== -1;
-          });
+          // If type is only defined in the first schema, keep it
+          if(!obj2.type || !obj2.type.length) {
+            extended.type = val;
+          }
+          // If type is defined in both schemas, do an intersect
+          else {
+            extended.type = val.filter(function(n) {
+              return obj2.type.indexOf(n) !== -1;
+            });
+          }
 
           // If there's only 1 type and it's a primitive, use a string instead of array
           if(extended.type.length === 1 && typeof extended.type[0] === "string") {
             extended.type = extended.type[0];
+          }
+          // Remove the type property if it's empty
+          else if(extended.type.length === 0) {
+            delete extended.type;
           }
         }
         // All other arrays should be intersected (enum, etc.)

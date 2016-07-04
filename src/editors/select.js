@@ -58,6 +58,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.enum_options = [];
     this.enum_values = [];
     this.enum_display = [];
+    var i;
 
     // Enum options enumerated
     if(this.schema["enum"]) {

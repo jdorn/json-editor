@@ -128,10 +128,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(this.schema.oneOf) {
       this.oneOf = true;
       this.types = this.schema.oneOf;
-      $each(this.types,function(i,oneof) {
-        //self.types[i] = self.jsoneditor.expandSchema(oneof);
-      });
       delete this.schema.oneOf;
+    }
+    else if(this.schema.anyOf) {
+      this.anyOf = true;
+      this.types = this.schema.anyOf;
+      delete this.schema.anyOf;
     }
     else {
       if(!this.schema.type || this.schema.type === "any") {
@@ -257,11 +259,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   showValidationErrors: function(errors) {
     var self = this;
 
-    // oneOf error paths need to remove the oneOf[i] part before passing to child editors
-    if(this.oneOf) {
+    // oneOf and anyOf error paths need to remove the oneOf[i] part before passing to child editors
+    if(this.oneOf || this.anyOf) {
+      var check_part = this.oneOf? 'oneOf' : 'anyOf';
       $each(this.editors,function(i,editor) {
         if(!editor) return;
-        var check = self.path+'.oneOf['+i+']';
+        var check = self.path+'.'+check_part+'['+i+']';
         var new_errors = [];
         $each(errors, function(j,error) {
           if(error.path.substr(0,check.length)===check) {

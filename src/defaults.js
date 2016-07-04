@@ -223,10 +223,9 @@ JSONEditor.plugins = {
 };
 
 // Default per-editor options
-for(var i in JSONEditor.defaults.editors) {
-  if(!JSONEditor.defaults.editors.hasOwnProperty(i)) continue;
-  JSONEditor.defaults.editors[i].options = JSONEditor.defaults.editors.options || {};
-}
+$each(JSONEditor.defaults.editors, function(i,editor) {
+  JSONEditor.defaults.editors[i].options = editor.options || {};
+});
 
 // Set the default resolvers
 // Use "multiple" as a fall back for everything
@@ -309,6 +308,6 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Use the multiple editor for schemas with `oneOf` set
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  // If this schema uses `oneOf`
-  if(schema.oneOf) return "multiple";
+  // If this schema uses `oneOf` or `anyOf`
+  if(schema.oneOf || schema.anyOf) return "multiple";
 });

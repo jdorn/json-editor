@@ -1,6 +1,7 @@
 JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
   preBuild: function() {
     this._super();
+    var i;
 
     this.select_options = {};
     this.select_values = {};
