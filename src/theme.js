@@ -166,9 +166,10 @@ JSONEditor.AbstractTheme = Class.extend({
   afterInputReady: function(input) {
 
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function(label, input, description, tooltip) {
     var el = document.createElement('div');
     el.className = 'form-control';
+    if(tooltip) el.title = tooltip;
     if(label) el.appendChild(label);
     if(input.type === 'checkbox') {
       label.insertBefore(input,label.firstChild);

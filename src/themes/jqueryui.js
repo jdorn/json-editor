@@ -29,8 +29,9 @@ JSONEditor.defaults.themes.jqueryui = JSONEditor.AbstractTheme.extend({
     el.style.display = 'inline-block';
     return el;
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function(label, input, description, tooltip) {
     var el = this._super(label,input,description);
+    if(tooltip) el.title = tooltip;
     if(input.type === 'checkbox') {
       el.style.lineHeight = '25px';
       

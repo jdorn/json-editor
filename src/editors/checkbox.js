@@ -24,9 +24,10 @@ JSONEditor.defaults.editors.checkbox = JSONEditor.AbstractEditor.extend({
     }
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
     if(this.options.compact) this.container.className += ' compact';
+    if(this.schema.tooltip) this.tooltip = this.schema.tooltip;
 
     this.input = this.theme.getCheckbox();
-    this.control = this.theme.getFormControl(this.label, this.input, this.description);
+    this.control = this.theme.getFormControl(this.label, this.input, this.description, this.tooltip);
 
     if(this.schema.readOnly || this.schema.readonly) {
       this.always_disabled = true;

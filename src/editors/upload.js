@@ -37,11 +37,12 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
 
     var description = this.schema.description;
     if (!description) description = '';
+    if(this.schema.tooltip) this.tooltip = this.schema.tooltip;
 
     this.preview = this.theme.getFormInputDescription(description);
     this.container.appendChild(this.preview);
 
-    this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview);
+    this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview, this.tooltip);
     this.container.appendChild(this.control);
   },
   refreshPreview: function() {

@@ -33,8 +33,9 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     }
     return el;
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function(label, input, description, tooltip) {
     var group = document.createElement('div');
+    if(tooltip) group.title = tooltip;
 
     if(label && input.type === 'checkbox') {
       group.className += ' checkbox';

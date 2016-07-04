@@ -5,6 +5,7 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
   build: function() {    
     var self = this;
     this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if(this.schema.tooltip) this.tooltip = this.schema.tooltip;
 
     // Input that holds the base64 string
     this.input = this.theme.getFormInputField('hidden');
@@ -37,7 +38,7 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
     this.preview = this.theme.getFormInputDescription(this.schema.description);
     this.container.appendChild(this.preview);
 
-    this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview);
+    this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview, this.tooltip);
     this.container.appendChild(this.control);
   },
   refreshPreview: function() {
