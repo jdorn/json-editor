@@ -12,7 +12,7 @@ var Class;
   Class = function(){};
  
   // Create a new Class that inherits from this class
-  Class.extend = function(prop) {
+  Class.extend = function extend(prop) {
     var _super = this.prototype;
    
     // Instantiate a base class (but only create the instance,
@@ -59,7 +59,7 @@ var Class;
     Class.prototype.constructor = Class;
  
     // And make this class extendable
-    Class.extend = arguments.callee;
+    Class.extend = extend;
    
     return Class;
   };
