@@ -1,8 +1,8 @@
-/*! JSON Editor v0.7.26 - JSON Schema -> HTML Editor
+/*! JSON Editor v0.7.27 - JSON Schema -> HTML Editor
  * By Jeremy Dorn - https://github.com/jdorn/json-editor/
  * Released under the MIT license
  *
- * Date: 2016-06-21
+ * Date: 2016-07-03
  */
 
 /**
@@ -25,7 +25,7 @@ var Class;
   Class = function(){};
  
   // Create a new Class that inherits from this class
-  Class.extend = function(prop) {
+  Class.extend = function extend(prop) {
     var _super = this.prototype;
    
     // Instantiate a base class (but only create the instance,
@@ -72,7 +72,7 @@ var Class;
     Class.prototype.constructor = Class;
  
     // And make this class extendable
-    Class.extend = arguments.callee;
+    Class.extend = extend;
    
     return Class;
   };
@@ -733,10 +733,10 @@ JSONEditor.prototype = {
     $each(obj1, function(prop,val) {
       // If this key is also defined in obj2, merge them
       if(typeof obj2[prop] !== "undefined") {
-        // Required arrays should be unioned together
-        if(prop === 'required' && typeof val === "object" && Array.isArray(val)) {
+        // Required and defaultProperties arrays should be unioned together
+        if((prop === 'required'||prop === 'defaultProperties') && typeof val === "object" && Array.isArray(val)) {
           // Union arrays and unique
-          extended.required = val.concat(obj2[prop]).reduce(function(p, c) {
+          extended[prop] = val.concat(obj2[prop]).reduce(function(p, c) {
             if (p.indexOf(c) < 0) p.push(c);
             return p;
           }, []);
@@ -747,14 +747,24 @@ JSONEditor.prototype = {
           if(typeof val === "string") val = [val];
           if(typeof obj2.type === "string") obj2.type = [obj2.type];
 
-
-          extended.type = val.filter(function(n) {
-            return obj2.type.indexOf(n) !== -1;
-          });
+          // If type is only defined in the first schema, keep it
+          if(!obj2.type || !obj2.type.length) {
+            extended.type = val;
+          }
+          // If type is defined in both schemas, do an intersect
+          else {
+            extended.type = val.filter(function(n) {
+              return obj2.type.indexOf(n) !== -1;
+            });
+          }
 
           // If there's only 1 type and it's a primitive, use a string instead of array
           if(extended.type.length === 1 && typeof extended.type[0] === "string") {
             extended.type = extended.type[0];
+          }
+          // Remove the type property if it's empty
+          else if(extended.type.length === 0) {
+            delete extended.type;
           }
         }
         // All other arrays should be intersected (enum, etc.)
@@ -4519,10 +4529,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(this.schema.oneOf) {
       this.oneOf = true;
       this.types = this.schema.oneOf;
-      $each(this.types,function(i,oneof) {
-        //self.types[i] = self.jsoneditor.expandSchema(oneof);
-      });
       delete this.schema.oneOf;
+    }
+    else if(this.schema.anyOf) {
+      this.anyOf = true;
+      this.types = this.schema.anyOf;
+      delete this.schema.anyOf;
     }
     else {
       if(!this.schema.type || this.schema.type === "any") {
@@ -4648,11 +4660,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   showValidationErrors: function(errors) {
     var self = this;
 
-    // oneOf error paths need to remove the oneOf[i] part before passing to child editors
-    if(this.oneOf) {
+    // oneOf and anyOf error paths need to remove the oneOf[i] part before passing to child editors
+    if(this.oneOf || this.anyOf) {
+      var check_part = this.oneOf? 'oneOf' : 'anyOf';
       $each(this.editors,function(i,editor) {
         if(!editor) return;
-        var check = self.path+'.oneOf['+i+']';
+        var check = self.path+'.'+check_part+'['+i+']';
         var new_errors = [];
         $each(errors, function(j,error) {
           if(error.path.substr(0,check.length)===check) {
@@ -4863,6 +4876,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     this.enum_options = [];
     this.enum_values = [];
     this.enum_display = [];
+    var i;
 
     // Enum options enumerated
     if(this.schema["enum"]) {
@@ -5222,6 +5236,7 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
     this.enum_options = [];
     this.enum_values = [];
     this.enum_display = [];
+    var i;
 
     // Enum options enumerated
     if(this.schema.enum) {
@@ -5508,6 +5523,7 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
 JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
   preBuild: function() {
     this._super();
+    var i;
 
     this.select_options = {};
     this.select_values = {};
@@ -7868,10 +7884,9 @@ JSONEditor.plugins = {
 };
 
 // Default per-editor options
-for(var i in JSONEditor.defaults.editors) {
-  if(!JSONEditor.defaults.editors.hasOwnProperty(i)) continue;
-  JSONEditor.defaults.editors[i].options = JSONEditor.defaults.editors.options || {};
-}
+$each(JSONEditor.defaults.editors, function(i,editor) {
+  JSONEditor.defaults.editors[i].options = editor.options || {};
+});
 
 // Set the default resolvers
 // Use "multiple" as a fall back for everything
@@ -7954,8 +7969,8 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Use the multiple editor for schemas with `oneOf` set
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  // If this schema uses `oneOf`
-  if(schema.oneOf) return "multiple";
+  // If this schema uses `oneOf` or `anyOf`
+  if(schema.oneOf || schema.anyOf) return "multiple";
 });
 
 /**
