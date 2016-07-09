@@ -6216,9 +6216,9 @@ JSONEditor.AbstractTheme = Class.extend({
 
     return el;
   },
-  getSelectInput: function(options) {
+  getSelectInput: function(options, titles) {
     var select = document.createElement('select');
-    if(options) this.setSelectOptions(select, options);
+    if(options) this.setSelectOptions(select, options, titles);
     return select;
   },
   getSwitcher: function(options) {

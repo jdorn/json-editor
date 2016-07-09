@@ -22,8 +22,8 @@ JSONEditor.defaults.themes.bootstrap2 = JSONEditor.AbstractTheme.extend({
   setGridColumnSize: function(el,size) {
     el.className = 'span'+size;
   },
-  getSelectInput: function(options) {
-    var input = this._super(options);
+  getSelectInput: function(options, titles) {
+    var input = this._super(options, titles);
     input.style.width = 'auto';
     input.style.maxWidth = '98%';
     return input;
