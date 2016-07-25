@@ -402,12 +402,12 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
         if(self.collapsed) {
           self.collapsed = false;
           self.panel.style.display = '';
-          self.setButtonText(this,'','collapse',this.translate('button_collapse'));
+          self.setButtonText(this,'','collapse',self.translate('button_collapse'));
         }
         else {
           self.collapsed = true;
           self.panel.style.display = 'none';
-          self.setButtonText(this,'','expand',this.translate('button_expand'));
+          self.setButtonText(this,'','expand',self.translate('button_expand'));
         }
       });
 
