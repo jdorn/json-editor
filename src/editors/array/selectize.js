@@ -19,6 +19,7 @@ JSONEditor.defaults.editors.arraySelectize = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.error_holder);
 
     window.jQuery(this.input).selectize({
+      plugins: JSONEditor.plugins.selectize.remove_button ? ["remove_button"] : [],
       delimiter: false,
       createOnBlur: true,
       create: true
