@@ -53,11 +53,11 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
 
     return group;
   },
-  getIndentedPanel: function() {
+  getIndentedPanel: function() {    
     var el = document.createElement('div');
-    el.className = 'ui form ui bottom attached segment';
-    el.style.paddingBottom = 0;
-    return el;
+    el.className = 'ui form ui basic segment';
+    //el.style.paddingBottom = 0;
+    return el; 
   },
   getFormInputDescription: function(text) {
     var el = document.createElement('p');
@@ -67,7 +67,8 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getHeaderButtonHolder: function() {
     var el = this.getButtonHolder();
-    el.className = 'ui compact mini right floated buttons';
+    //el.className = 'ui compact mini right floated buttons';
+    el.style.float = "right"
     return el;
   },
   getButtonHolder: function() {
@@ -107,8 +108,11 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getTabHolder: function() {
     var el = document.createElement('div');
-    el.innerHTML = "<div class='ui small top attached tabular menu'></div><div class='tab item'></div>";
-    el.className = 'rows';
+    el.className = 'ui tabbed-array grid';
+    //el.style.borderTop = "2px solid #ddd";
+    //el.style.marginTop = "10px!important"; 
+    el.style.clear = "both";
+    el.innerHTML = "<div class='three wide column ui small vertical secondary pointing menu'></div><div class='rows thirteen wide stretched column'></div>";
     return el;
   },
   getTab: function(text) {
