@@ -56,6 +56,7 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {    
     var el = document.createElement('div');
     el.className = 'ui form ui basic segment';
+    el.style.position = '';
     //el.style.paddingBottom = 0;
     return el; 
   },
@@ -108,11 +109,11 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getTabHolder: function() {
     var el = document.createElement('div');
-    el.className = 'ui tabbed-array grid';
+    el.className = 'ui tabbed-array grid ui segment';
     //el.style.borderTop = "2px solid #ddd";
     //el.style.marginTop = "10px!important"; 
     el.style.clear = "both";
-    el.innerHTML = "<div class='three wide column ui small vertical secondary pointing menu'></div><div class='rows thirteen wide stretched column'></div>";
+    el.innerHTML = "<div class='three wide column ui small vertical tabular menu'></div><div style='padding:0' class='rows thirteen wide stretched column'></div>";
     return el;
   },
   getTab: function(text) {
