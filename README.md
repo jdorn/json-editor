@@ -113,6 +113,11 @@ Here are all the available options:
     <td><code>false</code></td>
   </tr>
   <tr>
+    <td>disable_type_switcher</td>
+    <td>If <code>true</code>, remove all type switcher from objects. It's recommended to use it with <code>disable_properties</code> option.</td>
+    <td><code>false</code></td>
+  </tr>
+  <tr>
     <td>form_name_root</td>
     <td>The first part of the `name` attribute of form inputs in the editor.  An full example name is `root[person][name]` where "root" is the form_name_root.</td>
     <td>root</td>
