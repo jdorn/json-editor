@@ -7403,7 +7403,7 @@ JSONEditor.defaults.themes.barebones = JSONEditor.AbstractTheme.extend({
 JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   getSelectInput: function(options) {
     var el = this._super(options);
-    el.className += 'ui basic selection dropdown';
+    //el.className += 'ui basic selection dropdown';
     //el.style.width = 'auto';
     return el;
   },
@@ -7413,10 +7413,6 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   afterInputReady: function(input) {
     if(input.controlgroup) return;
     input.controlgroup = this.closest(input,'.ui.field');
-    if(this.closest(input,'.compact')) {
-      input.controlgroup.style.marginBottom = 0;
-    }
-
     // TODO: use bootstrap slider
   },
   getTextareaInput: function() {
@@ -7431,7 +7427,7 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   getFormInputField: function(type) {
     var el = this._super(type);
     if(type !== 'checkbox') {
-      el.className += ' ui input';
+      el.className += ' ui small input';
     }
     return el;
   },
@@ -7440,7 +7436,7 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
     
     if(label && input.type === 'checkbox') {
       group.className += ' ui checkbox';
-      label.appendChild(input);
+      group.appendChild(input);
       group.appendChild(label);
     } 
     else {
@@ -7455,11 +7451,12 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
 
     return group;
   },
-  getIndentedPanel: function() {
+  getIndentedPanel: function() {    
     var el = document.createElement('div');
-    el.className = 'ui form ui bottom attached segment';
-    el.style.paddingBottom = 0;
-    return el;
+    el.className = 'ui form ui basic segment';
+    el.style.position = '';
+    //el.style.paddingBottom = 0;
+    return el; 
   },
   getFormInputDescription: function(text) {
     var el = document.createElement('p');
@@ -7469,7 +7466,8 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getHeaderButtonHolder: function() {
     var el = this.getButtonHolder();
-    el.className = 'ui compact mini right floated buttons';
+    //el.className = 'ui compact mini right floated buttons';
+    el.style.float = "right";
     return el;
   },
   getButtonHolder: function() {
@@ -7487,30 +7485,33 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
     el.className = 'ui table bordered';
     return el;
   },
-
-  addInputError: function(input,text) {
-    if(!input.controlgroup) return;
-    input.controlgroup.className += ' error';
+  addInputError: function(input, text) {    
     if(!input.errmsg) {
-      input.errmsg = document.createElement('p');
-      input.errmsg.className = 'ui segment error';
-      input.controlgroup.appendChild(input.errmsg);
+      var group = this.closest(input,'.field');
+      input.errmsg = document.createElement('div');
+      input.errmsg.setAttribute('class','error');
+      input.errmsg.style = input.errmsg.style || {};
+      input.errmsg.style.color = 'red';
+      group.appendChild(input.errmsg);
     }
     else {
-      input.errmsg.style.display = '';
+      input.errmsg.style.display = 'block';
     }
-
-    input.errmsg.textContent = text;
+    
+    input.errmsg.innerHTML = '';
+    input.errmsg.appendChild(document.createTextNode(text));
   },
   removeInputError: function(input) {
     if(!input.errmsg) return;
     input.errmsg.style.display = 'none';
-    input.controlgroup.className = input.controlgroup.className.replace(/\s?error/g,'');
   },
   getTabHolder: function() {
     var el = document.createElement('div');
-    el.innerHTML = "<div class='ui small top attached tabular menu'></div><div class='tab item'></div>";
-    el.className = 'rows';
+    el.className = 'ui tabbed-array grid ui segment';
+    //el.style.borderTop = "2px solid #ddd";
+    //el.style.marginTop = "10px!important"; 
+    el.style.clear = "both";
+    el.innerHTML = "<div class='five wide column ui small vertical tabular menu'></div><div style='padding:0' class='rows eleven wide stretched column'></div>";
     return el;
   },
   getTab: function(text) {
