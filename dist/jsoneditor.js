@@ -2493,7 +2493,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     }
     // Normal layout
     else {
-      container = document.createElement('div');
+      container = this.row_container;
+      container.innerHTML = '';
       $each(this.property_order, function(i,key) {
         var editor = self.editors[key];
         if(editor.property_removed) return;
@@ -2505,8 +2506,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         row.appendChild(editor.container);
       });
     }
-    this.row_container.innerHTML = '';
-    this.row_container.appendChild(container);
   },
   getPropertySchema: function(key) {
     // Schema declared directly in properties
