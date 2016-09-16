@@ -31,14 +31,20 @@
               type: "integer",
               enum: [10,11,12,14,16,18,20,22,24,36,48,60,72,100],
               default: 24,
-            },
-            color: {
-              type: "string",
-              enum: ["black","red","green","blue","yellow","orange","purple","brown","white","cyan","maagenta"],
               options: {
                 // Override defaullt options
                 selectize_options: {
-                  create: true,
+                  create: true
+                }
+              }
+            },
+            color: {
+              type: "string",
+              enum: ["black","red","green","blue","yellow","orange","purple","brown","white","cyan","magenta"],
+              options: {
+                // Override defaullt options
+                selectize_options: {
+                  create: false,
                   sortField: 'text'
                 }
               }
@@ -49,6 +55,13 @@
               watch: {
                 "possible_fonts": "root.possibleFonts"
               },
+              options: {
+                // Override defaullt options
+                selectize_options: {
+                  create: false,
+                  sortField: 'text'
+                }
+              }
             },
             weight: {
               type: "string",
