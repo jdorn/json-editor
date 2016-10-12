@@ -3043,6 +3043,17 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         }
       }
     }
+    
+    if(this.jsoneditor.options.remove_empty_array || this.options.remove_empty_array) {
+      for(var x in result) {
+        if(result.hasOwnProperty(x)) {
+          if( result[x] && (result[x] instanceof Array) && (result[x].length === 0) ){
+            delete result[x];
+          } 
+        }
+      } 
+    }
+
     return result;
   },
   refreshValue: function() {
