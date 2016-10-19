@@ -605,7 +605,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add',this.translate('button_add_row_title',[this.getItemTitle()]));
+    var trans = this.translate('button_add_row_title',[this.getItemTitle()]);
+    this.add_row_button = this.getButton(trans,'add', trans);
     
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
