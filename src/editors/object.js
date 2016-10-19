@@ -286,7 +286,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         editor.setContainer(holder);
         editor.build();
         editor.postBuild();
-
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
@@ -466,7 +465,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_controls.appendChild(this.addproperty_holder);
       this.refreshAddProperties();
     }
-
+    if(this.options.hiddenTitle){
+      this.title.style.display = 'none';
+    }
     // Fix table cell ordering
     if(this.options.table_row) {
       this.editor_holder = this.container;

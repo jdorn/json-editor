@@ -464,7 +464,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     
     // Buttons to delete row, move row up, and move row down
     if(!self.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete',this.translate('button_delete_row_title',[self.getItemTitle()]));
+      self.rows[i].delete_button = this.getButton('','delete',this.translate('button_delete_row_title',[self.getItemTitle()]));
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
       self.rows[i].delete_button.addEventListener('click',function(e) {
@@ -501,7 +501,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       });
       
       if(controls_holder) {
-        controls_holder.appendChild(self.rows[i].delete_button);
+        self.rows[i].editor_holder.appendChild(self.rows[i].delete_button);
+        //controls_holder.appendChild(self.rows[i].delete_button);
       }
     }
     
