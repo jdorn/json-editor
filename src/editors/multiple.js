@@ -173,6 +173,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.switcher = this.theme.getSwitcher(this.display_text);
     this.switcher.className += ' switcher ';
     this.editor_holder = document.createElement('div');
+    this.editor_holder.className += 'switch-holder' 
     this.editor_holder.style.position = "relative";
     this.editor_holder.appendChild(this.switcher);
     
