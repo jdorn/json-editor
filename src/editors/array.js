@@ -99,8 +99,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         this.active_tab = null;
       }
       else {
-        this.panel = this.theme.getIndentedPanel();
-        this.container.appendChild(this.panel);
+        this.panel = this.theme.getIndentedPanel(true);
+        this.container.appendChild(this.panel); 
         this.row_holder = document.createElement('div');
         this.panel.appendChild(this.row_holder);
         this.controls = this.theme.getButtonHolder();
@@ -108,7 +108,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       }
     }
     else {
-        this.panel = this.theme.getIndentedPanel();
+        this.panel = this.theme.getIndentedPanel(true);
         this.container.appendChild(this.panel);
         this.controls = this.theme.getButtonHolder();
         this.panel.appendChild(this.controls);
