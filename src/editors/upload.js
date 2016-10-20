@@ -46,6 +46,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     this.control = this.theme.getFormControl(this.label, boxUploader,this.preview);
     this.container.appendChild(this.control);
     this.addUploadPreview();
+    this.addDeleteButton();
   },
 
   postBuild: function() {
@@ -91,6 +92,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
           self.theme.addInputError(self.uploader, error);
           if (self.progressBar) self.preview.removeChild(self.progressBar);
         },
+
         updateProgress: function(progress) {
           if (self.progressBar) {
             if (progress) self.theme.updateProgressBar(self.progressBar, progress);
@@ -98,6 +100,18 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
           }
         }
     });
+  },
+  
+  addDeleteButton:function(){
+    var self = this;
+    this.delete_button = this.getButton('','delete','');
+    this.delete_button.style.display='inline-block';
+    this.delete_button.style.position='static';
+    
+    this.delete_button.addEventListener('click',function(e) {
+      self.setValue("");
+    });
+    this.control.appendChild(this.delete_button);
   },
 
   addUploadPreview : function(){
@@ -131,6 +145,13 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
 
   },
   refreshImgPreview : function(url){
+    if(!url || url.length < 1 || typeof url == 'undefined' ){
+      this.link_holder.style.display = 'none';
+      this.delete_button.style.display = 'none';
+    }else{
+      this.link_holder.style.display = 'inline-block';
+      this.delete_button.style.display = 'inline-block';
+    }
 
     if (this.link_holder){
       for (var i = 0;  i < this.link_holder.children.length; i++){
@@ -150,7 +171,6 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   setValue: function(val) {
-    console.log("setValue" , val);
     if(this.value !== val) {
       this.value = val;
       this.input.value = this.value;
