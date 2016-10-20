@@ -6,7 +6,7 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getGridContainer: function(options) {
     var el = this._super(options);
-    el.className = 'ui stackable grid';        
+    el.className = 'ui stackable padded grid';        
     return el;
   },
   getIndentedPanel: function() {        
