@@ -37,13 +37,8 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
       });
     }
 
-    var description = this.schema.description;
-    if (!description) description = '';
-
-    this.preview = this.theme.getFormInputDescription(description);
-    this.preview.style.display = 'inline-block';
     boxUploader.appendChild(this.uploader);
-    this.control = this.theme.getFormControl(this.label, boxUploader,this.preview);
+    this.control = this.theme.getFormControl(this.label, boxUploader);
     this.container.appendChild(this.control);
     this.addUploadPreview();
     this.addDeleteButton();
@@ -59,25 +54,12 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
   
 
   refreshPreview: function() {
-    if(this.last_preview === this.preview_value) return;
-    this.last_preview = this.preview_value;
-
-    this.preview.innerHTML = '';
-    
-    if(!this.preview_value) return;
-
     var self = this;
-
-    var mime = this.preview_value.match(/^data:([^;,]+)[;,]/);
-    if(mime) mime = mime[1];
-    if(!mime) mime = 'unknown';
-    
-
     var file = this.uploader.files[0];
     self.theme.removeInputError(self.uploader);
     if (self.theme.getProgressBar) {
         self.progressBar = self.theme.getProgressBar();
-        self.preview.appendChild(self.progressBar);
+        self.control.appendChild(self.progressBar);
     }
 
     self.jsoneditor.options.upload(self.path, file, {
