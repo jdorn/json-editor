@@ -671,6 +671,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       this.remove_all_rows_button.style.textAlign = 'left';
       this.remove_all_rows_button.style.marginBottom = '3px';
     }
+    self.controls.className += " button-box-row"; 
   },
   showValidationErrors: function(errors) {
     var self = this;
