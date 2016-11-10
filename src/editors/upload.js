@@ -122,7 +122,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
 
     var compiler = this.jsoneditor.compileTemplate(data.href,this.template_engine);
     var url =  compiler({ 'self' :  value, 'url': value });
-    var pop = "<div><img style='max-width:350px' src='"+url+"'/></div>"
+    var pop = this.getPopOverContent(url);
     return pop;
 
   },
@@ -138,11 +138,15 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     if (this.link_holder){
       for (var i = 0;  i < this.link_holder.children.length; i++){
         if(this.jsoneditor.options.updatePopOver){
-          var pop = "<div><img style='max-width:350px' src='"+url+"'/></div>";
+          var pop = this.getPopOverContent(url);
           this.jsoneditor.options.updatePopOver(this.link_holder.children[i], pop);
         }
       }
     }
+  },
+
+  getPopOverContent: function(url){
+    return  "<div><img class='popover-img-preview' src='"+url+"'/></div>";
   },
   
   enable: function() {
