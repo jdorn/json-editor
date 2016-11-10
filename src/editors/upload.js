@@ -67,12 +67,12 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
           self.setValue(url);
           if(self.parent) self.parent.onChildEditorChange(self);
           else self.jsoneditor.onChange();
-          if (self.progressBar) self.preview.removeChild(self.progressBar);
+          if (self.progressBar) self.control.removeChild(self.progressBar);
 
         },
         failure: function(error) {
           self.theme.addInputError(self.uploader, error);
-          if (self.progressBar) self.preview.removeChild(self.progressBar);
+          if (self.progressBar) self.control.removeChild(self.progressBar);
         },
 
         updateProgress: function(progress) {
@@ -144,6 +144,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
       }
     }
   },
+  
   enable: function() {
     if(this.uploader) this.uploader.disabled = false;
     this._super();
