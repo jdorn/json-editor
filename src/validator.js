@@ -448,7 +448,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'required',
-              message: this.translate('error_required', [schema.required[i]])
+              message: this.translate('error_required', [schema.properties[schema.required[i]].title || schema.required[i]])
             });
           }
         }

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Basic JSON Editor Example</title>
+    <script src="../dist/jsoneditor.js"></script>
+
+  </head>
+  <body>
+    <h1>Basic JSON Editor Example</h1>
+    
+    <div id='editor_holder'></div>
+    <button id='submit'>Submit (console.log)</button>
+    <script   src="https://code.jquery.com/jquery-1.12.4.min.js"   integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="   crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css">
+    <style type="text/css">
+      .switcher{
+        position: absolute;
+        right: 20px;
+        top: 3px;
+        z-index: 9;
+      }
+    </style>
+    <script>
+      // Initialize the editor with a JSON schema
+      //sett a theme
+
+
+//JSON EDITOR
+var options = { 
+  disable_edit_json: true,
+  disable_properties: true,
+  disable_array_reorder: true,
+  input_width: '100px',
+  theme: "html",
+  disable_array_delete_last_row : true,
+  disable_collapse : false,
+  no_additional_properties: true,
+  required_by_default: true,
+  keep_oneof_values:false,
+  remove_empty_properties:true,
+  remove_empty_array: true,
+  ajax: true,
+
+};
+var defaults = $.extend(JSONEditor.defaults.options , options );
+JSONEditor.defaults.options = defaults;
+JSONEditor.plugins.select2.enable = false;
+
+
+      // Specify upload handler
+JSONEditor.defaults.options.upload = function(type, file, cbs) {
+    if (type === 'root.upload_fail') cbs.failure('Upload failed');
+    else {
+        var $body = angular.element(document.body);
+        var $rootScope = $body.scope().$root;    
+        window.actualProgressbar = cbs;
+        $rootScope.$apply(function () { 
+            //cbs.updateProgres(50);
+            var cbs = window.actualProgressbar;
+            $rootScope.uploadMediaFile2(cbs, file, function(path, _type){
+                cbs.success(static_url + path);
+            })
+        });
+        /*
+        var tick = 0;
+
+        var tickFunction = function() {
+            tick += 1;
+            console.log('progress: ' + tick);
+
+            if (tick < 100) {
+              cbs.updateProgress(tick);
+              window.setTimeout(tickFunction, 50)
+            } else if (tick == 100) {
+              cbs.updateProgress();
+              window.setTimeout(tickFunction, 500)
+            } else {
+              cbs.success('/static/' + file.name);
+            }
+        };
+
+        window.setTimeout(tickFunction)*/
+    }
+};
+
+
+
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        iconlib : "fontawesome4",
+        schema :{
+            isValidType: function(val){
+                try{
+                    return val.payload.template_type === "generic"
+                }catch (err){
+                    return false;
+
+                }
+            },
+            type: "object",
+            title: "Facebook  Carousel",
+            properties: {
+                type: {
+                    type:"string",
+                    default : "template",
+                    readonly: true,
+                    options:{
+                        hidden: true
+                    }
+                },
+                payload:{
+                    options:{
+                      hiddenTitle: true
+                    },
+                    properties: {
+                        template_type : {
+                            type:"string",
+                            default : "generic",
+                            readonly: true,
+                            options:{
+                                hidden: true
+                            }
+                        },
+                        elements: {
+                            title: "Elements",
+                            type: "array",
+                            items: {
+                                title: "Element",
+                                properties:{
+                                    title: {
+                                        type: "string",
+                                    },
+                                    subtitle: {
+                                        type: "string"
+                                    },
+                                    image_url:{
+                                        type: "string",
+                                      
+                                    },
+                                    image_url:{
+                                        type: "string",
+                                        format: "url",
+                                        options: {
+                                            upload: true
+                                        },
+                                        "links": [
+                                            {
+                                                "href": "{{self}}"
+                                            }
+                                        ]
+                                    },
+                                    buttons:{
+                                              "type": "array",
+                                              "title": "Buttons",
+                                              "items": {
+                                                "title": "Button",
+                                                "headerTemplate": "{{i1}} - {{self.title}}",
+                                                "oneOf": [{
+                                                  "title": "Post Back",
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "type": {
+                                                      "type": "string",
+                                                      "default": "postback",
+                                                      "readonly": true,
+                                                      "options": {
+                                                        "hidden": true
+                                                      }
+                                                    },
+                                                    "title": {
+                                                      "type": "string"
+                                                    },
+                                                    "payload": {
+                                                      "type": "string"
+
+                                                    }
+                                                  }
+
+                                                }, {
+                                                  "title": "Web url",
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "type": {
+                                                      "type": "string",
+                                                      "default": "web_url",
+                                                      "readonly": true,
+                                                      "options": {
+                                                        "hidden": true
+                                                      }
+                                                    },
+                                                    "title": {
+                                                      "type": "string"
+                                                    },
+                                                    "url": {
+                                                      "type": "string"
+
+                                                    }
+                                                  }
+
+                                                }]
+                                              }
+                                            }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+      });
+      
+      // Hook up the submit button to log to the console
+      document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.getValue());
+      });
+    </script>
+  </body>
+</html>

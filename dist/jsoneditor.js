@@ -1258,7 +1258,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'required',
-              message: this.translate('error_required', [schema.required[i]])
+              message: this.translate('error_required', [schema.properties[schema.required[i]].title || schema.required[i]])
             });
           }
         }
@@ -2627,7 +2627,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         editor.setContainer(holder);
         editor.build();
         editor.postBuild();
-
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
@@ -2807,7 +2806,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_controls.appendChild(this.addproperty_holder);
       this.refreshAddProperties();
     }
-
+    if(this.options.hiddenTitle){
+      this.title.style.display = 'none';
+    }
     // Fix table cell ordering
     if(this.options.table_row) {
       this.editor_holder = this.container;
@@ -3338,8 +3339,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         this.active_tab = null;
       }
       else {
-        this.panel = this.theme.getIndentedPanel();
-        this.container.appendChild(this.panel);
+        this.panel = this.theme.getIndentedPanel(true);
+        this.container.appendChild(this.panel); 
         this.row_holder = document.createElement('div');
         this.panel.appendChild(this.row_holder);
         this.controls = this.theme.getButtonHolder();
@@ -3347,7 +3348,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       }
     }
     else {
-        this.panel = this.theme.getIndentedPanel();
+        this.panel = this.theme.getIndentedPanel(true);
         this.container.appendChild(this.panel);
         this.controls = this.theme.getButtonHolder();
         this.panel.appendChild(this.controls);
@@ -3703,8 +3704,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     
     // Buttons to delete row, move row up, and move row down
     if(!self.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton(self.getItemTitle(),'delete',this.translate('button_delete_row_title',[self.getItemTitle()]));
-      self.rows[i].delete_button.className += ' delete';
+      self.rows[i].delete_button = this.getButton('','delete',this.translate('button_delete_row_title',[self.getItemTitle()]));
+      self.rows[i].delete_button.className += ' delete delete-array-element';
       self.rows[i].delete_button.setAttribute('data-i',i);
       self.rows[i].delete_button.addEventListener('click',function(e) {
         e.preventDefault();
@@ -3740,7 +3741,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       });
       
       if(controls_holder) {
-        controls_holder.appendChild(self.rows[i].delete_button);
+        self.rows[i].editor_holder.appendChild(self.rows[i].delete_button);
+        //controls_holder.appendChild(self.rows[i].delete_button);
       }
     }
     
@@ -3843,7 +3845,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
     
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add',this.translate('button_add_row_title',[this.getItemTitle()]));
+    var trans = this.translate('button_add_row_title',[this.getItemTitle()]);
+    this.add_row_button = this.getButton(trans,'add', trans);
+    this.add_row_button.className += ' add-array-element';
     
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
@@ -3907,6 +3911,7 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
       this.remove_all_rows_button.style.textAlign = 'left';
       this.remove_all_rows_button.style.marginBottom = '3px';
     }
+    self.controls.className += " button-box-row"; 
   },
   showValidationErrors: function(errors) {
     var self = this;
@@ -4515,7 +4520,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     self.editors[i].build();
     self.editors[i].postBuild();
 
-    if(self.editors[i].header) self.editors[i].header.style.display = 'none';
+    //if(self.editors[i].header) self.editors[i].header.style.display = 'none';
 
     self.editors[i].option = self.switcher_options[i];
 
@@ -4579,11 +4584,18 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     var self = this;
     var container = this.container;
 
-    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
-    this.container.appendChild(this.header);
+    //this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    //this.container.appendChild(this.header);
 
     this.switcher = this.theme.getSwitcher(this.display_text);
-    container.appendChild(this.switcher);
+    this.switcher.className += ' switcher ';
+    this.editor_holder = document.createElement('div');
+    this.editor_holder.className += 'switch-holder' 
+    this.editor_holder.style.position = "relative";
+    this.editor_holder.appendChild(this.switcher);
+    
+    container.appendChild(this.editor_holder);
+
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -4592,8 +4604,6 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       self.onChange(true);
     });
 
-    this.editor_holder = document.createElement('div');
-    container.appendChild(this.editor_holder);
     
       
     var validator_options = {};
@@ -5832,7 +5842,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
   getNumColumns: function() {
     return 4;
   },
-  build: function() {    
+  build: function() {  
     var self = this;
     this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
 
@@ -5846,6 +5856,8 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
       if(!this.jsoneditor.options.upload) throw "Upload handler required for upload editor";
 
       // File uploader
+      var boxUploader =this.getButton('','upload','');
+      boxUploader.className= "box-upload";
       this.uploader = this.theme.getFormInputField('file');
       
       this.uploader.addEventListener('change',function(e) {
@@ -5865,79 +5877,118 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
       });
     }
 
-    var description = this.schema.description;
-    if (!description) description = '';
-
-    this.preview = this.theme.getFormInputDescription(description);
-    this.container.appendChild(this.preview);
-
-    this.control = this.theme.getFormControl(this.label, this.uploader||this.input, this.preview);
+    boxUploader.appendChild(this.uploader);
+    this.control = this.theme.getFormControl(this.label, boxUploader);
     this.container.appendChild(this.control);
+    this.addUploadPreview();
+    this.addDeleteButton();
   },
+
+  postBuild: function() {
+    this.setupWatchListeners();
+    this.setValue(this.getDefault(), true);
+    this.updateHeaderText();
+    this.register();
+    this.onWatchedFieldChange();
+  },
+  
+
   refreshPreview: function() {
-    if(this.last_preview === this.preview_value) return;
-    this.last_preview = this.preview_value;
-
-    this.preview.innerHTML = '';
-    
-    if(!this.preview_value) return;
-
     var self = this;
-
-    var mime = this.preview_value.match(/^data:([^;,]+)[;,]/);
-    if(mime) mime = mime[1];
-    if(!mime) mime = 'unknown';
-
     var file = this.uploader.files[0];
-
-    this.preview.innerHTML = '<strong>Type:</strong> '+mime+', <strong>Size:</strong> '+file.size+' bytes';
-    if(mime.substr(0,5)==="image") {
-      this.preview.innerHTML += '<br>';
-      var img = document.createElement('img');
-      img.style.maxWidth = '100%';
-      img.style.maxHeight = '100px';
-      img.src = this.preview_value;
-      this.preview.appendChild(img);
+    self.theme.removeInputError(self.uploader);
+    if (self.theme.getProgressBar) {
+        self.progressBar = self.theme.getProgressBar();
+        self.control.appendChild(self.progressBar);
     }
 
-    this.preview.innerHTML += '<br>';
-    var uploadButton = this.getButton('Upload', 'upload', 'Upload');
-    this.preview.appendChild(uploadButton);
-    uploadButton.addEventListener('click',function(event) {
-      event.preventDefault();
-
-      uploadButton.setAttribute("disabled", "disabled");
-      self.theme.removeInputError(self.uploader);
-
-      if (self.theme.getProgressBar) {
-        self.progressBar = self.theme.getProgressBar();
-        self.preview.appendChild(self.progressBar);
-      }
-
-      self.jsoneditor.options.upload(self.path, file, {
+    self.jsoneditor.options.upload(self.path, file, {
         success: function(url) {
           self.setValue(url);
-
           if(self.parent) self.parent.onChildEditorChange(self);
           else self.jsoneditor.onChange();
+          if (self.progressBar) self.control.removeChild(self.progressBar);
 
-          if (self.progressBar) self.preview.removeChild(self.progressBar);
-          uploadButton.removeAttribute("disabled");
         },
         failure: function(error) {
           self.theme.addInputError(self.uploader, error);
-          if (self.progressBar) self.preview.removeChild(self.progressBar);
-          uploadButton.removeAttribute("disabled");
+          if (self.progressBar) self.control.removeChild(self.progressBar);
         },
+
         updateProgress: function(progress) {
           if (self.progressBar) {
             if (progress) self.theme.updateProgressBar(self.progressBar, progress);
             else self.theme.updateProgressBarUnknown(self.progressBar);
           }
         }
-      });
     });
   },
+  
+  addDeleteButton:function(){
+    var self = this;
+    this.delete_button = this.getButton('','delete','');
+    this.delete_button.style.display='inline-block';
+    this.delete_button.style.position='static';
+    
+    this.delete_button.addEventListener('click',function(e) {
+      self.setValue("");
+    });
+    this.control.appendChild(this.delete_button);
+  },
+
+  addUploadPreview : function(){
+    this.link_holder = this.theme.getLinksHolder();
+    this.link_holder.style.display =  "inline-block";
+    this.control.appendChild(this.link_holder);
+    if(this.schema.links) {
+      for(var i=0; i<this.schema.links.length; i++) {
+        var link = this.getImgLink(this.schema.links[i])
+        var preview = this.getImgPreview(this.schema.links[i])
+        this.link_holder.appendChild(link);
+        if(this.jsoneditor.options.initPopOver){
+          this.jsoneditor.options.initPopOver(link, preview);
+        }
+      }
+    }
+  },
+
+  getImgLink:function(){
+    var b = this.getButton('','preview','');
+    return b;
+  },
+
+  getImgPreview: function(data) {
+    var value = this.value;
+
+    var compiler = this.jsoneditor.compileTemplate(data.href,this.template_engine);
+    var url =  compiler({ 'self' :  value, 'url': value });
+    var pop = this.getPopOverContent(url);
+    return pop;
+
+  },
+  refreshImgPreview : function(url){
+    if(!url || url.length < 1 || typeof url == 'undefined' ){
+      this.link_holder.style.display = 'none';
+      this.delete_button.style.display = 'none';
+    }else{
+      this.link_holder.style.display = 'inline-block';
+      this.delete_button.style.display = 'inline-block';
+    }
+
+    if (this.link_holder){
+      for (var i = 0;  i < this.link_holder.children.length; i++){
+        if(this.jsoneditor.options.updatePopOver){
+          var pop = this.getPopOverContent(url);
+          this.jsoneditor.options.updatePopOver(this.link_holder.children[i], pop);
+        }
+      }
+    }
+  },
+
+  getPopOverContent: function(url){
+    return  "<div><img class='popover-img-preview' src='"+url+"'/></div>";
+  },
+  
   enable: function() {
     if(this.uploader) this.uploader.disabled = false;
     this._super();
@@ -5950,9 +6001,11 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     if(this.value !== val) {
       this.value = val;
       this.input.value = this.value;
+      this.refreshImgPreview(this.value);
       this.onChange();
     }
   },
+
   destroy: function() {
     if(this.preview && this.preview.parentNode) this.preview.parentNode.removeChild(this.preview);
     if(this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title);
@@ -5962,7 +6015,6 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     this._super();
   }
 });
-
 JSONEditor.defaults.editors.checkbox = JSONEditor.AbstractEditor.extend({
   setValue: function(value,initial) {
     this.value = !!value;
