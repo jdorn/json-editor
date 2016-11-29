@@ -323,6 +323,17 @@ JSONEditor.Validator = Class.extend({
         }
       }
     }
+    
+    if(schema.format === "url") {
+        var reg = /(http|https):\/\/(\w+:{0,1}\w*)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
+        if(! reg.test(value)  ) {
+          errors.push({
+            path: path,
+            property: 'pattern',
+            message: this.translate('error_url', [schema.title || "Value" ])
+          });
+        }
+    }
     // Array specific validation
     else if(typeof value === "object" && value !== null && Array.isArray(value)) {
       // `items` and `additionalItems`
