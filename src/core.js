@@ -60,16 +60,19 @@ JSONEditor.prototype = {
 
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);
-
       self.validation_results = self.validator.validate(self.root.getValue());
-      self.root.showValidationErrors(self.validation_results);
+      if(self.options.show_errors !== "never"){
+        self.root.showValidationErrors(self.validation_results);
+      }
       self.ready = true;
 
       // Fire ready event asynchronously
       window.requestAnimationFrame(function() {
         if(!self.ready) return;
         self.validation_results = self.validator.validate(self.root.getValue());
-        self.root.showValidationErrors(self.validation_results);
+        if(self.options.show_errors !== "never"){
+          self.root.showValidationErrors(self.validation_results);
+        }
         self.trigger('ready');
         self.trigger('change');
       });
