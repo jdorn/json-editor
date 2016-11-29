@@ -161,6 +161,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.input = this.theme.getTextareaInput();
       }
       // HTML5 Input type
+      else if(this.format === 'url' ){
+        this.input_type = 'text';
+        this.input = this.theme.getFormInputField(this.input_type);       
+      }
       else {
         this.input_type = this.format;
         this.input = this.theme.getFormInputField(this.input_type);
