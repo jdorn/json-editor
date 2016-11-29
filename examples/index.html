@@ -41,6 +41,7 @@ var options = {
   remove_empty_properties:true,
   remove_empty_array: true,
   ajax: true,
+  always_show_all_properties: true
 
 };
 var defaults = $.extend(JSONEditor.defaults.options , options );
@@ -85,9 +86,19 @@ JSONEditor.defaults.options.upload = function(type, file, cbs) {
 };
 
 
-
       var editor = new JSONEditor(document.getElementById('editor_holder'),{
         iconlib : "fontawesome4",
+        startval: {
+          type: "template",
+          payload: {
+            template_type: "generic",
+            elements:[
+            {
+              title: "AAAAAAAAA"
+            }
+            ]
+          }
+        },
         schema :{
             isValidType: function(val){
                 try{
@@ -125,6 +136,7 @@ JSONEditor.defaults.options.upload = function(type, file, cbs) {
                             title: "Elements",
                             type: "array",
                             items: {
+                                "required": ["title"],
                                 title: "Element",
                                 properties:{
                                     title: {
@@ -148,8 +160,8 @@ JSONEditor.defaults.options.upload = function(type, file, cbs) {
                                                 "href": "{{self}}"
                                             }
                                         ]
-                                    },
-                                    buttons:{
+                                    }
+                                    /*buttons:{
                                               "type": "array",
                                               "title": "Buttons",
                                               "items": {
@@ -199,7 +211,7 @@ JSONEditor.defaults.options.upload = function(type, file, cbs) {
 
                                                 }]
                                               }
-                                            }
+                                            }*/
                                 }
                             }
                         }

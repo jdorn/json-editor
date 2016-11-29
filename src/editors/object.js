@@ -566,13 +566,16 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     //control.style.overflowY = 'hidden';
 
     this.insertPropertyControlUsingPropertyOrder(key, control, this.addproperty_list);
-
+    var show_all_properties = false;
+    if(this.jsoneditor.options.always_show_all_properties|| this.schema.always_show_all_properties){
+      show_all_properties = true;
+    }
     checkbox.checked = key in this.editors;
     checkbox.addEventListener('change',function() {
       if(checkbox.checked) {
         self.addObjectProperty(key);
       }
-      else {
+      else if(!show_all_properties) {
         self.removeObjectProperty(key);
       }
       self.onChange(true);
@@ -819,6 +822,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     var self = this;
     value = value || {};
 
+    var show_all_properties = false;
+    if(this.jsoneditor.options.always_show_all_properties|| this.schema.always_show_all_properties){
+      show_all_properties = true;
+    }
     if(typeof value !== "object" || Array.isArray(value)) value = {};
 
     // First, set the values for all of the defined properties
@@ -829,7 +836,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         editor.setValue(value[i],initial);
       }
       // Otherwise, remove value unless this is the initial set or it's required
-      else if(!initial && !self.isRequired(editor)) {
+      else if(!initial && !self.isRequired(editor) && !show_all_properties) {
         self.removeObjectProperty(i);
       }
       // Otherwise, set the value to the default

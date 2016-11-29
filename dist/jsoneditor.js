@@ -273,16 +273,19 @@ JSONEditor.prototype = {
 
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);
-
       self.validation_results = self.validator.validate(self.root.getValue());
-      self.root.showValidationErrors(self.validation_results);
+      if(self.options.show_errors !== "never"){
+        self.root.showValidationErrors(self.validation_results);
+      }
       self.ready = true;
 
       // Fire ready event asynchronously
       window.requestAnimationFrame(function() {
         if(!self.ready) return;
         self.validation_results = self.validator.validate(self.root.getValue());
-        self.root.showValidationErrors(self.validation_results);
+        if(self.options.show_errors !== "never"){
+          self.root.showValidationErrors(self.validation_results);
+        }
         self.trigger('ready');
         self.trigger('change');
       });
@@ -1132,6 +1135,17 @@ JSONEditor.Validator = Class.extend({
           });
         }
       }
+    }
+    
+    if(schema.format === "url") {
+        var reg = /(http|https):\/\/(\w+:{0,1}\w*)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
+        if(! reg.test(value)  ) {
+          errors.push({
+            path: path,
+            property: 'pattern',
+            message: this.translate('error_url', [schema.title || "Value" ])
+          });
+        }
     }
     // Array specific validation
     else if(typeof value === "object" && value !== null && Array.isArray(value)) {
@@ -2031,6 +2045,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.input = this.theme.getTextareaInput();
       }
       // HTML5 Input type
+      else if(this.format === 'url' ){
+        this.input_type = 'text';
+        this.input = this.theme.getFormInputField(this.input_type);       
+      }
       else {
         this.input_type = this.format;
         this.input = this.theme.getFormInputField(this.input_type);
@@ -2907,13 +2925,16 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     //control.style.overflowY = 'hidden';
 
     this.insertPropertyControlUsingPropertyOrder(key, control, this.addproperty_list);
-
+    var show_all_properties = false;
+    if(this.jsoneditor.options.always_show_all_properties|| this.schema.always_show_all_properties){
+      show_all_properties = true;
+    }
     checkbox.checked = key in this.editors;
     checkbox.addEventListener('change',function() {
       if(checkbox.checked) {
         self.addObjectProperty(key);
       }
-      else {
+      else if(!show_all_properties) {
         self.removeObjectProperty(key);
       }
       self.onChange(true);
@@ -3160,6 +3181,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     var self = this;
     value = value || {};
 
+    var show_all_properties = false;
+    if(this.jsoneditor.options.always_show_all_properties|| this.schema.always_show_all_properties){
+      show_all_properties = true;
+    }
     if(typeof value !== "object" || Array.isArray(value)) value = {};
 
     // First, set the values for all of the defined properties
@@ -3170,7 +3195,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         editor.setValue(value[i],initial);
       }
       // Otherwise, remove value unless this is the initial set or it's required
-      else if(!initial && !self.isRequired(editor)) {
+      else if(!initial && !self.isRequired(editor) && !show_all_properties) {
         self.removeObjectProperty(i);
       }
       // Otherwise, set the value to the default
@@ -7839,6 +7864,8 @@ JSONEditor.defaults.languages.en = {
    * When a value does not match a given pattern
    */
   error_pattern: "Value must match the pattern {{0}}",
+  /*URL */
+  error_url: "{{0}} must be a valid Url",
   /**
    * When an array has additional items whereas it is not supposed to
    */
@@ -7871,7 +7898,7 @@ JSONEditor.defaults.languages.en = {
    * When a required property is not defined
    * @variables This key takes one variable: The name of the missing property
    */
-  error_required: "Object is missing the required property '{{0}}'",
+  error_required: "'{{0}}' is required",
   /**
    * When there is an additional property is set whereas there should be none
    * @variables This key takes one variable: The name of the additional property
