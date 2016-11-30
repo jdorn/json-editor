@@ -2762,12 +2762,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.title.appendChild(this.title_controls);
       this.title.appendChild(this.editjson_controls);
       this.title.appendChild(this.addproperty_controls);
-
       // Show/Hide button
       this.collapsed = false;
       this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
       this.title_controls.appendChild(this.toggle_button);
-      this.toggle_button.addEventListener('click',function(e) {
+      
+      function onCollapse(e) {
         e.preventDefault();
         e.stopPropagation();
         if(self.collapsed) {
@@ -2780,8 +2780,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           self.collapsed = true;
           self.setButtonText(self.toggle_button,'','expand',self.translate('button_expand'));
         }
-      });
-
+      }
+      this.toggle_button.addEventListener('click', onCollapse);
+      if(this.options.collapse_on_title_click || this.jsoneditor.options.collapse_on_title_click ){
+        this.title.addEventListener('click', onCollapse);
+      }
       // If it should start collapsed
       if(this.options.collapsed) {
         $trigger(this.toggle_button,'click');
