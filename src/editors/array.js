@@ -500,9 +500,14 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         self.onChange(true);
       });
       
-      if(controls_holder) {
+      if(self.rows[i].editor_holder){
         self.rows[i].editor_holder.appendChild(self.rows[i].delete_button);
-        //controls_holder.appendChild(self.rows[i].delete_button);
+      }else if(self.rows[i].title) {
+        self.rows[i].title.appendChild(self.rows[i].delete_button);
+      }else if(self.rows[i].control) {
+        self.rows[i].control.appendChild(self.rows[i].delete_button);
+        self.rows[i].delete_button.className += " inline-delete";
+        self.rows[i].control.className += " inline-input";
       }
     }
     
@@ -569,8 +574,9 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
     this.title_controls.appendChild(this.toggle_button);
     var row_holder_display = self.row_holder.style.display;
-    var controls_display = self.controls.style.display;
-    this.toggle_button.addEventListener('click',function(e) {
+    //var controls_display = self.controls.style.display;
+    
+    function toggle(e) {
       e.preventDefault();
       e.stopPropagation();
       if(self.collapsed) {
@@ -578,8 +584,8 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         if(self.panel) self.panel.style.display = '';
         self.row_holder.style.display = row_holder_display;
         if(self.tabs_holder) self.tabs_holder.style.display = '';
-        self.controls.style.display = controls_display;
-        self.setButtonText(this,'','collapse',self.translate('button_collapse'));
+        self.controls.style.display = "";
+        self.setButtonText(self.toggle_button,'','collapse',self.translate('button_collapse'));
       }
       else {
         self.collapsed = true;
@@ -587,10 +593,13 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
         if(self.tabs_holder) self.tabs_holder.style.display = 'none';
         self.controls.style.display = 'none';
         if(self.panel) self.panel.style.display = 'none';
-        self.setButtonText(this,'','expand',self.translate('button_expand'));
+        self.setButtonText(self.toggle_button,'','expand',self.translate('button_expand'));
       }
-    });
-
+    }
+    this.toggle_button.addEventListener('click',toggle);
+    if(this.options.collapse_on_title_click || this.jsoneditor.options.collapse_on_title_click ){
+      this.title.querySelector(".headerText").addEventListener('click', toggle);
+    }
     // If it should start collapsed
     if(this.options.collapsed) {
       $trigger(this.toggle_button,'click');

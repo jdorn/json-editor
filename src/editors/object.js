@@ -424,7 +424,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
       this.toggle_button.addEventListener('click', onCollapse);
       if(this.options.collapse_on_title_click || this.jsoneditor.options.collapse_on_title_click ){
-        this.title.addEventListener('click', onCollapse);
+        this.title.querySelector(".headerText").addEventListener('click', onCollapse);
       }
       // If it should start collapsed
       if(this.options.collapsed) {
@@ -705,7 +705,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     if(this.jsoneditor.options.remove_empty_properties || this.options.remove_empty_properties) {
       for(var i in result) {
         if(result.hasOwnProperty(i)) {
-          if(!result[i]) delete result[i];
+          if( (typeof result[i] !== "boolean") && ( !result[i]) ) delete result[i];
         }
       }
     }

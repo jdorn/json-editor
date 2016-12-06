@@ -89,132 +89,51 @@ JSONEditor.defaults.options.upload = function(type, file, cbs) {
 
       var editor = new JSONEditor(document.getElementById('editor_holder'),{
         iconlib : "fontawesome4",
-        startval: {
-          type: "template",
-          payload: {
-            template_type: "generic",
-            elements:[
-            {
-              title: "AAAAAAAAA"
-            }
-            ]
-          }
-        },
         schema :{
+            type: "object",
+            title:"Telegram buttons",
             isValidType: function(val){
                 try{
-                    return val.payload.template_type === "generic"
+                    return true
+                    //return val.hasOwnProperty("keyboard")
                 }catch (err){
                     return false;
-
-                }
+                }            
             },
-            type: "object",
-            title: "Facebook  Carousel",
-            properties: {
-                type: {
-                    type:"string",
-                    default : "template",
-                    readonly: true,
-                    options:{
-                        hidden: true
-                    }
+            options:{
+                hiddenTitle: true,
+                disable_collapse: true
+            },
+            required: ["resize_keyboard", "one_time_keyboard"],
+            properties:{
+                one_time_keyboard : {
+                    type:"boolean",
+                    title: "One Time Keyboard",
+                    default : false,//or compact
                 },
-                payload:{
-                    options:{
-                      hiddenTitle: true
-                    },
-                    properties: {
-                        template_type : {
+                resize_keyboard:{
+                    type:"boolean",
+                    title: "Resize Keyboard",
+                    default : true,//or compact
+                },
+                keyboard:{
+                    type: "array",
+                    title:"Buttons",
+                    items:{
+                        /*type:"object",
+                        headerTemplate: "OBJ {{ i1 }}",
+                        properties:{
+                            text:{
+                                type: "string",
+                                title: "TEXT"
+                            }
+                        }*/
+
+                        type: "array",
+                        headerTemplate: "Button Row {{ i1 }}",
+                        items:{
                             type:"string",
-                            default : "generic",
-                            readonly: true,
-                            options:{
-                                hidden: true
-                            }
-                        },
-                        elements: {
-                            title: "Elements",
-                            type: "array",
-                            items: {
-                                "required": ["title"],
-                                title: "Element",
-                                properties:{
-                                    title: {
-                                        type: "string",
-                                    },
-                                    subtitle: {
-                                        type: "string"
-                                    },
-                                    image_url:{
-                                        type: "string",
-                                      
-                                    },
-                                    image_url:{
-                                        type: "string",
-                                        format: "url",
-                                        options: {
-                                            upload: true
-                                        },
-                                        "links": [
-                                            {
-                                                "href": "{{self}}"
-                                            }
-                                        ]
-                                    }
-                                    /*buttons:{
-                                              "type": "array",
-                                              "title": "Buttons",
-                                              "items": {
-                                                "title": "Button",
-                                                "headerTemplate": "{{i1}} - {{self.title}}",
-                                                "oneOf": [{
-                                                  "title": "Post Back",
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "type": {
-                                                      "type": "string",
-                                                      "default": "postback",
-                                                      "readonly": true,
-                                                      "options": {
-                                                        "hidden": true
-                                                      }
-                                                    },
-                                                    "title": {
-                                                      "type": "string"
-                                                    },
-                                                    "payload": {
-                                                      "type": "string"
-
-                                                    }
-                                                  }
-
-                                                }, {
-                                                  "title": "Web url",
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "type": {
-                                                      "type": "string",
-                                                      "default": "web_url",
-                                                      "readonly": true,
-                                                      "options": {
-                                                        "hidden": true
-                                                      }
-                                                    },
-                                                    "title": {
-                                                      "type": "string"
-                                                    },
-                                                    "url": {
-                                                      "type": "string"
-
-                                                    }
-                                                  }
-
-                                                }]
-                                              }
-                                            }*/
-                                }
-                            }
+                            title:"Button"
                         }
                     }
                 }
