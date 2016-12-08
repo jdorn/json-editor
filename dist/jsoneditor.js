@@ -1732,7 +1732,14 @@ JSONEditor.AbstractEditor = Class.extend({
     this.value = value;
   },
   getValue: function() {
-    return this.value;
+    var val =  this.value;
+    if(this.options.placeholderWatch && this.input){
+      var placeholderVal = this.input.getAttribute("placeholder")
+      if(!val.length && placeholderVal && placeholderVal.length ){
+        val = placeholderVal;
+      }
+    }
+    return val;
   },
   refreshValue: function() {
 
@@ -1896,7 +1903,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   setValue: function(value,initial,from_template) {
     var self = this;
     
-    if(this.template && !from_template) {
+    if(!this.options.placeholderWatch && this.template && !from_template) {
       return;
     }
     
@@ -2088,7 +2095,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         e.stopPropagation();
         
         // Don't allow changing if this field is a template
-        if(self.schema.template) {
+        if(self.schema.template && !self.options.placeholderWatch) {
           this.value = self.value;
           return;
         }

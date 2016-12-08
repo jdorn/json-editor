@@ -332,7 +332,14 @@ JSONEditor.AbstractEditor = Class.extend({
     this.value = value;
   },
   getValue: function() {
-    return this.value;
+    var val =  this.value;
+    if(this.options.placeholderWatch && this.input){
+      var placeholderVal = this.input.getAttribute("placeholder")
+      if(!val.length && placeholderVal && placeholderVal.length ){
+        val = placeholderVal;
+      }
+    }
+    return val;
   },
   refreshValue: function() {
 
