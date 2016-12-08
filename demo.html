@@ -210,10 +210,13 @@ editor.on("change",  function() {
                         citystate: {
                             type: "string",
                             description: "This is generated automatically from the previous two fields",
-                            template: "{{city}}, {{state}}",
+                            template: "{{city}}",
                             watch: {
                                 city: 'location.city',
-                                state: 'location.state'
+                            },
+                            options:{
+                                unserscoreCase: true,
+                                placeholderWatch: true
                             }
                         }
                     }

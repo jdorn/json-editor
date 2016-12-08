@@ -189,8 +189,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
 
     if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
-      this.always_disabled = true;
-      this.input.disabled = true;
+      if(this.schema.template && ! this.options.placeholderWatch){
+        this.always_disabled = true;
+        this.input.disabled = true;
+      }
     }
 
     this.input
@@ -421,12 +423,24 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     // If this editor needs to be rendered by a macro template
     if(this.template) {
-      vars = this.getWatchedFieldValues();
-      this.setValue(this.template(vars),false,true);
+      var vars = this.getWatchedFieldValues();
+      var rendered = this.template(vars);
+      if(this.options.unserscoreCase){
+        rendered = rendered.replace(/ /g, "_").toLowerCase()
+      }
+      if(this.options.placeholderWatch){
+        this.setPlaceholder(rendered);
+      }else{
+        this.setValue(rendered,false,true);
+      }
     }
     
     this._super();
   },
+  setPlaceholder: function(value){
+    this.input.setAttribute("placeholder", value)
+  },
+
   showValidationErrors: function(errors) {
     var self = this;
     
