@@ -2073,10 +2073,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
 
     if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
-      if(this.schema.template && ! this.options.placeholderWatch){
         this.always_disabled = true;
         this.input.disabled = true;
-      }
+      
+    }
+    if(this.schema.options && this.schema.options.placeholderWatch){
+        this.always_disabled = false;
+        this.input.disabled = false; 
     }
 
     this.input
