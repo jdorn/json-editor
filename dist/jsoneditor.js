@@ -1103,8 +1103,11 @@ JSONEditor.Validator = Class.extend({
     }
     // String specific validation
     else if(typeof value === "string") {
+var stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
+      jumpValidation = value.startsWith(stringWhiteLabel);
+      
       // `maxLength`
-      if(schema.maxLength) {
+      if(schema.maxLength && !jumpValidation) {
         if((value+"").length > schema.maxLength) {
           errors.push({
             path: path,
@@ -1115,7 +1118,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // `minLength`
-      if(schema.minLength) {
+      if(schema.minLength && !jumpValidation) {
         if((value+"").length < schema.minLength) {
           errors.push({
             path: path,
@@ -1126,7 +1129,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // `pattern`
-      if(schema.pattern) {
+      if(schema.pattern && !jumpValidation) {
         if(!(new RegExp(schema.pattern)).test(value)) {
           errors.push({
             path: path,
@@ -1137,7 +1140,7 @@ JSONEditor.Validator = Class.extend({
       }
     }
     
-    if(schema.format === "url") {
+    if(schema.format === "url" && !jumpValidation) {
         var reg = /(http|https):\/\/(\w+:{0,1}\w*)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
         if(! reg.test(value)  ) {
           errors.push({
