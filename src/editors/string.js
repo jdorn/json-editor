@@ -263,6 +263,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     this.control = this.theme.getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
+    
+    //add required class
+    if (this.options.parent.schema.required && this.options.parent.schema.required.indexOf(this.key)>-1){
+      this.label.className += " required"
+    }
 
     // Any special formatting that needs to happen after the input is added to the dom
     window.requestAnimationFrame(function() {
