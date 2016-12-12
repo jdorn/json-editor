@@ -33,7 +33,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     }
     return el;
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function(label, input, description, infoText) {
     var group = document.createElement('div');
 
     if(label && input.type === 'checkbox') {
@@ -41,6 +41,7 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
       label.appendChild(input);
       label.style.fontSize = '14px';
       group.style.marginTop = '0';
+      if(infoText) group.appendChild(infoText);
       group.appendChild(label);
       input.style.position = 'relative';
       input.style.cssFloat = 'left';
@@ -51,6 +52,8 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
         label.className += ' control-label';
         group.appendChild(label);
       }
+
+      if(infoText) group.appendChild(infoText);
       group.appendChild(input);
     }
 
@@ -63,6 +66,36 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     el.className = 'well well-sm';
     el.style.paddingBottom = 0;
     return el;
+  },
+  getInfoButton: function(text) {
+    var icon = document.createElement('span');
+    icon.className = "glyphicon glyphicon-info-sign pull-right";
+    icon.style.padding = ".25rem";
+    icon.style.position = "relative";
+    icon.style.display = "inline-block";
+
+    var tooltip = document.createElement('span');
+    tooltip.style["font-family"] = "sans-serif";
+    tooltip.style.visibility = "hidden";
+    tooltip.style["background-color"] = "rgba(50, 50, 50, .75)";
+    tooltip.style.margin = "0 .25rem";
+    tooltip.style.color = "#FAFAFA";
+    tooltip.style.padding = ".5rem 1rem";
+    tooltip.style["border-radius"] = ".25rem";
+    tooltip.style.width = "25rem";
+    tooltip.style.transform = "translateX(-27rem) translateY(-.5rem)";
+    tooltip.style.position = "absolute";
+    tooltip.innerText = text;
+    icon.onmouseover = function() {
+      tooltip.style.visibility = "visible";
+    };
+    icon.onmouseleave = function() {
+      tooltip.style.visibility = "hidden";
+    };
+
+    icon.appendChild(tooltip);
+
+    return icon;
   },
   getFormInputDescription: function(text) {
     var el = document.createElement('p');

@@ -240,7 +240,7 @@ JSONEditor.defaults.themes.foundation6 = JSONEditor.defaults.themes.foundation5.
     el.style.display = 'block';
     return el;
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function(label, input, description, infoText) {
     var el = document.createElement('div');
     el.className = 'form-control';
     if(label) el.appendChild(label);
@@ -248,8 +248,10 @@ JSONEditor.defaults.themes.foundation6 = JSONEditor.defaults.themes.foundation5.
       label.insertBefore(input,label.firstChild);
     }
     else if (label) {
+      if(infoText) label.appendChild(infoText);
       label.appendChild(input);
     } else {
+      if(infoText) el.appendChild(infoText);
       el.appendChild(input);
     }
 

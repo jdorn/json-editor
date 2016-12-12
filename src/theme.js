@@ -63,6 +63,39 @@ JSONEditor.AbstractTheme = Class.extend({
   enableLabel: function(label) {
     label.style.color = '';
   },
+  getInfoButton: function(text) {
+    var icon = document.createElement('span');
+    icon.innerText = "ⓘ";
+    icon.style.fontSize = "16px";
+    icon.style.fontWeight = "bold";
+    icon.style.padding = ".25rem";
+    icon.style.position = "relative";
+    icon.style.display = "inline-block";
+
+    var tooltip = document.createElement('span');
+    tooltip.style.fontSize = "12px";
+    icon.style.fontWeight = "normal";
+    tooltip.style["font-family"] = "sans-serif";
+    tooltip.style.visibility = "hidden";
+    tooltip.style["background-color"] = "rgba(50, 50, 50, .75)";
+    tooltip.style.margin = "0 .25rem";
+    tooltip.style.color = "#FAFAFA";
+    tooltip.style.padding = ".5rem 1rem";
+    tooltip.style["border-radius"] = ".25rem";
+    tooltip.style.width = "20rem";
+    tooltip.style.position = "absolute";
+    tooltip.innerText = text;
+    icon.onmouseover = function() {
+      tooltip.style.visibility = "visible";
+    };
+    icon.onmouseleave = function() {
+      tooltip.style.visibility = "hidden";
+    };
+
+    icon.appendChild(tooltip);
+
+    return icon;
+  },
   getFormInputLabel: function(text) {
     var el = document.createElement('label');
     el.appendChild(document.createTextNode(text));
@@ -166,14 +199,16 @@ JSONEditor.AbstractTheme = Class.extend({
   afterInputReady: function(input) {
 
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function(label, input, description, infoText) {
     var el = document.createElement('div');
     el.className = 'form-control';
     if(label) el.appendChild(label);
     if(input.type === 'checkbox') {
       label.insertBefore(input,label.firstChild);
+      if(infoText) label.appendChild(infoText);
     }
     else {
+      if(infoText) label.appendChild(infoText);
       el.appendChild(input);
     }
 

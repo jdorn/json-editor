@@ -146,6 +146,7 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
     var self = this;
     if(!this.options.compact) this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
     if(this.schema.description) this.description = this.theme.getFormInputDescription(this.schema.description);
+    if(this.options.infoText) this.infoButton = this.theme.getInfoButton(this.options.infoText);
 
     if(this.options.compact) this.container.className += ' compact';
 
@@ -163,7 +164,7 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
       self.onInputChange();
     });
 
-    this.control = this.theme.getFormControl(this.label, this.input, this.description);
+    this.control = this.theme.getFormControl(this.label, this.input, this.description, this.infoButton);
     this.container.appendChild(this.control);
 
     this.value = this.enum_values[0];
