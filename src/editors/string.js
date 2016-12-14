@@ -433,9 +433,6 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.template) {
       var vars = this.getWatchedFieldValues();
       var rendered = this.template(vars);
-      if(this.options.unserscoreCase){
-        rendered = rendered.replace(/ /g, "_").toLowerCase()
-      }
       if(this.options.placeholderWatch){
         this.setPlaceholder(rendered);
       }else{
