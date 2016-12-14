@@ -75,6 +75,7 @@ JSONEditor.prototype = {
         }
         self.trigger('ready');
         self.trigger('change');
+        self.initValue = self.getValue();
       });
     });
   },
@@ -82,6 +83,10 @@ JSONEditor.prototype = {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before getting the value";
 
     return this.root.getValue();
+  },
+  isEmpty: function() {
+    if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before getting the value";    
+      return $deepCompare(this.initValue,this.getValue() )
   },
   setValue: function(value) {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before setting the value";

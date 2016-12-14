@@ -10,6 +10,7 @@
     
     <div id='editor_holder'></div>
     <button id='submit'>Submit (console.log)</button>
+    <button id='isEmpty'>isEmpty (console.log)</button>
     
     <script>
       // Initialize the editor with a JSON schema
@@ -50,6 +51,10 @@
       document.getElementById('submit').addEventListener('click',function() {
         // Get the value from the editor
         console.log(editor.getValue());
+      });
+      document.getElementById('isEmpty').addEventListener('click',function() {
+        // Get the value from the editor
+        console.log(editor.isEmpty());
       });
     </script>
   </body>
