@@ -383,7 +383,7 @@ JSONEditor.prototype = {
       self.root.preBuild();
       self.root.build();
       self.root.postBuild();
-
+      self.initValue = self.root.getValue()
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);
       self.validation_results = self.validator.validate(self.root.getValue());
@@ -401,7 +401,6 @@ JSONEditor.prototype = {
         }
         self.trigger('ready');
         self.trigger('change');
-        self.initValue = self.getValue();
       });
     });
   },
