@@ -374,9 +374,13 @@ JSONEditor.prototype = {
       if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
       self.refs[url] = 'loading';
       waiting++;
-
+      
       var r = new XMLHttpRequest(); 
-      r.open("GET", url, true);
+      var endpoint = url;
+      if(self.options.static_url){
+        endpoint = self.options.static_url + url;
+      }
+      r.open("GET", endpoint, true);
       r.onreadystatechange = function () {
         if (r.readyState != 4) return; 
         // Request succeeded
