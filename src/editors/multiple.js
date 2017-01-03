@@ -232,12 +232,39 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
   },
   setValue: function(val,initial) {
     // Determine type by getting the first one that validates
+    // or by using multiple_editor_select_via_property
     var self = this;
     $each(this.validators, function(i,validator) {
-      if(!validator.validate(val).length) {
-        self.type = i;
-        self.switcher.value = self.display_text[i];
-        return false;
+
+      // If this editor's schema has the option:
+      // "options": {
+      //    "multiple_editor_select_via_property": {
+      //       "property": "myProperty",
+      //       "value": "myValue"
+      //     }
+      //  }
+      // we'll select this editor if val.type = 'myValue'
+      if(self.types[i] && self.types[i].hasOwnProperty("options") && self.types[i].options.hasOwnProperty("multiple_editor_select_via_property")){
+        // This editor's schema has multiple_editor_select_via_property
+        var multiple_editor_select_via_property = self.types[i].options.multiple_editor_select_via_property;
+
+        var propName = multiple_editor_select_via_property.property;
+        var propValue = multiple_editor_select_via_property.value;
+
+        // Must check if val has this property with the correct value
+        if(typeof val !== "undefined" && val !== null && val.hasOwnProperty(propName) && val[propName] == propValue) {
+          // This is a match
+          self.type = i;
+          self.switcher.value = self.display_text[i];
+          return false;
+        }
+      } else {
+        // else, we select this editor, if it has no validation errors
+        if(!validator.validate(val).length) {
+          self.type = i;
+          self.switcher.value = self.display_text[i];
+          return false;
+        }
       }
     });
 

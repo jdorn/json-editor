@@ -749,6 +749,120 @@ This can make the editor much more compact, but at a cost of not guaranteeing ch
 }
 ```
 
+#### Mulitple-editor (oneOf, anyOf, allOf)
+
+When the schema uses oneOf (anyOf and allOf) the multiple-editor is used to hold the various sub-editors.
+It will also try to select the correct sub-editor when using setValue to initialize the editor with data.
+ 
+The default behaviour is to select the first sub-editor that has no validation-errors testing using the supplied data.
+
+Sometimes this sub-editor-selection needs to be more specific:
+
+When checking if a particular sub-editor is the one that should be selected,
+the multiple-editor looks for an option called `multiple_editor_select_via_property` in the
+sub-editors schema-data. If pressent, it tells the multiple-editor which property to look for in the
+data supplied via setValue. If this property is found and has the correct value, then this sub-editor is selected.
+
+If we have this schema:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "child": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/Boy"
+        },
+        {
+          "$ref": "#/definitions/Girl"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "Boy": {
+      "type": "object",
+      "title": "Boy",
+      "options": {
+        "multiple_editor_select_via_property": {
+          "property": "sex",
+          "value": "boy"
+        }
+      },
+      "properties": {
+        "sex": {
+          "type": "string",
+          "enum": [
+            "boy"
+          ],
+          "default": "boy",
+          "options": {
+            "hidden": true
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "age": {
+          "type": "number",
+          "minimum": 10
+        }
+      },
+      "required": ["sex"]
+    },
+    "Girl": {
+      "type": "object",
+      "title": "Girl",
+      "options": {
+        "multiple_editor_select_via_property": {
+          "property": "sex",
+          "value": "girl"
+        }
+      },
+      "properties": {
+        "sex": {
+          "type": "string",
+          "enum": [
+            "girl"
+          ],
+          "default": "girl",
+          "options": {
+            "hidden": true
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "age": {
+          "type": "number",
+          "minimum": 10
+        }
+      },
+      "required": ["sex"]
+    }
+  }
+}
+```
+
+Then the following json..
+
+```json
+{
+  "child": {
+    "sex": "girl",
+    "name": "Gry",
+    "age": 5
+  }
+}
+
+```
+.. would make the multiple-editor select the correct Girl-sub-editor
+even though the age = 5 is failing the editors validation.
+
+This feature is used when generating json-schema for Java- or Scala-classes which contains polymorphism using [mbknor-jackson-jsonSchema](https://github.com/mbknor/mbknor-jackson-jsonSchema).
+
 
 Editor Options
 ----------------
@@ -771,6 +885,7 @@ Editors can accept options which alter the behavior in some way.
 *  `input_height` - Explicitly set the height of the input element. Should be a valid CSS width string (e.g. "100px").  Works best with textareas.
 *  `input_width` - Explicitly set the width of the input element. Should be a valid CSS width string (e.g. "100px").  Works for string, number, and integer data types.
 *  `remove_empty_properties` - If set to true for an object, empty object properties (i.e. those with falsy values) will not be returned by getValue().
+*  `multiple_editor_select_via_property` - This can be used to instruct the multiple-editor (eg: oneOf) to select the correct sub-editor.
 
 ```json
 {
