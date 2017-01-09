@@ -203,6 +203,11 @@ JSONEditor.Validator = Class.extend({
     /*
      * Type Specific Validation
      */
+    var stringWhiteLabel, jumpValidation;
+    if (typeof value === "number" || typeof value === "string") {
+        stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
+        jumpValidation = value.startsWith && value.startsWith(stringWhiteLabel);
+    }
 
     // Number Specific Validation
     if(typeof value === "number") {
@@ -290,9 +295,7 @@ JSONEditor.Validator = Class.extend({
     }
     // String specific validation
     else if(typeof value === "string") {
-var stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
-      jumpValidation = value.startsWith(stringWhiteLabel);
-      
+
       // `maxLength`
       if(schema.maxLength && !jumpValidation) {
         if((value+"").length > schema.maxLength) {
@@ -326,7 +329,7 @@ var stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
         }
       }
     }
-    
+
     if(schema.format === "url" && !jumpValidation) {
         var reg = /(http|https):\/\/(\w+:{0,1}\w*)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
         if(! reg.test(value)  ) {

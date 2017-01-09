@@ -11,15 +11,15 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   },
   setValue: function(value,initial,from_template) {
     var self = this;
-    
+
     if(!this.options.placeholderWatch && this.template && !from_template) {
       return;
     }
-    
+
     if(value === null || typeof value === 'undefined') value = "";
     else if(typeof value === "object") value = JSON.stringify(value);
     else if(typeof value !== "string") value = ""+value;
-    
+
     if(value === this.serialized) return;
 
     // Sanitize value before setting it
@@ -30,7 +30,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     }
 
     this.input.value = sanitized;
-    
+
     // If using SCEditor, update the WYSIWYG
     if(this.sceditor_instance) {
       this.sceditor_instance.val(sanitized);
@@ -41,14 +41,14 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     else if(this.ace_editor) {
       this.ace_editor.setValue(sanitized);
     }
-    
+
     var changed = from_template || this.getValue() !== value;
-    
+
     this.refreshValue();
-    
+
     if(initial) this.is_dirty = false;
     else if(this.jsoneditor.options.show_errors === "change") this.is_dirty = true;
-    
+
     if(this.adjust_height) this.adjust_height(this.input);
 
     // Bubble this setValue to parents if the value changed
@@ -57,11 +57,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   getNumColumns: function() {
     var min = Math.ceil(Math.max(this.getTitle().length,this.schema.maxLength||0,this.schema.minLength||0)/5);
     var num;
-    
+
     if(this.input_type === 'textarea') num = 6;
     else if(['text','email'].indexOf(this.input_type) >= 0) num = 4;
     else num = 2;
-    
+
     return Math.min(12,Math.max(min,num));
   },
   build: function() {
@@ -157,13 +157,13 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       ) {
         this.input_type = this.format;
         this.source_code = true;
-        
+
         this.input = this.theme.getTextareaInput();
       }
       // HTML5 Input type
       else if(this.format === 'url' ){
         this.input_type = 'text';
-        this.input = this.theme.getFormInputField(this.input_type);       
+        this.input = this.theme.getFormInputField(this.input_type);
       }
       else {
         this.input_type = this.format;
@@ -175,7 +175,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this.input_type = 'text';
       this.input = this.theme.getFormInputField(this.input_type);
     }
-    
+
     // minLength, maxLength, and pattern
     if(typeof this.schema.maxLength !== "undefined") this.input.setAttribute('maxlength',this.schema.maxLength);
     if(typeof this.schema.pattern !== "undefined") this.input.setAttribute('pattern',this.schema.pattern);
@@ -191,18 +191,18 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
         this.always_disabled = true;
         this.input.disabled = true;
-      
+
     }
     if(this.schema.options && this.schema.options.placeholderWatch){
         this.always_disabled = false;
-        this.input.disabled = false; 
+        this.input.disabled = false;
     }
 
     this.input
-      .addEventListener('change',function(e) {        
+      .addEventListener('change',function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         // Don't allow changing if this field is a template
         if(self.schema.template && !self.options.placeholderWatch) {
           this.value = self.value;
@@ -210,19 +210,19 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         }
 
         var val = this.value;
-        
+
         // sanitize value
         var sanitized = self.sanitize(val);
         if(val !== sanitized) {
           this.value = sanitized;
         }
-        
+
         self.is_dirty = true;
 
         self.refreshValue();
         self.onChange(true);
       });
-      
+
     if(this.options.input_height) this.input.style.height = this.options.input_height;
     if(this.options.expand_height) {
       this.adjust_height = function(el) {
@@ -249,7 +249,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           el.style.height = (ch+1)+'px';
         }
       };
-      
+
       this.input.addEventListener('keyup',function(e) {
         self.adjust_height(this);
       });
@@ -263,10 +263,10 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
 
     this.control = this.theme.getFormControl(this.label, this.input, this.description);
     this.container.appendChild(this.control);
-    
+
     //add required class
     if (this.options.parent.schema.required && this.options.parent.schema.required.indexOf(this.key)>-1){
-      this.label.className += " required"
+      this.label.className += " required";
     }
 
     // Any special formatting that needs to happen after the input is added to the dom
@@ -301,12 +301,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   },
   afterInputReady: function() {
     var self = this, options;
-    
+
     // Code editor
-    if(this.source_code) {      
+    if(this.source_code) {
       // WYSIWYG html and bbcode editor
-      if(this.options.wysiwyg && 
-        ['html','bbcode'].indexOf(this.input_type) >= 0 && 
+      if(this.options.wysiwyg &&
+        ['html','bbcode'].indexOf(this.input_type) >= 0 &&
         window.jQuery && window.jQuery.fn && window.jQuery.fn.sceditor
       ) {
         options = $extend({},{
@@ -315,11 +315,11 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           width: '100%',
           height: 300
         },JSONEditor.plugins.sceditor,self.options.sceditor_options||{});
-        
+
         window.jQuery(self.input).sceditor(options);
-        
+
         self.sceditor_instance = window.jQuery(self.input).sceditor('instance');
-        
+
         self.sceditor_instance.blur(function() {
           // Get editor's value
           var val = window.jQuery("<div>"+self.sceditor_instance.val()+"</div>");
@@ -337,16 +337,16 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.epiceditor_container = document.createElement('div');
         this.input.parentNode.insertBefore(this.epiceditor_container,this.input);
         this.input.style.display = 'none';
-        
+
         options = $extend({},JSONEditor.plugins.epiceditor,{
           container: this.epiceditor_container,
           clientSideStorage: false
         });
-        
+
         this.epiceditor = new window.EpicEditor(options).load();
-        
+
         this.epiceditor.importFile(null,this.getValue());
-      
+
         this.epiceditor.on('update',function() {
           var val = self.epiceditor.exportFile();
           self.input.value = val;
@@ -362,7 +362,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         if(mode === 'cpp' || mode === 'c++' || mode === 'c') {
           mode = 'c_cpp';
         }
-        
+
         this.ace_container = document.createElement('div');
         this.ace_container.style.width = '100%';
         this.ace_container.style.position = 'relative';
@@ -370,15 +370,15 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.input.parentNode.insertBefore(this.ace_container,this.input);
         this.input.style.display = 'none';
         this.ace_editor = window.ace.edit(this.ace_container);
-        
+
         this.ace_editor.setValue(this.getValue());
-        
+
         // The theme
         if(JSONEditor.plugins.ace.theme) this.ace_editor.setTheme('ace/theme/'+JSONEditor.plugins.ace.theme);
         // The mode
         mode = window.ace.require("ace/mode/"+mode);
         if(mode) this.ace_editor.getSession().setMode(new mode.Mode());
-        
+
         // Listen for changes
         this.ace_editor.on('change',function() {
           var val = self.ace_editor.getValue();
@@ -389,7 +389,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         });
       }
     }
-    
+
     self.theme.afterInputReady(self.input);
   },
   refreshValue: function() {
@@ -408,8 +408,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     else if(this.ace_editor) {
       this.ace_editor.destroy();
     }
-    
-    
+
+
     this.template = null;
     if(this.input && this.input.parentNode) this.input.parentNode.removeChild(this.input);
     if(this.label && this.label.parentNode) this.label.parentNode.removeChild(this.label);
@@ -426,9 +426,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
   /**
    * Re-calculates the value if needed
    */
-  onWatchedFieldChange: function() {    
-    var self = this, vars, j;
-    
+  onWatchedFieldChange: function() {
+    var self = this, j;
+
     // If this editor needs to be rendered by a macro template
     if(this.template) {
       var vars = this.getWatchedFieldValues();
@@ -439,19 +439,19 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         this.setValue(rendered,false,true);
       }
     }
-    
+
     this._super();
   },
   setPlaceholder: function(value){
-    this.input.setAttribute("placeholder", value)
+    this.input.setAttribute("placeholder", value);
   },
 
   showValidationErrors: function(errors) {
     var self = this;
-    
+
     if(this.jsoneditor.options.show_errors === "always") {}
     else if(!this.is_dirty && this.previous_error_setting===this.jsoneditor.options.show_errors) return;
-    
+
     this.previous_error_setting = this.jsoneditor.options.show_errors;
 
     var messages = [];

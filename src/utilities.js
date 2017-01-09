@@ -89,7 +89,7 @@ var $deepCompare = function() {
          return true;
     }
 
-    // Compare primitives and functions.     
+    // Compare primitives and functions.
     // Check if both arguments link to the same object.
     // Especially useful on the step where we compare prototypes
     if (x === y) {
@@ -190,4 +190,4 @@ var $deepCompare = function() {
   }
 
   return true;
-}
+};

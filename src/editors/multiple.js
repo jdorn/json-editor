@@ -49,7 +49,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(!this.editors[i]) {
       this.buildChildEditor(i);
     }
-    
+
     var current_value = self.getValue();
 
     self.type = i;
@@ -173,10 +173,10 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.switcher = this.theme.getSwitcher(this.display_text);
     this.switcher.className += ' switcher ';
     this.editor_holder = document.createElement('div');
-    this.editor_holder.className += 'switch-holder' 
+    this.editor_holder.className += 'switch-holder';
     this.editor_holder.style.position = "relative";
     this.editor_holder.appendChild(this.switcher);
-    
+
     container.appendChild(this.editor_holder);
 
     this.switcher.addEventListener('change',function(e) {
@@ -187,8 +187,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       self.onChange(true);
     });
 
-    
-      
+
+
     var validator_options = {};
     if(self.jsoneditor.options.custom_validators) {
       validator_options.custom_validators = self.jsoneditor.options.custom_validators;
