@@ -1138,8 +1138,11 @@ JSONEditor.Validator = Class.extend({
     /*
      * Type Specific Validation
      */
-    var stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
-    var jumpValidation = value.startsWith(stringWhiteLabel);
+    var stringWhiteLabel, jumpValidation;
+    if (typeof value === "number" || typeof value === "string") {
+        stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
+        jumpValidation = value.startsWith && value.startsWith(stringWhiteLabel);
+    }
 
     // Number Specific Validation
     if(typeof value === "number") {
@@ -6039,14 +6042,18 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
         this.description = this.theme.getFormInputDescription(this.schema.description);
     }
 
+    var inputContainer = document.createElement('div');
+    inputContainer.className = 'upload-input';
+
     // Input that holds the base64 string;
     var inputType = this.options.showInput ? 'text' : 'hidden';
     this.input = this.theme.getFormInputField(inputType);
-    this.container.appendChild(this.input);
+    inputContainer.appendChild(this.input);
 
     // File uploader
     var boxUploader = this.getButton('','upload','');
-    boxUploader.className= "box-upload";
+    boxUploader.className = "box-upload";
+    inputContainer.appendChild(boxUploader);
 
     // Don't show uploader if this is readonly
     if(!this.schema.readOnly && !this.schema.readonly) {
@@ -6072,10 +6079,10 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     }
 
     boxUploader.appendChild(this.uploader);
-    this.control = this.theme.getFormControl(this.label, boxUploader, this.description);
+    this.control = this.theme.getFormControl(this.label, inputContainer, this.description);
     this.container.appendChild(this.control);
-    this.addUploadPreview();
-    this.addDeleteButton();
+    this.addUploadPreview(inputContainer);
+    this.addDeleteButton(inputContainer);
   },
 
   postBuild: function() {
@@ -6118,7 +6125,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     });
   },
 
-  addDeleteButton:function(){
+  addDeleteButton:function(container){
     var self = this;
     this.delete_button = this.getButton('','delete','');
     this.delete_button.style.display='inline-block';
@@ -6127,13 +6134,13 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     this.delete_button.addEventListener('click',function(e) {
       self.setValue("");
     });
-    this.control.appendChild(this.delete_button);
+    container.appendChild(this.delete_button);
   },
 
-  addUploadPreview : function(){
+  addUploadPreview : function(container){
     this.link_holder = this.theme.getLinksHolder();
     this.link_holder.style.display =  "inline-block";
-    this.control.appendChild(this.link_holder);
+    container.appendChild(this.link_holder);
     if(this.schema.links) {
       for(var i=0; i<this.schema.links.length; i++) {
         var link = this.getImgLink(this.schema.links[i]);

@@ -2,28 +2,36 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
   getNumColumns: function() {
     return 4;
   },
-  build: function() {  
+  build: function() {
     var self = this;
     this.title = this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    if (this.schema.description) {
+        this.description = this.theme.getFormInputDescription(this.schema.description);
+    }
 
-    // Input that holds the base64 string
-    this.input = this.theme.getFormInputField('hidden');
-    this.container.appendChild(this.input);
-    
+    var inputContainer = document.createElement('div');
+    inputContainer.className = 'upload-input';
+
+    // Input that holds the base64 string;
+    var inputType = this.options.showInput ? 'text' : 'hidden';
+    this.input = this.theme.getFormInputField(inputType);
+    inputContainer.appendChild(this.input);
+
+    // File uploader
+    var boxUploader = this.getButton('','upload','');
+    boxUploader.className = "box-upload";
+    inputContainer.appendChild(boxUploader);
+
     // Don't show uploader if this is readonly
     if(!this.schema.readOnly && !this.schema.readonly) {
 
       if(!this.jsoneditor.options.upload) throw "Upload handler required for upload editor";
 
-      // File uploader
-      var boxUploader =this.getButton('','upload','');
-      boxUploader.className= "box-upload";
       this.uploader = this.theme.getFormInputField('file');
-      
       this.uploader.addEventListener('change',function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         if(this.files && this.files.length) {
           var fr = new FileReader();
           fr.onload = function(evt) {
@@ -38,10 +46,10 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     }
 
     boxUploader.appendChild(this.uploader);
-    this.control = this.theme.getFormControl(this.label, boxUploader);
+    this.control = this.theme.getFormControl(this.label, inputContainer, this.description);
     this.container.appendChild(this.control);
-    this.addUploadPreview();
-    this.addDeleteButton();
+    this.addUploadPreview(inputContainer);
+    this.addDeleteButton(inputContainer);
   },
 
   postBuild: function() {
@@ -51,7 +59,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     this.register();
     this.onWatchedFieldChange();
   },
-  
+
 
   refreshPreview: function() {
     var self = this;
@@ -83,27 +91,27 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
         }
     });
   },
-  
-  addDeleteButton:function(){
+
+  addDeleteButton:function(container){
     var self = this;
     this.delete_button = this.getButton('','delete','');
     this.delete_button.style.display='inline-block';
     this.delete_button.style.position='static';
-    
+
     this.delete_button.addEventListener('click',function(e) {
       self.setValue("");
     });
-    this.control.appendChild(this.delete_button);
+    container.appendChild(this.delete_button);
   },
 
-  addUploadPreview : function(){
+  addUploadPreview : function(container){
     this.link_holder = this.theme.getLinksHolder();
     this.link_holder.style.display =  "inline-block";
-    this.control.appendChild(this.link_holder);
+    container.appendChild(this.link_holder);
     if(this.schema.links) {
       for(var i=0; i<this.schema.links.length; i++) {
-        var link = this.getImgLink(this.schema.links[i])
-        var preview = this.getImgPreview(this.schema.links[i])
+        var link = this.getImgLink(this.schema.links[i]);
+        var preview = this.getImgPreview(this.schema.links[i]);
         this.link_holder.appendChild(link);
         if(this.jsoneditor.options.initPopOver){
           this.jsoneditor.options.initPopOver(link, preview);
@@ -148,7 +156,7 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
   getPopOverContent: function(url){
     return  "<div><img class='popover-img-preview' src='"+url+"'/></div>";
   },
-  
+
   enable: function() {
     if(this.uploader) this.uploader.disabled = false;
     this._super();
