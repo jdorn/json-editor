@@ -407,8 +407,8 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.collapsed = false;
       this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
       this.title_controls.appendChild(this.toggle_button);
-      
-      function onCollapse(e) {
+
+      var onCollapse = function onCollapse(e) {
         e.preventDefault();
         e.stopPropagation();
         if(self.collapsed) {
@@ -421,7 +421,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           self.collapsed = true;
           self.setButtonText(self.toggle_button,'','expand',self.translate('button_expand'));
         }
-      }
+      };
       this.toggle_button.addEventListener('click', onCollapse);
       if(this.options.collapse_on_title_click || this.jsoneditor.options.collapse_on_title_click ){
         this.title.querySelector(".headerText").addEventListener('click', onCollapse);
@@ -709,15 +709,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         }
       }
     }
-    
+
     if(this.jsoneditor.options.remove_empty_array || this.options.remove_empty_array) {
       for(var x in result) {
         if(result.hasOwnProperty(x)) {
           if( result[x] && (result[x] instanceof Array) && (result[x].length === 0) ){
             delete result[x];
-          } 
+          }
         }
-      } 
+      }
     }
 
     return result;
@@ -730,7 +730,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       if(!this.editors.hasOwnProperty(i)) continue;
       this.value[i] = this.editors[i].getValue();
     }
-    
+
     if(this.adding_property) this.refreshAddProperties();
   },
   refreshAddProperties: function() {
