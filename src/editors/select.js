@@ -11,7 +11,7 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(this.value === sanitized) {
       return;
     }
-
+    
     this.input.value = this.enum_options[this.enum_values.indexOf(sanitized)];
     if(this.select2) this.select2.select2('val',this.input.value);
     this.value = sanitized;
@@ -220,7 +220,9 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
   postBuild: function() {
     this._super();
     this.theme.afterInputReady(this.input);
-    this.setupSelect2();
+    if (JSONEditor.plugins.select2.enable){
+      this.setupSelect2();
+    }
   },
   onWatchedFieldChange: function() {
     var self = this, vars, j;

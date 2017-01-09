@@ -111,6 +111,8 @@ JSONEditor.defaults.languages.en = {
    * When a value does not match a given pattern
    */
   error_pattern: "Value must match the pattern {{0}}",
+  /*URL */
+  error_url: "{{0}} must be a valid Url",
   /**
    * When an array has additional items whereas it is not supposed to
    */
@@ -143,7 +145,7 @@ JSONEditor.defaults.languages.en = {
    * When a required property is not defined
    * @variables This key takes one variable: The name of the missing property
    */
-  error_required: "Object is missing the required property '{{0}}'",
+  error_required: "'{{0}}' is required",
   /**
    * When there is an additional property is set whereas there should be none
    * @variables This key takes one variable: The name of the additional property
