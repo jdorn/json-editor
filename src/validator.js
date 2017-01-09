@@ -203,8 +203,11 @@ JSONEditor.Validator = Class.extend({
     /*
      * Type Specific Validation
      */
-    var stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
-    var jumpValidation = value.startsWith(stringWhiteLabel);
+    var stringWhiteLabel, jumpValidation;
+    if (typeof value === "number" || typeof value === "string") {
+        stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
+        jumpValidation = value.startsWith && value.startsWith(stringWhiteLabel);
+    }
 
     // Number Specific Validation
     if(typeof value === "number") {
