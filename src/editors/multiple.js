@@ -49,7 +49,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     if(!this.editors[i]) {
       this.buildChildEditor(i);
     }
-    
+
     var current_value = self.getValue();
 
     self.type = i;
@@ -103,7 +103,7 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     self.editors[i].build();
     self.editors[i].postBuild();
 
-    if(self.editors[i].header) self.editors[i].header.style.display = 'none';
+    //if(self.editors[i].header) self.editors[i].header.style.display = 'none';
 
     self.editors[i].option = self.switcher_options[i];
 
@@ -167,11 +167,18 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     var self = this;
     var container = this.container;
 
-    this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
-    this.container.appendChild(this.header);
+    //this.header = this.label = this.theme.getFormInputLabel(this.getTitle());
+    //this.container.appendChild(this.header);
 
     this.switcher = this.theme.getSwitcher(this.display_text);
-    container.appendChild(this.switcher);
+    this.switcher.className += ' switcher ';
+    this.editor_holder = document.createElement('div');
+    this.editor_holder.className += 'switch-holder';
+    this.editor_holder.style.position = "relative";
+    this.editor_holder.appendChild(this.switcher);
+
+    container.appendChild(this.editor_holder);
+
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -180,10 +187,8 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
       self.onChange(true);
     });
 
-    this.editor_holder = document.createElement('div');
-    container.appendChild(this.editor_holder);
-    
-      
+
+
     var validator_options = {};
     if(self.jsoneditor.options.custom_validators) {
       validator_options.custom_validators = self.jsoneditor.options.custom_validators;

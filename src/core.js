@@ -13,38 +13,38 @@ JSONEditor.prototype = {
   constructor: JSONEditor,
   init: function() {
     var self = this;
-    
+
     this.ready = false;
 
     var theme_class = JSONEditor.defaults.themes[this.options.theme || JSONEditor.defaults.theme];
     if(!theme_class) throw "Unknown theme " + (this.options.theme || JSONEditor.defaults.theme);
-    
+
     this.schema = this.options.schema;
     this.theme = new theme_class();
     this.template = this.options.template;
     this.refs = this.options.refs || {};
     this.uuid = 0;
     this.__data = {};
-    
+
     var icon_class = JSONEditor.defaults.iconlibs[this.options.iconlib || JSONEditor.defaults.iconlib];
     if(icon_class) this.iconlib = new icon_class();
 
     this.root_container = this.theme.getContainer();
     this.element.appendChild(this.root_container);
-    
+
     this.translate = this.options.translate || JSONEditor.defaults.translate;
 
     // Fetch all external refs via ajax
     this._loadExternalRefs(this.schema, function() {
       self._getDefinitions(self.schema);
-      
+
       // Validator options
       var validator_options = {};
       if(self.options.custom_validators) {
         validator_options.custom_validators = self.options.custom_validators;
       }
       self.validator = new JSONEditor.Validator(self,null,validator_options);
-      
+
       // Create the root editor
       var editor_class = self.getEditorClass(self.schema);
       self.root = self.createEditor(editor_class, {
@@ -53,23 +53,26 @@ JSONEditor.prototype = {
         required: true,
         container: self.root_container
       });
-      
+
       self.root.preBuild();
       self.root.build();
       self.root.postBuild();
-
+      self.initValue = self.root.getValue();
       // Starting data
       if(self.options.startval) self.root.setValue(self.options.startval);
-
       self.validation_results = self.validator.validate(self.root.getValue());
-      self.root.showValidationErrors(self.validation_results);
+      if(self.options.show_errors !== "never"){
+        self.root.showValidationErrors(self.validation_results);
+      }
       self.ready = true;
 
       // Fire ready event asynchronously
       window.requestAnimationFrame(function() {
         if(!self.ready) return;
         self.validation_results = self.validator.validate(self.root.getValue());
-        self.root.showValidationErrors(self.validation_results);
+        if(self.options.show_errors !== "never"){
+          self.root.showValidationErrors(self.validation_results);
+        }
         self.trigger('ready');
         self.trigger('change');
       });
@@ -80,6 +83,10 @@ JSONEditor.prototype = {
 
     return this.root.getValue();
   },
+  isEmpty: function() {
+    if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before getting the value";
+  return $deepCompare(this.initValue,this.getValue());
+  },
   setValue: function(value) {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before setting the value";
 
@@ -88,7 +95,7 @@ JSONEditor.prototype = {
   },
   validate: function(value) {
     if(!this.ready) throw "JSON Editor not ready yet.  Listen for 'ready' event before validating";
-    
+
     // Custom value
     if(arguments.length === 1) {
       return this.validator.validate(value);
@@ -101,7 +108,7 @@ JSONEditor.prototype = {
   destroy: function() {
     if(this.destroyed) return;
     if(!this.ready) return;
-    
+
     this.schema = null;
     this.options = null;
     this.root.destroy();
@@ -115,14 +122,14 @@ JSONEditor.prototype = {
     this.__data = null;
     this.ready = false;
     this.element.innerHTML = '';
-    
+
     this.destroyed = true;
   },
   on: function(event, callback) {
     this.callbacks = this.callbacks || {};
     this.callbacks[event] = this.callbacks[event] || [];
     this.callbacks[event].push(callback);
-    
+
     return this;
   },
   off: function(event, callback) {
@@ -146,7 +153,7 @@ JSONEditor.prototype = {
     else {
       this.callbacks = {};
     }
-    
+
     return this;
   },
   trigger: function(event) {
@@ -155,7 +162,7 @@ JSONEditor.prototype = {
         this.callbacks[event][i]();
       }
     }
-    
+
     return this;
   },
   setOption: function(option, value) {
@@ -167,7 +174,7 @@ JSONEditor.prototype = {
     else {
       throw "Option "+option+" must be set during instantiation and cannot be changed later";
     }
-    
+
     return this;
   },
   getEditorClass: function(schema) {
@@ -196,30 +203,30 @@ JSONEditor.prototype = {
   },
   onChange: function() {
     if(!this.ready) return;
-    
+
     if(this.firing_change) return;
     this.firing_change = true;
-    
+
     var self = this;
-    
+
     window.requestAnimationFrame(function() {
       self.firing_change = false;
       if(!self.ready) return;
 
       // Validate and cache results
       self.validation_results = self.validator.validate(self.root.getValue());
-      
+
       if(self.options.show_errors !== "never") {
         self.root.showValidationErrors(self.validation_results);
       }
       else {
         self.root.showValidationErrors([]);
       }
-      
+
       // Fire change event
       self.trigger('change');
     });
-    
+
     return this;
   },
   compileTemplate: function(template, name) {
@@ -262,7 +269,7 @@ JSONEditor.prototype = {
     else {
       // No data stored
       if(!el.hasAttribute('data-jsoneditor-'+key)) return null;
-      
+
       return this.__data[el.getAttribute('data-jsoneditor-'+key)];
     }
   },
@@ -284,7 +291,7 @@ JSONEditor.prototype = {
     this.watchlist = this.watchlist || {};
     this.watchlist[path] = this.watchlist[path] || [];
     this.watchlist[path].push(callback);
-    
+
     return this;
   },
   unwatch: function(path,callback) {
@@ -294,7 +301,7 @@ JSONEditor.prototype = {
       this.watchlist[path] = null;
       return this;
     }
-    
+
     var newlist = [];
     for(var i=0; i<this.watchlist[path].length; i++) {
       if(this.watchlist[path][i] === callback) continue;
@@ -339,11 +346,11 @@ JSONEditor.prototype = {
         }
       }
     };
-    
+
     if(schema.$ref && typeof schema.$ref !== "object" && schema.$ref.substr(0,1) !== "#" && !this.refs[schema.$ref]) {
       refs[schema.$ref] = true;
     }
-    
+
     for(var i in schema) {
       if(!schema.hasOwnProperty(i)) continue;
       if(schema[i] && typeof schema[i] === "object" && Array.isArray(schema[i])) {
@@ -357,25 +364,29 @@ JSONEditor.prototype = {
         merge_refs(this._getExternalRefs(schema[i]));
       }
     }
-    
+
     return refs;
   },
   _loadExternalRefs: function(schema, callback) {
     var self = this;
     var refs = this._getExternalRefs(schema);
-    
+
     var done = 0, waiting = 0, callback_fired = false;
-    
+
     $each(refs,function(url) {
       if(self.refs[url]) return;
       if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
       self.refs[url] = 'loading';
       waiting++;
 
-      var r = new XMLHttpRequest(); 
-      r.open("GET", url, true);
+      var r = new XMLHttpRequest();
+      var endpoint = url;
+      if(self.options.static_url){
+        endpoint = self.options.static_url + url;
+      }
+      r.open("GET", endpoint, true);
       r.onreadystatechange = function () {
-        if (r.readyState != 4) return; 
+        if (r.readyState != 4) return;
         // Request succeeded
         if(r.status === 200) {
           var response;
@@ -387,7 +398,7 @@ JSONEditor.prototype = {
             throw "Failed to parse external ref "+url;
           }
           if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+url;
-          
+
           self.refs[url] = response;
           self._loadExternalRefs(response,function() {
             done++;
@@ -405,20 +416,20 @@ JSONEditor.prototype = {
       };
       r.send();
     });
-    
+
     if(!waiting) {
       callback();
     }
   },
   expandRefs: function(schema) {
     schema = $extend({},schema);
-    
+
     while (schema.$ref) {
       var ref = schema.$ref;
       delete schema.$ref;
-      
+
       if(!this.refs[ref]) ref = decodeURIComponent(ref);
-      
+
       schema = this.extendSchemas(schema,this.refs[ref]);
     }
     return schema;
@@ -478,7 +489,7 @@ JSONEditor.prototype = {
     if(schema.not) {
       schema.not = this.expandSchema(schema.not);
     }
-    
+
     // allOf schemas should be merged into the parent
     if(schema.allOf) {
       for(i=0; i<schema.allOf.length; i++) {
@@ -508,7 +519,7 @@ JSONEditor.prototype = {
         extended.oneOf[i] = this.extendSchemas(this.expandSchema(schema.oneOf[i]),tmp);
       }
     }
-    
+
     return this.expandRefs(extended);
   },
   extendSchemas: function(obj1, obj2) {

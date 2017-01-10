@@ -203,6 +203,11 @@ JSONEditor.Validator = Class.extend({
     /*
      * Type Specific Validation
      */
+    var stringWhiteLabel, jumpValidation;
+    if (typeof value === "number" || typeof value === "string") {
+        stringWhiteLabel = this.jsoneditor.options.stringWhiteLabel;
+        jumpValidation = value.startsWith && value.startsWith(stringWhiteLabel);
+    }
 
     // Number Specific Validation
     if(typeof value === "number") {
@@ -290,8 +295,9 @@ JSONEditor.Validator = Class.extend({
     }
     // String specific validation
     else if(typeof value === "string") {
+
       // `maxLength`
-      if(schema.maxLength) {
+      if(schema.maxLength && !jumpValidation) {
         if((value+"").length > schema.maxLength) {
           errors.push({
             path: path,
@@ -302,7 +308,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // `minLength`
-      if(schema.minLength) {
+      if(schema.minLength && !jumpValidation) {
         if((value+"").length < schema.minLength) {
           errors.push({
             path: path,
@@ -313,7 +319,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // `pattern`
-      if(schema.pattern) {
+      if(schema.pattern && !jumpValidation) {
         if(!(new RegExp(schema.pattern)).test(value)) {
           errors.push({
             path: path,
@@ -322,6 +328,17 @@ JSONEditor.Validator = Class.extend({
           });
         }
       }
+    }
+
+    if(schema.format === "url" && !jumpValidation) {
+        var reg = /(http|https):\/\/(\w+:{0,1}\w*)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
+        if(! reg.test(value)  ) {
+          errors.push({
+            path: path,
+            property: 'pattern',
+            message: this.translate('error_url', [schema.title || "Value" ])
+          });
+        }
     }
     // Array specific validation
     else if(typeof value === "object" && value !== null && Array.isArray(value)) {
@@ -448,7 +465,7 @@ JSONEditor.Validator = Class.extend({
             errors.push({
               path: path,
               property: 'required',
-              message: this.translate('error_required', [schema.required[i]])
+              message: this.translate('error_required', [schema.properties[schema.required[i]].title || schema.required[i]])
             });
           }
         }

@@ -286,7 +286,6 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         editor.setContainer(holder);
         editor.build();
         editor.postBuild();
-
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
@@ -404,12 +403,12 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.title.appendChild(this.title_controls);
       this.title.appendChild(this.editjson_controls);
       this.title.appendChild(this.addproperty_controls);
-
       // Show/Hide button
       this.collapsed = false;
       this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
       this.title_controls.appendChild(this.toggle_button);
-      this.toggle_button.addEventListener('click',function(e) {
+
+      var onCollapse = function onCollapse(e) {
         e.preventDefault();
         e.stopPropagation();
         if(self.collapsed) {
@@ -422,8 +421,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
           self.collapsed = true;
           self.setButtonText(self.toggle_button,'','expand',self.translate('button_expand'));
         }
-      });
-
+      };
+      this.toggle_button.addEventListener('click', onCollapse);
+      if(this.options.collapse_on_title_click || this.jsoneditor.options.collapse_on_title_click ){
+          this.title.querySelector(".headerText").addEventListener('click', onCollapse);
+      }
       // If it should start collapsed
       if(this.options.collapsed) {
         $trigger(this.toggle_button,'click');
@@ -431,12 +433,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
       // Collapse button disabled
       if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
-        if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+        if(this.schema.options.disable_collapse){
+          this.toggle_button.style.display = 'none';
+          this.title.querySelector(".headerText").removeEventListener('click', onCollapse)
+        } 
       }
       else if(this.jsoneditor.options.disable_collapse) {
         this.toggle_button.style.display = 'none';
+        this.title.querySelector(".headerText").removeEventListener('click', onCollapse)
       }
-
       // Edit JSON Button
       this.editjson_button = this.getButton('JSON','edit','Edit JSON');
       this.editjson_button.addEventListener('click',function(e) {
@@ -466,7 +471,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       this.addproperty_controls.appendChild(this.addproperty_holder);
       this.refreshAddProperties();
     }
-
+    if(this.options.hiddenTitle){
+      this.title.style.display = 'none';
+    }
     // Fix table cell ordering
     if(this.options.table_row) {
       this.editor_holder = this.container;
@@ -565,13 +572,16 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     //control.style.overflowY = 'hidden';
 
     this.insertPropertyControlUsingPropertyOrder(key, control, this.addproperty_list);
-
+    var show_all_properties = false;
+    if(this.jsoneditor.options.always_show_all_properties|| this.schema.always_show_all_properties){
+      show_all_properties = true;
+    }
     checkbox.checked = key in this.editors;
     checkbox.addEventListener('change',function() {
       if(checkbox.checked) {
         self.addObjectProperty(key);
       }
-      else {
+      else if(!show_all_properties) {
         self.removeObjectProperty(key);
       }
       self.onChange(true);
@@ -698,10 +708,21 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     if(this.jsoneditor.options.remove_empty_properties || this.options.remove_empty_properties) {
       for(var i in result) {
         if(result.hasOwnProperty(i)) {
-          if(!result[i]) delete result[i];
+          if( (typeof result[i] !== "boolean") && ( !result[i]) ) delete result[i];
         }
       }
     }
+
+    if(this.jsoneditor.options.remove_empty_array || this.options.remove_empty_array) {
+      for(var x in result) {
+        if(result.hasOwnProperty(x)) {
+          if( result[x] && (result[x] instanceof Array) && (result[x].length === 0) ){
+            delete result[x];
+          }
+        }
+      }
+    }
+
     return result;
   },
   refreshValue: function() {
@@ -712,7 +733,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       if(!this.editors.hasOwnProperty(i)) continue;
       this.value[i] = this.editors[i].getValue();
     }
-    
+
     if(this.adding_property) this.refreshAddProperties();
   },
   refreshAddProperties: function() {
@@ -807,6 +828,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     var self = this;
     value = value || {};
 
+    var show_all_properties = false;
+    if(this.jsoneditor.options.always_show_all_properties|| this.schema.always_show_all_properties){
+      show_all_properties = true;
+    }
     if(typeof value !== "object" || Array.isArray(value)) value = {};
 
     // First, set the values for all of the defined properties
@@ -817,7 +842,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         editor.setValue(value[i],initial);
       }
       // Otherwise, remove value unless this is the initial set or it's required
-      else if(!initial && !self.isRequired(editor)) {
+      else if(!initial && !self.isRequired(editor) && !show_all_properties) {
         self.removeObjectProperty(i);
       }
       // Otherwise, set the value to the default
