@@ -424,7 +424,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       };
       this.toggle_button.addEventListener('click', onCollapse);
       if(this.options.collapse_on_title_click || this.jsoneditor.options.collapse_on_title_click ){
-        this.title.querySelector(".headerText").addEventListener('click', onCollapse);
+          this.title.querySelector(".headerText").addEventListener('click', onCollapse);
       }
       // If it should start collapsed
       if(this.options.collapsed) {
@@ -433,12 +433,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
 
       // Collapse button disabled
       if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
-        if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+        if(this.schema.options.disable_collapse){
+          this.toggle_button.style.display = 'none';
+          this.title.querySelector(".headerText").removeEventListener('click', onCollapse)
+        } 
       }
       else if(this.jsoneditor.options.disable_collapse) {
         this.toggle_button.style.display = 'none';
+        this.title.querySelector(".headerText").removeEventListener('click', onCollapse)
       }
-
       // Edit JSON Button
       this.editjson_button = this.getButton('JSON','edit','Edit JSON');
       this.editjson_button.addEventListener('click',function(e) {

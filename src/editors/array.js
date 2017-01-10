@@ -607,10 +607,14 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     
     // Collapse button disabled
     if(this.schema.options && typeof this.schema.options.disable_collapse !== "undefined") {
-      if(this.schema.options.disable_collapse) this.toggle_button.style.display = 'none';
+      if(this.schema.options.disable_collapse){
+      this.toggle_button.style.display = 'none';
+        this.title.querySelector(".headerText").removeEventListener('click', toggle);
+      } 
     }
     else if(this.jsoneditor.options.disable_collapse) {
       this.toggle_button.style.display = 'none';
+      this.title.querySelector(".headerText").removeEventListener('click', toggle);
     }
     
     // Add "new row" and "delete last" buttons below editor
