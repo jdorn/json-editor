@@ -694,6 +694,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     this._super();
   },
   getValue: function() {
+    if (!this.dependenciesFulfilled) {
+      return undefined;
+    }
     var result = this._super();
     if(this.jsoneditor.options.remove_empty_properties || this.options.remove_empty_properties) {
       for(var i in result) {

@@ -54,6 +54,9 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
     }
   },
   getValue: function() {
+    if (!this.dependenciesFulfilled) {
+      return undefined;
+    }
     return this.value;
   },
   preBuild: function() {

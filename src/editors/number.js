@@ -6,6 +6,9 @@ JSONEditor.defaults.editors.number = JSONEditor.defaults.editors.string.extend({
     return 2;
   },
   getValue: function() {
+    if (!this.dependenciesFulfilled) {
+      return undefined;
+    }
     return this.value*1;
   }
 });
