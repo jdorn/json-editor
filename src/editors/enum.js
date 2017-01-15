@@ -62,8 +62,10 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
     this.display_area.innerHTML = this.html_values[this.selected];
   },
   enable: function() {
-    if(!this.always_disabled) this.switcher.disabled = false;
-    this._super();
+    if(!this.always_disabled) {
+      this.switcher.disabled = false;
+      this._super();
+    }
   },
   disable: function() {
     this.switcher.disabled = true;

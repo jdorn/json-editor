@@ -176,8 +176,8 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
         }
       }
       if(this.select2) this.select2.select2("enable",true);
+      this._super();
     }
-    this._super();
   },
   disable: function() {
     if(this.input) {

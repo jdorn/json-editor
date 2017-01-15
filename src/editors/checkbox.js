@@ -45,8 +45,8 @@ JSONEditor.defaults.editors.checkbox = JSONEditor.AbstractEditor.extend({
   enable: function() {
     if(!this.always_disabled) {
       this.input.disabled = false;
+      this._super();
     }
-    this._super();
   },
   disable: function() {
     this.input.disabled = true;

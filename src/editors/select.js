@@ -333,8 +333,8 @@ JSONEditor.defaults.editors.select = JSONEditor.AbstractEditor.extend({
     if(!this.always_disabled) {
       this.input.disabled = false;
       if(this.select2) this.select2.select2("enable",true);
+      this._super();
     }
-    this._super();
   },
   disable: function() {
     this.input.disabled = true;

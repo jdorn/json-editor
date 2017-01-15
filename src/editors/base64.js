@@ -67,8 +67,10 @@ JSONEditor.defaults.editors.base64 = JSONEditor.AbstractEditor.extend({
     }
   },
   enable: function() {
-    if(this.uploader) this.uploader.disabled = false;
-    this._super();
+    if(!this.always_disabled) {
+      if(this.uploader) this.uploader.disabled = false;
+      this._super();
+    }
   },
   disable: function() {
     if(this.uploader) this.uploader.disabled = true;

@@ -29,20 +29,22 @@ JSONEditor.defaults.editors.array = JSONEditor.AbstractEditor.extend({
     }
   },
   enable: function() {
-    if(this.add_row_button) this.add_row_button.disabled = false;
-    if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = false;
-    if(this.delete_last_row_button) this.delete_last_row_button.disabled = false;
-    
-    if(this.rows) {
-      for(var i=0; i<this.rows.length; i++) {
-        this.rows[i].enable();
-        
-        if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = false;
-        if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = false;
-        if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = false;
+    if(!this.always_disabled) {
+      if(this.add_row_button) this.add_row_button.disabled = false;
+      if(this.remove_all_rows_button) this.remove_all_rows_button.disabled = false;
+      if(this.delete_last_row_button) this.delete_last_row_button.disabled = false;
+      
+      if(this.rows) {
+        for(var i=0; i<this.rows.length; i++) {
+          this.rows[i].enable();
+          
+          if(this.rows[i].moveup_button) this.rows[i].moveup_button.disabled = false;
+          if(this.rows[i].movedown_button) this.rows[i].movedown_button.disabled = false;
+          if(this.rows[i].delete_button) this.rows[i].delete_button.disabled = false;
+        }
       }
+      this._super();
     }
-    this._super();
   },
   disable: function() {
     if(this.add_row_button) this.add_row_button.disabled = true;
