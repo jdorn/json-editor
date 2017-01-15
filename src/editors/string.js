@@ -280,7 +280,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       this._super();
     }
   },
-  disable: function() {
+  disable: function(always_disabled) {
+    if(always_disabled) this.always_disabled = true;
     this.input.disabled = true;
     // TODO: WYSIWYG and Markdown editors
     this._super();

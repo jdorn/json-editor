@@ -67,7 +67,8 @@ JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
       this._super();
     }
   },
-  disable: function() {
+  disable: function(always_disabled) {
+    if(always_disabled) this.always_disabled = true;
     this.switcher.disabled = true;
     this._super();
   },
