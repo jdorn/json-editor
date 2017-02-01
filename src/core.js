@@ -339,9 +339,22 @@ JSONEditor.prototype = {
         }
       }
     };
-    
-    if(schema.$ref && typeof schema.$ref !== "object" && schema.$ref.substr(0,1) !== "#" && !this.refs[schema.$ref]) {
-      refs[schema.$ref] = true;
+
+    var ref = schema.$ref;
+    if (ref)
+    {
+        // strip # part of the url, if found
+        if (typeof ref == "string")
+        {
+            var hash = ref.indexOf("#");
+            if (hash > 0) {
+                ref = ref.substr(0, hash);
+            }
+        }
+
+        if(typeof ref !== "object" && ref.substr(0,1) !== "#" && !this.refs[ref]) {
+            refs[ref] = true;
+        }
     }
     
     for(var i in schema) {
@@ -411,17 +424,44 @@ JSONEditor.prototype = {
     }
   },
   expandRefs: function(schema) {
-    schema = $extend({},schema);
-    
-    while (schema.$ref) {
-      var ref = schema.$ref;
-      delete schema.$ref;
-      
-      if(!this.refs[ref]) ref = decodeURIComponent(ref);
-      
-      schema = this.extendSchemas(schema,this.refs[ref]);
-    }
-    return schema;
+      schema = $extend({},schema);
+
+      while (schema.$ref) {
+          var ref = schema.$ref;
+          delete schema.$ref;
+
+          if(!this.refs[ref]) ref = decodeURIComponent(ref);
+          var ref_object = this.refs[ref];
+
+          if (!ref_object) {
+              // cannot find the object by ref, try to find the one that matches
+              for (var i in this.refs) {
+                  if (ref.indexOf(i) === 0) {
+                      var path = ref.substr(i.length);
+                      if (path[0] == '#')
+                          path = path.substr(1);
+                      var keys = path.split('/');
+                      var new_ref_object = this.refs[i];
+                      for (var key in keys) {
+                          var key_name = keys[key];
+                          if (!key_name)
+                              continue;
+                          new_ref_object = new_ref_object[key_name];
+                          if (!new_ref_object)
+                              break;
+                      }
+                      if (new_ref_object) {
+                          ref_object = new_ref_object;
+                      }
+
+                      break;
+                  }
+              }
+          }
+
+          schema = this.extendSchemas(schema,ref_object);
+      }
+      return schema;
   },
   expandSchema: function(schema) {
     var self = this;
