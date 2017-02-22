@@ -572,7 +572,7 @@ JSONEditor.prototype = {
     }
     
     return refs;
-  },  
+  },
   _loadExternalRefs: function(schema, callback) {
     var self = this;
     var refs = this._getExternalRefs(schema);
@@ -581,11 +581,7 @@ JSONEditor.prototype = {
     
     $each(refs,function(url) {
       if(self.refs[url]) return;
-      if(self.options.resolveReferenceUrl && typeof(self.options.resolveReferenceUrl) == "function") {
-        var u = self.options.resolveReferenceUrl(url);
-        if (u) self.refs[url] = u;
-      }
-      else if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
+      if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
       self.refs[url] = 'loading';
       waiting++;
 
@@ -7404,35 +7400,18 @@ JSONEditor.defaults.themes.barebones = JSONEditor.AbstractTheme.extend({
 });
 
 JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
-  getContainer: function() {
-    var el = document.createElement('div');
-    el.className = 'ui form';    
-    return el;
-  },
-  getGridContainer: function(options) {
-    var el = this._super(options);
-    el.className = 'ui stackable padded grid';        
-    return el;
-  },
-  getIndentedPanel: function() {        
-    var el = document.createElement('div');
-    el.className = 'ui basic segment';
-    el.style.position = '';
-    return el; 
-  },
   getSelectInput: function(options) {
     var el = this._super(options);
-    el.className += 'ui basic selection dropdown';
+    //el.className += 'ui basic selection dropdown';
+    //el.style.width = 'auto';
     return el;
   },
   setGridColumnSize: function(el,size) {
-    var sizes = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen'];
-    el.className = sizes[size] + " wide column";
+    el.className = size + " wide column";
   },
-
   afterInputReady: function(input) {
     if(input.controlgroup) return;
-    input.controlgroup = this.closest(input,'.field');
+    input.controlgroup = this.closest(input,'.ui.field');
     // TODO: use bootstrap slider
   },
   getTextareaInput: function() {
@@ -7451,18 +7430,11 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
     }
     return el;
   },
-  getFormInputLabel: function(text) {
-    var el = this._super(text);
-    el.className += ' input-label';
-    
-    return el;
-  },
-  
   getFormControl: function(label, input, description) {
     var group = document.createElement('div');
     
     if(label && input.type === 'checkbox') {
-      group.className += ' ui slider checkbox';
+      group.className += ' ui checkbox';
       group.appendChild(input);
       group.appendChild(label);
     } 
@@ -7478,42 +7450,33 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
 
     return group;
   },
-
+  getIndentedPanel: function() {    
+    var el = document.createElement('div');
+    el.className = 'ui form ui basic segment';
+    el.style.position = '';
+    //el.style.paddingBottom = 0;
+    return el; 
+  },
   getFormInputDescription: function(text) {
     var el = document.createElement('p');
     el.className = 'help-block';
     el.innerHTML = text;
     return el;
   },
-  getHeader: function(text) {
-    var el = document.createElement('div');
-    el.className = "ui header";
-    
-    if(typeof text === "string") {
-      el.textContent = text;
-    }
-    
-    else {
-      el.appendChild(text);
-    }
-
-    return el;
-  },
   getHeaderButtonHolder: function() {
     var el = this.getButtonHolder();
-    el.className += " button-holder-header";   
-    el.style.float = "right"; 
+    //el.className = 'ui compact mini right floated buttons';
+    el.style.float = "right";
     return el;
   },
   getButtonHolder: function() {
     var el = document.createElement('div');
-    el.className="button-holder";
-    //el.style.float = "right";
+    el.className = '';
     return el;
   },
   getButton: function(text, icon, title) {
     var el = this._super(text, icon, title);
-    el.className += 'ui compact mini button';
+    el.className += 'ui basic compact mini button';
     return el;
   },
   getTable: function() {
@@ -7522,17 +7485,13 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
     return el;
   },
   addInputError: function(input, text) {    
-    
     if(!input.errmsg) {
-      /*
       var group = this.closest(input,'.field');
-      var target = $(group).find('label')[0];
-      input.errmsg = document.createElement('small');
+      input.errmsg = document.createElement('div');
       input.errmsg.setAttribute('class','error');
       input.errmsg.style = input.errmsg.style || {};
-      input.errmsg.style.float = 'right';
-      target.appendChild(input.errmsg);
-      */
+      input.errmsg.style.color = 'red';
+      group.appendChild(input.errmsg);
     }
     else {
       input.errmsg.style.display = 'block';
@@ -7547,13 +7506,11 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getTabHolder: function() {
     var el = document.createElement('div');
-    el.className = 'ui tabbed-array grid stackable ui segment';
-    el.innerHTML = "<div class='three wide column ui small vertical tabular menu'></div><div class='rows nine wide stretched column'></div>";
-    return el;
-  },
-  getTabContent: function() {
-    var el = document.createElement('div');
-    el.className = "tab-contents";
+    el.className = 'ui tabbed-array grid ui segment';
+    //el.style.borderTop = "2px solid #ddd";
+    //el.style.marginTop = "10px!important"; 
+    el.style.clear = "both";
+    el.innerHTML = "<div class='five wide column ui small vertical tabular menu'></div><div style='padding:0' class='rows eleven wide stretched column'></div>";
     return el;
   },
   getTab: function(text) {

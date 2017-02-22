@@ -359,7 +359,7 @@ JSONEditor.prototype = {
     }
     
     return refs;
-  },  
+  },
   _loadExternalRefs: function(schema, callback) {
     var self = this;
     var refs = this._getExternalRefs(schema);
@@ -368,11 +368,7 @@ JSONEditor.prototype = {
     
     $each(refs,function(url) {
       if(self.refs[url]) return;
-      if(self.options.resolveReferenceUrl && typeof(self.options.resolveReferenceUrl) == "function") {
-        var u = self.options.resolveReferenceUrl(url);
-        if (u) self.refs[url] = u;
-      }
-      else if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
+      if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
       self.refs[url] = 'loading';
       waiting++;
 

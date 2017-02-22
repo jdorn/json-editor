@@ -102,7 +102,7 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getButtonHolder: function() {
     var el = document.createElement('div');
-    el.className="button-holder";
+    el.className="button-holder"
     //el.style.float = "right";
     return el;
   },
@@ -117,9 +117,9 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
     return el;
   },
   addInputError: function(input, text) {    
+    console.log(['erroradd', input]);
     
     if(!input.errmsg) {
-      /*
       var group = this.closest(input,'.field');
       var target = $(group).find('label')[0];
       input.errmsg = document.createElement('small');
@@ -127,7 +127,6 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
       input.errmsg.style = input.errmsg.style || {};
       input.errmsg.style.float = 'right';
       target.appendChild(input.errmsg);
-      */
     }
     else {
       input.errmsg.style.display = 'block';
@@ -148,8 +147,8 @@ JSONEditor.defaults.themes.semantic_ui = JSONEditor.AbstractTheme.extend({
   },
   getTabContent: function() {
     var el = document.createElement('div');
-    el.className = "tab-contents";
-    return el;
+    el.className = "tab-contents"
+    return el
   },
   getTab: function(text) {
     var el = document.createElement('a');
