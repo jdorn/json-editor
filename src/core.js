@@ -348,7 +348,7 @@ JSONEditor.prototype = {
       if(!schema.hasOwnProperty(i)) continue;
       if(schema[i] && typeof schema[i] === "object" && Array.isArray(schema[i])) {
         for(var j=0; j<schema[i].length; j++) {
-          if(typeof schema[i][j]==="object") {
+          if(schema[i][j] && typeof schema[i][j]==="object") {
             merge_refs(this._getExternalRefs(schema[i][j]));
           }
         }
