@@ -44,6 +44,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
   getIndentedPanel: function() {
     var el = document.createElement('div');
     el.className = 'panel';
+    el.style.paddingBottom = 0;
     return el;
   },
   getHeaderButtonHolder: function() {
@@ -66,7 +67,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
   addInputError: function(input,text) {
     if(!input.group) return;
     input.group.className += ' error';
-    
+
     if(!input.errmsg) {
       input.insertAdjacentHTML('afterend','<small class="error"></small>');
       input.errmsg = input.parentNode.getElementsByClassName('error')[0];
@@ -74,7 +75,7 @@ JSONEditor.defaults.themes.foundation = JSONEditor.AbstractTheme.extend({
     else {
       input.errmsg.style.display = '';
     }
-    
+
     input.errmsg.textContent = text;
   },
   removeInputError: function(input) {
@@ -191,7 +192,7 @@ JSONEditor.defaults.themes.foundation5 = JSONEditor.defaults.themes.foundation.e
   },
   getTabHolder: function() {
     var el = document.createElement('div');
-    el.innerHTML = "<dl class='tabs vertical'></dl><div class='tabs-content'></div>";
+    el.innerHTML = "<dl class='tabs vertical'></dl><div class='tabs-content vertical'></div>";
     return el;
   },
   getTab: function(text) {
@@ -220,4 +221,66 @@ JSONEditor.defaults.themes.foundation5 = JSONEditor.defaults.themes.foundation.e
   addTab: function(holder, tab) {
     holder.children[0].appendChild(tab);
   }
+});
+
+JSONEditor.defaults.themes.foundation6 = JSONEditor.defaults.themes.foundation5.extend({
+  getIndentedPanel: function() {
+    var el = document.createElement('div');
+    el.className = 'callout secondary';
+    return el;
+  },
+  getButtonHolder: function() {
+    var el = document.createElement('div');
+    el.className = 'button-group tiny';
+    el.style.marginBottom = 0;
+    return el;
+  },
+  getFormInputLabel: function(text) {
+    var el = this._super(text);
+    el.style.display = 'block';
+    return el;
+  },
+  getFormControl: function(label, input, description) {
+    var el = document.createElement('div');
+    el.className = 'form-control';
+    if(label) el.appendChild(label);
+    if(input.type === 'checkbox') {
+      label.insertBefore(input,label.firstChild);
+    }
+    else if (label) {
+      label.appendChild(input);
+    } else {
+      el.appendChild(input);
+    }
+
+    if(description) label.appendChild(description);
+    return el;
+  },
+  addInputError: function(input,text) {
+    if(!input.group) return;
+    input.group.className += ' error';
+
+    if(!input.errmsg) {
+      var errorEl = document.createElement('span');
+      errorEl.className = 'form-error is-visible';
+      input.group.getElementsByTagName('label')[0].appendChild(errorEl);
+
+      input.className = input.className + ' is-invalid-input';
+
+      input.errmsg = errorEl;
+    }
+    else {
+      input.errmsg.style.display = '';
+      input.className = '';
+    }
+
+    input.errmsg.textContent = text;
+  },
+  removeInputError: function(input) {
+    if(!input.errmsg) return;
+    input.className = input.className.replace(/ is-invalid-input/g,'');
+    if(input.errmsg.parentNode) {
+      input.errmsg.parentNode.removeChild(input.errmsg);
+    }
+  },
 });

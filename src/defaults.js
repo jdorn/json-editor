@@ -86,7 +86,7 @@ JSONEditor.defaults.languages.en = {
    * When a value is greater than it's supposed to be (inclusive
    * @variables This key takes one variable: The maximum
    */
-  error_maximum_incl: "Value must at most {{0}}",
+  error_maximum_incl: "Value must be at most {{0}}",
   /**
    * When a value is lesser than it's supposed to be (exclusive)
    * @variables This key takes one variable: The minimum
@@ -110,7 +110,7 @@ JSONEditor.defaults.languages.en = {
   /**
    * When a value does not match a given pattern
    */
-  error_pattern: "Value must match the provided pattern",
+  error_pattern: "Value must match the pattern {{0}}",
   /**
    * When an array has additional items whereas it is not supposed to
    */
@@ -153,7 +153,55 @@ JSONEditor.defaults.languages.en = {
    * When a dependency is not resolved
    * @variables This key takes one variable: The name of the missing property for the dependency
    */
-  error_dependency: "Must have property {{0}}"
+  error_dependency: "Must have property {{0}}",
+  /**
+   * Text on Delete All buttons
+   */
+  button_delete_all: "All",
+  /**
+   * Title on Delete All buttons
+   */
+  button_delete_all_title: "Delete All",
+  /**
+    * Text on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last: "Last {{0}}",
+  /**
+    * Title on Delete Last buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_last_title: "Delete Last {{0}}",
+  /**
+    * Title on Add Row buttons
+    * @variable This key takes one variable: The title of object to add
+    */
+  button_add_row_title: "Add {{0}}",
+  /**
+    * Title on Move Down buttons
+    */
+  button_move_down_title: "Move down",
+  /**
+    * Title on Move Up buttons
+    */
+  button_move_up_title: "Move up",
+  /**
+    * Title on Delete Row buttons
+    * @variable This key takes one variable: The title of object to delete
+    */
+  button_delete_row_title: "Delete {{0}}",
+  /**
+    * Title on Delete Row buttons, short version (no parameter with the object title)
+    */
+  button_delete_row_title_short: "Delete",
+  /**
+    * Title on Collapse buttons
+    */
+  button_collapse: "Collapse",
+  /**
+    * Title on Expand buttons
+    */
+  button_expand: "Expand"
 };
 
 // Miscellaneous Plugin Settings
@@ -169,29 +217,40 @@ JSONEditor.plugins = {
   },
   select2: {
     
+  },
+  selectize: {
   }
 };
 
 // Default per-editor options
-for(var i in JSONEditor.defaults.editors) {
-  if(!JSONEditor.defaults.editors.hasOwnProperty(i)) continue;
-  JSONEditor.defaults.editors[i].options = JSONEditor.defaults.editors.options || {};
-}
+$each(JSONEditor.defaults.editors, function(i,editor) {
+  JSONEditor.defaults.editors[i].options = editor.options || {};
+});
 
 // Set the default resolvers
 // Use "multiple" as a fall back for everything
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(typeof schema.type !== "string") return "multiple";
 });
+// If the type is not set but properties are defined, we can infer the type is actually object
+JSONEditor.defaults.resolvers.unshift(function(schema) {
+  // If the schema is a simple type
+  if(!schema.type && schema.properties ) return "object";
+});
 // If the type is set and it's a basic type, use the primitive editor
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // If the schema is a simple type
   if(typeof schema.type === "string") return schema.type;
 });
-// Use the select editor for all boolean values
+// Boolean editors
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === 'boolean') {
-    return "select";
+    // If explicitly set to 'checkbox', use that
+    if(schema.format === "checkbox" || (schema.options && schema.options.checkbox)) {
+      return "checkbox";
+    }
+    // Otherwise, default to select menu
+    return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
   }
 });
 // Use the multiple editor for schemas where the `type` is set to "any"
@@ -221,27 +280,34 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Use the `select` editor for dynamic enumSource enums
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.enumSource) return "select";
+  if(schema.enumSource) return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
 });
 // Use the `enum` or `select` editors for schemas with enumerated properties
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.enum) {
+  if(schema["enum"]) {
     if(schema.type === "array" || schema.type === "object") {
       return "enum";
     }
     else if(schema.type === "number" || schema.type === "integer" || schema.type === "string") {
-      return "select";
+      return (JSONEditor.plugins.selectize.enable) ? 'selectize' : 'select';
     }
   }
 });
-// Use the 'multiselect' editor for arrays of enumerated strings/numbers/integers
+// Specialized editors for arrays of strings
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && schema.uniqueItems && schema.items.enum && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
-    return 'multiselect';
+  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && schema.uniqueItems && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
+    // For enumerated strings, number, or integers
+    if(schema.items.enum) {
+      return 'multiselect';
+    }
+    // For non-enumerated strings (tag editor)
+    else if(JSONEditor.plugins.selectize.enable && schema.items.type === "string") {
+      return 'arraySelectize';
+    }
   }
 });
 // Use the multiple editor for schemas with `oneOf` set
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  // If this schema uses `oneOf`
-  if(schema.oneOf) return "multiple";
+  // If this schema uses `oneOf` or `anyOf`
+  if(schema.oneOf || schema.anyOf) return "multiple";
 });

@@ -16,7 +16,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       return;
     }
     
-    if(value === null) value = "";
+    if(value === null || typeof value === 'undefined') value = "";
     else if(typeof value === "object") value = JSON.stringify(value);
     else if(typeof value !== "string") value = ""+value;
     
@@ -48,6 +48,8 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     
     if(initial) this.is_dirty = false;
     else if(this.jsoneditor.options.show_errors === "change") this.is_dirty = true;
+    
+    if(this.adjust_height) this.adjust_height(this.input);
 
     // Bubble this setValue to parents if the value changed
     this.onChange(changed);
@@ -115,6 +117,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
           'ejs',
           'erlang',
           'golang',
+          'groovy',
           'handlebars',
           'haskell',
           'haxe',
@@ -174,7 +177,12 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(typeof this.schema.pattern !== "undefined") this.input.setAttribute('pattern',this.schema.pattern);
     else if(typeof this.schema.minLength !== "undefined") this.input.setAttribute('pattern','.{'+this.schema.minLength+',}');
 
-    if(this.options.compact) this.container.setAttribute('class',this.container.getAttribute('class')+' compact');
+    if(this.options.compact) {
+      this.container.className += ' compact';
+    }
+    else {
+      if(this.options.input_width) this.input.style.width = this.options.input_width;
+    }
 
     if(this.schema.readOnly || this.schema.readonly || this.schema.template) {
       this.always_disabled = true;
@@ -205,6 +213,42 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
         self.refreshValue();
         self.onChange(true);
       });
+      
+    if(this.options.input_height) this.input.style.height = this.options.input_height;
+    if(this.options.expand_height) {
+      this.adjust_height = function(el) {
+        if(!el) return;
+        var i, ch=el.offsetHeight;
+        // Input too short
+        if(el.offsetHeight < el.scrollHeight) {
+          i=0;
+          while(el.offsetHeight < el.scrollHeight+3) {
+            if(i>100) break;
+            i++;
+            ch++;
+            el.style.height = ch+'px';
+          }
+        }
+        else {
+          i=0;
+          while(el.offsetHeight >= el.scrollHeight+3) {
+            if(i>100) break;
+            i++;
+            ch--;
+            el.style.height = ch+'px';
+          }
+          el.style.height = (ch+1)+'px';
+        }
+      };
+      
+      this.input.addEventListener('keyup',function(e) {
+        self.adjust_height(this);
+      });
+      this.input.addEventListener('change',function(e) {
+        self.adjust_height(this);
+      });
+      this.adjust_height();
+    }
 
     if(this.format) this.input.setAttribute('data-schemaformat',this.format);
 
@@ -217,6 +261,7 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
       // otherwise, in the case of an ace_editor creation,
       // it will generate an error trying to append it to the missing parentNode
       if(self.input.parentNode) self.afterInputReady();
+      if(self.adjust_height) self.adjust_height(self.input);
     });
 
     // Compile and store the template

@@ -1,19 +1,23 @@
 JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
   preBuild: function() {
     this._super();
+    var i;
 
     this.select_options = {};
     this.select_values = {};
 
     var items_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
-    var e = items_schema.enum || [];
+    var e = items_schema["enum"] || [];
+    var t = items_schema.options? items_schema.options.enum_titles || [] : [];
     this.option_keys = [];
+    this.option_titles = [];
     for(i=0; i<e.length; i++) {
       // If the sanitized value is different from the enum value, don't include it
       if(this.sanitize(e[i]) !== e[i]) continue;
 
       this.option_keys.push(e[i]+"");
+      this.option_titles.push((t[i]||e[i])+"");
       this.select_values[e[i]+""] = e[i];
     }
   },
@@ -30,7 +34,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       for(i=0; i<this.option_keys.length; i++) {
         this.inputs[this.option_keys[i]] = this.theme.getCheckbox();
         this.select_options[this.option_keys[i]] = this.inputs[this.option_keys[i]];
-        var label = this.theme.getCheckboxLabel(this.option_keys[i]);
+        var label = this.theme.getCheckboxLabel(this.option_titles[i]);
         this.controls[this.option_keys[i]] = this.theme.getFormControl(label, this.inputs[this.option_keys[i]]);
       }
 
@@ -39,6 +43,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     else {
       this.input_type = 'select';
       this.input = this.theme.getSelectInput(this.option_keys);
+      this.theme.setSelectOptions(this.input,this.option_keys,this.option_titles);
       this.input.multiple = true;
       this.input.size = Math.min(10,this.option_keys.length);
 
@@ -89,6 +94,30 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
     this.updateValue(value);
     this.onChange();
   },
+  setupSelect2: function() {
+    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+        var options = window.jQuery.extend({},JSONEditor.plugins.select2);
+        if(this.schema.options && this.schema.options.select2_options) options = $extend(options,this.schema.options.select2_options);
+        this.select2 = window.jQuery(this.input).select2(options);
+        var self = this;
+        this.select2.on('select2-blur',function() {
+            var val =self.select2.select2('val');
+            self.value = val;
+            self.onChange(true);
+        });
+    }
+    else {
+        this.select2 = null;
+    }
+  },
+  onInputChange: function() {
+      this.value = this.input.value;
+      this.onChange(true);
+  },
+  postBuild: function() {
+      this._super();
+      this.setupSelect2();
+  },
   register: function() {
     this._super();
     if(!this.input) return;
@@ -121,6 +150,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
       if(sanitized !== value[i]) changed = true;
     }
     this.value = new_value;
+    if(this.select2) this.select2.select2('val',this.value);
     return changed;
   },
   sanitize: function(value) {
@@ -145,6 +175,7 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
           this.inputs[i].disabled = false;
         }
       }
+      if(this.select2) this.select2.select2("enable",true);
     }
     this._super();
   },
@@ -157,6 +188,14 @@ JSONEditor.defaults.editors.multiselect = JSONEditor.AbstractEditor.extend({
         if(!this.inputs.hasOwnProperty(i)) continue;
         this.inputs[i].disabled = true;
       }
+    }
+    if(this.select2) this.select2.select2("enable",false);
+    this._super();
+  },
+  destroy: function() {
+    if(this.select2) {
+        this.select2.select2('destroy');
+        this.select2 = null;
     }
     this._super();
   }

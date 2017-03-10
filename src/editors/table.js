@@ -22,7 +22,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     var item_schema = this.jsoneditor.expandRefs(this.schema.items || {});
 
     this.item_title = item_schema.title || 'row';
-    this.item_default = item_schema.default || null;
+    this.item_default = item_schema["default"] || null;
     this.item_has_child_editors = item_schema.properties || item_schema.items;
     this.width = 12;
     this._super();
@@ -42,7 +42,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     var tmp = this.getElementEditor(0,true);
     this.item_default = tmp.getDefault();
     this.width = tmp.getNumColumns() + 2;
-    
+
     if(!this.options.compact) {
       this.title = this.theme.getHeader(this.getTitle());
       this.container.appendChild(this.title);
@@ -67,11 +67,13 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     this.panel.appendChild(this.controls);
 
     if(this.item_has_child_editors) {
-      $each(tmp.getChildEditors(), function(i,editor) {
-        var th = self.theme.getTableHeaderCell(editor.getTitle());
-        if(editor.options.hidden) th.style.display = 'none';
+      var ce = tmp.getChildEditors();
+      var order = tmp.property_order || Object.keys(ce);
+      for(var i=0; i<order.length; i++) {
+        var th = self.theme.getTableHeaderCell(ce[order[i]].getTitle());
+        if(ce[order[i]].options.hidden) th.style.display = 'none';
         self.header_row.appendChild(th);
-      });
+      }
     }
     else {
       self.header_row.appendChild(self.theme.getTableHeaderCell(this.item_title));
@@ -92,7 +94,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     this._super();
   },
   getItemDefault: function() {
-    return $extend({},{default:this.item_default}).default;
+    return $extend({},{"default":this.item_default})["default"];
   },
   getItemTitle: function() {
     return this.item_title;
@@ -116,7 +118,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       compact: true,
       table_row: true
     });
-    
+
     ret.preBuild();
     if(!ignore) {
       ret.build();
@@ -129,7 +131,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       ret.table_controls.style.margin = 0;
       ret.table_controls.style.padding = 0;
     }
-    
+
     return ret;
   },
   destroy: function() {
@@ -157,7 +159,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     if(this.schema.maxItems && value.length > this.schema.maxItems) {
       value = value.slice(0,this.schema.maxItems);
     }
-    
+
     var serialized = JSON.stringify(value);
     if(serialized === this.serialized) return;
 
@@ -191,15 +193,15 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     if(numrows_changed || initial) self.refreshRowButtons();
 
     self.onChange();
-          
+
     // TODO: sortable
   },
   refreshRowButtons: function() {
     var self = this;
-    
+
     // If we currently have minItems items in the array
     var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length;
-    
+
     var need_row_buttons = false;
     $each(this.rows,function(i,editor) {
       // Hide the move down button for the last row
@@ -223,12 +225,12 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
           editor.delete_button.style.display = '';
         }
       }
-      
+
       if(editor.moveup_button) {
         need_row_buttons = true;
       }
     });
-    
+
     // Show/hide controls column in table
     $each(this.rows,function(i,editor) {
       if(need_row_buttons) {
@@ -244,20 +246,20 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     else {
       this.controls_header_cell.style.display = 'none';
     }
-    
+
     var controls_needed = false;
-  
+
     if(!this.value.length) {
       this.delete_last_row_button.style.display = 'none';
       this.remove_all_rows_button.style.display = 'none';
       this.table.style.display = 'none';
     }
-    else if(this.value.length === 1  || this.hide_delete_buttons) {
+    else if(this.value.length === 1) {
       this.table.style.display = '';
       this.remove_all_rows_button.style.display = 'none';
 
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems || this.hide_delete_buttons) {
+      // If there are minItems items in the array, or configured to hide the delete_last_row button, hide the delete button beneath the rows
+      if(minItems || this.hide_delete_last_row_buttons) {
         this.delete_last_row_button.style.display = 'none';
       }
       else {
@@ -267,13 +269,19 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
     else {
       this.table.style.display = '';
-      // If there are minItems items in the array, hide the delete button beneath the rows
-      if(minItems || this.hide_delete_buttons) {
+
+      if(minItems || this.hide_delete_last_row_buttons) {
         this.delete_last_row_button.style.display = 'none';
-        this.remove_all_rows_button.style.display = 'none';
       }
       else {
         this.delete_last_row_button.style.display = '';
+        controls_needed = true;
+      }
+
+      if(minItems || this.hide_delete_all_rows_buttons) {
+        this.remove_all_rows_button.style.display = 'none';
+      }
+      else {
         this.remove_all_rows_button.style.display = '';
         controls_needed = true;
       }
@@ -287,7 +295,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       this.add_row_button.style.display = '';
       controls_needed = true;
     }
-    
+
     if(!controls_needed) {
       this.controls.style.display = 'none';
     }
@@ -315,7 +323,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
 
     // Buttons to delete row, move row up, and move row down
     if(!this.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton('','delete','Delete');
+      self.rows[i].delete_button = this.getButton('','delete',this.translate('button_delete_row_title_short'));
       self.rows[i].delete_button.className += ' delete';
       self.rows[i].delete_button.setAttribute('data-i',i);
       self.rows[i].delete_button.addEventListener('click',function(e) {
@@ -336,9 +344,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       controls_holder.appendChild(self.rows[i].delete_button);
     }
 
-    
+
     if(i && !this.hide_move_buttons) {
-      self.rows[i].moveup_button = this.getButton('','moveup','Move up');
+      self.rows[i].moveup_button = this.getButton('','moveup',this.translate('button_move_up_title'));
       self.rows[i].moveup_button.className += ' moveup';
       self.rows[i].moveup_button.setAttribute('data-i',i);
       self.rows[i].moveup_button.addEventListener('click',function(e) {
@@ -357,9 +365,9 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
       });
       controls_holder.appendChild(self.rows[i].moveup_button);
     }
-    
+
     if(!this.hide_move_buttons) {
-      self.rows[i].movedown_button = this.getButton('','movedown','Move down');
+      self.rows[i].movedown_button = this.getButton('','movedown',this.translate('button_move_down_title'));
       self.rows[i].movedown_button.className += ' movedown';
       self.rows[i].movedown_button.setAttribute('data-i',i);
       self.rows[i].movedown_button.addEventListener('click',function(e) {
@@ -384,7 +392,7 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     var self = this;
 
     this.collapsed = false;
-    this.toggle_button = this.getButton('','collapse','Collapse');
+    this.toggle_button = this.getButton('','collapse',this.translate('button_collapse'));
     if(this.title_controls) {
       this.title_controls.appendChild(this.toggle_button);
       this.toggle_button.addEventListener('click',function(e) {
@@ -394,12 +402,12 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
         if(self.collapsed) {
           self.collapsed = false;
           self.panel.style.display = '';
-          self.setButtonText(this,'','collapse','Collapse');
+          self.setButtonText(this,'','collapse',self.translate('button_collapse'));
         }
         else {
           self.collapsed = true;
           self.panel.style.display = 'none';
-          self.setButtonText(this,'','expand','Expand');
+          self.setButtonText(this,'','expand',self.translate('button_expand'));
         }
       });
 
@@ -418,11 +426,11 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     }
 
     // Add "new row" and "delete last" buttons below editor
-    this.add_row_button = this.getButton(this.getItemTitle(),'add','Add '+this.getItemTitle());
+    this.add_row_button = this.getButton(this.getItemTitle(),'add',this.translate('button_add_row_title',[this.getItemTitle()]));
     this.add_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       self.addRow();
       self.refreshValue();
       self.refreshRowButtons();
@@ -430,11 +438,11 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     });
     self.controls.appendChild(this.add_row_button);
 
-    this.delete_last_row_button = this.getButton('Last '+this.getItemTitle(),'delete','Delete Last '+this.getItemTitle());
+    this.delete_last_row_button = this.getButton(this.translate('button_delete_last',[this.getItemTitle()]),'delete',this.translate('button_delete_last_title',[this.getItemTitle()]));
     this.delete_last_row_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       var rows = self.getValue();
       rows.pop();
       self.setValue(rows);
@@ -442,11 +450,11 @@ JSONEditor.defaults.editors.table = JSONEditor.defaults.editors.array.extend({
     });
     self.controls.appendChild(this.delete_last_row_button);
 
-    this.remove_all_rows_button = this.getButton('All','delete','Delete All');
+    this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'),'delete',this.translate('button_delete_all_title'));
     this.remove_all_rows_button.addEventListener('click',function(e) {
       e.preventDefault();
       e.stopPropagation();
-      
+
       self.setValue([]);
       self.onChange(true);
     });

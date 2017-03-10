@@ -1,5 +1,5 @@
 // Enum Editor (used for objects and arrays with enumerated values)
-JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
+JSONEditor.defaults.editors["enum"] = JSONEditor.AbstractEditor.extend({
   getNumColumns: function() {
     return 4;
   },
@@ -10,49 +10,43 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
 
     this.options.enum_titles = this.options.enum_titles || [];
 
-    this.enum = this.schema.enum;
+    this["enum"] = this.schema["enum"];
     this.selected = 0;
     this.select_options = [];
     this.html_values = [];
 
     var self = this;
-    for(var i=0; i<this.enum.length; i++) {
+    for(var i=0; i<this["enum"].length; i++) {
       this.select_options[i] = this.options.enum_titles[i] || "Value "+(i+1);
-      this.html_values[i] = this.getHTML(this.enum[i]);
+      this.html_values[i] = this.getHTML(this["enum"][i]);
     }
 
     // Switcher
     this.switcher = this.theme.getSwitcher(this.select_options);
     this.container.appendChild(this.switcher);
-    this.switcher.style.width = 'auto';
-    this.switcher.style.display = 'inline-block';
-    this.switcher.style.marginLeft = '5px';
-    this.switcher.style.marginBottom = 0;
 
     // Display area
     this.display_area = this.theme.getIndentedPanel();
-    this.display_area.style.paddingTop = 0;
-    this.display_area.style.paddingBottom = 0;
     this.container.appendChild(this.display_area);
-    
+
     if(this.options.hide_display) this.display_area.style.display = "none";
 
     this.switcher.addEventListener('change',function() {
       self.selected = self.select_options.indexOf(this.value);
-      self.value = self.enum[self.selected];
+      self.value = self["enum"][self.selected];
       self.refreshValue();
       self.onChange(true);
     });
-    this.value = this.enum[0];
+    this.value = this["enum"][0];
     this.refreshValue();
 
-    if(this.enum.length === 1) this.switcher.style.display = 'none';
+    if(this["enum"].length === 1) this.switcher.style.display = 'none';
   },
   refreshValue: function() {
     var self = this;
     self.selected = -1;
     var stringified = JSON.stringify(this.value);
-    $each(this.enum, function(i, el) {
+    $each(this["enum"], function(i, el) {
       if(stringified === JSON.stringify(el)) {
         self.selected = i;
         return false;
@@ -60,7 +54,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
     });
 
     if(self.selected<0) {
-      self.setValue(self.enum[0]);
+      self.setValue(self["enum"][0]);
       return;
     }
 
@@ -98,7 +92,7 @@ JSONEditor.defaults.editors.enum = JSONEditor.AbstractEditor.extend({
         // TODO: use theme
         ret += '<li>'+html+'</li>';
       });
-      
+
       if(Array.isArray(el)) ret = '<ol>'+ret+'</ol>';
       else ret = "<ul style='margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;'>"+ret+'</ul>';
 

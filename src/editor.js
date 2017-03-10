@@ -35,6 +35,8 @@ JSONEditor.AbstractEditor = Class.extend({
     this.template_engine = this.jsoneditor.template;
     this.iconlib = this.jsoneditor.iconlib;
     
+    this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
+
     this.original_schema = options.schema;
     this.schema = this.jsoneditor.expandSchema(this.original_schema);
     
@@ -95,6 +97,7 @@ JSONEditor.AbstractEditor = Class.extend({
         path = this.schema.watch[name];
 
         if(Array.isArray(path)) {
+          if(path.length<2) continue;
           path_parts = [path[0]].concat(path[1].split('.'));
         }
         else {
@@ -175,7 +178,15 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // Template to generate the link href
     var href = this.jsoneditor.compileTemplate(data.href,this.template_engine);
-    
+
+    // Template to generate the link's download attribute
+    var download = null;
+    if(data.download) download = data.download;
+
+    if(download && download !== true) {
+      download = this.jsoneditor.compileTemplate(download, this.template_engine);
+    }
+
     // Image links
     if(type === 'image') {
       holder = this.theme.getBlockLinkHolder();
@@ -215,18 +226,31 @@ JSONEditor.AbstractEditor = Class.extend({
     }
     // Text links
     else {
-      holder = this.theme.getBlockLink();
+      link = holder = this.theme.getBlockLink();
       holder.setAttribute('target','_blank');
       holder.textContent = data.rel;
-      
-      // When a watched field changes, update the url  
+
+      // When a watched field changes, update the url
       this.link_watchers.push(function(vars) {
         var url = href(vars);
         holder.setAttribute('href',url);
         holder.textContent = data.rel || url;
       });
     }
+
+    if(download && link) {
+      if(download === true) {
+        link.setAttribute('download','');
+      }
+      else {
+        this.link_watchers.push(function(vars) {
+          link.setAttribute('download',download(vars));
+        });
+      }
+    }
     
+    if(data.class) link.className = link.className + ' ' + data.class;
+
     return holder;
   },
   refreshWatchedFieldValues: function() {
@@ -258,7 +282,19 @@ JSONEditor.AbstractEditor = Class.extend({
   },
   updateHeaderText: function() {
     if(this.header) {
-      this.header.textContent = this.getHeaderText();
+      // If the header has children, only update the text node's value
+      if(this.header.children.length) {
+        for(var i=0; i<this.header.childNodes.length; i++) {
+          if(this.header.childNodes[i].nodeType===3) {
+            this.header.childNodes[i].nodeValue = this.getHeaderText();
+            break;
+          }
+        }
+      }
+      // Otherwise, just update the entire node
+      else {
+        this.header.textContent = this.getHeaderText();
+      }
     }
   },
   getHeaderText: function(title_only) {
@@ -325,8 +361,8 @@ JSONEditor.AbstractEditor = Class.extend({
     this.parent = null;
   },
   getDefault: function() {
-    if(this.schema.default) return this.schema.default;
-    if(this.schema.enum) return this.schema.enum[0];
+    if(this.schema["default"]) return this.schema["default"];
+    if(this.schema["enum"]) return this.schema["enum"][0];
     
     var type = this.schema.type || this.schema.oneOf;
     if(type && Array.isArray(type)) type = type[0];
@@ -356,6 +392,12 @@ JSONEditor.AbstractEditor = Class.extend({
   isEnabled: function() {
     return !this.disabled;
   },
+  isRequired: function() {
+    if(typeof this.schema.required === "boolean") return this.schema.required;
+    else if(this.parent && this.parent.schema && Array.isArray(this.parent.schema.required)) return this.parent.schema.required.indexOf(this.key) > -1;
+    else if(this.jsoneditor.options.required_by_default) return true;
+    else return false;
+  },  
   getDisplayText: function(arr) {
     var disp = [];
     var used = {};

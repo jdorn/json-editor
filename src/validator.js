@@ -1,14 +1,15 @@
 JSONEditor.Validator = Class.extend({
-  init: function(jsoneditor,schema) {
+  init: function(jsoneditor,schema,options) {
     this.jsoneditor = jsoneditor;
     this.schema = schema || this.jsoneditor.schema;
-    this.options = {};
+    this.options = options || {};
     this.translate = this.jsoneditor.translate || JSONEditor.defaults.translate;
   },
   validate: function(value) {
     return this._validateSchema(this.schema, value);
   },
   _validateSchema: function(schema,value,path) {
+    var self = this;
     var errors = [];
     var valid, i, j;
     var stringified = JSON.stringify(value);
@@ -52,10 +53,10 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `enum`
-    if(schema.enum) {
+    if(schema["enum"]) {
       valid = false;
-      for(i=0; i<schema.enum.length; i++) {
-        if(stringified === JSON.stringify(schema.enum[i])) valid = true;
+      for(i=0; i<schema["enum"].length; i++) {
+        if(stringified === JSON.stringify(schema["enum"][i])) valid = true;
       }
       if(!valid) {
         errors.push({
@@ -67,9 +68,9 @@ JSONEditor.Validator = Class.extend({
     }
 
     // `extends` (version 3)
-    if(schema.extends) {
-      for(i=0; i<schema.extends.length; i++) {
-        errors = errors.concat(this._validateSchema(schema.extends[i],value,path));
+    if(schema["extends"]) {
+      for(i=0; i<schema["extends"].length; i++) {
+        errors = errors.concat(this._validateSchema(schema["extends"][i],value,path));
       }
     }
 
@@ -207,48 +208,82 @@ JSONEditor.Validator = Class.extend({
     if(typeof value === "number") {
       // `multipleOf` and `divisibleBy`
       if(schema.multipleOf || schema.divisibleBy) {
-        valid = value / (schema.multipleOf || schema.divisibleBy);
-        if(valid !== Math.floor(valid)) {
+        var divisor = schema.multipleOf || schema.divisibleBy;
+        // Vanilla JS, prone to floating point rounding errors (e.g. 1.14 / .01 == 113.99999)
+        valid = (value/divisor === Math.floor(value/divisor));
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math.mod(window.math.bignumber(value), window.math.bignumber(divisor)).equals(0);
+        }
+        // Use decimal.js is available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value)).mod(new window.Decimal(divisor)).equals(0);
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: schema.multipleOf? 'multipleOf' : 'divisibleBy',
-            message: this.translate('error_multipleOf', [schema.multipleOf || schema.divisibleBy])
+            message: this.translate('error_multipleOf', [divisor])
           });
         }
       }
 
       // `maximum`
       if(schema.hasOwnProperty('maximum')) {
-        if(schema.exclusiveMaximum && value >= schema.maximum) {
-          errors.push({
-            path: path,
-            property: 'maximum',
-            message: this.translate('error_maximum_excl', [schema.maximum])
-          });
+        // Vanilla JS, prone to floating point rounding errors (e.g. .999999999999999 == 1)
+        valid = schema.exclusiveMaximum? (value < schema.maximum) : (value <= schema.maximum);
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math[schema.exclusiveMaximum?'smaller':'smallerEq'](
+            window.math.bignumber(value),
+            window.math.bignumber(schema.maximum)
+          );
         }
-        else if(!schema.exclusiveMaximum && value > schema.maximum) {
+        // Use Decimal.js if available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value))[schema.exclusiveMaximum?'lt':'lte'](new window.Decimal(schema.maximum));
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: 'maximum',
-            message: this.translate('error_maximum_incl', [schema.maximum])
+            message: this.translate(
+              (schema.exclusiveMaximum?'error_maximum_excl':'error_maximum_incl'),
+              [schema.maximum]
+            )
           });
         }
       }
 
       // `minimum`
       if(schema.hasOwnProperty('minimum')) {
-        if(schema.exclusiveMinimum && value <= schema.minimum) {
-          errors.push({
-            path: path,
-            property: 'minimum',
-            message: this.translate('error_minimum_excl', [schema.minimum])
-          });
+        // Vanilla JS, prone to floating point rounding errors (e.g. .999999999999999 == 1)
+        valid = schema.exclusiveMinimum? (value > schema.minimum) : (value >= schema.minimum);
+
+        // Use math.js is available
+        if(window.math) {
+          valid = window.math[schema.exclusiveMinimum?'larger':'largerEq'](
+            window.math.bignumber(value),
+            window.math.bignumber(schema.minimum)
+          );
         }
-        else if(!schema.exclusiveMinimum && value < schema.minimum) {
+        // Use Decimal.js if available
+        else if(window.Decimal) {
+          valid = (new window.Decimal(value))[schema.exclusiveMinimum?'gt':'gte'](new window.Decimal(schema.minimum));
+        }
+
+        if(!valid) {
           errors.push({
             path: path,
             property: 'minimum',
-            message: this.translate('error_minimum_incl', [schema.minimum])
+            message: this.translate(
+              (schema.exclusiveMinimum?'error_minimum_excl':'error_minimum_incl'),
+              [schema.minimum]
+            )
           });
         }
       }
@@ -268,7 +303,7 @@ JSONEditor.Validator = Class.extend({
 
       // `minLength`
       if(schema.minLength) {
-        if((value+"").length < schema.minLength) {          
+        if((value+"").length < schema.minLength) {
           errors.push({
             path: path,
             property: 'minLength',
@@ -283,7 +318,7 @@ JSONEditor.Validator = Class.extend({
           errors.push({
             path: path,
             property: 'pattern',
-            message: this.translate('error_pattern')
+            message: this.translate('error_pattern', [schema.pattern])
           });
         }
       }
@@ -507,10 +542,16 @@ JSONEditor.Validator = Class.extend({
       }
     }
 
-    // Custom type validation
+    // Custom type validation (global)
     $each(JSONEditor.defaults.custom_validators,function(i,validator) {
-      errors = errors.concat(validator(schema,value,path));
+      errors = errors.concat(validator.call(self,schema,value,path));
     });
+    // Custom type validation (instance specific)
+    if(this.options.custom_validators) {
+      $each(this.options.custom_validators,function(i,validator) {
+        errors = errors.concat(validator.call(self,schema,value,path));
+      });
+    }
 
     return errors;
   },

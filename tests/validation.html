@@ -5,6 +5,7 @@
     <title>JSON Editor Validation Example</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src='../dist/jsoneditor.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjs/2.7.0/math.min.js'></script>
 </head>
 <body>
   <div id='output'></div>
@@ -216,6 +217,13 @@
             },
             valid: [5,0,10],
             invalid: [5.5,8,1]
+        },
+        multipleOfDecimal: {
+          schema: {
+            multipleOf: .01
+          },
+          valid: [1,1.14,3.57,56],
+          invalid: [1.012]
         },
         minmax: {
             schema: {
@@ -530,7 +538,7 @@
                     schema: "",
                     schema2: 2
                 }
-            ]   
+            ]
         },
         definitions: {
             schema: {
@@ -545,7 +553,7 @@
                 },
                 definitions: {
                     diskDevice: {
-                        pattern: "^/dev/[^/]+(/[^/]+)*$" 
+                        pattern: "^/dev/[^/]+(/[^/]+)*$"
                     },
                     external: {
                         "$ref": "http://localhost/json-editor/tests/string.json"
@@ -667,7 +675,7 @@
                 }
             ]
         },
-        
+
         disallow: {
             schema: {
                 type: "object",
@@ -677,7 +685,7 @@
                             "string",
                             {
                                 type: "number",
-                                maximum: 5 
+                                maximum: 5
                             }
                         ]
                     },
@@ -717,7 +725,7 @@
             invalid: ["1999","abc","abc 1999-01-01","1999-01-01 abc"]
         }
     };
-    
+
     // Custom validators must return an array of errors or an empty array if valid
     $.jsoneditor.custom_validators.push(function(schema, value, path) {
       var errors = [];
@@ -733,13 +741,13 @@
       }
       return errors;
     });
-    
+
     var num = 0;
     var animel = $("<div></div>");
     $.each(tests,function(i,test) {
         animel.queue(function(next) {
             console.log(i);
-            
+
             try {
               var editor = new JSONEditor(document.createElement('div'),{
                 schema: test.schema,
@@ -750,7 +758,7 @@
               console.log(test.schema);
               throw e;
             }
-            
+
             editor.on('ready',function() {
               $.each(test.valid,function(j,value) {
                 try {

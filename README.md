@@ -16,7 +16,7 @@ Download the [production version][min] (22K when gzipped) or the [development ve
 Requirements
 -----------------
 
-JSON Schema has no required dependencies.  It only needs a modern browser (tested in Chrome and Firefox).
+JSON Editor has no dependencies. It only needs a modern browser (tested in Chrome and Firefox).
 
 ### Optional Requirements
 
@@ -29,6 +29,8 @@ The following are not required, but can improve the style and usability of JSON 
 *  [EpicEditor](http://epiceditor.com/) for editing of Markdown content
 *  [Ace Editor](http://ace.c9.io/) for editing code
 *  [Select2](http://ivaynberg.github.io/select2/) for nicer Select boxes
+*  [Selectize](http://brianreavis.github.io/selectize.js/) for nicer Select & Array boxes
+*  [math.js](http://mathjs.org/) for more accurate floating point math (multipleOf, divisibleBy, etc.)
 
 Usage
 --------------
@@ -39,7 +41,7 @@ If you learn best by example, check these out:
 *  Advanced Usage Example - http://rawgithub.com/jdorn/json-editor/master/examples/advanced.html
 *  CSS Integration Example - http://rawgithub.com/jdorn/json-editor/master/examples/css_integration.html
 
-The rest of this README contains detailed documentation about every aspect of JSON Editor.
+The rest of this README contains detailed documentation about every aspect of JSON Editor.  For more under-the-hood documentation, check the wiki.
 
 ### Initialize
 
@@ -136,6 +138,11 @@ Here are all the available options:
     <td><code>false</code></td>
   </tr>
   <tr>
+    <td>keep_oneof_values</td>
+    <td>If <code>true</code>, makes oneOf copy properties over when switching.</td>
+    <td><code>true</code></td>
+  </tr>
+  <tr>
     <td>schema</td>
     <td>A valid JSON Schema to use for the editor.  Version 3 and Version 4 of the draft specification are supported.</td>
     <td><code>{}</code></td>
@@ -159,6 +166,11 @@ Here are all the available options:
     <td>theme</td>
     <td>The CSS theme to use.  See the <strong>CSS Integration</strong> section below for more info.</td>
     <td><code>html</code></td>
+  </tr>
+  <tr>
+    <td>display_required_only</td>
+    <td>If <code>true</code>, only required properties will be included by default.</td>
+    <td><code>false</code></td>
   </tr>
   </tbody>
 </table>
@@ -191,7 +203,7 @@ var name = editor.getEditor('root.name');
 // `getEditor` will return null if the path is invalid
 if(name) {
   name.setValue("John Smith");
-  
+
   console.log(name.getValue());
 }
 ```
@@ -199,7 +211,7 @@ if(name) {
 
 ### Validate
 
-When feasible, JSON Editor won't let users enter invalid data.  This is done by 
+When feasible, JSON Editor won't let users enter invalid data.  This is done by
 using input masks and intelligently enabling/disabling controls.
 
 However, in some cases it is still possible to enter data that doesn't validate against the schema.
@@ -291,16 +303,20 @@ JSON Editor can integrate with several popular CSS frameworks out of the box.
 
 The currently supported themes are:
 
+*  barebones
 *  html (the default)
 *  bootstrap2
 *  bootstrap3
 *  foundation3
 *  foundation4
 *  foundation5
+*  foundation6
 *  jqueryui
 
-The default theme is `html`, which doesn't use any special class names or styling.
+The default theme is `html`, which does not rely on an external framework.
 This default can be changed by setting the `JSONEditor.defaults.options.theme` variable.
+
+If you want to specify your own styles with CSS, you can use `barebones`, which includes almost no classes or inline styles.
 
 ```javascript
 JSONEditor.defaults.options.theme = 'foundation5';
@@ -405,7 +421,25 @@ Simple text link
   "links": [
     {
       "rel": "comments",
-      "href": "/posts/{{self}}/comments/"
+      "href": "/posts/{{self}}/comments/",
+      // Optional - set CSS classes for the link
+      "class": "comment-link open-in-modal primary-text"
+    }
+  ]
+}
+```
+
+Make link download when clicked
+```js+jinja
+{
+  "title": "Document filename",
+  "type": "string",
+  "links": [
+    {
+      "rel": "Download File",
+      "href": "/documents/{{self}}",
+      // Can also set `download` to a string as per the HTML5 spec
+      "download": true
     }
   ]
 }
@@ -573,6 +607,7 @@ __Ace Editor__ is a syntax highlighting source code editor. You can use it by se
 *  ejs
 *  erlang
 *  golang
+*  groovy
 *  handlebars
 *  haskell
 *  haxe
@@ -631,6 +666,17 @@ You can override the default Ace theme by setting the `JSONEditor.plugins.ace.th
 
 ```js
 JSONEditor.plugins.ace.theme = 'twilight';
+```
+
+#### Booleans
+
+The default boolean editor is a select box with options "true" and "false".  To use a checkbox instead, set the format to `checkbox`.
+
+```json
+{
+  "type": "boolean",
+  "format": "checkbox"
+}
 ```
 
 #### Arrays
@@ -711,12 +757,20 @@ Editors can accept options which alter the behavior in some way.
 
 *  `collapsed` - If set to true, the editor will start collapsed (works for objects and arrays)
 *  `disable_array_add` - If set to true, the "add row" button will be hidden (works for arrays)
-*  `disable_array_delete` - If set to true, the "delete row" buttons will be hidden (works for arrays)
+*  `disable_array_delete` - If set to true, all of the "delete" buttons will be hidden (works for arrays)
+*  `disable_array_delete_all_rows` - If set to true, just the "delete all rows" button will be hidden (works for arrays)
+*  `disable_array_delete_last_row` - If set to true, just the "delete last row" buttons will be hidden (works for arrays)
 *  `disable_array_reorder` - If set to true, the "move up/down" buttons will be hidden (works for arrays)
 *  `disable_collapse` - If set to true, the collapse button will be hidden (works for objects and arrays)
 *  `disable_edit_json` - If set to true, the Edit JSON button will be hidden (works for objects)
 *  `disable_properties` - If set to true, the Edit Properties button will be hidden (works for objects)
+*  `enum_titles` - An array of display values to use for select box options in the same order as defined with the `enum` keyword. Works with schema using enum values.
+*  `expand_height` - If set to true, the input will auto expand/contract to fit the content.  Works best with textareas.
+*  `grid_columns` - Explicitly set the number of grid columns (1-12) for the editor if it's within an object using a grid layout.
 *  `hidden` - If set to true, the editor will not appear in the UI (works for all types)
+*  `input_height` - Explicitly set the height of the input element. Should be a valid CSS width string (e.g. "100px").  Works best with textareas.
+*  `input_width` - Explicitly set the width of the input element. Should be a valid CSS width string (e.g. "100px").  Works for string, number, and integer data types.
+*  `remove_empty_properties` - If set to true for an object, empty object properties (i.e. those with falsy values) will not be returned by getValue().
 
 ```json
 {
@@ -726,7 +780,7 @@ Editors can accept options which alter the behavior in some way.
   },
   "properties": {
     "name": {
-      "type": "string" 
+      "type": "string"
     }
   }
 }
@@ -743,7 +797,7 @@ Dependencies
 ------------------
 Sometimes, it's necessary to have one field's value depend on another's.  
 
-The `dependencies` keyword from the JSON Schema specification is not nearly flexible enough to handle most use cases, 
+The `dependencies` keyword from the JSON Schema specification is not nearly flexible enough to handle most use cases,
 so JSON Editor introduces a couple custom keywords that help in this regard.
 
 The first step is to have a field "watch" other fields for changes.
@@ -906,7 +960,7 @@ Then, we use the special keyword `enumSource` to tell JSON Editor that we want t
 
 Now, anytime the `possible_colors` array changes, the dropdown's values will be changed as well.
 
-This is the most basic usage of `enumSource`.  The more verbose form of this property supports 
+This is the most basic usage of `enumSource`.  The more verbose form of this property supports
 filtering, pulling from multiple sources, constant values, etc..
 Here's a more complex example (this uses the Swig template engine syntax to show some advanced features)
 
@@ -934,7 +988,30 @@ Here's a more complex example (this uses the Swig template engine syntax to show
 }
 ```
 
-The colors examples used an array of strings directly.  Using the verbose form, you can 
+You can also specify a list of static items with a slightly different syntax:
+
+```js+jinja
+{
+  "enumSource": [{
+      // A watched field source
+      "source": [
+        {
+          "value": 1,
+          "title": "One"
+        },
+        {
+          "value": 2,
+          "title": "Two"
+        }
+      ],
+      "title": "{{item.title}}",
+      "value": "{{item.value}}"
+    }]
+  ]
+}
+```
+
+The colors examples used an array of strings directly.  Using the verbose form, you can
 also make it work with an array of objects.  Here's an example:
 
 ```js+jinja
@@ -960,7 +1037,7 @@ also make it work with an array of objects.  Here's an example:
       "enumSource": [{
         "source": "colors",
         "value": "{{item.text}}"
-      ]}
+      }]
     }
   }
 }
@@ -995,7 +1072,7 @@ To accomplish this, use the `headerTemplate` property.  All of the watched varia
 
 ### Custom Template Engines
 
-If one of the included template engines isn't sufficient, 
+If one of the included template engines isn't sufficient,
 you can use any custom template engine with a `compile` method.  For example:
 
 ```js
@@ -1029,10 +1106,10 @@ You can easily override individual translations in the default language or creat
 
 ```js+jinja
 // Override a specific translation
-JSONEditor.defaults.languages.en.error_minLength = 
+JSONEditor.defaults.languages.en.error_minLength =
   "This better be at least {{0}} characters long or else!";
-  
-  
+
+
 // Create your own language mapping
 // Any keys not defined here will fall back to the "en" language
 JSONEditor.defaults.languages.es = {
@@ -1064,7 +1141,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
   if(schema.type === "object" && schema.format === "location") {
     return "location";
   }
-  
+
   // If no valid editor is returned, the next resolver function will be used
 });
 ```
@@ -1099,6 +1176,15 @@ The possibilities are endless.  Some ideas:
 *  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data URLs
 
+Select2 & Selectize Support
+----------------
+Select2 support is enabled by default and will become active if the Select2 library is detected.
+
+Selectize support is enabled via the following snippet:
+```js
+JSONEditor.plugins.selectize.enable = true;
+```
+See the demo for an example of the `array` and `select` editor with Selectize support enabled.
 
 Custom Validation
 ----------------
@@ -1141,9 +1227,9 @@ $("#editor_holder")
   .on('ready', function() {
     // Get the value
     var value = $(this).jsoneditor('value');
-    
+
     value.name = "John Smith";
-    
+
     // Set the value
     $(this).jsoneditor('value',value);
   });

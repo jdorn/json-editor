@@ -3,24 +3,28 @@
 module.exports = function(grunt) {
   grunt.initConfig({
     concat: {
+      options: {
+        sourceMap: true
+      },
       dist: {
+        dest: 'dist/jsoneditor.js',
         src: [
           // License & version info, start the containing closure
           'src/intro.js',
-          
+
           // Simple inheritance
           'src/class.js',
           // IE9 polyfills
           'src/ie9.js',
           // Utils like extend, each, and trigger
           'src/utilities.js',
-          
+
           // The main JSONEditor class
           'src/core.js',
 
           // JSON Schema validator
           'src/validator.js',
-          
+
           // All the editors
           'src/editor.js',
           'src/editors/null.js',
@@ -33,9 +37,12 @@ module.exports = function(grunt) {
           'src/editors/multiple.js',
           'src/editors/enum.js',
           'src/editors/select.js',
+          'src/editors/selectize.js',
           'src/editors/multiselect.js',
           'src/editors/base64.js',
           'src/editors/upload.js',
+          'src/editors/checkbox.js',
+          'src/editors/array/selectize.js',
 
           // All the themes and iconlibs
           'src/theme.js',
@@ -48,23 +55,23 @@ module.exports = function(grunt) {
 
           // Set the defaults
           'src/defaults.js',
-          
+
           // Wrapper for $.fn style initialization
           'src/jquery.js',
-          
+
           // End the closure
           'src/outro.js'
         ],
-        dest: 'dist/jsoneditor.js'
       }
     },
     uglify: {
       dist: {
-        src: '<%= concat.dist.dest %>',
+        src: 'dist/jsoneditor.js',
         dest: 'dist/jsoneditor.min.js'
       },
       options: {
-        preserveComments: 'some'
+        preserveComments: 'some',
+        sourceMap: true
       }
     },
     watch: {
@@ -85,20 +92,20 @@ module.exports = function(grunt) {
       beforeconcat: [
         'src/class.js',
         'src/ie9.js',
-        
+
         // Utils like extend, each, and trigger
         'src/utilities.js',
-        
+
         // The main JSONEditor class
         'src/core.js',
 
         // JSON Schema validator
         'src/validator.js',
-        
+
         // All the editors
         'src/editor.js',
         'src/editors/*.js',
-        
+
         // All the themes and iconlibs
         'src/theme.js',
         'src/themes/*.js',
@@ -110,7 +117,7 @@ module.exports = function(grunt) {
 
         // Set the defaults
         'src/defaults.js',
-        
+
         // Wrapper for $.fn style initialization
         'src/jquery.js'
       ],
@@ -126,10 +133,10 @@ module.exports = function(grunt) {
   });
 
   // These plugins provide necessary tasks.
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-concat');
 
   // Default task.
   grunt.registerTask('default', ['jshint:beforeconcat','concat','jshint:afterconcat','uglify']);
