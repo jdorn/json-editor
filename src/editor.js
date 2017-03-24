@@ -39,9 +39,9 @@ JSONEditor.AbstractEditor = Class.extend({
 
     this.original_schema = options.schema;
     this.schema = this.jsoneditor.expandSchema(this.original_schema);
-    
-    this.options = $extend({}, (this.options || {}), (options.schema.options || {}), options);
-    
+
+    this.options = $extend({}, (this.options || {}), (this.schema.options || {}), (options.schema.options || {}), options);
+
     if(!options.path && !this.schema.id) this.schema.id = 'root';
     this.path = options.path || 'root';
     this.formname = options.formname || this.path.replace(/\.([^.]+)/g,'[$1]');
