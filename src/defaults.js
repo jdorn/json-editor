@@ -274,7 +274,7 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 // Use the table editor for arrays with the format set to `table`
 JSONEditor.defaults.resolvers.unshift(function(schema) {
   // Type `array` with format set to `table`
-  if(schema.type == "array" && schema.format == "table") {
+  if(schema.type === "array" && schema.format === "table") {
     return "table";
   }
 });
