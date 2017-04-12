@@ -29,6 +29,7 @@ module.exports = function(grunt) {
           'src/editor.js',
           'src/editors/null.js',
           'src/editors/string.js',
+          'src/editors/hidden.js',
           'src/editors/number.js',
           'src/editors/integer.js',
           'src/editors/object.js',
