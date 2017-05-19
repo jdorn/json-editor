@@ -35,6 +35,9 @@ JSONEditor.defaults.editors.string = JSONEditor.AbstractEditor.extend({
     if(this.sceditor_instance) {
       this.sceditor_instance.val(sanitized);
     }
+    else if(this.SimpleMDE) {
+      this.SimpleMDE.value(sanitized);
+    }
     else if(this.ace_editor) {
       this.ace_editor.setValue(sanitized);
     }
