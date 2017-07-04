@@ -25,7 +25,7 @@ If you fix a bug or add a cool feature, please submit a pull request!
 *  Use comments whenever the code's meaning is not obvious
 *  When in doubt, try to match the style in existing source files
 
-###Grunt
+### Grunt
 
 The easiest way to hack on JSON Editor is to run `grunt watch`, which 
 re-builds `dist/jsoneditor.js` every time a source file changes.
