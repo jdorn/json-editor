@@ -1,0 +1,34 @@
+
+
+<article class="section3 {{section3.colourClass}}">
+
+	<div class="section-inner">
+
+		<h2 class="title {{section3.title.colourClass}}">
+			{{section3.title.text}}
+		</h2>
+
+		<div class="partners">
+			<div class="scroller">
+				<div class="tile__scroll-tile-onebyone">
+					<div class="tile__scroll">
+
+
+						{{#each section3.partners}}
+							{{> tile-onexone }}
+						{{/each}}
+
+
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div class="register">
+			{{> button-link href=section3.link.href text=section3.link.text }}
+		</div>
+
+	</div>
+
+</article>

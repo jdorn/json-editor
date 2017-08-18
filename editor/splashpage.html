@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>Splash Page JSON Editor</title>
+
+	<link rel='stylesheet' id='theme_stylesheet' href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+	<link rel='stylesheet' id='icon_stylesheet'
+	      href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.css">
+
+	<script
+			src="https://code.jquery.com/jquery-3.2.1.min.js"
+			integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+			crossorigin="anonymous"></script>
+
+	<script src="jsoneditor.js"></script>
+</head>
+<body>
+<h1>Splash Page JSON Editor</h1>
+
+<h2>Pages</h2>
+<ul id="splash-page-links">
+</ul>
+
+<button id='submit'>Submit (console.log)</button>
+<button id='restore'>Restore to Default</button>
+<button id='enable_disable'>Disable/Enable Form</button>
+<span id='valid_indicator'></span>
+<input type="hidden" id="active-page-name"/>
+
+<div id='editor_holder'></div>
+<script>
+
+
+	$(function () {
+
+		var starting_value =
+			{
+				"pageTitle": "Derby Intu",
+				"pageName": "derbyintu",
+				"template": "default",
+				"backgroundUrl": "",
+				"colours": {
+					"primary": "#FAB700",
+					"secondary": "#000"
+				},
+				"section2": {
+					"title": {
+						"text": "Main Event Marketing message to build excitement about whats on",
+						"colourClass": "sp-colour-override-secondary"
+					},
+					"body": {
+						"text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla tincidunt odio quis justo aliquam, at commodo odio mollis. Integer id quam ipsum.",
+						"colourClass": "sp-colour-override-secondary"
+					},
+					"link": {
+						"text": "Main Register CTA",
+						"href": "https://www.myunidays.com/GB/en-GB/content/forms/intu-derby-student-night"
+					}
+				}
+			};
+
+
+		JSONEditor.defaults.options.theme = 'bootstrap3';
+
+		// Initialize the editor
+		var editor = new JSONEditor(document.getElementById('editor_holder'), {
+			// Enable fetching schemas via ajax
+			ajax: true,
+
+			// The schema for the editor
+			schema: {
+				type: "object",
+				title: "Splash Page",
+				format: "tabs",
+				properties: {
+					title: {
+						type: "string"
+					},
+					pageTitle: {
+						type: "string"
+					},
+					pageName: {
+						type: "string"
+					},
+					template: {
+						type: "string"
+					},
+					backgroundUrl: {
+						type: "string",
+						format: "url"
+					},
+					colours: {
+						type: "object",
+						id: "colours",
+						properties: {
+							primary: {
+								"type": "string",
+								"format": "color"
+							},
+							secondary: {
+								"type": "string",
+								"format": "color"
+							}
+						}
+					},
+					"section2": {
+						$ref: "section2.json",
+						title: "Section One"
+					}
+				}
+			},
+
+			// Seed the form with a starting value
+			startval: starting_value,
+
+			// Disable additional properties
+			no_additional_properties: true,
+
+			// Require all properties by default
+			required_by_default: true
+		});
+
+		// Hook up the submit button to log to the console
+		document.getElementById('submit').addEventListener('click', function () {
+			// Get the value from the editor
+			console.log(editor.getValue());
+
+			$.ajax
+			({
+				type: "POST",
+				url: '/api/page/' + $('#active-page-name').val(),
+				dataType: 'json',
+				//json object to sent to the authentication url
+				data: editor.getValue(),
+				success: function (data) {
+
+					console.log(data);
+				}
+			})
+		});
+
+		// Hook up the Restore to Default button
+		document.getElementById('restore').addEventListener('click', function () {
+			editor.setValue(starting_value);
+		});
+
+		// Hook up the enable/disable button
+		document.getElementById('enable_disable').addEventListener('click', function () {
+			// Enable form
+			if (!editor.isEnabled()) {
+				editor.enable();
+			}
+			// Disable form
+			else {
+				editor.disable();
+			}
+		});
+
+		// Hook up the validation indicator to update its
+		// status whenever the editor changes
+		editor.on('change', function () {
+			// Get an array of errors from the validator
+			var errors = editor.validate();
+
+			var indicator = document.getElementById('valid_indicator');
+
+			// Not valid
+			if (errors.length) {
+				indicator.style.color = 'red';
+				indicator.textContent = "not valid";
+			}
+			// Valid
+			else {
+				indicator.style.color = 'green';
+				indicator.textContent = "valid";
+			}
+		});
+
+		$splashPageLinks = $('#splash-page-links');
+
+		$.get("/api/pages", function (data) {
+
+			$.each(data, function (key, value) {
+
+				$splashPageLinks.append('<li><a class="page-data-load" href="#" data-page="' + value + '">' + value + '</a></li>');
+			});
+
+			$('.page-data-load').on('click', function () {
+				$('#active-page-name').val($(this).data('page'))
+				$.get("/api/page/" + $(this).data('page'), function (data) {
+
+					editor.setValue(data);
+					console.log(data);
+
+				});
+			});
+
+		});
+
+
+	});
+
+	// This is the starting value for the editor
+	// We will use this to seed the initial editor
+	// and to provide a "Restore to Default" button.
+
+</script>
+</body>
+</html>

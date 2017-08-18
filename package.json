@@ -36,6 +36,11 @@
   "scripts": {
     "build": "npm install && grunt",
     "start": "grunt watch",
-    "test": "grunt"
+    "test": "grunt",
+    "server:run": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.15.4",
+    "handlebars": "^4.0.10"
   }
 }

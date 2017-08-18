@@ -1,0 +1,13 @@
+{
+	"title": "Button Link",
+	"type": "object",
+	"id": "button-link",
+	"properties": {
+		"text": {
+			"type": "string"
+		},
+		"href": {
+			"type": "string"
+		}
+	}
+}

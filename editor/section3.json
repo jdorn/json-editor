@@ -1,0 +1,42 @@
+{
+	"title": "Person",
+	"type": "object",
+	"id": "person",
+	"properties": {
+		"colourClass": {
+			"type": "string",
+			"enum": ["sp-bg-colour-override-primary","sp-bg-colour-override-secondary"]
+		}
+		"title": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+				}
+			}
+		},
+		"body": {
+			"type": "object",
+			"id": "body",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+				}
+			}
+		},
+		"link": {
+			"$ref": "button-link.json",
+			"title": "Button Link"
+		}
+
+	}
+}

@@ -1,0 +1,24 @@
+@font-face {
+  font-family: 'UNiDAYSPro-Book';
+  src: url('fonts/all-book.woff2') format('woff2'), url('fonts/all-book.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'UNiDAYSPro-Demi';
+  src: url('fonts/all-demi.woff2') format('woff2'), url('fonts/all-demi.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'UNiDAYSPro-Heavy';
+  src: url('fonts/all-heavy.woff2') format('woff2'), url('fonts/all-heavy.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'UD-icons';
+  src: url('fonts/v5-icons-v24.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
