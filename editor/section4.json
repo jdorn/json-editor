@@ -1,0 +1,21 @@
+{
+	"title": "Sponsors",
+	"type": "object",
+	"id": "sponsors",
+	"properties": {
+		"sponsors": {
+			"title": "Sponsor Images",
+			"type": "array",
+			"format": "table",
+			"id": "sponsorImages",
+			"uniqueItems": false,
+			"items": {
+				"properties": {
+					"src": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

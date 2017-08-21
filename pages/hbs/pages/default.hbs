@@ -74,44 +74,13 @@
 	<section class="shopping-center-splash">
 
 
-		<article class="section1 sp-background-override">
+		{{> section1 section1 }}
 
-			<div class="section-inner">
+		{{> section2 section2 }}
 
-				<img class="logo" />
+		{{> section3 section3 }}
 
-				<h1 class="title {{content.section1.title.colourClass}}">
-					{{content.section1.title.text}}
-				</h1>
-
-				{{#if content.section1.dateTime.text}}
-					<h2 class="date-time {{content.section1.dateTime.colourClass}}">
-						{{content.section1.dateTime.text}}
-					</h2>
-				{{/if}}
-
-				{{#if content.section1.date.text}}
-					<h2 class="date {{content.section1.date.colourClass}}">
-						{{content.section1.date.text}}
-					</h2>
-				{{/if}}
-
-				{{#if content.section1.time.text}}
-					<h2 class="time {{content.section1.time.colourClass}}">
-						{{content.section1.time.text}}
-					</h2>
-				{{/if}}
-
-			</div>
-
-		</article>
-
-
-		{{> section2 }}
-
-		{{> section3 }}
-
-		{{> section4 }}
+		{{> section4 section4 }}
 
 
 	</section>

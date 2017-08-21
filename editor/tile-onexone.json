@@ -1,0 +1,19 @@
+{
+	"title": "Partner Tile",
+	"type": "object",
+	"id": "button-link",
+	"properties": {
+		"image": {
+			"type": "string"
+		},
+		"alt": {
+			"type": "string"
+		},
+		"href": {
+			"type": "string"
+		},
+		"discount": {
+			"$ref": "tile-discount.json"
+		}
+	}
+}

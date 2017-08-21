@@ -1,0 +1,60 @@
+{
+	"title": "Person",
+	"type": "object",
+	"id": "person",
+	"properties": {
+		"title": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+				}
+			}
+		},
+		"dateTime": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+				}
+			}
+		},
+		"date": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+				}
+			}
+		},
+		"time": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+				}
+			}
+		}
+
+	}
+}

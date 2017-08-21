@@ -6,7 +6,7 @@
 		"colourClass": {
 			"type": "string",
 			"enum": ["sp-bg-colour-override-primary","sp-bg-colour-override-secondary"]
-		}
+		},
 		"title": {
 			"type": "object",
 			"id": "title",
@@ -20,16 +20,18 @@
 				}
 			}
 		},
-		"body": {
-			"type": "object",
-			"id": "body",
-			"properties": {
-				"text": {
-					"type": "string"
-				},
-				"colourClass": {
-					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+		"partners": {
+			"title": "Partners",
+			"type": "array",
+			"format": "table",
+			"id": "partners",
+			"uniqueItems": false,
+			"items": {
+				"properties": {
+					"partner": {
+						"$ref": "tile-onexone.json",
+						"title": "Partner"
+					}
 				}
 			}
 		},
