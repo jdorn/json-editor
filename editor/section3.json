@@ -3,6 +3,9 @@
 	"type": "object",
 	"id": "person",
 	"properties": {
+		"enabled": {
+			"type": "boolean"
+		},
 		"colourClass": {
 			"type": "string",
 			"enum": ["sp-bg-colour-override-primary","sp-bg-colour-override-secondary"]

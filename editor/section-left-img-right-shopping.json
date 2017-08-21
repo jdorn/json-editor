@@ -6,6 +6,22 @@
 		"enabled": {
 			"type": "boolean"
 		},
+		"leftImage": {
+			"type": "string",
+			"format": "url"
+		},
+		"logoImage": {
+			"type": "string",
+			"format": "url"
+		},
+		"backgroundUrl": {
+			"type": "string",
+			"format": "url"
+		},
+		"backgroundColor": {
+			"type": "string",
+			"enum": ["", "sp-colour-override-primary","sp-colour-override-secondary"]
+		},
 		"title": {
 			"type": "object",
 			"id": "title",

@@ -51,6 +51,12 @@
 	margin: 0 auto;
 }
 
+.sectionInnerNoPadding()
+{
+	max-width: @max-width;
+	margin: 0 auto;
+}
+
 .customButtons()
 {
 	background-color: @color-primary;
@@ -66,6 +72,79 @@ main
 .shopping-center-splash
 {
 	text-align: center;
+
+	> .section-left-img-right-shopping
+	{
+		overflow: auto;
+		padding-bottom: 78px;
+
+		> .section-inner
+		{
+			.sectionInnerNoPadding();
+
+			> .left, > .right
+			{
+				float: none;
+				width: 100%;
+
+				@media screen and (min-width: @screen-md)
+				{
+					width: 49%;
+				}
+			}
+
+			> .left
+			{
+				float: left;
+
+				> .section-image
+				{
+					> img, picture
+					{
+						width: 100%;
+						height: 100%;
+					}
+				}
+			}
+
+			> .right
+			{
+				float: right;
+
+				> .logo
+				{
+					width: 184px;
+					height: 101px;
+					padding: @spacing-2 0 0 0;
+
+					@media screen and (min-width: @screen-md)
+					{
+						padding: @spacing-10 0 0 0;
+					}
+				}
+
+				> .title
+				{
+					font-size: 1.75rem;
+					color: @color-primary;
+					padding: 0;
+				}
+
+				> .date-time,
+				> .date,
+				> .time
+				{
+					padding: @spacing-3 0 @spacing-3 0;
+
+					@media screen and (min-width: @screen-md)
+					{
+						padding: @spacing-4 0 @spacing-5 0;
+					}
+
+				}
+			}
+		}
+	}
 
 	> .section1
 	{

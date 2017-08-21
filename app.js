@@ -12,6 +12,53 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 app.use('/editor', express.static(path.join(__dirname, 'editor')))
 app.use('/pages', express.static(path.join(__dirname, 'pages')));
 
+Handlebars.registerHelper('compare', function (lvalue, rvalue, options) {
+
+	if (arguments.length < 3)
+		throw new Error("Handlerbars Helper 'compare' needs 2 parameters");
+
+	var operator = options.hash.operator || "==";
+
+	var operators = {
+		'==': function (l, r) {
+			return l == r;
+		},
+		'===': function (l, r) {
+			return l === r;
+		},
+		'!=': function (l, r) {
+			return l != r;
+		},
+		'<': function (l, r) {
+			return l < r;
+		},
+		'>': function (l, r) {
+			return l > r;
+		},
+		'<=': function (l, r) {
+			return l <= r;
+		},
+		'>=': function (l, r) {
+			return l >= r;
+		},
+		'typeof': function (l, r) {
+			return typeof l == r;
+		}
+	}
+
+	if (!operators[operator])
+		throw new Error("Handlerbars Helper 'compare' doesn't know the operator " + operator);
+
+	var result = operators[operator](lvalue, rvalue);
+
+	if (result) {
+		return options.fn(this);
+	} else {
+		return options.inverse(this);
+	}
+
+});
+
 fs.readdir(path.join(__dirname, '/pages/hbs/partials'), function (err, files) {
 	if (err) {
 		console.error("Could not list the directory.", err);
@@ -20,7 +67,7 @@ fs.readdir(path.join(__dirname, '/pages/hbs/partials'), function (err, files) {
 
 	files.forEach(function (filename) {
 
-		fs.readFile(path.join(__dirname, '/pages/hbs/partials', filename), 'utf-8', function(err, content) {
+		fs.readFile(path.join(__dirname, '/pages/hbs/partials', filename), 'utf-8', function (err, content) {
 			if (err) {
 				onError(err);
 				return;

@@ -5,6 +5,63 @@ main {
 .shopping-center-splash {
   text-align: center;
 }
+.shopping-center-splash > .section-left-img-right-shopping {
+  overflow: auto;
+  padding-bottom: 78px;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right {
+  float: none;
+  width: 100%;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left,
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right {
+    width: 49%;
+  }
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left {
+  float: left;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left > .section-image > img,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left > .section-image picture {
+  width: 100%;
+  height: 100%;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right {
+  float: right;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .logo {
+  width: 184px;
+  height: 101px;
+  padding: 8px 0 0 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .logo {
+    padding: 40px 0 0 0;
+  }
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .title {
+  font-size: 1.75rem;
+  color: #fab700;
+  padding: 0;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date-time,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .time {
+  padding: 12px 0 12px 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date-time,
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date,
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .time {
+    padding: 16px 0 20px 0;
+  }
+}
 .shopping-center-splash > .section1 {
   padding-bottom: 78px;
 }

@@ -74,14 +74,25 @@
 	<section class="shopping-center-splash">
 
 
-		{{> section1 section1 }}
+		{{#compare section-left-img-right-shopping.enabled 'true' }}
+			{{> section-left-img-right-shopping section-left-img-right-shopping }}
+		{{/compare}}
 
-		{{> section2 section2 }}
+		{{#compare section1.enabled 'true' }}
+			{{> section1 section1 }}
+		{{/compare}}
 
-		{{> section3 section3 }}
+		{{#compare section2.enabled 'true' }}
+			{{> section2 section2 }}
+		{{/compare}}
 
-		{{> section4 section4 }}
+		{{#compare section3.enabled 'true' }}
+			{{> section3 section3 }}
+		{{/compare}}
 
+		{{#compare section4.enabled 'true' }}
+			{{> section4 section4 }}
+		{{/compare}}
 
 	</section>
 

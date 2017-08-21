@@ -3,6 +3,9 @@
 	"type": "object",
 	"id": "sponsors",
 	"properties": {
+		"enabled": {
+			"type": "boolean"
+		},
 		"sponsors": {
 			"title": "Sponsor Images",
 			"type": "array",
