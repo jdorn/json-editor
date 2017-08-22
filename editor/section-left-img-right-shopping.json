@@ -20,7 +20,7 @@
 		},
 		"backgroundColor": {
 			"type": "string",
-			"enum": ["", "sp-colour-override-primary","sp-colour-override-secondary"]
+			"enum": ["sp-bg-colour-override-primary","sp-bg-colour-override-secondary","sp-bg-colour-override-tertiary"]
 		},
 		"title": {
 			"type": "object",
@@ -31,7 +31,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		},
@@ -44,7 +44,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		},
@@ -57,7 +57,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		},
@@ -70,7 +70,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		}

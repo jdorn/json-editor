@@ -8,6 +8,18 @@
 		},
 		"href": {
 			"type": "string"
+		},
+		"borderColor": {
+			"type": "string",
+			"enum": ["sp-bd-colour-override-primary","sp-bd-colour-override-secondary","sp-bd-colour-override-tertiary"]
+		},
+		"backgroundColor": {
+			"type": "string",
+			"enum": ["sp-bg-colour-override-primary","sp-bg-colour-override-secondary","sp-bg-colour-override-tertiary"]
+		},
+		"foregroundColor": {
+			"type": "string",
+			"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 		}
 	}
 }

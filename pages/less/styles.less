@@ -76,7 +76,11 @@ main
 	> .section-left-img-right-shopping
 	{
 		overflow: auto;
-		padding-bottom: 78px;
+
+		@media screen and (min-width: @screen-md)
+		{
+			//padding-bottom: 78px;
+		}
 
 		> .section-inner
 		{

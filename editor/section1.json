@@ -15,7 +15,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		},
@@ -28,7 +28,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		},
@@ -41,7 +41,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		},
@@ -54,7 +54,7 @@
 				},
 				"colourClass": {
 					"type": "string",
-					"enum": ["sp-colour-override-primary","sp-colour-override-secondary"]
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
 				}
 			}
 		}

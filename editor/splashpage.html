@@ -18,50 +18,32 @@
 <body>
 <h1>Splash Page JSON Editor</h1>
 
+<div style="width: 68%; float:left;">
+	<button id='submit'>Save</button>
+	<button id='restore'>Restore to Default</button>
+	<button id='enable_disable'>Disable/Enable Form</button>
+	<span id='valid_indicator'></span>
+	<input type="hidden" id="active-page-name"/>
+
+	<div id='editor_holder'></div>
+</div>
+
+<div style="width: 28%; float:left;">
 <h2>Pages</h2>
 <ul id="splash-page-links">
 </ul>
+</div>
 
-<button id='submit'>Submit (console.log)</button>
-<button id='restore'>Restore to Default</button>
-<button id='enable_disable'>Disable/Enable Form</button>
-<span id='valid_indicator'></span>
-<input type="hidden" id="active-page-name"/>
-
-<div id='editor_holder'></div>
 <script>
 
 
 	$(function () {
 
-		var starting_value =
-			{
-				"pageTitle": "Derby Intu",
-				"pageName": "derbyintu",
-				"template": "default",
-				"backgroundUrl": "",
-				"colours": {
-					"primary": "#FAB700",
-					"secondary": "#000"
-				},
-				"section2": {
-					"title": {
-						"text": "Main Event Marketing message to build excitement about whats on",
-						"colourClass": "sp-colour-override-secondary"
-					},
-					"body": {
-						"text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla tincidunt odio quis justo aliquam, at commodo odio mollis. Integer id quam ipsum.",
-						"colourClass": "sp-colour-override-secondary"
-					},
-					"link": {
-						"text": "Main Register CTA",
-						"href": "https://www.myunidays.com/GB/en-GB/content/forms/intu-derby-student-night"
-					}
-				}
-			};
-
+		var starting_value = {};
 
 		JSONEditor.defaults.options.theme = 'bootstrap3';
+		JSONEditor.defaults.editors.object.options.disable_properties = true;
+		JSONEditor.defaults.editors.object.options.disable_edit_json = true;
 
 		// Initialize the editor
 		var editor = new JSONEditor(document.getElementById('editor_holder'), {
@@ -93,6 +75,9 @@
 					colours: {
 						type: "object",
 						id: "colours",
+						"options": {
+							"collapsed": true
+						},
 						properties: {
 							primary: {
 								"type": "string",
@@ -101,26 +86,45 @@
 							secondary: {
 								"type": "string",
 								"format": "color"
+							},
+							tertiary: {
+								"type": "string",
+								"format": "color"
 							}
 						}
 					},
 					"section-left-img-right-shopping": {
+						"options": {
+							"collapsed": true
+						},
 						$ref: "section-left-img-right-shopping.json",
 						title: "Left/Right Shopping Header"
 					},
 					"section1": {
+						"options": {
+							"collapsed": true
+						},
 						$ref: "section1.json",
 						title: "Header"
 					},
 					"section2": {
+						"options": {
+							"collapsed": true
+						},
 						$ref: "section2.json",
 						title: "Section Two"
 					},
 					"section3": {
+						"options": {
+							"collapsed": true
+						},
 						$ref: "section3.json",
 						title: "Discounts and Partners"
 					},
 					"section4": {
+						"options": {
+							"collapsed": true
+						},
 						$ref: "section4.json",
 						title: "Sponsors"
 					}
