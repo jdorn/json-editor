@@ -1,0 +1,49 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'run',
+1 verbose cli   'server:run',
+1 verbose cli   '--scripts-prepend-node-path=auto' ]
+2 info using npm@3.10.10
+3 info using node@v6.10.0
+4 verbose run-script [ 'preserver:run', 'server:run', 'postserver:run' ]
+5 info lifecycle json-editor@0.7.28~preserver:run: json-editor@0.7.28
+6 silly lifecycle json-editor@0.7.28~preserver:run: no script for preserver:run, continuing
+7 info lifecycle json-editor@0.7.28~server:run: json-editor@0.7.28
+8 verbose lifecycle json-editor@0.7.28~server:run: unsafe-perm in lifecycle true
+9 verbose lifecycle json-editor@0.7.28~server:run: PATH: C:\Program Files\nodejs\node_modules\npm\bin\node-gyp-bin;D:\git\json-editor\node_modules\.bin;C:\ProgramData\Oracle\Java\javapath;C:\GTK\bin;C:\Program Files\dotnet\;C:\Program Files\nodejs\;C:\Program Files\TortoiseGit\bin;C:\Program Files\Shibboleth\SP\lib;C:\Program Files (x86)\Shibboleth\SP\lib;C:\ProgramData\chocolatey\bin;C:\ProgramData\nvm;C:\Program Files\nodejs;C:\Users\john.nolan\.dnx\bin;C:\Program Files (x86)\Microsoft VS Code\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Users\john.nolan\AppData\Roaming\npm
+10 verbose lifecycle json-editor@0.7.28~server:run: CWD: D:\git\json-editor
+11 silly lifecycle json-editor@0.7.28~server:run: Args: [ '/d /s /c', 'node app.js' ]
+12 silly lifecycle json-editor@0.7.28~server:run: Returned: code: 1  signal: null
+13 info lifecycle json-editor@0.7.28~server:run: Failed to exec server:run script
+14 verbose stack Error: json-editor@0.7.28 server:run: `node app.js`
+14 verbose stack Exit status 1
+14 verbose stack     at EventEmitter.<anonymous> (C:\Program Files\nodejs\node_modules\npm\lib\utils\lifecycle.js:255:16)
+14 verbose stack     at emitTwo (events.js:106:13)
+14 verbose stack     at EventEmitter.emit (events.js:191:7)
+14 verbose stack     at ChildProcess.<anonymous> (C:\Program Files\nodejs\node_modules\npm\lib\utils\spawn.js:40:14)
+14 verbose stack     at emitTwo (events.js:106:13)
+14 verbose stack     at ChildProcess.emit (events.js:191:7)
+14 verbose stack     at maybeClose (internal/child_process.js:877:16)
+14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:226:5)
+15 verbose pkgid json-editor@0.7.28
+16 verbose cwd D:\git\json-editor
+17 error Windows_NT 10.0.10586
+18 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "run" "server:run" "--scripts-prepend-node-path=auto"
+19 error node v6.10.0
+20 error npm  v3.10.10
+21 error code ELIFECYCLE
+22 error json-editor@0.7.28 server:run: `node app.js`
+22 error Exit status 1
+23 error Failed at the json-editor@0.7.28 server:run script 'node app.js'.
+23 error Make sure you have the latest version of node.js and npm installed.
+23 error If you do, this is most likely a problem with the json-editor package,
+23 error not with npm itself.
+23 error Tell the author that this fails on your system:
+23 error     node app.js
+23 error You can get information on how to open an issue for this project with:
+23 error     npm bugs json-editor
+23 error Or if that isn't available, you can get their info via:
+23 error     npm owner ls json-editor
+23 error There is likely additional logging output above.
+24 verbose exit [ 1, true ]

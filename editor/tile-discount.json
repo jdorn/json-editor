@@ -1,0 +1,10 @@
+{
+	"title": "Offer",
+	"type": "object",
+	"id": "tile-discount",
+	"properties": {
+		"offer": {
+			"type": "string"
+		}
+	}
+}

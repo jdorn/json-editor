@@ -1,0 +1,221 @@
+main {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+.shopping-center-splash {
+  text-align: center;
+}
+.shopping-center-splash > .section-left-img-right-shopping {
+  overflow: auto;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right {
+  float: none;
+  width: 100%;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left,
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right {
+    width: 49%;
+  }
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left {
+  float: left;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left > .section-image > img,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .left > .section-image picture {
+  width: 100%;
+  height: 100%;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right {
+  float: right;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .logo {
+  width: 184px;
+  height: 101px;
+  padding: 8px 0 0 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .logo {
+    padding: 40px 0 0 0;
+  }
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .title {
+  font-size: 1.75rem;
+  color: #fab700;
+  padding: 0;
+}
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date-time,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date,
+.shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .time {
+  padding: 12px 0 12px 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date-time,
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .date,
+  .shopping-center-splash > .section-left-img-right-shopping > .section-inner > .right > .time {
+    padding: 16px 0 20px 0;
+  }
+}
+.shopping-center-splash > .section1 {
+  padding-bottom: 78px;
+}
+.shopping-center-splash > .section1 > .section-inner {
+  padding: 0 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.shopping-center-splash > .section1 > .section-inner > .logo {
+  width: 184px;
+  height: 101px;
+  padding: 8px 0 0 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section1 > .section-inner > .logo {
+    padding: 40px 0 0 0;
+  }
+}
+.shopping-center-splash > .section1 > .section-inner > .title {
+  font-size: 1.75rem;
+  color: #fab700;
+  padding: 0;
+}
+.shopping-center-splash > .section1 > .section-inner > .date-time,
+.shopping-center-splash > .section1 > .section-inner > .date,
+.shopping-center-splash > .section1 > .section-inner > .time {
+  padding: 12px 0 12px 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section1 > .section-inner > .date-time,
+  .shopping-center-splash > .section1 > .section-inner > .date,
+  .shopping-center-splash > .section1 > .section-inner > .time {
+    padding: 16px 0 20px 0;
+  }
+}
+.shopping-center-splash > .section2 {
+  background-color: #ffffff;
+}
+.shopping-center-splash > .section2 > .section-inner {
+  padding: 0 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.shopping-center-splash > .section2 > .section-inner > .title {
+  padding: 20px 0 16px 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section2 > .section-inner > .title {
+    padding: 60px 0 24px 0;
+  }
+}
+.shopping-center-splash > .section2 > .section-inner > .body {
+  padding: 0 0 40px 0;
+}
+.shopping-center-splash > .section2 > .section-inner > .register {
+  padding: 0 0 40px 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section2 > .section-inner > .register {
+    padding: 0 0 70px 0;
+  }
+}
+.shopping-center-splash > .section2 > .section-inner > .register > .register-button {
+  background-color: #fab700;
+  color: #000000;
+}
+.shopping-center-splash > .section3 {
+  background-color: #fab700;
+}
+.shopping-center-splash > .section3 > .section-inner {
+  padding: 0 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.shopping-center-splash > .section3 > .section-inner > .title {
+  padding: 20px 0 16px 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section3 > .section-inner > .title {
+    padding: 48px 0 24px 0;
+  }
+}
+.shopping-center-splash > .section3 > .section-inner > .partners {
+  padding: 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section3 > .section-inner > .partners {
+    margin-left: -40px;
+    padding: 0 0 47px 0;
+  }
+}
+.shopping-center-splash > .section3 > .section-inner > .partners > .scroller {
+  margin-right: -16px;
+}
+@media screen and (min-width: 900px) {
+  .shopping-center-splash > .section3 > .section-inner > .partners > .scroller > .tile__scroll-tile-onebyone > .tile__scroll {
+    text-align: left;
+    display: block;
+  }
+}
+@media screen and (min-width: 900px) {
+  .shopping-center-splash > .section3 > .section-inner > .partners > .scroller > .tile__scroll-tile-onebyone > .tile__scroll > .tile {
+    min-height: 186px;
+    min-width: 212px;
+    margin-left: 16px;
+    flex: none;
+    display: inline-block;
+    max-width: 23%;
+  }
+}
+.shopping-center-splash > .section3 > .section-inner > .register {
+  padding: 0 0 40px 0;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section3 > .section-inner > .register {
+    padding: 0 0 47px 0;
+  }
+}
+.shopping-center-splash > .section3 > .section-inner > .register > .register-button {
+  background-color: #fab700;
+  color: #000000;
+}
+.shopping-center-splash > .section4 {
+  background-color: #ffffff;
+}
+.shopping-center-splash > .section4 > .section-inner {
+  padding: 0 16px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.shopping-center-splash > .section4 > .section-inner > .sponsors {
+  padding: 20px 0 12px 0;
+  margin: 0 auto;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section4 > .section-inner > .sponsors {
+    padding: 55px 0 20px 0;
+  }
+}
+.shopping-center-splash > .section4 > .section-inner > .sponsors > .item {
+  display: inline-block;
+}
+.shopping-center-splash > .section4 > .section-inner > .sponsors > .item:first-child {
+  margin-right: 16px;
+}
+.shopping-center-splash > .section4 > .section-inner > .sponsors > .item:last-child {
+  margin-left: 16px;
+}
+.shopping-center-splash > .section4 > .section-inner > .sponsors > .item > .item-image {
+  width: 106px;
+  height: 58px;
+}
+@media screen and (min-width: 768px) {
+  .shopping-center-splash > .section4 > .section-inner > .sponsors > .item > .item-image {
+    width: 129px;
+    height: 70px;
+  }
+}

@@ -1,0 +1,31 @@
+<article class="section1 sp-background-override">
+
+	<div class="section-inner">
+
+		<img class="logo" />
+
+		<h1 class="title {{title.colourClass}}">
+			{{title.text}}
+		</h1>
+
+		{{#if dateTime.text}}
+			<h2 class="date-time {{dateTime.colourClass}}">
+				{{dateTime.text}}
+			</h2>
+		{{/if}}
+
+		{{#if date.text}}
+			<h2 class="date {{date.colourClass}}">
+				{{date.text}}
+			</h2>
+		{{/if}}
+
+		{{#if time.text}}
+			<h2 class="time {{time.colourClass}}">
+				{{time.text}}
+			</h2>
+		{{/if}}
+
+	</div>
+
+</article>

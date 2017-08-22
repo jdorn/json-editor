@@ -1,0 +1,79 @@
+{
+	"title": "Person",
+	"type": "object",
+	"id": "person",
+	"properties": {
+		"enabled": {
+			"type": "boolean"
+		},
+		"leftImage": {
+			"type": "string",
+			"format": "url"
+		},
+		"logoImage": {
+			"type": "string",
+			"format": "url"
+		},
+		"backgroundUrl": {
+			"type": "string",
+			"format": "url"
+		},
+		"backgroundColor": {
+			"type": "string",
+			"enum": ["sp-bg-colour-override-primary","sp-bg-colour-override-secondary","sp-bg-colour-override-tertiary"]
+		},
+		"title": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
+				}
+			}
+		},
+		"dateTime": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
+				}
+			}
+		},
+		"date": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
+				}
+			}
+		},
+		"time": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
+				}
+			}
+		}
+
+	}
+}

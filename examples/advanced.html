@@ -3,12 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <title>Advanced JSON Editor Example</title>
-    
+
+	  <link rel='stylesheet' id='theme_stylesheet' >
+	  <link rel='stylesheet' id='icon_stylesheet'>
+
     <script src="../dist/jsoneditor.js"></script>
   </head>
   <body>
     <h1>Advanced JSON Editor Example</h1>
-    
+
     <p>This example demonstrates the following:</p>
     <ul>
       <li>Loading external schemas via ajax (using $ref)</li>
@@ -17,17 +20,17 @@
       <li>Macro templates (try changing the city or state fields and watch the citystate field update automatically)</li>
       <li>Enabling and disabling editor fields</li>
     </ul>
-    
+
     <button id='submit'>Submit (console.log)</button>
     <button id='restore'>Restore to Default</button>
     <button id='enable_disable'>Disable/Enable Form</button>
     <span id='valid_indicator'></span>
-    
+
     <div id='editor_holder'></div>
-    
+
     <script>
       // This is the starting value for the editor
-      // We will use this to seed the initial editor 
+      // We will use this to seed the initial editor
       // and to provide a "Restore to Default" button.
       var starting_value = [
         {
@@ -53,12 +56,12 @@
           ]
         }
       ];
-      
+
       // Initialize the editor
       var editor = new JSONEditor(document.getElementById('editor_holder'),{
         // Enable fetching schemas via ajax
         ajax: true,
-        
+
         // The schema for the editor
         schema: {
           type: "array",
@@ -79,28 +82,28 @@
             ]
           }
         },
-        
+
         // Seed the form with a starting value
         startval: starting_value,
-        
+
         // Disable additional properties
         no_additional_properties: true,
-        
+
         // Require all properties by default
         required_by_default: true
       });
-      
+
       // Hook up the submit button to log to the console
       document.getElementById('submit').addEventListener('click',function() {
         // Get the value from the editor
         console.log(editor.getValue());
       });
-      
+
       // Hook up the Restore to Default button
       document.getElementById('restore').addEventListener('click',function() {
         editor.setValue(starting_value);
       });
-      
+
       // Hook up the enable/disable button
       document.getElementById('enable_disable').addEventListener('click',function() {
         // Enable form
@@ -112,15 +115,15 @@
           editor.disable();
         }
       });
-      
-      // Hook up the validation indicator to update its 
+
+      // Hook up the validation indicator to update its
       // status whenever the editor changes
       editor.on('change',function() {
         // Get an array of errors from the validator
         var errors = editor.validate();
-        
+
         var indicator = document.getElementById('valid_indicator');
-        
+
         // Not valid
         if(errors.length) {
           indicator.style.color = 'red';

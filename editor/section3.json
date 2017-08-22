@@ -1,0 +1,47 @@
+{
+	"title": "Person",
+	"type": "object",
+	"id": "person",
+	"properties": {
+		"enabled": {
+			"type": "boolean"
+		},
+		"colourClass": {
+			"type": "string",
+			"enum": ["sp-bg-colour-override-primary","sp-bg-colour-override-secondary","sp-bg-colour-override-tertiary"]
+		},
+		"title": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"enum": ["sp-colour-override-primary","sp-colour-override-secondary","sp-colour-override-tertiary"]
+				}
+			}
+		},
+		"partners": {
+			"title": "Partners",
+			"type": "array",
+			"format": "table",
+			"id": "partners",
+			"uniqueItems": false,
+			"items": {
+				"properties": {
+					"partner": {
+						"$ref": "tile-onexone.json",
+						"title": "Partner"
+					}
+				}
+			}
+		},
+		"link": {
+			"$ref": "button-link.json",
+			"title": "Button Link"
+		}
+
+	}
+}

@@ -1,0 +1,33 @@
+{
+	"title": "Person",
+	"type": "object",
+	"id": "person",
+	"properties": {
+		"title": {
+			"type": "object",
+			"id": "title",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"format": "color"
+				}
+			}
+		},
+		"body": {
+			"type": "object",
+			"id": "body",
+			"properties": {
+				"text": {
+					"type": "string"
+				},
+				"colourClass": {
+					"type": "string",
+					"format": "color"
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,362 @@
+@color-primary: #e1fd49;
+@color-secondary: #00bbdc;
+@color-tertiary: #000;
+@color-quaternary: #fff;
+@color-producthover: rgba(0, 187, 220, 0.5);
+
+// Meadowhall
+@color-primary: #FAB700;
+@color-secondary: #000;
+@color-tertiary: #fff;
+
+//Screen sizes =======================
+@screen-content-width: 900px;
+// Small screen / phone
+@screen-xxsm: 320px;
+@screen-xsm: 375px;
+@screen-sm: 425px;
+// Small-medium screen / tablets
+@screen-sm-md: 600px;
+@screen-md: 768px;
+// Large screen / desktop
+@screen-lg: 900px;
+@screen-xlg: 1024px;
+@screen-xxlg: 1300px;
+
+@max-width: 900px;
+
+@spacing-subtle: 2px;
+@spacing-1: 4px;
+@spacing-2: 8px;
+@spacing-3: 12px;
+@spacing-4: 16px;
+@spacing-5: 20px;
+@spacing-6: 24px;
+@spacing-7: 28px;
+@spacing-8: 32px;
+@spacing-9: 36px;
+@spacing-10: 40px;
+@spacing-11: 44px;
+@spacing-12: 48px;
+
+.fontBook()
+{
+	font-family: 'UNiDAYSPro-Book';
+}
+
+.sectionInner()
+{
+	padding: 0 @spacing-4;
+	max-width: @max-width;
+	margin: 0 auto;
+}
+
+.sectionInnerNoPadding()
+{
+	max-width: @max-width;
+	margin: 0 auto;
+}
+
+.customButtons()
+{
+	background-color: @color-primary;
+	color: @color-secondary;
+}
+
+main
+{
+	padding-top: 0 !important;
+	margin-top: 0 !important;
+}
+
+.shopping-center-splash
+{
+	text-align: center;
+
+	> .section-left-img-right-shopping
+	{
+		overflow: auto;
+
+		@media screen and (min-width: @screen-md)
+		{
+			//padding-bottom: 78px;
+		}
+
+		> .section-inner
+		{
+			.sectionInnerNoPadding();
+
+			> .left, > .right
+			{
+				float: none;
+				width: 100%;
+
+				@media screen and (min-width: @screen-md)
+				{
+					width: 49%;
+				}
+			}
+
+			> .left
+			{
+				float: left;
+
+				> .section-image
+				{
+					> img, picture
+					{
+						width: 100%;
+						height: 100%;
+					}
+				}
+			}
+
+			> .right
+			{
+				float: right;
+
+				> .logo
+				{
+					width: 184px;
+					height: 101px;
+					padding: @spacing-2 0 0 0;
+
+					@media screen and (min-width: @screen-md)
+					{
+						padding: @spacing-10 0 0 0;
+					}
+				}
+
+				> .title
+				{
+					font-size: 1.75rem;
+					color: @color-primary;
+					padding: 0;
+				}
+
+				> .date-time,
+				> .date,
+				> .time
+				{
+					padding: @spacing-3 0 @spacing-3 0;
+
+					@media screen and (min-width: @screen-md)
+					{
+						padding: @spacing-4 0 @spacing-5 0;
+					}
+
+				}
+			}
+		}
+	}
+
+	> .section1
+	{
+		padding-bottom: 78px;
+		> .section-inner
+		{
+			.sectionInner();
+
+			> .logo
+			{
+				width: 184px;
+				height: 101px;
+				padding: @spacing-2 0 0 0;
+
+				@media screen and (min-width: @screen-md)
+				{
+					padding: @spacing-10 0 0 0;
+				}
+			}
+
+			> .title
+			{
+				font-size: 1.75rem;
+				color: @color-primary;
+				padding: 0;
+			}
+
+			> .date-time,
+			> .date,
+			> .time
+			{
+				padding: @spacing-3 0 @spacing-3 0;
+
+				@media screen and (min-width: @screen-md)
+				{
+					padding: @spacing-4 0 @spacing-5 0;
+				}
+
+			}
+		}
+	}
+
+	> .section2
+	{
+		background-color: @color-tertiary;
+
+		> .section-inner
+		{
+			.sectionInner();
+
+			> .title
+			{
+				padding: @spacing-5 0 @spacing-4 0;
+
+				@media screen and (min-width: @screen-md)
+				{
+					padding: 60px 0 @spacing-6 0;
+				}
+			}
+
+			> .body
+			{
+				padding: 0 0 @spacing-10 0;
+			}
+
+			> .register
+			{
+				padding: 0 0 @spacing-10 0;
+
+				@media screen and (min-width: @screen-md)
+				{
+					padding: 0 0 70px 0;
+				}
+
+				> .register-button
+				{
+					.customButtons();
+				}
+			}
+		}
+	}
+
+	> .section3
+	{
+		background-color: @color-primary;
+
+		> .section-inner
+		{
+			.sectionInner();
+
+			> .title
+			{
+				padding: @spacing-5 0 @spacing-4 0;
+
+				@media screen and (min-width: @screen-md)
+				{
+					padding: 48px 0 @spacing-6 0;
+				}
+
+			}
+
+			> .partners
+			{
+				padding: 0;
+
+				@media screen and (min-width: @screen-md)
+				{
+					margin-left: -40px;
+					padding: 0 0 47px 0;
+				}
+
+				> .scroller
+				{
+					margin-right: -@spacing-4;
+
+					> .tile__scroll-tile-onebyone
+					{
+
+						> .tile__scroll
+						{
+							@media screen and (min-width: 900px)
+							{
+								text-align: left;
+								display: block;
+							}
+							//flex-flow: nowrap;
+							//padding-bottom: 0;
+
+							> .tile
+							{
+
+
+								@media screen and (min-width: 900px)
+								{
+									min-height: 186px;
+									min-width: 212px;
+									margin-left: 16px;
+									flex: none;
+									display: inline-block;
+									max-width: 23%;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			> .register
+			{
+				padding: 0 0 @spacing-10 0;
+
+				@media screen and (min-width: @screen-md)
+				{
+					padding: 0 0 47px 0;
+				}
+
+				> .register-button
+				{
+					.customButtons();
+				}
+			}
+		}
+	}
+
+	> .section4
+	{
+		background-color: @color-tertiary;
+
+		> .section-inner
+		{
+			.sectionInner();
+
+			> .sponsors
+			{
+				padding: @spacing-5 0 @spacing-3 0;
+				margin: 0 auto;
+
+				@media screen and (min-width: @screen-md)
+				{
+					padding: 55px 0 @spacing-5 0;
+				}
+
+				> .item
+				{
+					&:first-child
+					{
+						margin-right: @spacing-4;
+					}
+					&:last-child
+					{
+						margin-left: @spacing-4;
+					}
+
+					display: inline-block;
+
+					> .item-image
+					{
+						width: 106px;
+						height: 58px;
+
+						@media screen and (min-width: @screen-md)
+						{
+							width: 129px;
+							height: 70px;
+						}
+					}
+				}
+			}
+		}
+	}
+}
