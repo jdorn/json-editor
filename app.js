@@ -121,7 +121,7 @@ app.post('/api/page/:pageName', function (req, res) {
 			return console.log(err);
 		}
 
-		fs.readFile(path.join(__dirname, '/pages/hbs/pages/default.hbs'), 'utf8', function (err, source) {
+		fs.readFile(path.join(__dirname, '/pages/hbs/pages/' + req.body.template), 'utf8', function (err, source) {
 			if (err) {
 				return console.log(err);
 			}
