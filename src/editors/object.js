@@ -638,6 +638,10 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       }
 
       var schema = self.getPropertySchema(name);
+      if(typeof schema.propertyOrder !== 'number'){                  
+        // if the propertyOrder undefined, then set a smart default value.
+        schema.propertyOrder = Object.keys(self.editors).length + 1000;                                                                   
+      } 
 
 
       // Add the property
