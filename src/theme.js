@@ -9,17 +9,17 @@ var matchKey = (function () {
 })();
 
 JSONEditor.AbstractTheme = Class.extend({
-  getContainer: function() {
+  getContainer: function () {
     return document.createElement('div');
   },
-  getFloatRightLinkHolder: function() {
+  getFloatRightLinkHolder: function () {
     var el = document.createElement('div');
     el.style = el.style || {};
     el.style.cssFloat = 'right';
     el.style.marginLeft = '10px';
     return el;
   },
-  getModal: function() {
+  getModal: function () {
     var el = document.createElement('div');
     el.style.backgroundColor = 'white';
     el.style.border = '1px solid black';
@@ -29,53 +29,53 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style.display = 'none';
     return el;
   },
-  getGridContainer: function() {
+  getGridContainer: function () {
     var el = document.createElement('div');
     return el;
   },
-  getGridRow: function() {
+  getGridRow: function () {
     var el = document.createElement('div');
     el.className = 'row';
     return el;
   },
-  getGridColumn: function() {
+  getGridColumn: function () {
     var el = document.createElement('div');
     return el;
   },
-  setGridColumnSize: function(el,size) {
+  setGridColumnSize: function (el, size) {
 
   },
-  getLink: function(text) {
+  getLink: function (text) {
     var el = document.createElement('a');
-    el.setAttribute('href','#');
+    el.setAttribute('href', '#');
     el.appendChild(document.createTextNode(text));
     return el;
   },
-  disableHeader: function(header) {
+  disableHeader: function (header) {
     header.style.color = '#ccc';
   },
-  disableLabel: function(label) {
+  disableLabel: function (label) {
     label.style.color = '#ccc';
   },
-  enableHeader: function(header) {
+  enableHeader: function (header) {
     header.style.color = '';
   },
-  enableLabel: function(label) {
+  enableLabel: function (label) {
     label.style.color = '';
   },
-  getFormInputLabel: function(text) {
+  getFormInputLabel: function (text) {
     var el = document.createElement('label');
     el.appendChild(document.createTextNode(text));
     return el;
   },
-  getCheckboxLabel: function(text) {
+  getCheckboxLabel: function (text) {
     var el = this.getFormInputLabel(text);
     el.style.fontWeight = 'normal';
     return el;
   },
-  getHeader: function(text) {
+  getHeader: function (text) {
     var el = document.createElement('h3');
-    if(typeof text === "string") {
+    if (typeof text === "string") {
       el.textContent = text;
     }
     else {
@@ -84,37 +84,37 @@ JSONEditor.AbstractTheme = Class.extend({
 
     return el;
   },
-  getCheckbox: function() {
+  getCheckbox: function () {
     var el = this.getFormInputField('checkbox');
     el.style.display = 'inline-block';
     el.style.width = 'auto';
     return el;
   },
-  getMultiCheckboxHolder: function(controls,label,description) {
+  getMultiCheckboxHolder: function (controls, label, description) {
     var el = document.createElement('div');
 
-    if(label) {
+    if (label) {
       label.style.display = 'block';
       el.appendChild(label);
     }
 
-    for(var i in controls) {
-      if(!controls.hasOwnProperty(i)) continue;
+    for (var i in controls) {
+      if (!controls.hasOwnProperty(i)) continue;
       controls[i].style.display = 'inline-block';
       controls[i].style.marginRight = '20px';
       el.appendChild(controls[i]);
     }
 
-    if(description) el.appendChild(description);
+    if (description) el.appendChild(description);
 
     return el;
   },
-  getSelectInput: function(options) {
+  getSelectInput: function (options) {
     var select = document.createElement('select');
-    if(options) this.setSelectOptions(select, options);
+    if (options) this.setSelectOptions(select, options);
     return select;
   },
-  getSwitcher: function(options) {
+  getSwitcher: function (options) {
     var switcher = this.getSelectInput(options);
     switcher.style.backgroundColor = 'transparent';
     switcher.style.display = 'inline-block';
@@ -127,23 +127,23 @@ JSONEditor.AbstractTheme = Class.extend({
     switcher.style.width = 'auto';
     return switcher;
   },
-  getSwitcherOptions: function(switcher) {
+  getSwitcherOptions: function (switcher) {
     return switcher.getElementsByTagName('option');
   },
-  setSwitcherOptions: function(switcher, options, titles) {
+  setSwitcherOptions: function (switcher, options, titles) {
     this.setSelectOptions(switcher, options, titles);
   },
-  setSelectOptions: function(select, options, titles) {
+  setSelectOptions: function (select, options, titles) {
     titles = titles || [];
     select.innerHTML = '';
-    for(var i=0; i<options.length; i++) {
+    for (var i = 0; i < options.length; i++) {
       var option = document.createElement('option');
-      option.setAttribute('value',options[i]);
+      option.setAttribute('value', options[i]);
       option.textContent = titles[i] || options[i];
       select.appendChild(option);
     }
   },
-  getTextareaInput: function() {
+  getTextareaInput: function () {
     var el = document.createElement('textarea');
     el.style = el.style || {};
     el.style.width = '100%';
@@ -151,36 +151,41 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style.boxSizing = 'border-box';
     return el;
   },
-  getRangeInput: function(min,max,step) {
+  getRangeInput: function (min, max, step) {
     var el = this.getFormInputField('range');
-    el.setAttribute('min',min);
-    el.setAttribute('max',max);
-    el.setAttribute('step',step);
+    el.setAttribute('min', min);
+    el.setAttribute('max', max);
+    el.setAttribute('step', step);
     return el;
   },
-  getFormInputField: function(type) {
+  getFormInputField: function (type) {
     var el = document.createElement('input');
-    el.setAttribute('type',type);
+    el.setAttribute('type', type);
     return el;
   },
-  afterInputReady: function(input) {
+  afterInputReady: function (input) {
 
   },
-  getFormControl: function(label, input, description) {
+  getFormControl: function (label, input, description) {
     var el = document.createElement('div');
+    var id = 'el-' + Math.round(Math.random() * 10000000);
     el.className = 'form-control';
-    if(label) el.appendChild(label);
-    if(label && input.type === 'checkbox') {
-      label.insertBefore(input,label.firstChild);
-    }
-    else {
+
+    if (!label) { label = document.createElement('label'); }
+
+    if (input.type === 'checkbox') {
+      label.setAttribute('for', id);
+      input.setAttribute('id', id);
+      el.appendChild(label);
+      el.insertBefore(input, label);
+    } else {
       el.appendChild(input);
     }
 
-    if(description) el.appendChild(description);
+    if (description) el.appendChild(description);
     return el;
   },
-  getIndentedPanel: function() {
+  getIndentedPanel: function () {
     var el = document.createElement('div');
     el.style = el.style || {};
     el.style.paddingLeft = '10px';
@@ -188,90 +193,90 @@ JSONEditor.AbstractTheme = Class.extend({
     el.style.borderLeft = '1px solid #ccc';
     return el;
   },
-  getChildEditorHolder: function() {
+  getChildEditorHolder: function () {
     return document.createElement('div');
   },
-  getDescription: function(text) {
+  getDescription: function (text) {
     var el = document.createElement('p');
     el.innerHTML = text;
     return el;
   },
-  getCheckboxDescription: function(text) {
+  getCheckboxDescription: function (text) {
     return this.getDescription(text);
   },
-  getFormInputDescription: function(text) {
+  getFormInputDescription: function (text) {
     return this.getDescription(text);
   },
-  getHeaderButtonHolder: function() {
+  getHeaderButtonHolder: function () {
     return this.getButtonHolder();
   },
-  getButtonHolder: function() {
+  getButtonHolder: function () {
     return document.createElement('div');
   },
-  getButton: function(text, icon, title) {
+  getButton: function (text, icon, title) {
     var el = document.createElement('button');
     el.type = 'button';
-    this.setButtonText(el,text,icon,title);
+    this.setButtonText(el, text, icon, title);
     return el;
   },
-  setButtonText: function(button, text, icon, title) {
+  setButtonText: function (button, text, icon, title) {
     button.innerHTML = '';
-    if(icon) {
+    if (icon) {
       button.appendChild(icon);
       button.innerHTML += ' ';
     }
     button.appendChild(document.createTextNode(text));
-    if(title) button.setAttribute('title',title);
+    if (title) button.setAttribute('title', title);
   },
-  getTable: function() {
+  getTable: function () {
     return document.createElement('table');
   },
-  getTableRow: function() {
+  getTableRow: function () {
     return document.createElement('tr');
   },
-  getTableHead: function() {
+  getTableHead: function () {
     return document.createElement('thead');
   },
-  getTableBody: function() {
+  getTableBody: function () {
     return document.createElement('tbody');
   },
-  getTableHeaderCell: function(text) {
+  getTableHeaderCell: function (text) {
     var el = document.createElement('th');
     el.textContent = text;
     return el;
   },
-  getTableCell: function() {
+  getTableCell: function () {
     var el = document.createElement('td');
     return el;
   },
-  getErrorMessage: function(text) {
+  getErrorMessage: function (text) {
     var el = document.createElement('p');
     el.style = el.style || {};
     el.style.color = 'red';
     el.appendChild(document.createTextNode(text));
     return el;
   },
-  addInputError: function(input, text) {
+  addInputError: function (input, text) {
   },
-  removeInputError: function(input) {
+  removeInputError: function (input) {
   },
-  addTableRowError: function(row) {
+  addTableRowError: function (row) {
   },
-  removeTableRowError: function(row) {
+  removeTableRowError: function (row) {
   },
-  getTabHolder: function() {
+  getTabHolder: function () {
     var el = document.createElement('div');
     el.innerHTML = "<div style='float: left; width: 130px;' class='tabs'></div><div class='content' style='margin-left: 130px;'></div><div style='clear:both;'></div>";
     return el;
   },
-  applyStyles: function(el,styles) {
+  applyStyles: function (el, styles) {
     el.style = el.style || {};
-    for(var i in styles) {
-      if(!styles.hasOwnProperty(i)) continue;
+    for (var i in styles) {
+      if (!styles.hasOwnProperty(i)) continue;
       el.style[i] = styles[i];
     }
   },
-  closest: function(elem, selector) {
+  closest: function (elem, selector) {
     while (elem && elem !== document) {
       if (elem[matchKey]) {
         if (elem[matchKey](selector)) {
@@ -286,11 +291,11 @@ JSONEditor.AbstractTheme = Class.extend({
     }
     return false;
   },
-  getTab: function(span) {
+  getTab: function (span) {
     var el = document.createElement('div');
     el.appendChild(span);
     el.style = el.style || {};
-    this.applyStyles(el,{
+    this.applyStyles(el, {
       border: '1px solid #ccc',
       borderWidth: '1px 0 1px 1px',
       textAlign: 'center',
@@ -303,46 +308,46 @@ JSONEditor.AbstractTheme = Class.extend({
     });
     return el;
   },
-  getTabContentHolder: function(tab_holder) {
+  getTabContentHolder: function (tab_holder) {
     return tab_holder.children[1];
   },
-  getTabContent: function() {
+  getTabContent: function () {
     return this.getIndentedPanel();
   },
-  markTabActive: function(tab) {
-    this.applyStyles(tab,{
+  markTabActive: function (tab) {
+    this.applyStyles(tab, {
       opacity: 1,
       background: 'white'
     });
   },
-  markTabInactive: function(tab) {
-    this.applyStyles(tab,{
-      opacity:0.5,
+  markTabInactive: function (tab) {
+    this.applyStyles(tab, {
+      opacity: 0.5,
       background: ''
     });
   },
-  addTab: function(holder, tab) {
+  addTab: function (holder, tab) {
     holder.children[0].appendChild(tab);
   },
-  getBlockLink: function() {
+  getBlockLink: function () {
     var link = document.createElement('a');
     link.style.display = 'block';
     return link;
   },
-  getBlockLinkHolder: function() {
+  getBlockLinkHolder: function () {
     var el = document.createElement('div');
     return el;
   },
-  getLinksHolder: function() {
+  getLinksHolder: function () {
     var el = document.createElement('div');
     return el;
   },
-  createMediaLink: function(holder,link,media) {
+  createMediaLink: function (holder, link, media) {
     holder.appendChild(link);
-    media.style.width='100%';
+    media.style.width = '100%';
     holder.appendChild(media);
   },
-  createImageLink: function(holder,link,image) {
+  createImageLink: function (holder, link, image) {
     holder.appendChild(link);
     link.appendChild(image);
   }
