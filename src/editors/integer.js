@@ -4,6 +4,6 @@ JSONEditor.defaults.editors.integer = JSONEditor.defaults.editors.number.extend(
     return value.replace(/[^0-9\-]/g,'');
   },
   getNumColumns: function() {
-    return 2;
+    return 1;
   }
 });

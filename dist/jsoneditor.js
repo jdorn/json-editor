@@ -236,6 +236,7 @@ JSONEditor.prototype = {
     this.theme = new theme_class();
     this.template = this.options.template;
     this.refs = this.options.refs || {};
+    this.loadFlags = {};
     this.uuid = 0;
     this.__data = {};
     
@@ -249,7 +250,6 @@ JSONEditor.prototype = {
 
     // Fetch all external refs via ajax
     this._loadExternalRefs(this.schema, function() {
-      self._getDefinitions(self.schema);
       
       // Validator options
       var validator_options = {};
@@ -580,9 +580,9 @@ JSONEditor.prototype = {
     var done = 0, waiting = 0, callback_fired = false;
     
     $each(refs,function(url) {
-      if(self.refs[url]) return;
+      if(self.loadFlags[url]) return;
       if(!self.options.ajax) throw "Must set ajax option to true to load external ref "+url;
-      self.refs[url] = 'loading';
+      self.loadFlags[url] = 'loading';
       waiting++;
 
       var r = new XMLHttpRequest(); 
@@ -601,8 +601,11 @@ JSONEditor.prototype = {
           }
           if(!response || typeof response !== "object") throw "External ref does not contain a valid schema - "+url;
           
-          self.refs[url] = response;
+          self.loadFlags[url] = "loaded";
           self._loadExternalRefs(response,function() {
+            var index = url.lastIndexOf(".json");
+            if (index == -1) throw "invalid external reference url";
+            self._getDefinitions(response, url.substring(0, index + 5) + "#/definitions/");
             done++;
             if(done >= waiting && !callback_fired) {
               callback_fired = true;
@@ -620,6 +623,7 @@ JSONEditor.prototype = {
     });
     
     if(!waiting) {
+      this._getDefinitions(schema);
       callback();
     }
   },
@@ -2322,7 +2326,7 @@ JSONEditor.defaults.editors.number = JSONEditor.defaults.editors.string.extend({
     return (value+"").replace(/[^0-9\.\-eE]/g,'');
   },
   getNumColumns: function() {
-    return 2;
+    return 1;
   },
   getValue: function() {
     return this.value*1;
@@ -2335,7 +2339,7 @@ JSONEditor.defaults.editors.integer = JSONEditor.defaults.editors.number.extend(
     return value.replace(/[^0-9\-]/g,'');
   },
   getNumColumns: function() {
-    return 2;
+    return 1;
   }
 });
 
@@ -2631,6 +2635,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
+
+        if(editor.title && self.schema.$hideTitle) {
+          editor.title.hidden = true;
+		}
+
         if(self.editors[key].options.input_width) {
           holder.style.width = self.editors[key].options.input_width;
         }

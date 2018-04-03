@@ -290,6 +290,11 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         if(self.editors[key].options.hidden) {
           holder.style.display = 'none';
         }
+
+        if(editor.title && self.schema.$hideTitle) {
+          editor.title.hidden = true;
+		}
+
         if(self.editors[key].options.input_width) {
           holder.style.width = self.editors[key].options.input_width;
         }
