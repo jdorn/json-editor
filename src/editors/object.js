@@ -164,7 +164,9 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
         row.appendChild(editor.container);
       });
     }
-    this.row_container.innerHTML = '';
+    while (this.row_container.firstChild) {
+      this.row_container.removeChild(this.row_container.firstChild);
+    }
     this.row_container.appendChild(container);
   },
   getPropertySchema: function(key) {
