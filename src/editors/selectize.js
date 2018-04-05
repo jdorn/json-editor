@@ -169,6 +169,7 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
     this.value = this.enum_values[0];
   },
   onInputChange: function() {
+    //console.log("onInputChange");
     var val = this.input.value;
 
     var sanitized = val;
@@ -176,7 +177,8 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
       sanitized = this.enum_options[0];
     }
 
-    this.value = this.enum_values[this.enum_options.indexOf(val)];
+    //this.value = this.enum_values[this.enum_options.indexOf(val)];
+    this.value = val;
     this.onChange(true);
   },
   setupSelectize: function() {
@@ -187,7 +189,8 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
       if(this.schema.options && this.schema.options.selectize_options) options = $extend(options,this.schema.options.selectize_options);
       this.selectize = window.jQuery(this.input).selectize($extend(options,
       {
-        create: true,
+        // set the create option to true by default, or to the user specified value if defined
+        create: ( options.create === undefined ? true : options.create),
         onChange : function() {
           self.onInputChange();
         }
@@ -272,6 +275,14 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
       }
 
       var prev_value = this.value;
+
+      // Check to see if this item is in the list
+      // Note: We have to skip empty string for watch lists to work properly
+      if ((prev_value !== undefined) && (prev_value !== "") && (select_options.indexOf(prev_value) === -1)) {
+        // item is not in the list. Add it.
+        select_options = select_options.concat(prev_value);
+        select_titles = select_titles.concat(prev_value);
+      }
 
       this.theme.setSelectOptions(this.input, select_options, select_titles);
       this.enum_options = select_options;
