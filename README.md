@@ -243,6 +243,13 @@ else {
 }
 ```
 
+In some cases it's possible that value is invalid, but user has not yet interacted with the form (i.e. all fields are blank, but required).
+You might want to force validation and show errors i.e. on form submit.
+
+```
+editor.validate(true);
+```
+
 By default, this will do the validation with the editor's current value.
 If you want to use a different value, you can pass it in as a parameter.
 
