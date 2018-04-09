@@ -52,6 +52,81 @@ JSONEditor.AbstractEditor = Class.extend({
     this.link_watchers = [];
     
     if(options.container) this.setContainer(options.container);
+    this.registerDependencies();
+  },
+  registerDependencies: function() {
+    this.dependenciesFulfilled = true;
+    var deps = this.options.dependencies;
+    if (!deps) {
+      return;
+    }
+    
+    var self = this;
+    Object.keys(deps).forEach(function(dependency) {
+      var path = self.path.split('.');
+      path[path.length - 1] = dependency;
+      path = path.join('.');
+      var choices = deps[dependency];
+      self.jsoneditor.watch(path, function() {
+        self.checkDependency(path, choices);
+      });
+    });
+  },
+  checkDependency: function(path, choices) {
+    var wrapper = this.control || this.container;
+    if (this.path === path || !wrapper) {
+      return;
+    }
+    
+    var self = this;
+    var editor = this.jsoneditor.getEditor(path);
+    var value = editor ? editor.getValue() : undefined;
+    var previousStatus = this.dependenciesFulfilled;
+    this.dependenciesFulfilled = false;
+    
+    if (!editor || !editor.dependenciesFulfilled) {
+      this.dependenciesFulfilled = false;
+    } else if (Array.isArray(choices)) {
+      choices.some(function(choice) {
+        if (value === choice) {
+          self.dependenciesFulfilled = true;
+          return true;
+        }
+      });
+    } else if (typeof choices === 'object') {
+      if (typeof value !== 'object') {
+        this.dependenciesFulfilled = choices === value;
+      } else {
+        Object.keys(choices).some(function(key) {
+          if (!choices.hasOwnProperty(key)) {
+            return false;
+          }
+          if (!value.hasOwnProperty(key) || choices[key] !== value[key]) {
+            self.dependenciesFulfilled = false;
+            return true;
+          }
+          self.dependenciesFulfilled = true;
+        });
+      }
+    } else if (typeof choices === 'string' || typeof choices === 'number') {
+      this.dependenciesFulfilled = value === choices;
+    } else if (typeof choices === 'boolean') {
+      if (choices) {
+        this.dependenciesFulfilled = value && value.length > 0;
+      } else {
+        this.dependenciesFulfilled = !value || value.length === 0;
+      }
+    }
+    
+    if (this.dependenciesFulfilled !== previousStatus) {
+      this.notify();
+    }
+    
+    if (this.dependenciesFulfilled) {
+      wrapper.style.display = 'block';
+    } else {
+      wrapper.style.display = 'none';
+    }
   },
   setContainer: function(container) {
     this.container = container;
@@ -332,6 +407,9 @@ JSONEditor.AbstractEditor = Class.extend({
     this.value = value;
   },
   getValue: function() {
+    if (!this.dependenciesFulfilled) {
+      return undefined;
+    }
     return this.value;
   },
   refreshValue: function() {
