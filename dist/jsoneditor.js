@@ -2532,6 +2532,15 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
       schema = $extend({},this.schema.additionalProperties);
     }
 
+    // Expand any non-expanded references  
+    while (schema.$ref) {
+      if (schema.$ref == "#") {
+        schema = this.jsoneditor.schema;
+      } else {
+        schema = this.jsoneditor.refs[schema.$ref];
+      }
+    }
+
     return schema;
   },
   preBuild: function() {
