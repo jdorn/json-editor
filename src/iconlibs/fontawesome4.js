@@ -8,7 +8,8 @@ JSONEditor.defaults.iconlibs.fontawesome4 = JSONEditor.AbstractIconLib.extend({
     cancel: 'ban',
     save: 'save',
     moveup: 'arrow-up',
-    movedown: 'arrow-down'
+    movedown: 'arrow-down',
+    copy: 'files-o'
   },
   icon_prefix: 'fa fa-'
 });
