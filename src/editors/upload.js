@@ -109,10 +109,13 @@ JSONEditor.defaults.editors.upload = JSONEditor.AbstractEditor.extend({
     });
   },
   enable: function() {
-    if(this.uploader) this.uploader.disabled = false;
-    this._super();
+    if(!this.always_disabled) {
+      if(this.uploader) this.uploader.disabled = false;
+      this._super();
+    }
   },
-  disable: function() {
+  disable: function(always_disabled) {
+    if(always_disabled) this.always_disabled = true;
     if(this.uploader) this.uploader.disabled = true;
     this._super();
   },

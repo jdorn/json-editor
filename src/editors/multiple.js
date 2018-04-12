@@ -24,20 +24,23 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     return Math.max(this.editors[this.type].getNumColumns(),4);
   },
   enable: function() {
-    if(this.editors) {
-      for(var i=0; i<this.editors.length; i++) {
-        if(!this.editors[i]) continue;
-        this.editors[i].enable();
+    if(!this.always_disabled) {
+      if(this.editors) {
+        for(var i=0; i<this.editors.length; i++) {
+          if(!this.editors[i]) continue;
+          this.editors[i].enable();
+        }
       }
+      this.switcher.disabled = false;
+      this._super();
     }
-    this.switcher.disabled = false;
-    this._super();
   },
-  disable: function() {
+  disable: function(always_disabled) {
+    if(always_disabled) this.always_disabled = true;
     if(this.editors) {
       for(var i=0; i<this.editors.length; i++) {
         if(!this.editors[i]) continue;
-        this.editors[i].disable();
+        this.editors[i].disable(always_disabled);
       }
     }
     this.switcher.disabled = true;

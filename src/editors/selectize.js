@@ -324,10 +324,11 @@ JSONEditor.defaults.editors.selectize = JSONEditor.AbstractEditor.extend({
       if(this.selectize) {
         this.selectize[0].selectize.unlock();
       }
+      this._super();
     }
-    this._super();
   },
-  disable: function() {
+  disable: function(always_disabled) {
+    if(always_disabled) this.always_disabled = true;
     this.input.disabled = true;
     if(this.selectize) {
       this.selectize[0].selectize.lock();

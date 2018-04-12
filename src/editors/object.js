@@ -27,18 +27,21 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     return Math.max(Math.min(12,this.maxwidth),3);
   },
   enable: function() {
-    if(this.editjson_button) this.editjson_button.disabled = false;
-    if(this.addproperty_button) this.addproperty_button.disabled = false;
+    if(!this.always_disabled) {
+      if(this.editjson_button) this.editjson_button.disabled = false;
+      if(this.addproperty_button) this.addproperty_button.disabled = false;
 
-    this._super();
-    if(this.editors) {
-      for(var i in this.editors) {
-        if(!this.editors.hasOwnProperty(i)) continue;
-        this.editors[i].enable();
+      this._super();
+      if(this.editors) {
+        for(var i in this.editors) {
+          if(!this.editors.hasOwnProperty(i)) continue;
+          this.editors[i].enable();
+        }
       }
     }
   },
-  disable: function() {
+  disable: function(always_disabled) {
+    if(always_disabled) this.always_disabled = true;
     if(this.editjson_button) this.editjson_button.disabled = true;
     if(this.addproperty_button) this.addproperty_button.disabled = true;
     this.hideEditJSON();
@@ -47,7 +50,7 @@ JSONEditor.defaults.editors.object = JSONEditor.AbstractEditor.extend({
     if(this.editors) {
       for(var i in this.editors) {
         if(!this.editors.hasOwnProperty(i)) continue;
-        this.editors[i].disable();
+        this.editors[i].disable(always_disabled);
       }
     }
   },
