@@ -46,10 +46,11 @@ JSONEditor.prototype = {
       self.validator = new JSONEditor.Validator(self,null,validator_options);
       
       // Create the root editor
-      var editor_class = self.getEditorClass(self.schema);
+      var schema = self.expandRefs(self.schema);
+      var editor_class = self.getEditorClass(schema);
       self.root = self.createEditor(editor_class, {
         jsoneditor: self,
-        schema: self.schema,
+        schema: schema,
         required: true,
         container: self.root_container
       });
