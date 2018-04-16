@@ -59,7 +59,7 @@ JSONEditor.prototype = {
       self.root.postBuild();
 
       // Starting data
-      if(self.options.startval) self.root.setValue(self.options.startval);
+      if(self.options.hasOwnProperty('startval')) self.root.setValue(self.options.startval);
 
       self.validation_results = self.validator.validate(self.root.getValue());
       self.root.showValidationErrors(self.validation_results);
