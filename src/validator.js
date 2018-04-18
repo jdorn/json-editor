@@ -23,33 +23,17 @@ JSONEditor.Validator = Class.extend({
      * Type Agnostic Validation
      */
 
-    // Version 3 `required`
-    if(schema.required && schema.required === true) {
-      if(typeof value === "undefined") {
+    // Version 3 `required` and `required_by_default`
+    if(typeof value === "undefined") {
+      if((typeof schema.required !== "undefined" && schema.required === true) || (typeof schema.required === "undefined" && this.jsoneditor.options.required_by_default === true)) {
         errors.push({
           path: path,
           property: 'required',
           message: this.translate("error_notset")
         });
+      }
 
-        // Can't do any more validation at this point
-        return errors;
-      }
-    }
-    // Value not defined
-    else if(typeof value === "undefined") {
-      // If required_by_default is set, all fields are required
-      if(this.jsoneditor.options.required_by_default) {
-        errors.push({
-          path: path,
-          property: 'required',
-          message: this.translate("error_notset")
-        });
-      }
-      // Not required, no further validation needed
-      else {
-        return errors;
-      }
+      return errors;
     }
 
     // `enum`
@@ -442,7 +426,7 @@ JSONEditor.Validator = Class.extend({
       }
 
       // Version 4 `required`
-      if(schema.required && Array.isArray(schema.required)) {
+      if(typeof schema.required !== "undefined" && Array.isArray(schema.required)) {
         for(i=0; i<schema.required.length; i++) {
           if(typeof value[schema.required[i]] === "undefined") {
             errors.push({
@@ -457,10 +441,17 @@ JSONEditor.Validator = Class.extend({
       // `properties`
       var validated_properties = {};
       if(schema.properties) {
-        for(i in schema.properties) {
-          if(!schema.properties.hasOwnProperty(i)) continue;
-          validated_properties[i] = true;
-          errors = errors.concat(this._validateSchema(schema.properties[i],value[i],path+'.'+i));
+        if(typeof schema.required !== "undefined" && Array.isArray(schema.required)) {
+          for(i of schema.required) {
+            validated_properties[i] = true;
+            errors = errors.concat(this._validateSchema(schema.properties[i],value[i],path+'.'+i));
+          }
+        } else {
+          for(i in schema.properties) {
+            if(!schema.properties.hasOwnProperty(i)) continue;
+            validated_properties[i] = true;
+            errors = errors.concat(this._validateSchema(schema.properties[i],value[i],path+'.'+i));
+          }
         }
       }
 
@@ -468,7 +459,6 @@ JSONEditor.Validator = Class.extend({
       if(schema.patternProperties) {
         for(i in schema.patternProperties) {
           if(!schema.patternProperties.hasOwnProperty(i)) continue;
-
           var regex = new RegExp(i);
 
           // Check which properties match
