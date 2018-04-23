@@ -171,6 +171,12 @@ JSONEditor.defaults.editors.multiple = JSONEditor.AbstractEditor.extend({
     this.container.appendChild(this.header);
 
     this.switcher = this.theme.getSwitcher(this.display_text);
+
+    // Disable the type switcher if specified
+    if(this.jsoneditor.options.disable_type_switcher){
+      this.switcher.style.display = "none";
+    }
+
     container.appendChild(this.switcher);
     this.switcher.addEventListener('change',function(e) {
       e.preventDefault();
