@@ -178,7 +178,8 @@ JSONEditor.AbstractEditor = Class.extend({
     
     // Template to generate the link href
     var href = this.jsoneditor.compileTemplate(data.href,this.template_engine);
-
+    var relTemplate = this.jsoneditor.compileTemplate(data.rel ? data.rel : data.href,this.template_engine);
+    
     // Template to generate the link's download attribute
     var download = null;
     if(data.download) download = data.download;
@@ -199,8 +200,9 @@ JSONEditor.AbstractEditor = Class.extend({
       // When a watched field changes, update the url  
       this.link_watchers.push(function(vars) {
         var url = href(vars);
+        var rel = relTemplate(vars);
         link.setAttribute('href',url);
-        link.setAttribute('title',data.rel || url);
+        link.setAttribute('title',rel || url);
         image.setAttribute('src',url);
       });
     }
@@ -219,8 +221,9 @@ JSONEditor.AbstractEditor = Class.extend({
       // When a watched field changes, update the url  
       this.link_watchers.push(function(vars) {
         var url = href(vars);
+        var rel = relTemplate(vars);
         link.setAttribute('href',url);
-        link.textContent = data.rel || url;
+        link.textContent = rel || url;
         media.setAttribute('src',url);
       });
     }
@@ -233,8 +236,9 @@ JSONEditor.AbstractEditor = Class.extend({
       // When a watched field changes, update the url
       this.link_watchers.push(function(vars) {
         var url = href(vars);
+        var rel = relTemplate(vars);
         holder.setAttribute('href',url);
-        holder.textContent = data.rel || url;
+        holder.textContent = rel || url;
       });
     }
 
