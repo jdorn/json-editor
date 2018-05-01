@@ -295,13 +295,19 @@ JSONEditor.defaults.resolvers.unshift(function(schema) {
 });
 // Specialized editors for arrays of strings
 JSONEditor.defaults.resolvers.unshift(function(schema) {
-  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && schema.uniqueItems && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
+  if(schema.type === "array" && schema.items && !(Array.isArray(schema.items)) && ['string','number','integer'].indexOf(schema.items.type) >= 0) {
+    //For quick lists via splitting the value of a text field
+    if(schema.format==="split"){
+      if(schema.items.type==="string"){return 'splitStrings';}
+      if(schema.items.type==="number"){return 'splitNumbers';}
+      if(schema.items.type==="integer"){return 'splitIntegers';}
+    }
     // For enumerated strings, number, or integers
-    if(schema.items.enum) {
+    if(schema.items.enum && schema.uniqueItems) {
       return 'multiselect';
     }
     // For non-enumerated strings (tag editor)
-    else if(JSONEditor.plugins.selectize.enable && schema.items.type === "string") {
+    else if(JSONEditor.plugins.selectize.enable && schema.items.type === "string" && schema.uniqueItems) {
       return 'arraySelectize';
     }
   }
