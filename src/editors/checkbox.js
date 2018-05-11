@@ -2,7 +2,7 @@ JSONEditor.defaults.editors.checkbox = JSONEditor.AbstractEditor.extend({
   setValue: function(value,initial) {
     this.value = !!value;
     this.input.checked = this.value;
-    this.onChange();
+    this.onChange(true);
   },
   register: function() {
     this._super();
