@@ -106,11 +106,25 @@ JSONEditor.defaults.themes.bootstrap3 = JSONEditor.AbstractTheme.extend({
     }
 
     input.errmsg.textContent = text;
+
+    var tabHolder = (document.getElementsByClassName("tabs") || [])[0];
+    if (tabHolder) {
+      var name = input.name;
+      var idx = parseInt(input.name.match(/\[(\d+)\]/)[1]);
+      tabHolder.childNodes[idx].classList.add("list-group-item-danger");
+    }
   },
   removeInputError: function(input) {
     if(!input.errmsg) return;
     input.errmsg.style.display = 'none';
     input.controlgroup.className = input.controlgroup.className.replace(/\s?has-error/g,'');
+
+    var tabHolder = (document.getElementsByClassName("tabs") || [])[0];
+    if (tabHolder) {
+      var name = input.name;
+      var idx = parseInt(input.name.match(/\[(\d+)\]/)[1]);
+      tabHolder.childNodes[idx].classList.remove("list-group-item-danger");
+    }
   },
   getTabHolder: function() {
     var el = document.createElement('div');
