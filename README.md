@@ -565,6 +565,29 @@ Here is an example that will show a color picker in browsers that support it:
 }
 ```
 
+Please note that ```format``` implies that "semantic validation" is in order. In other cases ```inputType``` may specify the to-be-rendered input. Think of "textarea" and "input" for strings, or "radio buttons" and "select" for enumarated values. E.g.
+
+```json
+{
+  "type": "object",
+  "properties":{
+     "gender": {
+        "type": "string",
+        "inputType": "radio",
+        "title": "Gender:",
+        "enum": ["M", "F"],
+        "enumTitles": {
+          "M": "Male",
+          "F": "Female"
+        }
+      }
+    }
+  }
+}
+  ```
+  
+Another format option ```enumTitles``` is used in the example above as well, demonstrating a simple way to format the actual visible options in the form.
+
 #### Specialized String Editors
 
 In addition to the standard HTML input formats, JSON Editor can also integrate with several 3rd party specialized editors.  These libraries are not included in JSON Editor and you must load them on the page yourself.
@@ -1178,10 +1201,9 @@ The following schema will now use this custom editor for each of the array eleme
 
 If you create a custom editor interface that you think could be helpful to others, submit a pull request!
 
-The possibilities are endless.  Some ideas:
+The possibilities are endless. Some ideas:
 
 *  A compact way to edit objects
-*  Radio button version of the `select` editor
 *  Autosuggest for strings (like enum, but not restricted to those values)
 *  Better editor for arrays of strings (tag editor)
 *  Canvas based image editor that produces Base64 data URLs
@@ -1195,6 +1217,48 @@ Selectize support is enabled via the following snippet:
 JSONEditor.plugins.selectize.enable = true;
 ```
 See the demo for an example of the `array` and `select` editor with Selectize support enabled.
+
+Format the final form
+--------------------
+
+When using JSON Editor with existing schema's, or if you want to seperate data- from presentation logic, you may pass an optional ```form``` option to override or add options in the schema for proper presentation. e.g.
+
+```
+var editor = new JSONEditor(element, {
+  "schema": {
+    "type": "object",
+    "$schema": "http://json-schema.org/draft-04/schema",
+    "properties": {
+      "user": {
+        "type": "object",
+        "properties": {
+          "gender": {
+            "type": "string",
+            "enum": ["M", "F"]
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "form": {
+    "user.gender": {
+      "inputType": "radio",
+      "enumTitles":{
+        "M": "Male",
+        "F": "Female"
+      }
+    },
+    "user.password": {
+      "format": "password"
+    }
+  }
+});
+```
+
+Besides: extra CSS classes are added to rows and containers to add customizations to the form via CSS.
 
 Custom Validation
 ----------------
